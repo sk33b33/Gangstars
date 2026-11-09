@@ -191,6 +191,7 @@ func _setup_audio() -> void:
 			hud.show_message("It starts to rain. People hurry indoors."))
 	district.door_opened.connect(func(pos: Vector3): audio.play_at("door", pos + Vector3(0, 1, 0), -4.0))
 	district.vehicle_horn.connect(func(pos: Vector3): audio.play_at("horn", pos + Vector3(0, 1, 0)))
+	district.dog_barked.connect(func(pos: Vector3, pitch: float): audio.play_at("bark", pos, -2.0, pitch))
 	player.honked.connect(func(pos: Vector3): audio.play_at("horn", pos + Vector3(0, 1, 0), 2.0))
 	player.shouted.connect(func(pos: Vector3): audio.play_at("whistle", pos + Vector3(0, 1.7, 0)))
 	district.events.incident_started.connect(func(e: Dictionary):

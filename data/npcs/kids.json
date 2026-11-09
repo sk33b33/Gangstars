@@ -1,0 +1,564 @@
+{
+  "_comment": "Neighbourhood kids (role 'kid'): they walk to the local pitch and play kick-about (KickAbout).",
+  "residents": [
+    {
+      "id": "npc_kid_ziyaad",
+      "display_name": "Ziyaad",
+      "home_id": "starter_h02",
+      "role": "kid",
+      "shirt_color": "#e74c3c",
+      "pants_color": "#2c3e50",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.9,
+      "start_delay": 20.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "poi_court",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Pass the ball, man!",
+        "My ma's calling us for supper just now."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_chantal",
+      "display_name": "Chantal",
+      "home_id": "starter_h07",
+      "role": "kid",
+      "shirt_color": "#f1c40f",
+      "pants_color": "#34495e",
+      "skin_color": "#6b4430",
+      "walk_speed": 1.9,
+      "start_delay": 27.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "poi_court",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Ag no, that was offside!",
+        "Watch this skill, hey!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.64,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_keagan",
+      "display_name": "Keagan",
+      "home_id": "starter_h09",
+      "role": "kid",
+      "shirt_color": "#3498db",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.9,
+      "start_delay": 34.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "poi_court",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Can you play? We need a keeper.",
+        "Who kicked it over the wall?!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "bald",
+      "hair_color": "#1d1b24",
+      "height": 0.66,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_aaliyah",
+      "display_name": "Aaliyah",
+      "home_id": "starter_h11",
+      "role": "kid",
+      "shirt_color": "#2ecc71",
+      "pants_color": "#1c2833",
+      "skin_color": "#4a2f22",
+      "walk_speed": 1.9,
+      "start_delay": 41.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "poi_court",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "My ma's calling us for supper just now.",
+        "Pass the ball, man!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "long",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_reece",
+      "display_name": "Reece",
+      "home_id": "starter_h13",
+      "role": "kid",
+      "shirt_color": "#ffffff",
+      "pants_color": "#2c3e50",
+      "skin_color": "#c58c62",
+      "walk_speed": 1.9,
+      "start_delay": 48.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "poi_court",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Watch this skill, hey!",
+        "Ag no, that was offside!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.64,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_jody",
+      "display_name": "Jody",
+      "home_id": "rooi_h02",
+      "role": "kid",
+      "shirt_color": "#e67e22",
+      "pants_color": "#34495e",
+      "skin_color": "#7a4a32",
+      "walk_speed": 1.9,
+      "start_delay": 20.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "rooi_field",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Who kicked it over the wall?!",
+        "Can you play? We need a keeper."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_tashreeq",
+      "display_name": "Tashreeq",
+      "home_id": "rooi_h08",
+      "role": "kid",
+      "shirt_color": "#9b59b6",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.9,
+      "start_delay": 27.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "rooi_field",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Pass the ball, man!",
+        "My ma's calling us for supper just now."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "afro",
+      "hair_color": "#1d1b24",
+      "height": 0.64,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_monique",
+      "display_name": "Monique",
+      "home_id": "rooi_h10",
+      "role": "kid",
+      "shirt_color": "#1abc9c",
+      "pants_color": "#1c2833",
+      "skin_color": "#6b4430",
+      "walk_speed": 1.9,
+      "start_delay": 34.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "rooi_field",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Ag no, that was offside!",
+        "Watch this skill, hey!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "afro",
+      "hair_color": "#1d1b24",
+      "height": 0.66,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_liam",
+      "display_name": "Liam",
+      "home_id": "rooi_h12",
+      "role": "kid",
+      "shirt_color": "#ecf0f1",
+      "pants_color": "#2c3e50",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.9,
+      "start_delay": 41.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "rooi_field",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Can you play? We need a keeper.",
+        "Who kicked it over the wall?!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_junaid",
+      "display_name": "Junaid",
+      "home_id": "kalk_h02",
+      "role": "kid",
+      "shirt_color": "#c0392b",
+      "pants_color": "#34495e",
+      "skin_color": "#4a2f22",
+      "walk_speed": 1.9,
+      "start_delay": 20.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "kalk_kickabout",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "My ma's calling us for supper just now.",
+        "Pass the ball, man!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_kayla",
+      "display_name": "Kayla",
+      "home_id": "kalk_h06",
+      "role": "kid",
+      "shirt_color": "#2980b9",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#c58c62",
+      "walk_speed": 1.9,
+      "start_delay": 27.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "kalk_kickabout",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Watch this skill, hey!",
+        "Ag no, that was offside!"
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.64,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_ethan",
+      "display_name": "Ethan",
+      "home_id": "kalk_h09",
+      "role": "kid",
+      "shirt_color": "#f39c12",
+      "pants_color": "#1c2833",
+      "skin_color": "#7a4a32",
+      "walk_speed": 1.9,
+      "start_delay": 34.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "kalk_kickabout",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Who kicked it over the wall?!",
+        "Can you play? We need a keeper."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "bald",
+      "hair_color": "#1d1b24",
+      "height": 0.66,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    {
+      "id": "npc_kid_lwazi",
+      "display_name": "Lwazi",
+      "home_id": "kalk_h11",
+      "role": "kid",
+      "shirt_color": "#27ae60",
+      "pants_color": "#2c3e50",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.9,
+      "start_delay": 41.0,
+      "schedule": [
+        {
+          "activity": "soccer",
+          "destination": "kalk_kickabout",
+          "duration": 360,
+          "window": [
+            9,
+            18
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Pass the ball, man!",
+        "My ma's calling us for supper just now."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        8,
+        19
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.62,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0
+    }
+  ]
+}

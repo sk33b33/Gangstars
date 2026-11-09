@@ -1,4 +1,8 @@
 {
+  "dogs": {
+    "street": 3,
+    "yard": 3
+  },
   "id": "district_east",
   "display_name": "Rooiduin",
   "street_name": "Rooiduin",
@@ -319,5 +323,18 @@
         ]
       }
     ]
-  }
+  },
+  "kickabouts": [
+    {
+      "poi": "rooi_field",
+      "center": [
+        130,
+        -34
+      ],
+      "half": [
+        12.0,
+        7.6
+      ]
+    }
+  ]
 }

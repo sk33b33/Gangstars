@@ -7,6 +7,7 @@ signal navigation_ready
 signal vehicle_horn(position: Vector3)
 signal door_opened(position: Vector3)
 signal navigation_rebaked
+signal dog_barked(position: Vector3, pitch: float)
 
 const HOUSE_SCENE := preload("res://scenes/houses/house_plot.tscn")
 const RESIDENT_SCENE := preload("res://scenes/npcs/resident.tscn")
@@ -41,6 +42,12 @@ var is_navigation_ready := false
 var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
+## Residents that don't come from a district's generated data (the neighbourhood kids).
+@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json"]
+## Kids' kick-about games, one per pitch in the area data ("kickabouts").
+var kickabouts: Array[KickAbout] = []
+## Street and yard dogs (cosmetic; see DogPack).
+var dogs: DogPack
 ## Benches, chairs and walls residents settle into while dwelling (cosmetic).
 var spots := SpotRegistry.new()
 ## The player, so crew members can follow them ("@leader:player"). Set by the session.
@@ -210,6 +217,19 @@ func _on_bake_finished() -> void:
 	destinations.navigation_map = map
 	_spawn_residents()
 	_spawn_vehicles()
+	dogs = DogPack.new()
+	dogs.name = "Dogs"
+	add_child(dogs)
+	dogs.setup(self)
+	dogs.barked.connect(func(pos: Vector3, pitch: float): dog_barked.emit(pos, pitch))
+	for area in areas:
+		for k in area.get("kickabouts", []):
+			var game := KickAbout.new()
+			game.name = "KickAbout_" + str(k.poi)
+			add_child(game)
+			var c := DataFiles.to_vec2(k.get("center"))
+			game.setup(self, str(k.poi), Vector3(c.x, 0, c.y), DataFiles.to_vec2(k.get("half"), Vector2(4, 3)))
+			kickabouts.append(game)
 	if use_lod:
 		merge_stats = MeshMerger.merge(nav_region)
 		lod_count = Lod.apply(nav_region)
@@ -283,6 +303,8 @@ func _spawn_residents() -> void:
 	var all_npcs: Array[NpcData] = []
 	for area in areas:
 		all_npcs.append_array(NpcData.load_file(str(area.get("residents_file", ""))))
+	for f in extra_residents_files:
+		all_npcs.append_array(NpcData.load_file(f))
 	for npc in all_npcs:
 		if registry.get_house(npc.home_id) == null:
 			push_warning("Resident %s has unknown home %s; not spawned." % [npc.id, npc.home_id])

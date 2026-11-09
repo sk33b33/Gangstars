@@ -219,6 +219,22 @@ old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkb
   - The approach point (0.85 m for sit, 0.55 m for lean, straight out in front) must be on the
     navigation mesh.
 
+## Ambient life
+
+- **Kids:** residents with role `kid` (`data/npcs/kids.json`, loaded through
+  `District.extra_residents_files`) and activity `soccer`.
+  - `KickAbout` (one per entry in an area's `kickabouts`: poi, center, half extents) sets
+    `Resident.play_target` and `play_speed` for the kids dwelling at its POI. The resident's
+    physics does the moving.
+  - Kids at play bypass RVO avoidance.
+  - The ball is a scripted mesh, never a body.
+- **Dogs:** `DogPack` reads the area's `"dogs"` counts.
+  - Yard dogs steer inside `HousePlot.front_yard()`.
+  - Street dogs path on the navigation mesh between nearby `house_gate` anchors.
+  - They have no collision layer (mask = world only).
+  - LOD: physics stops beyond 60 m.
+  - Barks go `District.dog_barked` → `AudioDirector` ("bark").
+
 ## Windows build and gamepad
 
 ```bash

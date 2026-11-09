@@ -80,7 +80,7 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.lines = PackedStringArray(d.get("lines", []))
 	n.hair_style = str(d.get("hair_style", "short"))
 	n.hair_color = DataFiles.to_color(d.get("hair_color"), Color("#1d1b24"))
-	n.height = clampf(float(d.get("height", 1.0)), 0.85, 1.12)
+	n.height = clampf(float(d.get("height", 1.0)), 0.55 if str(d.get("role", "")) == "kid" else 0.85, 1.12)
 	n.sleeves = str(d.get("sleeves", "long"))
 	n.figure = float(d.get("figure", -1.0))
 	n.heavy = float(d.get("heavy", -1.0))

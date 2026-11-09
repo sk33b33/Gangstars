@@ -1,4 +1,8 @@
 {
+  "dogs": {
+    "street": 3,
+    "yard": 4
+  },
   "id": "district_west",
   "display_name": "Kalkbos",
   "street_name": "Kalkbos",
@@ -119,6 +123,17 @@
         -48.8
       ],
       "facing": "north"
+    },
+    {
+      "type": "kickabout",
+      "position": [
+        -141,
+        -42
+      ],
+      "size": [
+        9,
+        9
+      ]
     }
   ],
   "pois": [
@@ -176,6 +191,17 @@
       ],
       "radius": 2.5,
       "map_label": "square"
+    },
+    {
+      "id": "kalk_kickabout",
+      "name": "the kick-about lot",
+      "kind": "park",
+      "position": [
+        -141,
+        -42
+      ],
+      "radius": 3.0,
+      "map_label": "lot"
     }
   ],
   "patrol_routes": {
@@ -316,5 +342,18 @@
         ]
       }
     ]
-  }
+  },
+  "kickabouts": [
+    {
+      "poi": "kalk_kickabout",
+      "center": [
+        -141,
+        -42
+      ],
+      "half": [
+        4.0,
+        3.8
+      ]
+    }
+  ]
 }

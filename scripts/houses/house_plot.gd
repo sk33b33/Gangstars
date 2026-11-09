@@ -165,6 +165,13 @@ func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
 		Geo.collider(self, Vector3(1.5, 2.0, 1.5), tank + Vector3(0, 1.0, 0))
 
 
+## The open front yard between the fence and the house, in plot-local space (+Z = street side),
+## kept clear of the fences. Yard dogs live here.
+func front_yard() -> Rect2:
+	var half_w := data.plot_size.x * 0.5
+	return Rect2(-half_w + 0.5, -SETBACK + 0.6, data.plot_size.x - 1.0, SETBACK - 1.1)
+
+
 ## Swings the front door open and closed again (someone entering, leaving or answering).
 func open_door(hold := 1.4) -> void:
 	if _door_hinge == null or not is_inside_tree():

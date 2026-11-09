@@ -35,6 +35,7 @@ var _talk := 0.0
 var _guard := 0.0
 var _look_target: Variant = null
 var _head_yaw := 0.0
+var _head_scale := 1.0
 var _hat: MeshInstance3D
 var _hair: Array[MeshInstance3D] = []
 
@@ -44,12 +45,16 @@ var _hair: Array[MeshInstance3D] = []
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
-	var height: float = clampf(float(opts.get("height", 1.0)), 0.85, 1.12)
-	scale = Vector3(lerpf(1.0, height, 0.5), height, lerpf(1.0, height, 0.5))
+	var height: float = clampf(float(opts.get("height", 1.0)), 0.55, 1.12)
+	var child := height < 0.8
+	# Children are slimmer for their height, with a relatively bigger head (below).
+	var width := height * 1.08 if child else lerpf(1.0, height, 0.5)
+	scale = Vector3(width, height, width)
 	_root = MODEL.instantiate()
 	add_child(_root)
 	_skeleton = _root.find_child("Skeleton3D", true, false)
 	_head_bone = _skeleton.find_bone("head")
+	_head_scale = 1.3 if child else 1.0
 	var skirt: bool = bool(opts.get("skirt", false))
 	var hair_color: Color = opts.get("hair_color", Color("#1d1b24"))
 	var colours := {
@@ -131,6 +136,11 @@ func wave() -> void:
 	_wave_timer = WAVE_TIME
 
 
+func kick() -> void:
+	if _tree:
+		_tree.set("parameters/kick_shot/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+
+
 func is_waving() -> bool:
 	return _wave_timer > 0.0
 
@@ -164,6 +174,8 @@ func _apply_look(delta: float) -> void:
 	if _head_bone >= 0 and absf(_head_yaw) > 0.001:
 		var q := _skeleton.get_bone_pose_rotation(_head_bone)
 		_skeleton.set_bone_pose_rotation(_head_bone, q * Quaternion(Vector3.UP, _head_yaw))
+	if _head_bone >= 0 and _head_scale != 1.0:
+		_skeleton.set_bone_pose_scale(_head_bone, Vector3.ONE * _head_scale)
 
 
 func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
@@ -176,7 +188,7 @@ func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
 
 func _build_tree(player: AnimationPlayer) -> void:
 	for anim_name in player.get_animation_list():
-		player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+		player.get_animation(anim_name).loop_mode = Animation.LOOP_NONE if anim_name == "kick" else Animation.LOOP_LINEAR
 	var loco := AnimationNodeBlendSpace1D.new()
 	loco.min_space = 0.0
 	loco.max_space = RUN_REF
@@ -195,6 +207,15 @@ func _build_tree(player: AnimationPlayer) -> void:
 		bt.connect_node(pose + "_mix", 0, previous)
 		bt.connect_node(pose + "_mix", 1, pose)
 		previous = pose + "_mix"
+	# A full-body one-shot kick (kids' kick-about).
+	var kick := AnimationNodeOneShot.new()
+	kick.fadein_time = 0.05
+	kick.fadeout_time = 0.15
+	bt.add_node("kick", _anim("kick"))
+	bt.add_node("kick_shot", kick)
+	bt.connect_node("kick_shot", 0, previous)
+	bt.connect_node("kick_shot", 1, "kick")
+	previous = "kick_shot"
 	# Upper-body gestures on top (legs keep walking, sitting or leaning).
 	var upper := _upper_paths(player.get_animation("talk"))
 	for pose in ["talk", "guard", "wave"]:

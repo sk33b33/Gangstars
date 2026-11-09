@@ -13,7 +13,7 @@ Contents (Blender Z-up, character faces -Y; glTF export turns that into Godot's 
 - Hair_short, Hair_long, Hair_doek, Hair_beanie, Hat_cap, Skirt: optional pieces Godot toggles.
 - Accessories (Acc_glasses, Acc_sunglasses, Acc_beard, Acc_moustache, Acc_collar, Acc_chain,
   Acc_apron) and Hair_afro / Hair_ponytail for named characters.
-- Actions: idle, walk, run, talk, guard, sit, lean, wave (all loops, 24 fps). Walk = 1 s per two steps at
+- Actions: idle, walk, run, talk, guard, sit, lean, wave (loops), kick (one-shot); 24 fps. Walk = 1 s per two steps at
   1.5 m/s; run = 0.6 s at 4.5 m/s (Godot scales playback to the real speed).
 """
 import math
@@ -563,6 +563,28 @@ def pose_wave(rig, t):
     set_multi(rig, "head", [("Z", -0.08), ("X", -0.04)])
 
 
+def pose_kick(rig, t):
+    """Right-foot kick: wind up (leg back), strike (leg forward), follow through, recover."""
+    pose_idle(rig, t)
+    # 0 -> 0.35 wind up, 0.35 -> 0.5 strike, 0.5 -> 1 recover
+    if t < 0.35:
+        k = t / 0.35
+        swing = 0.7 * k
+    elif t < 0.5:
+        k = (t - 0.35) / 0.15
+        swing = 0.7 - 1.9 * k
+    else:
+        k = (t - 0.5) / 0.5
+        swing = -1.2 * (1.0 - k)
+    set_rot(rig, "thigh.R", "X", swing)
+    set_rot(rig, "shin.R", "X", max(0.0, swing) * 1.4 + 0.1)
+    set_rot(rig, "thigh.L", "X", -0.12)
+    set_rot(rig, "shin.L", "X", 0.25)
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("Y", 0.55 * sign), ("X", swing * 0.4 * sign)])
+    set_rot(rig, "spine", "X", 0.1 * max(0.0, -swing))
+
+
 def bake_action(rig, name, frames, fn):
     reset_pose(rig)
     action = bpy.data.actions.new(name)
@@ -610,6 +632,7 @@ bake_action(rig, "guard", 72, pose_guard)
 bake_action(rig, "sit", 96, pose_sit)
 bake_action(rig, "lean", 96, pose_lean)
 bake_action(rig, "wave", 24, pose_wave)
+bake_action(rig, "kick", 14, pose_kick)
 reset_pose(rig)
 
 # Every mesh gets a (flat) UV map: Godot's importer needs UVs to build tangents.

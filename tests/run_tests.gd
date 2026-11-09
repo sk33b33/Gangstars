@@ -903,6 +903,70 @@ func _pad_axis(axis: JoyAxis, value: float) -> void:
 	Input.parse_input_event(e)
 
 
+func _test_ambient_life(main: Node, district: District, player: Player) -> void:
+	district.weather.enabled = false
+	district.weather.set_kind("clear")
+	_check(district.kickabouts.size() == 3, "every district has a kick-about pitch (%d)" % district.kickabouts.size())
+	var kids := district.residents.values().filter(func(r): return r.data.role == "kid")
+	_check(kids.size() >= 12, "kids live in the neighbourhood (%d)" % kids.size())
+	_check((kids[0] as Resident).model.scale.y < 0.75, "kids are child-sized")
+	# Kick-about at the Vleirand court: send the kids out and watch.
+	var court: KickAbout = district.kickabouts[0]
+	district.director.clock.set_hour(10.0)
+	player.global_position = court.center + Vector3(0, 0.1, 9.0)
+	player.snap_camera()
+	for r: Resident in kids:
+		if r.is_inside:
+			r.brain.timer = minf(r.brain.timer, 0.5)
+	var max_kid_step := 0.0
+	var kicks0 := court.kicks
+	for i in 60 * 240:
+		if court.kicks - kicks0 >= 6 and court.is_playing():
+			break
+		await physics_frame
+	if court.kicks - kicks0 < 6 and _args.has("verbose"):
+		for r: Resident in kids:
+			print("    kid %s %s act=%s target=%s tier=%s %s" % [r.data.id, r.state_name(), r.brain.activity, r.target_id, r.sim_tier, r.brain.last_transition])
+	_check(court.is_playing() and court.kicks - kicks0 >= 6, "kids walk to the court and play (%d players, %d kicks, %d goals)" % [court.players.size(), court.kicks - kicks0, court.goals])
+	var bp := court.ball.global_position - court.center
+	_check(absf(bp.x) <= court.half.x + 0.7 and absf(bp.z) <= court.half.y + 0.5, "the ball stays on the pitch")
+	for r: Resident in kids:
+		max_kid_step = maxf(max_kid_step, float(r.teleport_violations))
+	_check(max_kid_step == 0, "kids never teleport while playing")
+	# Dogs.
+	var pack := district.dogs
+	_check(pack.count("yard") >= 10 and pack.count("street") >= 8, "dogs live in yards and on the streets (%d yard, %d street)" % [pack.count("yard"), pack.count("street")])
+	var yard_dog: StreetDog = null
+	for d in pack.dogs:
+		if d.kind == "yard" and d.yard_plot.data.district_id == "starter":
+			yard_dog = d
+			break
+	player.global_position = yard_dog.yard_plot.global_transform * Vector3(0, 0.1, 3.0)
+	player.snap_camera()
+	yard_dog._cooldown = 0.0
+	if yard_dog.state == "nap":
+		yard_dog._timer = 0.0
+	var heard := [0]
+	var on_bark := func(_p: Vector3, _pitch: float): heard[0] += 1
+	district.dog_barked.connect(on_bark)
+	var barks0 := yard_dog.barks
+	for i in 60 * 20:
+		if yard_dog.barks > barks0 and heard[0] > 0:
+			break
+		await physics_frame
+	district.dog_barked.disconnect(on_bark)
+	_check(yard_dog.barks > barks0 and heard[0] > 0, "a yard dog barks at the player walking past (%d barks)" % (yard_dog.barks - barks0))
+	var local: Vector3 = yard_dog.yard_plot.global_transform.affine_inverse() * yard_dog.global_position
+	_check(yard_dog.yard_rect.grow(0.4).has_point(Vector2(local.x, local.z)), "yard dogs stay inside their yard")
+	var worst := 0.0
+	var travelled := 0.0
+	for d in pack.dogs:
+		worst = maxf(worst, d.max_step)
+		travelled += d.distance_walked
+	_check(worst < 0.5, "dogs never teleport (largest step %.2f m)" % worst)
+	_check(travelled > 20.0, "dogs get around (%.0f m walked in total)" % travelled)
+
+
 func _test_greetings(main: Node, district: District, player: Player) -> void:
 	district.director.clock.set_hour(11.0)
 	var who: Resident = null
@@ -1374,13 +1438,15 @@ func _test_district() -> void:
 		total_arrivals += r.arrivals
 	print("  total arrivals: %d" % total_arrivals)
 	for r: Resident in district.residents.values():
-		if not _args.has("verbose") and r.arrivals >= int(minutes * 0.5) and r.teleport_violations == 0:
+		if not _args.has("verbose") and r.arrivals >= (2 if r.data.role == "kid" else int(minutes * 0.5)) and r.teleport_violations == 0:
 			_passed += 3
 			continue
 		print("    %s arrivals=%d failures=%d max_travel=%.1fs state=%s last=%s" % [
 			r.data.id, r.arrivals, r.travel_failures, r.max_travel_time, r.state_name(), r.brain.last_transition])
 		_check(r.teleport_violations == 0, "%s never teleports" % r.data.id)
-		_check(r.arrivals >= int(minutes * 0.5), "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
+		# Kids play for 6 minutes at a stretch, so they make fewer (longer) trips.
+		var need := 2 if r.data.role == "kid" else int(minutes * 0.5)
+		_check(r.arrivals >= need, "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
 		_check(r.max_travel_time < 150.0, "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
 	print("  daytime states seen: %s" % seen)
 	print("  tier samples: %s, ambient reactions %d" % [tiers, director.reactions_delivered])
@@ -1444,6 +1510,8 @@ func _test_district() -> void:
 	await _test_gamepad_in_game(main, district, player)
 	print("== greetings (waves)")
 	await _test_greetings(main, district, player)
+	print("== ambient life (kids' kick-about, dogs)")
+	await _test_ambient_life(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

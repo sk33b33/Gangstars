@@ -24,13 +24,14 @@ static func get_stream(stream_name: String) -> AudioStreamWAV:
 		"wind": s = _wind()
 		"rain": s = _rain()
 		"crickets": s = _crickets()
+		"bark": s = _bark()
 		_: push_warning("AudioBank: unknown sound " + stream_name)
 	_cache[stream_name] = s
 	return s
 
 
 static func names() -> PackedStringArray:
-	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets"]
+	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets", "bark"]
 
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -52,6 +53,28 @@ static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
 
 static func _env(t: float, length: float, attack := 0.01, release := 0.08) -> float:
 	return clampf(t / attack, 0.0, 1.0) * clampf((length - t) / release, 0.0, 1.0)
+
+
+## Two gruff barks: a voiced tone sliding down (620 -> 380 Hz) with rough harmonics and breath noise.
+static func _bark() -> AudioStreamWAV:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 23
+	var n := int(RATE * 0.62)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var phase := 0.0
+	for i in n:
+		var t := float(i) / RATE
+		var v := 0.0
+		for start in [0.0, 0.3]:
+			var bt: float = t - start
+			if bt >= 0.0 and bt < 0.2:
+				var f := lerpf(620.0, 380.0, bt / 0.2)
+				phase += TAU * f / RATE
+				var tone := tanh(sin(phase) * 2.5) * 0.7 + sin(phase * 2.0) * 0.2 + sin(phase * 3.0) * 0.1
+				v += (tone + rng.randf_range(-0.35, 0.35)) * _env(bt, 0.2, 0.008, 0.09)
+		out[i] = v * 0.4
+	return _wav(out)
 
 
 static func _horn() -> AudioStreamWAV:

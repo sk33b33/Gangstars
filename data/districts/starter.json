@@ -1,4 +1,8 @@
 {
+  "dogs": {
+    "street": 4,
+    "yard": 7
+  },
   "id": "starter",
   "display_name": "Vleirand",
   "street_name": "Starter district",
@@ -413,5 +417,18 @@
   "backdrop_skip": [
     "east",
     "west"
+  ],
+  "kickabouts": [
+    {
+      "poi": "poi_court",
+      "center": [
+        20,
+        -20
+      ],
+      "half": [
+        5.2,
+        3.6
+      ]
+    }
   ]
 }

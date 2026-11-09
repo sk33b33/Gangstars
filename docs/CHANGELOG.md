@@ -4,6 +4,33 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Ambient life: kids' kick-about and neighbourhood dogs (2026-11-09)
+- **Kids** (`data/npcs/kids.json`, role `kid`):
+  - 13 kids live in the three districts as real residents with homes and schedules. They walk to
+    their pitch on the navigation mesh, play for a while, go home for supper, and stay in when it
+    rains.
+  - They are child-sized (height 0.6, slimmer, bigger heads) and wave at the player.
+- **Kick-about (`KickAbout`):**
+  - One game per pitch: the Vleirand court, the Rooiduin soccer field, and a new sandy lot in
+    Kalkbos with tyre goals (`kalk_kickabout`).
+  - The nearest kid chases the scripted ball and kicks it (new `kick` animation), passing to a
+    friend or shooting at an end goal. The others jog into space. The ball rolls, slows, bounces
+    off the edges, and rolls back out after a goal; shouts of "GOAL!!" and "Pass, pass!".
+  - Kids at play skip crowd avoidance: in a tight group it returned zero velocity. They keep their
+    physics, so they still never teleport.
+- **Dogs** (`DogPack`, `StreetDog`):
+  - A new rigged dog built in Blender (`tools/blender/build_dog.py` → `dog.glb`) with idle (tail
+    wag), walk, trot, lie and bark animations and seven coat colours.
+  - **Yard dogs:** 14 in total. They live in a house's front yard and never leave it, nap in the
+    sun, and run to the fence and bark when you walk past.
+  - **Street dogs:** 10 in total. They wander the pavements near their patch on the navigation
+    mesh and nap. Some bark at you from a few metres; friendly ones trot along beside you for a
+    bit.
+  - New synthesized bark sound.
+  - Dogs further than 60 m from the player freeze.
+  - Placement is per-district data (`"dogs": {"street": n, "yard": n}`), deterministic per house.
+  - Dogs are purely cosmetic: they don't collide with people or cars.
+
 ### Sitting, leaning, waving and named-character looks (2026-11-09)
 - **New animations** (in `build_character.py`):
   - **sit:** on a 0.45 m seat, hands on thighs.

@@ -41,6 +41,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
 			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
 			"lookout": _build_lookout(root, pos, _facing_rot(lm))
+			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
 	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
@@ -394,6 +395,26 @@ static func _build_courtyard(root: Node3D, c: Vector3) -> void:
 	PropLibrary.place(root, "tree_b", c, 0.4).scale = Vector3.ONE * 1.5
 	for a in [0.0, PI * 0.5, PI, PI * 1.5]:
 		Geo.bench(root, c + Vector3(cos(a), 0, sin(a)) * 3.5, -a - PI * 0.5)
+
+
+## Empty lot the kids play on: trodden sand, chalk lines and goals made of stacked tyres (visual
+## only, so nobody's path is ever blocked by them).
+static func _build_kickabout(root: Node3D, c: Vector3, size: Vector2) -> void:
+	Geo.patch(root, Rect2(c.x - size.x * 0.5, c.z - size.y * 0.5, size.x, size.y), 0.011,
+		PixelMaterials.surface("chalk_ground", Vector2(2, 2), Color("#d8cdb4")))
+	var chalk := PixelMaterials.flat(Color("#f4f1ea"))
+	Geo.box(root, Vector3(0.08, 0.02, size.y - 1.0), Vector3(c.x, 0.02, c.z), chalk, false)
+	var tyre := TorusMesh.new()
+	tyre.inner_radius = 0.18
+	tyre.outer_radius = 0.32
+	for side in [-1.0, 1.0]:
+		for gz in [-1.1, 1.1]:
+			for k in 3:
+				var mi := MeshInstance3D.new()
+				mi.mesh = tyre
+				mi.material_override = PixelMaterials.flat(Color("#232327") if k != 1 else Color("#e2585e"))
+				mi.position = Vector3(c.x + side * (size.x * 0.5 - 0.3), 0.08 + k * 0.15, c.z + gz)
+				root.add_child(mi)
 
 
 ## Kalkbos Hall: limestone church hall with a bell gable, sign and double doors facing +Z.

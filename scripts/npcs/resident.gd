@@ -92,6 +92,9 @@ var _move_vel := Vector3.ZERO
 var _ghost_timer := 0.0
 var _far_anim_accum := 0.0
 var spots: SpotRegistry
+## Set by a KickAbout while this kid is playing: where to run (null = not playing).
+var play_target: Variant = null
+var play_speed := 0.0
 ## Settling into a spot: "" | "approach" (walking to it) | "settle" | "seated" | "rise".
 var spot_phase := ""
 var _spot := -1
@@ -238,7 +241,7 @@ func _update_pose() -> void:
 func _maybe_wave(s: NpcBrain.State) -> void:
 	var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
 	var near := pl != null and pl.visible and pl.global_position.distance_to(global_position) < 7.0
-	var friendly := data.role in ["resident", "player_crew"] and not brain.is_reacting()
+	var friendly := data.role in ["resident", "player_crew", "kid"] and not brain.is_reacting()
 	if friendly and _wave_cooldown <= 0.0:
 		if near and not _player_was_near:
 			_wave_at(pl.global_position)
@@ -306,6 +309,11 @@ func _physics_process(delta: float) -> void:
 		step_to.y = 0.0
 		if step_to.length() > 0.05:
 			desired = step_to.normalized() * data.walk_speed * 0.8 * clampf(to_spot.length() / SLOW_RADIUS, 0.45, 1.0)
+	elif play_target != null and not _travelling:
+		var to_play: Vector3 = play_target - global_position
+		to_play.y = 0.0
+		if to_play.length() > 0.35:
+			desired = to_play.normalized() * play_speed * clampf(to_play.length() / 0.8, 0.5, 1.0)
 	elif _travelling:
 		if agent.is_navigation_finished():
 			_on_path_end()
@@ -320,7 +328,7 @@ func _physics_process(delta: float) -> void:
 					desired *= clampf(left / SLOW_RADIUS, 0.45, 1.0)
 	var rate := ACCELERATION if desired.length() > _move_vel.length() else DECELERATION
 	_move_vel = _move_vel.move_toward(desired, rate * delta)
-	if agent.avoidance_enabled:
+	if agent.avoidance_enabled and play_target == null:
 		agent.velocity = _move_vel
 	else:
 		_apply_velocity(_move_vel)
@@ -359,7 +367,8 @@ func _on_path_end() -> void:
 
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
-	if not is_inside and spot_phase in ["", "approach"]:
+	# Kids at play bypass avoidance (a tight group of standing kids makes RVO return zero).
+	if not is_inside and spot_phase in ["", "approach"] and play_target == null:
 		_apply_velocity(safe_velocity)
 
 
@@ -493,6 +502,7 @@ func _run(cmd: Dictionary) -> void:
 		"enter_home":
 			_set_inside(true)
 		"go":
+			play_target = null
 			_speed_mult = float(cmd.get("speed", 1.0))
 			_go(cmd.destination)
 		"follow":

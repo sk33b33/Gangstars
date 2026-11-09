@@ -33,6 +33,7 @@ func _run() -> void:
 	ground.mesh = pm
 	ground.material_override = PixelMaterials.flat(Color("#b9b2a2"))
 	world.add_child(ground)
+	var dogs: Array = []
 	var looks := [
 		[Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"), {"hair_style": "short", "sleeves": "short"}, "wave", 0.0],
 		[Color("#d9534f"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "doek", "hair_color": Color("#2e8b57"), "figure": 1.0, "heavy": 0.5, "skirt": true, "accessories": ["apron", "glasses"], "apron_color": Color("#f4f1ea")}, "sit", 0.0],
@@ -48,6 +49,16 @@ func _run() -> void:
 			for n in NpcData.load_file("res://data/npcs/%s_residents.json" % f):
 				if not n.id.get_slice("_", n.id.get_slice_count("_") - 1).is_valid_int():
 					looks.append([n.shirt_color, n.pants_color, n.skin_color, Color(0, 0, 0, 0), n.appearance(), "idle", 0.0, n.display_name])
+	if args.has("dogs"):
+		var coats := [[Color("#5a3a22"), Color("#d8c4a0")], [Color("#1d1b20"), Color("#e8e2d6")], [Color("#c9a26b"), Color("#f0e2c4")], [Color("#8a7d70"), Color("#d8d0c4")]]
+		for i in coats.size():
+			var d := DogModel.new()
+			world.add_child(d)
+			d.build(coats[i][0], coats[i][1], 1.0 + 0.08 * (i % 2))
+			d.position = Vector3(-1.8 + i * 1.2, 0, 1.2)
+			d.rotation.y = 0.6
+			d.lying = i == 2
+			dogs.append([d, [0.0, 1.0, 0.0, 2.6][i]])
 	var models: Array = []
 	var spacing := 0.85 if looks.size() > 6 else 1.0
 	for i in looks.size():
@@ -80,7 +91,10 @@ func _run() -> void:
 		models.append([m, float(l[6])])
 	var cam := Camera3D.new()
 	world.add_child(cam)
-	if args.has("close"):
+	if args.has("dogs"):
+		cam.position = Vector3(0.2, 1.1, 3.6)
+		cam.look_at(Vector3(-0.3, 0.45, 1.2))
+	elif args.has("close"):
 		cam.position = Vector3(-1.0, 1.55, 1.6)
 		cam.look_at(Vector3(-1.5, 1.45, 0))
 	elif args.has("named"):
@@ -97,6 +111,10 @@ func _run() -> void:
 			if f % 60 == 0 and models.find(pair) == 0:
 				(pair[0] as CharacterModel).wave()
 			(pair[0] as CharacterModel).animate(1.0 / 60.0, pair[1])
+		for dp in dogs:
+			if f == frames - 8 and dp == dogs[0]:
+				(dp[0] as DogModel).bark()
+			(dp[0] as DogModel).animate(1.0 / 60.0, dp[1])
 		await process_frame
 	await RenderingServer.frame_post_draw
 	var img := root.get_texture().get_image()

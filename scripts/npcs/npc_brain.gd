@@ -45,7 +45,7 @@ var raining := false
 ## One-off event entry (braai, load-shedding) taken before the next schedule entry.
 var pending_event: Dictionary = {}
 var _current_event: Dictionary = {}
-const RAIN_SKIPPED := ["socializing", "playing", "relaxing", "braai"]
+const RAIN_SKIPPED := ["socializing", "playing", "relaxing", "braai", "soccer"]
 var reacting_to := ""
 
 var _failures := 0
