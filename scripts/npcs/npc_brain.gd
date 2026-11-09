@@ -266,6 +266,8 @@ func _go_to_next(reason := "") -> Array:
 	if not pending_event.is_empty():
 		var pe := pending_event
 		pending_event = {}
+		if _entry_allowed(pe) and str(pe.destination).begins_with("@leader:"):
+			return _start_entry(pe, "called by the boss")
 		if _entry_allowed(pe):
 			_current_event = pe
 			destination_id = pe.destination

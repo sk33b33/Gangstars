@@ -170,7 +170,7 @@ func recruit(schedule: Array) -> void:
 	data.role = "player_crew"
 	model.set_hat(Color("#a63a4c"))
 	brain.schedule = schedule
-	brain.active_hours = Vector2(8, 24)
+	brain.active_hours = Vector2(8, 2)
 	brain.index = -1
 	interactable.prompt = "Talk to %s (your crew)" % data.display_name
 
@@ -392,6 +392,9 @@ func _update_follow() -> void:
 		_fail("leader unavailable")
 		return
 	var forward: Vector3 = leader.facing_dir() if leader.has_method("facing_dir") else leader.global_basis.z
+	# Crew following the player don't give up while still catching up.
+	if not leader is Resident and leader.global_position.distance_to(global_position) > 20.0:
+		brain.timer = maxf(brain.timer, 20.0)
 	var behind := leader.global_position - forward * FOLLOW_GAP
 	_special_point = behind
 	_set_target(0.0)

@@ -6,6 +6,7 @@ extends Node3D
 signal navigation_ready
 signal vehicle_horn(position: Vector3)
 signal door_opened(position: Vector3)
+signal navigation_rebaked
 
 const HOUSE_SCENE := preload("res://scenes/houses/house_plot.tscn")
 const RESIDENT_SCENE := preload("res://scenes/npcs/resident.tscn")
@@ -32,6 +33,8 @@ var light_pool: LightPool
 var use_lod := true
 var lod_count := 0
 var merge_stats := {}
+var rebake_count := 0
+var _rebaking := false
 var _braai: Node3D
 var residents: Dictionary = {}   # npc id -> Resident
 var is_navigation_ready := false
@@ -182,6 +185,9 @@ func _bake_navigation() -> void:
 	nm.cell_size = 0.25
 	nm.cell_height = 0.25
 	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
+	# Only world geometry (layer 1): moving traffic (AnimatableBody, a static-body type) and
+	# opened gates (layer 0) are never baked in.
+	nm.geometry_collision_mask = 1
 	nav_region.navigation_mesh = nm
 	nav_region.bake_finished.connect(_on_bake_finished, CONNECT_ONE_SHOT)
 	nav_region.bake_navigation_mesh(false)
@@ -229,6 +235,27 @@ func _spawn_vehicles() -> void:
 	add_child(traffic)
 	traffic.setup(self)
 	traffic.extra_obstacles.append_array(vehicles.values())
+
+
+## Re-bakes on a thread after a gate opens/closes, so the districts' walkable areas connect
+## (crew can follow the player across). Residents still keep to their own district because
+## their schedules only point there. Emits navigation_rebaked when the map has the new mesh.
+func rebake_navigation() -> void:
+	if _rebaking:
+		return
+	_rebaking = true
+	await get_tree().physics_frame  # let deferred collision-shape changes apply first
+	await get_tree().physics_frame
+	nav_region.bake_finished.connect(_on_rebake_finished, CONNECT_ONE_SHOT)
+	nav_region.bake_navigation_mesh(true)
+
+
+func _on_rebake_finished() -> void:
+	for i in 3:
+		await get_tree().physics_frame
+	_rebaking = false
+	rebake_count += 1
+	navigation_rebaked.emit()
 
 
 func _region_is_live(map: RID) -> bool:
@@ -300,7 +327,7 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 	if r == null or r.data.role == "player_crew":
 		return
 	r.recruit([
-		{"activity": "follow", "destination": "@leader:player", "duration": 90.0},
+		{"activity": "follow", "destination": "@leader:player", "duration": 180.0},
 		{"activity": "guard", "destination": safehouse_id + ":gate", "duration": 40.0},
 		{"activity": "socializing", "destination": "poi_corner", "duration": 25.0},
 		{"activity": "home", "destination": "home", "duration": 15.0}])
@@ -308,9 +335,12 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 
 ## Opens/closes every gate to a neighbouring district. Only the session calls this, in
 ## response to DistrictManager unlocks (or when restoring a save).
-func set_district_open(district_id: String, open: bool, animate := true) -> void:
+func set_district_open(district_id: String, open: bool, animate := true) -> bool:
+	var changed := false
 	for gate: DistrictGate in gates.get(district_id, []):
+		changed = changed or gate.is_open != open
 		gate.set_open(open, animate)
+	return changed
 
 
 ## Drum braai with smoke at the park while the braai event runs.

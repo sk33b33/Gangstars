@@ -40,6 +40,8 @@ func _run() -> void:
 	_test_phase5_units()
 	print("== phase 6 units (traffic routes, audio, settings, calendar, rain, new objectives)")
 	_test_phase6_units()
+	print("== phase 7 units (Rooiduin data pipeline)")
+	_test_phase7_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -480,6 +482,135 @@ func _test_phase6_units() -> void:
 		mm.on_interaction("npc", npc)
 	_check(mm.is_completed("braai_night"), "visiting and chatting during the braai completes Braai Night")
 	mm.free()
+
+
+func _test_phase7_units() -> void:
+	var rooi := HouseRegistry.load_file("res://data/houses/rooiduin_houses.json")
+	var starter := HouseRegistry.load_file("res://data/houses/starter_houses.json")
+	_check(rooi.errors.is_empty() and rooi.count() == 20, "Rooiduin: 20 valid houses (%d) %s" % [rooi.count(), rooi.errors])
+	_check(Array(rooi.order).all(func(id): return not starter.houses.has(id) and rooi.get_house(id).district_id == "district_east"),
+		"Rooiduin house ids are unique across districts and tagged district_east")
+	var kits := {}
+	for id in rooi.order:
+		kits[rooi.get_house(id).kit] = true
+	_check(kits.has("flats") and kits.has("row_house"), "Rooiduin uses its own building types (flats, row houses)")
+	var npcs := NpcData.load_file("res://data/npcs/rooiduin_residents.json")
+	_check(npcs.size() >= 20, "Rooiduin residents (%d)" % npcs.size())
+	for id in rooi.order:
+		var h := rooi.get_house(id)
+		if h.occupancy == "occupied":
+			_check(not h.occupant_ids.is_empty(), "%s has residents" % id)
+	var bad: PackedStringArray = []
+	for n in npcs:
+		for e in n.schedule:
+			for dest in Array(e.get("route", [])) + [e.destination]:
+				var d := str(dest)
+				if d.is_empty() or d == "home" or d.begins_with("rooi_") or d.begins_with("@leader:npc_rooi_") or d.begins_with("patrol:rooi_"):
+					continue
+				bad.append("%s->%s" % [n.id, d])
+	_check(bad.is_empty(), "Rooiduin schedules stay in Rooiduin %s" % [bad])
+	_check(GameSession._load_all_missions().size() == 13, "13 missions load from the district catalog")
+	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
+	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
+		"calendar events belong to their districts")
+	_check(SaveSystem.read("res://tests/fixtures/save_v1_phase5.json").ok, "the Phase 5 save fixture is readable")
+
+
+func _test_phase7_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var missions := session.missions
+	var prog := session.progression
+	var dm := session.districts
+	district.director.ambient_incidents = false
+	district.weather.enabled = false
+	_check(district.areas.size() == 2 and district.area_by_id("district_east").display_name == "Rooiduin", "two areas are built (Vleirand + Rooiduin)")
+	if district.rebake_count == 0:
+		await district.navigation_rebaked
+	var map := district.nav_region.get_navigation_map()
+	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("starter_h05:gate"))
+	var to := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
+	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	_check(path.size() > 2 and path[path.size() - 1].distance_to(to) < 1.0, "after the unlock the districts' walkable areas connect (rebakes: %d)" % district.rebake_count)
+
+	# Travel on foot from the approach street into Rooiduin.
+	district.director.clock.set_hour(12.0)
+	player.pivot.rotation.y = 0.0
+	player.global_position = Vector3(98, 0.1, 5.2)
+	player.snap_camera()
+	await _press_toward(player, "move_right", 5.0)
+	for i in 20:
+		await physics_frame
+	_check(district.area_at(player.global_position) == "district_east" and session.current_area == "district_east",
+		"walking east enters Rooiduin (x %.1f)" % player.global_position.x)
+	_check(session.hud.banner_text() == "ROOIDUIN", "a district banner greets the player (%s)" % session.hud.banner_text())
+	var rooi_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_east")
+	var rooi_trips := 0
+	for r: Resident in rooi_res:
+		rooi_trips += r.arrivals
+	_check(rooi_res.size() >= 20 and rooi_trips > 30, "Rooiduin is populated and living (%d residents, %d trips so far)" % [rooi_res.size(), rooi_trips])
+
+	# New Turf.
+	var rachel: Resident = district.residents["npc_rooi_rachel"]
+	var solly: Resident = district.residents["npc_rooi_solly"]
+	_talk(player, rachel.interactable)
+	_check(missions.active.has("new_turf"), "Ma Rachel offers New Turf")
+	for poi in ["rooi_field", "rooi_spaza"]:
+		player.global_position = district.destinations.anchor_position(poi) + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		for i in 30:
+			await physics_frame
+	_talk(player, solly.interactable)
+	_check(missions.is_completed("new_turf") and dm.influence("district_east") >= 10, "New Turf completes (+Rooiduin influence %d)" % dm.influence("district_east"))
+
+	# Clean Cut: a cross-district errand.
+	_talk(player, solly.interactable)
+	_check(missions.active.has("clean_cut"), "Uncle Solly offers Clean Cut")
+	player.global_position = district.destinations.anchor_position("poi_shop") + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	for i in 30:
+		await physics_frame
+	_check(missions.current_objective("clean_cut").get("id") == "return", "the blades are collected in Vleirand")
+	_talk(player, solly.interactable)
+	_check(missions.is_completed("clean_cut"), "Clean Cut completes back in Rooiduin")
+
+	# Dune Truce: Boeta walks over from Vleirand to stand on the field.
+	_talk(player, rachel.interactable)
+	_check(missions.active.has("dune_truce"), "Ma Rachel offers Dune Truce")
+	_talk(player, district.residents["npc_rooi_spider"].interactable)
+	_check(missions.current_objective("dune_truce").get("id") == "hold", "Spider has been spoken to")
+	district.director.clock.set_hour(20.0)
+	var field := district.destinations.anchor_position("rooi_field")
+	player.global_position = field + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	var boeta: Resident = district.residents["npc_boeta"]
+	var arrived := false
+	for i in 60 * 360:
+		if missions.is_completed("dune_truce"):
+			break
+		if not arrived and not boeta.is_inside and boeta.global_position.distance_to(player.global_position) < 10.0:
+			arrived = true
+		if _args.has("verbose") and i % 1200 == 0:
+			print("    boeta %s inside=%s pos=%s target=%s path=%s tier=%s last=%s" % [boeta.state_name(), boeta.is_inside,
+				boeta.global_position.snapped(Vector3.ONE * 0.1), boeta.target_id, boeta.path_status, boeta.sim_tier, boeta.brain.last_transition])
+		await physics_frame
+	_check(arrived, "Boeta follows the player from Vleirand to the Rooiduin field")
+	_check(missions.is_completed("dune_truce") and prog.recruited_crew_ids.has("npc_rooi_kaylin"), "Dune Truce completes and Kaylin joins the crew")
+	var crew_req: Array = dm.get_unlock_requirements("district_west").filter(func(r): return r.text.begins_with("Crew"))
+	_check(not crew_req.is_empty() and crew_req[0].met, "Kalkbos' crew requirement is now met (%s)" % [crew_req])
+
+	session.open_turf_map()
+	var panel := session.turf_map.panel_text()
+	_check(panel.contains("Rooiduin (east) — CONTEST") or panel.contains("Rooiduin (east) — CONTROLLED"), "the turf map shows Rooiduin's control state")
+	session.turf_map.close()
+
+	# Save compatibility: a save written before Rooiduin existed still loads.
+	var keep_path := session.save_path
+	session.save_path = "res://tests/fixtures/save_v1_phase5.json"
+	var err := session.load_game()
+	session.save_path = keep_path
+	_check(err == "" and prog.cash == 410 and prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"),
+		"a Phase 5 save loads in Phase 7 (%s)" % err)
+	_check(district.residents.size() >= 53, "both districts stay populated after loading (%d)" % district.residents.size())
 
 
 func _test_phase6_in_game(main: Node, district: District, player: Player) -> void:
@@ -1032,6 +1163,8 @@ func _test_district() -> void:
 	await _test_turf_in_game(main, district, player)
 	print("== phase 6 in game (traffic, driving, weather, events, lighting, settings)")
 	await _test_phase6_in_game(main, district, player)
+	print("== phase 7 in game (Rooiduin: travel, missions, crew, save compatibility)")
+	await _test_phase7_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

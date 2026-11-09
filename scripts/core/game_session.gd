@@ -105,6 +105,7 @@ func _physics_process(delta: float) -> void:
 		missions.tick()
 		_check_reckless(TRACK_INTERVAL)
 		_check_area()
+		_call_crew_if_needed()
 		_refresh()
 
 
@@ -145,15 +146,19 @@ func request_unlock(district_id: String) -> bool:
 
 
 func _on_district_unlocked(district_id: String) -> void:
-	district.set_district_open(district_id, true, true)
+	if district.set_district_open(district_id, true, true):
+		district.rebake_navigation()
 	hud.show_banner("%s UNLOCKED" % districts.display_name(district_id).to_upper())
 	hud.show_message("The boom gates to %s are up. New turf lies beyond." % districts.display_name(district_id))
 
 
 ## Gates always mirror the saved unlock state (used on start and after loading).
 func sync_gates(animate := false) -> void:
+	var changed := false
 	for d in districts.neighbours():
-		district.set_district_open(str(d.id), districts.is_unlocked(str(d.id)), animate)
+		changed = district.set_district_open(str(d.id), districts.is_unlocked(str(d.id)), animate) or changed
+	if changed:
+		district.rebake_navigation()
 
 
 func _on_interacted(target: Interactable, base_message: String) -> void:
@@ -197,6 +202,26 @@ func _setup_audio() -> void:
 	if district.traffic:
 		for car in district.traffic.cars:
 			audio.attach_engine(car)
+
+
+## When the tracked objective needs the crew beside the player (a crew hold), every recruit
+## who isn't already following is called over (a pending follow entry; recruits at home come out).
+func _call_crew_if_needed() -> void:
+	var m := missions.tracked_mission()
+	if m == null:
+		return
+	var o := missions.current_objective(m.id)
+	if str(o.get("type", "")) != "hold" or not bool(o.get("with_crew", false)):
+		return
+	for npc_id in progression.recruited_crew_ids:
+		var r: Resident = district.residents.get(npc_id)
+		if r == null or r.brain.state == NpcBrain.State.FOLLOWING or not r.brain.pending_event.is_empty():
+			continue
+		r.brain.pending_event = {"activity": "follow", "destination": "@leader:player", "duration": 120.0, "event": "crew_call"}
+		if r.brain.state == NpcBrain.State.AT_HOME:
+			r.brain.timer = minf(r.brain.timer, 1.0)
+		elif r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING]:
+			r.brain.timer = 0.0
 
 
 ## Announces district changes as the player crosses into another area.
