@@ -42,7 +42,9 @@
         "influence": {
           "starter": 80
         }
-      }
+      },
+      "data": "res://data/districts/kalkbos.json",
+      "missions": "res://data/missions/kalkbos.json"
     }
   ]
 }

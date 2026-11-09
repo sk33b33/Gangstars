@@ -51,11 +51,12 @@ func setup(p_district_id: String, p_display_name: String, width: float, face: fl
 
 func set_open(open: bool, animate := true) -> void:
 	is_open = open
-	_body.collision_layer = 0 if open else 1
-	_body.process_mode = Node.PROCESS_MODE_DISABLED if open else Node.PROCESS_MODE_INHERIT
-	for c in _body.get_children():
-		if c is CollisionShape3D:
-			c.set_deferred("disabled", open)
+	# An open gate's collider leaves the tree entirely, so neither physics nor a navigation
+	# re-bake can see it (layer filtering alone wasn't reliable for the bake).
+	if open and _body.get_parent() == self:
+		remove_child(_body)
+	elif not open and _body.get_parent() == null:
+		add_child(_body)
 	_sign.visible = not open
 	_label.text = ("%s — OPEN" % display_name.to_upper()) if open else ("%s — LOCKED TURF\nOpen the turf map (M) to see what it takes" % display_name.to_upper())
 	_label.modulate = Color("#9fd8b8") if open else Color("#ffd75e")
@@ -67,6 +68,15 @@ func set_open(open: bool, animate := true) -> void:
 		_tween.tween_property(_boom, "rotation:x", target, 1.6).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	else:
 		_boom.rotation.x = target
+
+
+func _exit_tree() -> void:
+	pass
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and is_instance_valid(_body) and _body.get_parent() == null:
+		_body.free()
 
 
 func blocks_movement() -> bool:

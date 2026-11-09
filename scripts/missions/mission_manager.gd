@@ -62,6 +62,9 @@ func prerequisites_met(m: MissionData) -> bool:
 		return false
 	if progression.recruited_crew_ids.size() < int(pre.get("crew", 0)):
 		return false
+	for d in pre.get("districts", []):
+		if str(d) != "starter" and not progression.unlocked_district_ids.has(str(d)):
+			return false
 	return true
 
 
@@ -79,6 +82,9 @@ func missing_requirements(id: String) -> PackedStringArray:
 	for dep in m.prerequisites.get("missions", []):
 		if not is_completed(str(dep)):
 			out.append("complete \"%s\"" % get_mission(str(dep)).title if get_mission(str(dep)) else str(dep))
+	for d in m.prerequisites.get("districts", []):
+		if str(d) != "starter" and not progression.unlocked_district_ids.has(str(d)):
+			out.append("unlock %s" % str(d))
 	var rep := int(m.prerequisites.get("reputation", 0))
 	if progression.reputation < rep:
 		out.append("reach %d reputation (now %d)" % [rep, progression.reputation])

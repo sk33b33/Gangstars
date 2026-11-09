@@ -42,6 +42,8 @@ func _run() -> void:
 	_test_phase6_units()
 	print("== phase 7 units (Rooiduin data pipeline)")
 	_test_phase7_units()
+	print("== Kalkbos units")
+	_test_kalkbos_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -509,11 +511,124 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Rooiduin schedules stay in Rooiduin %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 13, "13 missions load from the district catalog")
+	_check(GameSession._load_all_missions().size() == 16, "16 missions load from the district catalog")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
 	_check(SaveSystem.read("res://tests/fixtures/save_v1_phase5.json").ok, "the Phase 5 save fixture is readable")
+
+
+func _test_kalkbos_units() -> void:
+	var kalk := HouseRegistry.load_file("res://data/houses/kalkbos_houses.json")
+	var others := HouseRegistry.load_file("res://data/houses/starter_houses.json")
+	var rooi := HouseRegistry.load_file("res://data/houses/rooiduin_houses.json")
+	_check(kalk.errors.is_empty() and kalk.count() == 22, "Kalkbos: 22 valid houses (%d) %s" % [kalk.count(), kalk.errors])
+	_check(Array(kalk.order).all(func(id): return not others.houses.has(id) and not rooi.houses.has(id) and kalk.get_house(id).district_id == "district_west"),
+		"Kalkbos ids are unique across all districts and tagged district_west")
+	var cottages := Array(kalk.order).filter(func(id): return kalk.get_house(id).kit == "cottage").size()
+	var stone := Array(kalk.order).filter(func(id): return kalk.get_house(id).fence == "stone").size()
+	_check(cottages >= 10 and stone >= 10, "Kalkbos identity: limestone cottages (%d) behind stone walls (%d)" % [cottages, stone])
+	var bad: PackedStringArray = []
+	for n in NpcData.load_file("res://data/npcs/kalkbos_residents.json"):
+		for e in n.schedule:
+			for dest in Array(e.get("route", [])) + [e.destination]:
+				var d := str(dest)
+				if not (d.is_empty() or d == "home" or d.begins_with("kalk_") or d.begins_with("@leader:npc_kalk_") or d.begins_with("patrol:kalk_")):
+					bad.append("%s->%s" % [n.id, d])
+	_check(bad.is_empty(), "Kalkbos schedules stay in Kalkbos %s" % [bad])
+	var mm := MissionManager.new()
+	var p := ProgressionState.new()
+	p.completed_mission_ids.append("beyond_the_block")
+	mm.setup(GameSession._load_all_missions(), p, SimClock.new())
+	_check(not mm.is_available("stone_and_salt") and mm.missing_requirements("stone_and_salt").has("unlock district_west"),
+		"Kalkbos missions wait for Kalkbos to be unlocked")
+	p.unlocked_district_ids.append("district_west")
+	_check(mm.is_available("stone_and_salt"), "unlocking Kalkbos opens its first mission")
+	mm.free()
+
+
+func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var missions := session.missions
+	var prog := session.progression
+	var dm := session.districts
+	district.director.ambient_incidents = false
+	district.weather.enabled = false
+	var west_x: float = district.info.bounds[0]
+	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Kalkbos starts locked")
+	# Meet the requirements (the earlier tests reloaded an older save, so top up what's missing).
+	for id in ["beyond_the_block"]:
+		if not prog.completed_mission_ids.has(id):
+			prog.completed_mission_ids.append(id)
+	prog.add_reputation(maxi(0, 100 - prog.reputation))
+	for npc in ["npc_boeta", "npc_rooi_kaylin"]:
+		prog.recruit(npc)
+	prog.add_district_influence("starter", maxi(0, 80 - dm.influence("starter")))
+	_check(dm.can_unlock("district_west"), "Kalkbos' requirements are met: %s" % [dm.get_unlock_requirements("district_west")])
+	session.open_turf_map()
+	session.turf_map.unlock_button("district_west").pressed.emit()
+	session.turf_map.close()
+	_check(district.is_district_open("district_west") and session.hud.banner_text().contains("KALKBOS UNLOCKED"), "Kalkbos unlocks from the turf map")
+	var rebakes := district.rebake_count
+	while district.rebake_count == rebakes:
+		await district.navigation_rebaked
+	var map := district.nav_region.get_navigation_map()
+	var a := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
+	var b := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("kalk_lookout"))
+	var path := NavigationServer3D.map_get_path(map, a, b, true)
+	_check(path.size() > 2 and path[path.size() - 1].distance_to(b) < 1.0, "all three districts connect after the unlock")
+
+	district.director.clock.set_hour(12.0)
+	player.pivot.rotation.y = 0.0
+	player.global_position = Vector3(west_x - 26.0, 0.1, 5.2)
+	player.snap_camera()
+	await _press_toward(player, "move_left", 5.0)
+	for i in 20:
+		await physics_frame
+	_check(session.current_area == "district_west" and session.hud.banner_text() == "KALKBOS", "walking west enters Kalkbos (x %.1f)" % player.global_position.x)
+	var kalk_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_west")
+	_check(kalk_res.size() >= 20, "Kalkbos is populated (%d)" % kalk_res.size())
+
+	var pastor: Resident = district.residents["npc_kalk_pastor"]
+	var gail: Resident = district.residents["npc_kalk_gail"]
+	_talk(player, pastor.interactable)
+	_check(missions.active.has("stone_and_salt"), "Pastor Josephs offers Stone & Salt")
+	for poi in ["kalk_lookout", "kalk_fish"]:
+		player.global_position = district.destinations.anchor_position(poi) + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		for i in 30:
+			await physics_frame
+	_talk(player, gail.interactable)
+	_check(missions.is_completed("stone_and_salt") and dm.influence("district_west") >= 10, "Stone & Salt completes (+Kalkbos influence)")
+
+	_talk(player, gail.interactable)
+	_check(missions.active.has("the_long_haul"), "Auntie Gail offers The Long Haul")
+	_talk(player, district.residents["npc_rooi_solly"].interactable)
+	_talk(player, gail.interactable)
+	_check(missions.is_completed("the_long_haul"), "The Long Haul: Kalkbos -> Rooiduin -> Kalkbos")
+
+	_talk(player, pastor.interactable)
+	_check(missions.active.has("quarry_night"), "Pastor Josephs offers Quarry Night")
+	_talk(player, district.residents["npc_kalk_klip"].interactable)
+	district.director.clock.set_hour(20.0)
+	player.global_position = district.destinations.anchor_position("kalk_lookout") + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	for i in 60 * 400:
+		if missions.is_completed("quarry_night"):
+			break
+		await physics_frame
+	_check(missions.is_completed("quarry_night") and prog.recruited_crew_ids.has("npc_kalk_riyaad"),
+		"Quarry Night completes with the crew beside you; Riyaad joins (crew %d)" % prog.recruited_crew_ids.size())
+
+	var keep := session.save_path
+	session.save_path = "user://test_kalkbos_save.json"
+	_check(session.save_game() == "", "save with three districts")
+	prog.unlocked_district_ids = PackedStringArray(["starter"])
+	session.sync_gates()
+	_check(session.load_game() == "" and district.is_district_open("district_west") and district.is_district_open("district_east"),
+		"loading restores both unlocked districts")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
+	session.save_path = keep
 
 
 func _test_phase7_in_game(main: Node, district: District, player: Player) -> void:
@@ -523,7 +638,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 2 and district.area_by_id("district_east").display_name == "Rooiduin", "two areas are built (Vleirand + Rooiduin)")
+	_check(district.areas.size() == 3 and district.area_by_id("district_east").display_name == "Rooiduin", "three areas are built (Vleirand, Rooiduin, Kalkbos)")
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
 	var map := district.nav_region.get_navigation_map()
@@ -617,7 +732,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 6, "6 AI vehicles drive across both districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 8, "8 AI vehicles drive across the three districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -1165,6 +1280,8 @@ func _test_district() -> void:
 	await _test_phase6_in_game(main, district, player)
 	print("== phase 7 in game (Rooiduin: travel, missions, crew, save compatibility)")
 	await _test_phase7_in_game(main, district, player)
+	print("== Kalkbos in game (unlock, travel, missions, third recruit, saves)")
+	await _test_kalkbos_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

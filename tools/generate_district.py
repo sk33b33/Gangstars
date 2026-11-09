@@ -49,15 +49,22 @@ def houses_from_rows(spec):
 def make_house(spec, h):
     row, hid = h["row"], h["id"]
     rng = rng_for(spec, "house", hid)
-    fence = "palisade" if rng.random() < spec["fences"].get("palisade", 0.5) else "precast"
+    roll, fence = rng.random(), None
+    for kind, weight in spec["fences"].items():  # weighted pick, in spec order
+        roll -= weight
+        if roll < 0:
+            fence = kind
+            break
+    fence = fence or list(spec["fences"])[-1]
     wall = rng.choice(spec["paint"])
-    flats = row["kit"] == "flats"
+    kit = rng.choice(row["kits"]) if "kits" in row else row["kit"]
+    flats = kit == "flats"
     house = {
         "id": hid, "number": h["number"], "street": row["street"], "district_id": spec["district_id"],
         "display_name": ("%s block" if flats else "%s family") % rng.choice(spec["surnames"]),
-        "kit": row["kit"], "position": h["position"], "facing": row["facing"], "plot_size": row["plot_size"],
+        "kit": kit, "position": h["position"], "facing": row["facing"], "plot_size": row["plot_size"],
         "wall_color": wall, "roof": "ibr" if rng.random() < 0.5 else "tiles",
-        "fence": fence, "fence_color": "#56606e" if fence == "palisade" else wall,
+        "fence": fence, "fence_color": {"palisade": "#56606e", "stone": "#efe9dc"}.get(fence, wall),
         "occupancy": "vacant" if hid in spec.get("vacant", []) else "occupied",
         "ownership": "hostile" if hid == spec.get("hostile", {}).get("house") else "neutral",
         "occupant_ids": [],

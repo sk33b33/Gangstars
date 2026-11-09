@@ -38,6 +38,9 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"soccer_field": _build_soccer_field(root, pos)
 			"taxi_rank": _build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
 			"courtyard": _build_courtyard(root, pos)
+			"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
+			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
+			"lookout": _build_lookout(root, pos, _facing_rot(lm))
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
 	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
@@ -392,6 +395,79 @@ static func _build_courtyard(root: Node3D, c: Vector3) -> void:
 	root.add_child(mi)
 	for a in [0.0, PI * 0.5, PI, PI * 1.5]:
 		Geo.bench(root, c + Vector3(cos(a), 0, sin(a)) * 3.5, -a - PI * 0.5)
+
+
+## Kalkbos Hall: limestone church hall with a bell gable, sign and double doors facing +Z.
+static func _build_church_hall(root: Node3D, c: Vector3, rot_y: float) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	var stone := PixelMaterials.surface("limestone_wall", Vector2(2, 2), Color("#f4efe4"))
+	Geo.box(pivot, Vector3(12, 4.2, 9), Vector3(0, 2.1, 0), stone)
+	var roof := MeshInstance3D.new()
+	roof.mesh = Geo.roof_mesh(9.8, 12.8, 2.6, 0.0)
+	roof.rotation.y = PI * 0.5
+	roof.material_override = PixelMaterials.surface("roof_ibr", Vector2(2, 2), Color("#8a8f96"))
+	roof.position = Vector3(0, 4.2, 0)
+	pivot.add_child(roof)
+	# Bell gable over the entrance, with a small bell.
+	Geo.box(pivot, Vector3(2.0, 2.6, 0.5), Vector3(0, 6.1, 4.3), stone, false)
+	Geo.box(pivot, Vector3(0.8, 0.9, 0.52), Vector3(0, 6.4, 4.31), PixelMaterials.flat(Color("#2a2a30")), false)
+	var bell := CylinderMesh.new()
+	bell.top_radius = 0.15
+	bell.bottom_radius = 0.3
+	bell.height = 0.45
+	var b := MeshInstance3D.new()
+	b.mesh = bell
+	b.material_override = PixelMaterials.flat(Color("#c9a42e"))
+	b.position = Vector3(0, 6.35, 4.35)
+	pivot.add_child(b)
+	Geo.quad(pivot, Vector2(4.8, 1.2), Vector3(0, 3.5, 4.53), PixelMaterials.panel("sign_hall"))
+	for dx in [-0.55, 0.55]:
+		Geo.quad(pivot, Vector2(1.0, 2.3), Vector3(dx, 1.15, 4.53), PixelMaterials.flat(Color("#5c3a2c")))
+	for wx in [-4.0, 4.0]:
+		Geo.quad(pivot, Vector2(1.2, 1.8), Vector3(wx, 2.0, 4.53), PixelMaterials.panel("window_bars"))
+	Geo.box(pivot, Vector3(4.0, 0.25, 1.6), Vector3(0, 0.125, 5.3), stone, false)
+
+
+## Old limestone quarry: a stepped, cut cliff face (solid, unreachable), rock piles, a rusting
+## derrick crane, and a danger fence along the front (local +Z side is the street side).
+static func _build_quarry_face(root: Node3D, c: Vector3, size: Vector2) -> void:
+	var rock := PixelMaterials.surface("limestone_wall", Vector2(4, 4), Color("#d9d2c0"))
+	var tiers := [[0.78, 4.0], [0.52, 8.0], [0.28, 12.0]]
+	for t in tiers:
+		var depth: float = size.y * float(t[0])
+		var h: float = t[1]
+		Geo.box(root, Vector3(size.x, h, depth), Vector3(c.x, h * 0.5, c.z - size.y * 0.5 + depth * 0.5), rock)
+	var gravel := PixelMaterials.surface("chalk_ground", Vector2(2, 2), Color("#cfc8b4"))
+	for i in 5:
+		var px := c.x - size.x * 0.35 + i * size.x * 0.17
+		Geo.box(root, Vector3(2.4, 1.2, 2.0), Vector3(px, 0.6, c.z + size.y * 0.5 - 2.2), gravel, true, 0.3 * i)
+	# Derrick crane: mast and jib.
+	var steel := PixelMaterials.flat(Color("#8c4a2f"))
+	var mast := Vector3(c.x + size.x * 0.3, 0, c.z + size.y * 0.5 - 3.2)
+	Geo.box(root, Vector3(0.5, 14.0, 0.5), mast + Vector3(0, 7.0, 0), steel)
+	Geo.box(root, Vector3(12.0, 0.4, 0.4), mast + Vector3(-5.0, 13.2, 0), steel, false, 0.2)
+	Geo.box(root, Vector3(0.06, 6.0, 0.06), mast + Vector3(-9.0, 10.2, 2.0), PixelMaterials.flat(Color("#2a2a30")), false)
+	# Danger fence along the street side with signs.
+	var fence := PixelMaterials.surface("fence_palisade", Vector2(2, 1.5), Color("#56606e"), true)
+	var fz := c.z + size.y * 0.5 + 0.8
+	Geo.box(root, Vector3(size.x + 2.0, 1.5, 0.12), Vector3(c.x, 0.75, fz), fence)
+	for sx in [-size.x * 0.3, size.x * 0.3]:
+		Geo.quad(root, Vector2(1.5, 0.5), Vector3(c.x + sx, 1.2, fz + 0.08), PixelMaterials.panel("sign_quarry"))
+
+
+## Quarry lookout: a bench and a coin telescope facing the cliffs (local -Z).
+static func _build_lookout(root: Node3D, c: Vector3, rot_y: float) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	Geo.bench(pivot, Vector3(-1.6, 0, 0.6), PI)
+	var steel := PixelMaterials.flat(Color("#3d6e8f"))
+	Geo.box(pivot, Vector3(0.15, 1.1, 0.15), Vector3(1.4, 0.55, 0.0), steel)
+	Geo.box(pivot, Vector3(0.22, 0.22, 0.6), Vector3(1.4, 1.2, -0.1), steel, false)
 
 
 static func _build_court(root: Node3D, c: Vector3) -> void:

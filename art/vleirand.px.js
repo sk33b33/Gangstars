@@ -230,3 +230,49 @@ sprite("tag_duin", { w: 48, h: 20 },
       if (!c.is(x + dx, y + dy, "QW")) c.px(x + dx, y + dy, "k")
     for (const x of [12, 25, 35]) c.vline(x, 12, 2, "Q")
   })
+
+// ------------------------------------------------------------------ Kalkbos (limestone quarry)
+pal({ "0": "#e9e4d6", "1": "#d6cfbd", "2": "#bdb5a1", "3": "#a39b88", "4": "#f6f2e8", "5": "#2a2a30", "6": "#3d6e8f" })
+
+// Chalky ground: granular limestone grit (speckle is the material), a few stone chips.
+sprite("chalk_ground", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "0"), noise(0, 0, 32, 32, "123", 0.1, 23),
+  rect(6, 11, 2, 1, "3"), rect(21, 4, 3, 2, "2"), rect(14, 25, 2, 2, "3"))
+
+// Dry-stone limestone wall (2 m tile, tintable): irregular courses, offset joints, mortar lines.
+sprite("limestone_wall", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "4"),
+  (c) => {
+    const rows = [0, 6, 11, 17, 22, 27, 32]
+    for (let r = 0; r < rows.length - 1; r++) {
+      const y = rows[r], h = rows[r + 1] - rows[r]
+      c.hline(0, y, 32, "2")
+      const off = (r * 7) % 11
+      for (let x = off; x < 32; x += 9 + (r % 3) * 2) c.vline(x, y, h, "2")
+      c.hline(1, y + 1, 30, "0")
+    }
+  },
+  dither(0, 29, 32, 3, "4", "1", 0.35))
+
+sprite("sign_hall", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "5"), box(0, 0, 64, 16, "3"),
+  text(32, 3, "KALKBOS HALL", "4", { align: "c" }), text(32, 9, "ALL WELCOME", "S", { align: "c" }))
+
+sprite("sign_fish", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "6"), box(0, 0, 64, 16, "B"),
+  text(34, 3, "VIS EN TJIPS", "W", { align: "c" }), text(32, 9, "FRESH SNOEK", "S", { align: "c" }),
+  rect(3, 6, 6, 3, "C"), px(9, 6, "C"), px(9, 8, "C"), px(4, 7, "5"))
+
+sprite("sign_quarry", { w: 48, h: 16 },
+  rect(0, 0, 48, 16, "S"), box(0, 0, 48, 16, "5"),
+  text(24, 3, "DANGER", "Q", { align: "c" }), text(24, 9, "QUARRY", "5", { align: "c" }))
+
+sprite("tag_klip", { w: 48, h: 20 },
+  text(24, 2, "KLIP", "6", { align: "c", scale: 2, gap: 1 }),
+  text(24, 14, "SPRINGERS", "4", { align: "c" }),
+  (c) => {
+    const keep = []
+    for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (c.is(x, y, "64")) keep.push([x, y])
+    for (const [x, y] of keep) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
+      if (!c.is(x + dx, y + dy, "64")) c.px(x + dx, y + dy, "k")
+  })

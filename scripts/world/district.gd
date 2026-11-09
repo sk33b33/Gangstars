@@ -193,7 +193,7 @@ func _bake_navigation() -> void:
 	nm.geometry_collision_mask = 1
 	nav_region.navigation_mesh = nm
 	nav_region.bake_finished.connect(_on_bake_finished, CONNECT_ONE_SHOT)
-	nav_region.bake_navigation_mesh(false)
+	nav_region.bake_navigation_mesh(true)
 
 
 func _on_bake_finished() -> void:
@@ -254,8 +254,15 @@ func rebake_navigation() -> void:
 
 
 func _on_rebake_finished() -> void:
-	for i in 3:
+	# Map iterations build asynchronously: one already in flight when the new mesh landed may
+	# not include it, so wait for two fresh iterations (bounded) before announcing the change.
+	var map := nav_region.get_navigation_map()
+	var start := NavigationServer3D.map_get_iteration_id(map)
+	var waited := 0
+	while NavigationServer3D.map_get_iteration_id(map) < start + 2 and waited < 300:
 		await get_tree().physics_frame
+		waited += 1
+	await get_tree().physics_frame
 	_rebaking = false
 	rebake_count += 1
 	navigation_rebaked.emit()

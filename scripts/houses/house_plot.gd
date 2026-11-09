@@ -24,6 +24,9 @@ const KITS := {
 		"windows": [[-7.0, 1.0], [-3.5, 1.0], [0.0, 1.0], [3.5, 1.0], [-7.0, 3.8], [-3.5, 3.8], [0.0, 3.8], [3.5, 3.8],
 			[-7.0, 6.6], [-3.5, 6.6], [0.0, 6.6], [3.5, 6.6]],
 		"stair": {"x": 8.0, "w": 2.6}, "balconies": true},
+	# Kalkbos: whitewashed limestone cottage, steep gable, chimney, low dry-stone wall.
+	"cottage": {"w": 7.0, "d": 6.0, "x": -0.5, "storeys": 1, "door_x": -1.2, "roof": "gable", "roof_h": 1.9,
+		"windows": [[-3.0, 1.1], [1.6, 1.1]], "wall_texture": "limestone_wall", "chimney": {"x": 2.7}},
 	"row_house": {"w": 7.4, "d": 7.0, "x": 0.0, "storeys": 1, "door_x": -2.0, "roof": "gable_side", "roof_h": 1.1,
 		"windows": [[1.2, 1.0]]},
 }
@@ -43,7 +46,7 @@ func build(house: HouseData, closing_fence := false) -> void:
 	var front_z := -SETBACK
 	var h: float = STOREY * int(kit.storeys)
 	var center := Vector3(kit.x, h * 0.5, front_z - kit.d * 0.5)
-	var wall := PixelMaterials.surface("wall_plaster", Vector2(2, 2), house.wall_color)
+	var wall := PixelMaterials.surface(str(kit.get("wall_texture", "wall_plaster")), Vector2(2, 2), house.wall_color)
 
 	# Body and splash-back grime band.
 	Geo.box(self, Vector3(kit.w, h, kit.d), center, wall)
@@ -78,6 +81,12 @@ func build(house: HouseData, closing_fence := false) -> void:
 	_build_fences(gaps, closing_fence)
 	if kit.has("stair"):
 		_build_flats_extras(kit, h, front_z)
+	if kit.has("chimney"):
+		var ch: float = float(kit.roof_h) + 0.9
+		Geo.box(self, Vector3(0.7, ch, 0.7), Vector3(float(kit.x) + float(kit.chimney.x), h + ch * 0.5 - 0.3, front_z - float(kit.d) * 0.5),
+			PixelMaterials.surface("limestone_wall", Vector2(2, 2), house.wall_color), false)
+		Geo.box(self, Vector3(0.85, 0.12, 0.85), Vector3(float(kit.x) + float(kit.chimney.x), h + ch - 0.24, front_z - float(kit.d) * 0.5),
+			PixelMaterials.flat(Color("#3d3d42")), false)
 	_build_props(kit, h, front_z)
 
 	door_interactable = Interactable.new()
@@ -268,7 +277,14 @@ func _build_garage(g: Dictionary, front_z: float) -> void:
 		PixelMaterials.surface("paving_brick", Vector2(2, 2)))
 
 
+## Low dry-stone walls (Kalkbos) are shorter but still solid (above the nav obstacle height).
+func _fence_height() -> float:
+	return 1.0 if data.fence == "stone" else FENCE_HEIGHT
+
+
 func _fence_material() -> Material:
+	if data.fence == "stone":
+		return PixelMaterials.surface("limestone_wall", Vector2(2, 1.0), data.fence_color)
 	if data.fence == "palisade":
 		return PixelMaterials.surface("fence_palisade", Vector2(2, FENCE_HEIGHT), data.fence_color, true)
 	return PixelMaterials.surface("fence_precast", Vector2(2, FENCE_HEIGHT), data.fence_color, true)
@@ -305,4 +321,6 @@ func _build_fences(gaps: Array, closing_fence: bool) -> void:
 
 
 func _fence(center: Vector3, length: float, rot_y: float, mat: Material) -> void:
-	Geo.box(self, Vector3(length, FENCE_HEIGHT, FENCE_THICKNESS), center + Vector3(0, FENCE_HEIGHT * 0.5, 0), mat, true, rot_y)
+	var fh := _fence_height()
+	var thick := 0.35 if data.fence == "stone" else FENCE_THICKNESS
+	Geo.box(self, Vector3(length, fh, thick), center + Vector3(0, fh * 0.5, 0), mat, true, rot_y)

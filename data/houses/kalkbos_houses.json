@@ -1,0 +1,773 @@
+{
+  "district_id": "district_west",
+  "houses": [
+    {
+      "id": "kalk_h01",
+      "number": 19,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Willemse family",
+      "kit": "cottage",
+      "position": [
+        -116,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h01_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h02",
+      "number": 17,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Esau family",
+      "kit": "cottage",
+      "position": [
+        -126,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#dfe8ee",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h02_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h03",
+      "number": 15,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "September family",
+      "kit": "cottage",
+      "position": [
+        -136,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#dfe8ee",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_gail"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h04",
+      "number": 13,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Plaatjies family",
+      "kit": "cottage",
+      "position": [
+        -146,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#efe9dc",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h04_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": true,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h05",
+      "number": 11,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Bailey family",
+      "kit": "cottage",
+      "position": [
+        -156,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#e9e4d6",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e9e4d6",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_pastor"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h06",
+      "number": 9,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Kleinsmidt family",
+      "kit": "cottage",
+      "position": [
+        -176,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#efe9dc",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h06_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": true,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h07",
+      "number": 7,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Empty house",
+      "kit": "cottage",
+      "position": [
+        -186,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#f6f2e8",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h08",
+      "number": 5,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Hendricks family",
+      "kit": "cottage",
+      "position": [
+        -196,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#efe9dc",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h08_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h09",
+      "number": 3,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Ontong family",
+      "kit": "cottage",
+      "position": [
+        -206,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h09_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h10",
+      "number": 1,
+      "street": "Duif Street",
+      "district_id": "district_west",
+      "display_name": "Plaatjies family",
+      "kit": "cottage",
+      "position": [
+        -216,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        10,
+        14
+      ],
+      "wall_color": "#f2e6d2",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h10_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h11",
+      "number": 16,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Rossouw family",
+      "kit": "double_semi",
+      "position": [
+        -120,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#f4efe4",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h11_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h12",
+      "number": 14,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Bailey family",
+      "kit": "single_gable",
+      "position": [
+        -132,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_riyaad"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h13",
+      "number": 12,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Domingo family",
+      "kit": "single_gable",
+      "position": [
+        -144,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#f4efe4",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h13_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h14",
+      "number": 10,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Kleinsmidt family",
+      "kit": "cottage",
+      "position": [
+        -156,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#f6f2e8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h14_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h15",
+      "number": 8,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Hendricks family",
+      "kit": "double_semi",
+      "position": [
+        -168,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#e9e4d6",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h15_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h16",
+      "number": 6,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Esau family",
+      "kit": "single_gable",
+      "position": [
+        -180,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#e9e4d6",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h16_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h17",
+      "number": 4,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "September family",
+      "kit": "single_gable",
+      "position": [
+        -192,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#f6f2e8",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h17_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h18",
+      "number": 2,
+      "street": "Mossie Street",
+      "district_id": "district_west",
+      "display_name": "Plaatjies family",
+      "kit": "cottage",
+      "position": [
+        -204,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        12,
+        14
+      ],
+      "wall_color": "#dfe8ee",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "hostile",
+      "occupant_ids": [
+        "npc_kalk_klip",
+        "npc_kalk_spring_2",
+        "npc_kalk_spring_3"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h19",
+      "number": 8,
+      "street": "Klip Street",
+      "district_id": "district_west",
+      "display_name": "Mentoor family",
+      "kit": "row_house",
+      "position": [
+        -161.0,
+        -14
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#f2e6d2",
+      "roof": "tiles",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h19_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h20",
+      "number": 6,
+      "street": "Klip Street",
+      "district_id": "district_west",
+      "display_name": "Empty house",
+      "kit": "row_house",
+      "position": [
+        -161.0,
+        -22
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#f4efe4",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": true,
+        "tree": true,
+        "gate": false
+      }
+    },
+    {
+      "id": "kalk_h21",
+      "number": 4,
+      "street": "Klip Street",
+      "district_id": "district_west",
+      "display_name": "Cloete family",
+      "kit": "row_house",
+      "position": [
+        -161.0,
+        -30
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#dfe8ee",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h21_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "kalk_h22",
+      "number": 2,
+      "street": "Klip Street",
+      "district_id": "district_west",
+      "display_name": "January family",
+      "kit": "row_house",
+      "position": [
+        -161.0,
+        -38
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#dfe8ee",
+      "roof": "ibr",
+      "fence": "stone",
+      "fence_color": "#efe9dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_kalk_h22_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    }
+  ]
+}

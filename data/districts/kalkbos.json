@@ -1,0 +1,320 @@
+{
+  "id": "district_west",
+  "display_name": "Kalkbos",
+  "street_name": "Kalkbos",
+  "bounds": [
+    -228,
+    -78,
+    -108,
+    22
+  ],
+  "houses_file": "res://data/houses/kalkbos_houses.json",
+  "residents_file": "res://data/npcs/kalkbos_residents.json",
+  "ground_texture": "chalk_ground",
+  "ground_tint": "#f4f1ea",
+  "ground_margin": {
+    "east": 0
+  },
+  "open_sides": [
+    "east"
+  ],
+  "backdrop_skip": [
+    "east"
+  ],
+  "streets": [
+    {
+      "id": "duif_k",
+      "name": "Duif Street",
+      "axis": "x",
+      "at": 0,
+      "from": -240,
+      "to": -88,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "mossie_k",
+      "name": "Mossie Street",
+      "axis": "x",
+      "at": -56,
+      "from": -240,
+      "to": -88,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "klip",
+      "name": "Klip Street",
+      "axis": "z",
+      "at": -168,
+      "from": -4,
+      "to": -52,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    },
+    {
+      "id": "steen",
+      "name": "Steen Lane",
+      "axis": "z",
+      "at": -220,
+      "from": -4,
+      "to": -52,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    }
+  ],
+  "landmarks": [
+    {
+      "type": "container_shop",
+      "position": [
+        -120,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_fish",
+      "color": "#3d6e8f"
+    },
+    {
+      "type": "church_hall",
+      "position": [
+        -136,
+        -16
+      ],
+      "facing": "south"
+    },
+    {
+      "type": "quarry_face",
+      "position": [
+        -196,
+        -28
+      ],
+      "size": [
+        34,
+        28
+      ]
+    },
+    {
+      "type": "lookout",
+      "position": [
+        -196,
+        -10
+      ],
+      "facing": "south"
+    },
+    {
+      "type": "courtyard",
+      "position": [
+        -128,
+        -36
+      ]
+    },
+    {
+      "type": "bus_stop",
+      "position": [
+        -196,
+        -48.8
+      ],
+      "facing": "north"
+    }
+  ],
+  "pois": [
+    {
+      "id": "kalk_fish",
+      "name": "Vis en Tjips",
+      "kind": "shop",
+      "position": [
+        -120,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "fish"
+    },
+    {
+      "id": "kalk_hall",
+      "name": "Kalkbos Hall",
+      "kind": "gathering",
+      "position": [
+        -136,
+        -9.5
+      ],
+      "radius": 1.6,
+      "map_label": "hall"
+    },
+    {
+      "id": "kalk_lookout",
+      "name": "the quarry lookout",
+      "kind": "park",
+      "position": [
+        -196,
+        -9.0
+      ],
+      "radius": 2.5,
+      "map_label": "lookout"
+    },
+    {
+      "id": "kalk_bus",
+      "name": "the Kalkbos bus stop",
+      "kind": "transit",
+      "position": [
+        -196,
+        -50.7
+      ],
+      "radius": 1.0,
+      "map_label": "bus"
+    },
+    {
+      "id": "kalk_square",
+      "name": "the village square",
+      "kind": "gathering",
+      "position": [
+        -128,
+        -36
+      ],
+      "radius": 2.5,
+      "map_label": "square"
+    }
+  ],
+  "patrol_routes": {
+    "kalk_loop": [
+      [
+        -150,
+        -5.4
+      ],
+      [
+        -163,
+        -12
+      ],
+      [
+        -163,
+        -46
+      ],
+      [
+        -150,
+        -50.8
+      ],
+      [
+        -118,
+        -50.8
+      ],
+      [
+        -118,
+        -5.4
+      ]
+    ]
+  },
+  "parked_cars": [
+    {
+      "position": [
+        -140,
+        3.4
+      ],
+      "rot": 0,
+      "color": "#bdc3c7"
+    },
+    {
+      "position": [
+        -190,
+        -3.4
+      ],
+      "rot": 180,
+      "color": "#16a085"
+    }
+  ],
+  "decals": [
+    {
+      "texture": "tag_klip",
+      "position": [
+        -198,
+        0.8,
+        -62.94
+      ],
+      "size": [
+        2.2,
+        0.92
+      ],
+      "rot": 0
+    },
+    {
+      "texture": "tag_klip",
+      "position": [
+        -108.12,
+        0.9,
+        -30
+      ],
+      "size": [
+        2.4,
+        1.0
+      ],
+      "rot": -90
+    }
+  ],
+  "traffic": {
+    "lane_offset": 1.3,
+    "corner_radius": 6.0,
+    "taxi_stops": [
+      "kalk_bus"
+    ],
+    "taxi_wait": 5.0,
+    "loops": [
+      {
+        "points": [
+          [
+            -168,
+            -56
+          ],
+          [
+            -220,
+            -56
+          ],
+          [
+            -220,
+            0
+          ],
+          [
+            -168,
+            0
+          ]
+        ],
+        "cars": [
+          {
+            "id": "kalk_taxi_1",
+            "color": "#f1eee8",
+            "start": 0.3,
+            "taxi": true
+          }
+        ]
+      },
+      {
+        "points": [
+          [
+            -168,
+            0
+          ],
+          [
+            -220,
+            0
+          ],
+          [
+            -220,
+            -56
+          ],
+          [
+            -168,
+            -56
+          ]
+        ],
+        "cars": [
+          {
+            "id": "kalk_traffic_1",
+            "color": "#c0392b",
+            "start": 0.7
+          }
+        ]
+      }
+    ]
+  }
+}

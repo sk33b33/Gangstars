@@ -1,0 +1,144 @@
+{
+  "missions": [
+    {
+      "id": "stone_and_salt",
+      "title": "Stone & Salt",
+      "giver": "npc_kalk_pastor",
+      "prerequisites": {
+        "missions": [
+          "beyond_the_block"
+        ],
+        "districts": [
+          "district_west"
+        ]
+      },
+      "intro": "Pastor Josephs: \"Welcome to Kalkbos. Before you go making friends, see our quarry from the lookout, and greet Auntie Gail at the fish shop. She knows everyone.\"",
+      "description": "Get to know Kalkbos.",
+      "objectives": [
+        {
+          "id": "lookout",
+          "type": "visit",
+          "target": "kalk_lookout",
+          "radius": 5,
+          "text": "Look over the old quarry from the lookout"
+        },
+        {
+          "id": "fish",
+          "type": "visit",
+          "target": "kalk_fish",
+          "radius": 3,
+          "text": "Stop at Vis en Tjips"
+        },
+        {
+          "id": "gail",
+          "type": "talk_to",
+          "target": "npc_kalk_gail",
+          "allow_knock": true,
+          "text": "Greet Auntie Gail"
+        }
+      ],
+      "rewards": {
+        "cash": 60,
+        "reputation": 8,
+        "influence": {
+          "district_west": 10
+        },
+        "relationship": {
+          "npc_kalk_pastor": 10
+        }
+      }
+    },
+    {
+      "id": "the_long_haul",
+      "title": "The Long Haul",
+      "giver": "npc_kalk_gail",
+      "prerequisites": {
+        "missions": [
+          "stone_and_salt"
+        ],
+        "districts": [
+          "district_east",
+          "district_west"
+        ]
+      },
+      "intro": "Auntie Gail: \"Uncle Solly in Rooiduin ordered snoek for his birthday braai. It's three districts away and it won't stay fresh. Take a car if you have one!\"",
+      "description": "Deliver fresh fish across all three districts.",
+      "time_limit_minutes": 240,
+      "fail_text": "The snoek turned. Auntie Gail sends a sorry message to Solly.",
+      "objectives": [
+        {
+          "id": "deliver",
+          "type": "talk_to",
+          "target": "npc_rooi_solly",
+          "allow_knock": true,
+          "text": "Deliver the snoek to Uncle Solly (Rooiduin)"
+        },
+        {
+          "id": "back",
+          "type": "talk_to",
+          "target": "npc_kalk_gail",
+          "allow_knock": true,
+          "text": "Tell Auntie Gail it arrived fresh (Kalkbos)"
+        }
+      ],
+      "rewards": {
+        "cash": 180,
+        "reputation": 10,
+        "influence": {
+          "district_west": 10,
+          "district_east": 5
+        },
+        "relationship": {
+          "npc_kalk_gail": 15,
+          "npc_rooi_solly": 10
+        }
+      }
+    },
+    {
+      "id": "quarry_night",
+      "title": "Quarry Night",
+      "giver": "npc_kalk_pastor",
+      "prerequisites": {
+        "missions": [
+          "the_long_haul"
+        ]
+      },
+      "intro": "Pastor Josephs: \"The Klipspringers chase families off the lookout at night. Talk to Klip, then stand there with your crew. Peacefully.\"",
+      "description": "Open the lookout to everyone again.",
+      "objectives": [
+        {
+          "id": "klip",
+          "type": "talk_to",
+          "target": "npc_kalk_klip",
+          "allow_knock": true,
+          "text": "Talk to Klip at the Klipspringers' house (Mossie Street)"
+        },
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "kalk_lookout",
+          "radius": 7,
+          "minutes": 20,
+          "window": [
+            19,
+            2
+          ],
+          "with_crew": true,
+          "text": "Hold the quarry lookout with your crew after dark"
+        }
+      ],
+      "rewards": {
+        "reputation": 15,
+        "crew_influence": 10,
+        "influence": {
+          "district_west": 25
+        },
+        "recruit": "npc_kalk_riyaad",
+        "relationship": {
+          "npc_kalk_pastor": 15,
+          "npc_kalk_riyaad": 20
+        }
+      }
+    }
+  ]
+}

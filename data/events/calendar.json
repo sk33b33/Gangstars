@@ -51,6 +51,23 @@
       "duration": 40,
       "start_text": "",
       "end_text": ""
+    },
+    {
+      "id": "church_bazaar",
+      "name": "Bazaar at Kalkbos Hall",
+      "every_days": 3,
+      "offset": 0,
+      "hours": [
+        10,
+        13
+      ],
+      "district": "district_west",
+      "anchor": "kalk_hall",
+      "activity": "at the bazaar",
+      "join_chance": 0.5,
+      "duration": 35,
+      "start_text": "",
+      "end_text": ""
     }
   ]
 }
