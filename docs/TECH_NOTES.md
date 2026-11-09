@@ -178,6 +178,21 @@ simulation cost is about 1.2 ms per physics frame with 28 residents and 4 cars.
 
 Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain`, `--drive=car_player`, `--pause-menu`.
 
+## Phase 7: adding a district
+
+1. Write a spec like `tools/specs/rooiduin.json` and run `python3 tools/generate_district.py <spec>`.
+2. Write the district file (like `data/districts/rooiduin.json`): bounds, streets, landmarks, pois,
+   patrol_routes, traffic, parked_cars, decals, ground_texture, ground_margin / open_sides /
+   backdrop_skip for sides shared with a neighbour, houses_file, residents_file.
+3. Add `data` and `missions` to its entry in `data/districts/districts.json` (with a `side` and
+   `unlock_requirements` if it starts locked).
+4. Add missions in their own file; give calendar events a `district`.
+5. Run the tests. Reachability is checked per district, and every door must reach every POI of
+   its own district.
+
+Building types available: single_hip, single_gable, double_semi, double_garage, flats, row_house.
+Landmark types: cafe, bus_stop, court, park, corner, container_shop, soccer_field, taxi_rank, courtyard.
+
 ## Known limitations
 
 - Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.

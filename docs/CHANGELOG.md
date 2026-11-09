@@ -4,6 +4,43 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Phase 7: expansion content — Rooiduin (2026-11-09)
+- **Repeatable district pipeline:**
+  - `tools/generate_district.py <spec>` turns a district spec (street rows, building types, plot
+    sizes, palettes, name pools, landmarks/POIs, named characters, rival crew) into house and
+    resident data. It is deterministic, with a per-id seed.
+  - `districts.json` entries carry `data` (district file) and `missions`.
+  - `District` builds every catalog area with the existing StreetBuilder / HousePlot / residents /
+    traffic / patrol / calendar code into one navigation bake.
+  - Gates (solid at bake time) keep areas apart until unlocked.
+- **Rooiduin (east):**
+  - 20 houses: 6 three-storey flats blocks with stair towers, balconies, railings and laundry,
+    plus 14 row houses (2 vacant).
+  - 25 residents, including Ma Rachel, Uncle Solly (barber), Kaylin, and the rival Duin Boys
+    (Spider + 2) with a flats-block HQ and a night patrol.
+  - Landmarks: Duin Spaza and Kings Cuts in shipping containers, a soccer field, a taxi rank and a
+    courtyard. The district has its own red-dune ground, traffic loop with a taxi, and a daily
+    soccer-match event.
+  - New pxl textures: sand_red, container_wall, sign_barber, sign_spaza, sign_taxi, tag_duin.
+  - It's turf like Vleirand: contested/controlled by its own influence; the turf map and HUD
+    show it. Entering shows a district banner.
+- **Missions** (`data/missions/rooiduin.json`): New Turf, Clean Cut (a cross-district errand to
+  Vleirand's café and back), Dune Truce (hold the soccer field after dark with your crew →
+  Kaylin joins, so Kalkbos' 2-crew requirement can be met).
+- **Navigation:**
+  - Unlocking (or loading a save with an unlock) rebakes the nav mesh on a thread, so the
+    player's crew can follow across districts.
+  - Residents keep to their own district.
+  - Roads are carved out of the pedestrian nav mesh except at zebra crossings every 24 m, so
+    people walk on pavements and cross at crossings. This fixed traffic crawling behind people
+    walking in the road.
+- **Crew:** follow without giving up while catching up to the player; when an objective needs
+  the crew beside you, they are called over; recruits are active until 02:00.
+- **Save compatibility:** `tests/fixtures/save_v1_phase5.json` (written before Rooiduin existed)
+  loads and restores the unlock.
+- New screenshot flags: `--cam=x,y,z,tx,ty,tz`; `--hour` now applies after `--load`.
+
+
 ### Phase 6: vehicles, richer interactions and polish (2026-11-09)
 - **Traffic:**
   - 4 AI vehicles, including a minibus taxi that pauses at both bus stops.

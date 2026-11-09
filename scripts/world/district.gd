@@ -134,8 +134,11 @@ func resident_district(r: Resident) -> String:
 
 
 func display_name() -> String:
-	return "%s · %d houses · %d streets" % [info.get("display_name", "?"), registry.count() if registry else 0,
-		info.get("streets", []).size()]
+	var own := 0
+	if registry:
+		for id in registry.order:
+			own += 1 if registry.get_house(id).district_id == info.id else 0
+	return "%s · %d houses · %d streets" % [info.get("display_name", "?"), own, info.get("streets", []).size()]
 
 
 func _build_houses() -> void:

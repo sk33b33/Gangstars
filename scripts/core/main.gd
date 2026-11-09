@@ -8,6 +8,7 @@ extends Node
 ##   --load=user://file.json (start from that save; goes through normal save validation)
 ##   --profile (print rendering/frame stats after the delay and quit)  --no-lod
 ##   --day=N  --weather=clear|cloudy|windy|rain  --drive=<vehicle id>  --pause-menu
+##   --cam=x,y,z,tx,ty,tz (fixed camera at x,y,z looking at tx,ty,tz)
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
@@ -50,14 +51,14 @@ func _ready() -> void:
 	settings.changed.connect(apply_settings)
 	district.events.message.connect(hud.show_message)
 	player.shouted.connect(func(pos: Vector3): district.events.raise("whistle", pos))
-	if _args.has("hour"):
-		district.director.clock.set_hour(float(_args.hour))
 	if not district.is_navigation_ready:
 		await district.navigation_ready
 	session.setup(district, player, hud)
 	apply_settings()
 	hud.show_message("Welcome to Vleirand. You've just moved into 13 Duif Street.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
+	if _args.has("hour"):
+		district.director.clock.set_hour(float(_args.hour))  # after loading, so it wins over the save
 	if _args.has("shot"):
 		_run_screenshot.call_deferred()
 	elif _args.has("profile"):
@@ -117,6 +118,9 @@ func _run_screenshot() -> void:
 		player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
 	if _args.has("pitch"):
 		player.pitch.rotation.x = deg_to_rad(float(_args.pitch))
+	if _args.has("cam"):
+		var c: PackedStringArray = _args.cam.split(",")
+		_add_camera(Vector3(float(c[0]), float(c[1]), float(c[2])), Vector3(float(c[3]), float(c[4]), float(c[5])))
 	match _args.get("view", "player"):
 		"overview":
 			_add_camera(Vector3(0, 105, 52), Vector3(0, 0, -30))
