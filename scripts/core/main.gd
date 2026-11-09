@@ -74,6 +74,8 @@ func apply_settings() -> void:
 	settings.apply_engine()
 	player.mouse_sensitivity = float(settings.get_value("controls/mouse_sensitivity"))
 	player.invert_y = bool(settings.get_value("controls/invert_y"))
+	player.stick_sensitivity = float(settings.get_value("controls/stick_sensitivity"))
+	player.vibration = bool(settings.get_value("controls/vibration"))
 	player.camera.fov = float(settings.get_value("video/fov"))
 	var vp := get_viewport()
 	vp.msaa_3d = int(settings.get_value("video/msaa")) as Viewport.MSAA

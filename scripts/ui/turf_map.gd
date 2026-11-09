@@ -61,6 +61,7 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(420, 600)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true  # D-pad focus scrolls the requirements list
 	row.add_child(scroll)
 	_side = VBoxContainer.new()
 	_side.custom_minimum_size = Vector2(400, 0)
@@ -105,6 +106,7 @@ func refresh() -> void:
 		manager.influence("starter"), manager.progression.district_influence("starter"),
 		manager.friendly_houses() * DistrictManager.FRIENDLY_HOUSE_INFLUENCE, manager.friendly_houses()], 14, Color("#c9c6bf"))
 	_add_legend()
+	var focused := false
 	for d in manager.neighbours():
 		var id := str(d.id)
 		var st := manager.state(id)
@@ -122,12 +124,15 @@ func refresh() -> void:
 			_side.add_child(btn)
 			if st == "unlockable":
 				_focus_later(btn)
+				focused = true
 		else:
 			_add_label("Open: walk through the gate on the %s side." % d.side, 16, Color("#9fd8b8"))
 	var close_btn := Button.new()
-	close_btn.text = "Close (M / Esc)"
+	close_btn.text = "Close (M / Esc · B on a pad)"
 	close_btn.pressed.connect(close)
 	_side.add_child(close_btn)
+	if not focused:
+		_focus_later(close_btn)  # something must hold focus so a pad can move through the list
 	_canvas.queue_redraw()
 
 

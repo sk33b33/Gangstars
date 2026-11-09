@@ -1,6 +1,6 @@
 class_name DrivableCar
 extends CharacterBody3D
-## A car the player can get into (E), drive (WASD, arcade handling) and hoot (Q).
+## A car the player can get into (E / A), drive (WASD or stick + RT/LT, arcade handling) and hoot (Q / Y).
 ## Collides with the world, NPCs and other vehicles; a bump scrubs speed instead of pushing.
 
 signal bumped(car: DrivableCar)
@@ -64,7 +64,8 @@ func _physics_process(delta: float) -> void:
 	var throttle := 0.0
 	var steer := 0.0
 	if driver and driver.input_enabled:
-		throttle = Input.get_axis("move_backward", "move_forward")
+		# W/S or the left stick, plus the triggers (RT accelerate, LT brake/reverse) on a pad.
+		throttle = clampf(Input.get_axis("move_backward", "move_forward") + Input.get_axis("brake", "accelerate"), -1.0, 1.0)
 		steer = Input.get_axis("move_right", "move_left")
 	if throttle > 0.0:
 		speed += (ACCEL if speed >= 0.0 else BRAKE) * throttle * delta

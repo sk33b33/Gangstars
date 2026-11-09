@@ -7,14 +7,15 @@ signal changed
 
 const DEFAULTS := {
 	"audio/master": 0.9, "audio/sfx": 0.9, "audio/ambient": 0.7, "audio/ui": 0.8,
-	"controls/mouse_sensitivity": 0.0025, "controls/invert_y": false,
+	"controls/mouse_sensitivity": 0.0025, "controls/stick_sensitivity": 2.6, "controls/invert_y": false,
+	"controls/vibration": true,
 	"video/fov": 70.0, "video/shadows": true, "video/msaa": 2, "video/fog": true,
 	"video/render_scale": 1.0, "video/fullscreen": false, "video/vsync": true, "video/show_fps": false,
 	"gameplay/weather": true, "gameplay/traffic": true,
 }
 const RANGES := {
 	"audio/master": [0.0, 1.0], "audio/sfx": [0.0, 1.0], "audio/ambient": [0.0, 1.0], "audio/ui": [0.0, 1.0],
-	"controls/mouse_sensitivity": [0.0005, 0.008], "video/fov": [55.0, 95.0], "video/render_scale": [0.5, 1.0],
+	"controls/mouse_sensitivity": [0.0005, 0.008], "controls/stick_sensitivity": [1.0, 6.0], "video/fov": [55.0, 95.0], "video/render_scale": [0.5, 1.0],
 	"video/msaa": [0, 3],
 }
 

@@ -886,6 +886,93 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://settings.cfg"))
 
 
+func _pad_button(button: JoyButton) -> void:
+	for pressed in [true, false]:
+		var e := InputEventJoypadButton.new()
+		e.button_index = button
+		e.pressed = pressed
+		Input.parse_input_event(e)
+		await physics_frame
+		await physics_frame
+
+
+func _pad_axis(axis: JoyAxis, value: float) -> void:
+	var e := InputEventJoypadMotion.new()
+	e.axis = axis
+	e.axis_value = value
+	Input.parse_input_event(e)
+
+
+func _test_gamepad_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var hud := session.hud
+	# Prompts follow the device used last; resting thumbs don't flip them.
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_W
+	key.pressed = true
+	InputHints.note_event(key)
+	var drift := InputEventJoypadMotion.new()
+	drift.axis = JOY_AXIS_LEFT_X
+	drift.axis_value = 0.2
+	InputHints.note_event(drift)
+	_check(not InputHints.gamepad, "stick drift doesn't switch the prompts to the pad")
+	await _pad_button(JOY_BUTTON_LEFT_STICK)
+	var golf: DrivableCar = district.vehicles["car_mossie"]
+	hud.set_prompt(golf.interactable)
+	_check(InputHints.gamepad and hud._prompt.text.begins_with("[A]") and hud._title.text.contains("A interact"),
+		"a pad press switches prompts to pad buttons (%s)" % hud._prompt.text)
+	hud.set_prompt(null)
+	main.settings.set_value("controls/stick_sensitivity", 4.0)
+	main.apply_settings()
+	_check(is_equal_approx(player.stick_sensitivity, 4.0), "stick sensitivity comes from the settings")
+	# Right stick turns the camera.
+	var yaw0: float = player.pivot.rotation.y
+	_pad_axis(JOY_AXIS_RIGHT_X, 1.0)
+	for i in 20:
+		await physics_frame
+	_pad_axis(JOY_AXIS_RIGHT_X, 0.0)
+	_check(absf(angle_difference(yaw0, player.pivot.rotation.y)) > 0.3, "the right stick turns the camera")
+	# Triggers drive.
+	player.global_position = golf.global_position + Vector3(2.5, 0.1, 0)
+	player.snap_camera()
+	await physics_frame
+	_talk(player, golf.interactable)
+	_check(player.is_driving(), "A on a car gets in")
+	_pad_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)
+	var top := 0.0
+	for i in 90:
+		await physics_frame
+		top = maxf(top, golf.speed)
+	_pad_axis(JOY_AXIS_TRIGGER_RIGHT, 0.0)
+	_check(top > 5.0, "RT accelerates (top %.1f m/s)" % top)
+	var fast := golf.speed
+	_pad_axis(JOY_AXIS_TRIGGER_LEFT, 1.0)
+	for i in 30:
+		await physics_frame
+	_pad_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
+	_check(golf.speed < fast - 3.0, "LT brakes (%.1f -> %.1f m/s)" % [fast, golf.speed])
+	player.exit_vehicle()
+	# Menus: View opens the turf map, B closes it; Menu pauses, B resumes.
+	await _pad_button(JOY_BUTTON_BACK)
+	_check(session.turf_map.visible and not player.input_enabled, "View opens the turf map")
+	_check(session.turf_map.get_viewport().gui_get_focus_owner() != null, "the turf map gives a button focus for the pad")
+	await _pad_button(JOY_BUTTON_B)
+	_check(not session.turf_map.visible and player.input_enabled, "B closes the turf map")
+	await _pad_button(JOY_BUTTON_START)
+	_check(main.pause_menu.visible and get_root().get_tree().paused, "Menu pauses")
+	await _pad_button(JOY_BUTTON_B)
+	_check(not main.pause_menu.visible and not get_root().get_tree().paused, "B resumes")
+	# The A press that closes a menu must not also interact in the world.
+	player.input_enabled = false
+	player.input_enabled = true
+	Input.action_press("interact")
+	var blocked := not player._pressed("interact")
+	Input.action_release("interact")
+	_check(blocked, "the button that closes a menu doesn't also interact")
+	InputHints.gamepad = false
+	hud.refresh_hints()
+
+
 func _press_toward(player: Player, action: String, seconds: float) -> void:
 	Input.action_press(action)
 	for i in int(seconds * 60):
@@ -1282,6 +1369,8 @@ func _test_district() -> void:
 	await _test_phase7_in_game(main, district, player)
 	print("== Kalkbos in game (unlock, travel, missions, third recruit, saves)")
 	await _test_kalkbos_in_game(main, district, player)
+	print("== gamepad (prompts, triggers, menus with A/B)")
+	await _test_gamepad_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

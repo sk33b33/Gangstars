@@ -21,6 +21,8 @@ const CAMERA_FOLLOW := 14.0  # higher = tighter; smooths steps and landings
 @export var jump_velocity := 4.2
 @export var mouse_sensitivity := 0.0025
 @export var stick_sensitivity := 2.6
+## Controller rumble on hoots and getting in/out of cars (settings: controls/vibration).
+var vibration := true
 @export var min_pitch := -1.1
 @export var max_pitch := 0.35
 
@@ -32,7 +34,14 @@ const CAMERA_FOLLOW := 14.0  # higher = tighter; smooths steps and landings
 @onready var sensor: Area3D = $InteractionSensor
 
 var current_target: Interactable
-var input_enabled := true
+var input_enabled := true:
+	set(v):
+		if v and not input_enabled:
+			_enabled_frame = Engine.get_physics_frames()
+		input_enabled = v
+## Physics frame input was last re-enabled on: the button that closed a menu (A on a pad is
+## both "accept" and "interact") must not also act in the world on the same press.
+var _enabled_frame := -10
 var vehicle: DrivableCar
 var invert_y := false
 var _saved_layer := 0
@@ -92,6 +101,7 @@ func enter_vehicle(car: DrivableCar) -> void:
 		current_target = null
 		interaction_target_changed.emit(null)
 	pivot.rotation.y = car.rotation.y + PI
+	rumble(0.0, 0.4, 0.2)
 	vehicle_changed.emit(car)
 
 
@@ -112,10 +122,11 @@ func exit_vehicle() -> void:
 func _physics_process(delta: float) -> void:
 	if vehicle:
 		global_position = vehicle.global_position
-		if input_enabled and Input.is_action_just_pressed("interact"):
+		if _pressed("interact"):
 			exit_vehicle()
-		elif input_enabled and Input.is_action_just_pressed("shout"):
+		elif _pressed("shout"):
 			honked.emit(global_position)
+			rumble(0.3, 0.0, 0.25)
 		var look_v := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 		if look_v != Vector2.ZERO:
 			_look(look_v * stick_sensitivity * delta)
@@ -134,7 +145,7 @@ func _physics_process(delta: float) -> void:
 	velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 	if is_on_floor():
 		velocity.y = 0.0
-		if input_enabled and Input.is_action_just_pressed("jump"):
+		if _pressed("jump"):
 			velocity.y = jump_velocity
 	else:
 		velocity.y -= GRAVITY * delta
@@ -145,10 +156,10 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = lerp_angle(model.rotation.y, atan2(velocity.x, velocity.z), clampf(delta * 12.0, 0.0, 1.0))
 	model.animate(delta, flat.length())
 
-	if input_enabled and Input.is_action_just_pressed("shout"):
+	if _pressed("shout"):
 		shouted.emit(global_position)
 	_update_target()
-	if input_enabled and current_target and Input.is_action_just_pressed("interact"):
+	if current_target and _pressed("interact"):
 		var msg := current_target.interact(self)
 		interacted_with.emit(current_target, msg)
 		interacted.emit(msg)
@@ -182,3 +193,14 @@ func _update_target() -> void:
 	if best != current_target:
 		current_target = best
 		interaction_target_changed.emit(best)
+
+
+func _pressed(action: String) -> bool:
+	return input_enabled and Engine.get_physics_frames() > _enabled_frame + 1 and Input.is_action_just_pressed(action)
+
+
+## Short controller rumble, only when a pad is the active device.
+func rumble(weak: float, strong: float, seconds: float) -> void:
+	if vibration and InputHints.gamepad:
+		for pad in Input.get_connected_joypads():
+			Input.start_joy_vibration(pad, weak, strong, seconds)

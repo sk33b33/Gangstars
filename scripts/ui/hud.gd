@@ -4,7 +4,6 @@ extends CanvasLayer
 ## Observes gameplay through signals; owns no gameplay rules.
 
 const MESSAGE_TIME := 5.0
-const HELP := "WASD move · Shift sprint · E interact · Q whistle · M turf map · F3 debug · F5/F6 incidents · F7 +1h · Esc mouse"
 
 var _title: Label
 var _prompt: Label
@@ -21,12 +20,13 @@ var _banner: Label
 var _fps: Label
 var _banner_timer := 0.0
 var _district := ""
+var _prompt_target: Interactable
 var _message_timer := 0.0
 
 
 func _ready() -> void:
 	_title = _label(Vector2(16, 12), 18)
-	_title.text = "CONCRETE KINGS\n" + HELP
+	_title.text = "CONCRETE KINGS\n" + InputHints.help_line()
 	_clock = _label(Vector2(16, 70), 26)
 	_stats = _label(Vector2(16, 104), 22)
 	_tracker = _label(Vector2(16, 140), 20)
@@ -71,7 +71,7 @@ func _ready() -> void:
 
 func set_district_name(text: String) -> void:
 	_district = text
-	_title.text = "%s\n%s" % [text.to_upper(), HELP]
+	_title.text = "%s\n%s" % [text.to_upper(), InputHints.help_line()]
 
 
 func set_clock(clock: SimClock) -> void:
@@ -161,7 +161,19 @@ func _build_menu() -> void:
 
 
 func set_prompt(target: Interactable) -> void:
-	_prompt.text = "[E]  %s" % target.prompt if target else ""
+	_prompt_target = target
+	_prompt.text = "[%s]  %s" % [InputHints.key("interact"), target.prompt] if target else ""
+
+
+## Switches every on-screen button name when the player changes between keyboard and pad.
+func _input(event: InputEvent) -> void:
+	if InputHints.note_event(event):
+		refresh_hints()
+
+
+func refresh_hints() -> void:
+	_title.text = "%s\n%s" % [_district.to_upper() if not _district.is_empty() else "CONCRETE KINGS", InputHints.help_line()]
+	set_prompt(_prompt_target if is_instance_valid(_prompt_target) else null)
 
 
 func show_message(text: String) -> void:

@@ -236,14 +236,14 @@
           "hold_the_corner"
         ]
       },
-      "intro": "Lionel: \"Vleirand knows your name now. Rooiduin is next door. Check the turf map (M) to see what it takes.\"",
+      "intro": "Lionel: \"Vleirand knows your name now. Rooiduin is next door. Check the turf map (M / View) to see what it takes.\"",
       "description": "Open the way to Rooiduin and walk in.",
       "objectives": [
         {
           "id": "unlock",
           "type": "district_unlocked",
           "target": "district_east",
-          "text": "Unlock Rooiduin on the turf map (M)"
+          "text": "Unlock Rooiduin on the turf map (M / View)"
         },
         {
           "id": "enter",

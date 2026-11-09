@@ -45,7 +45,7 @@ func _build() -> void:
 	_heading("PAUSED", 28)
 	var resume := Button.new()
 	resume.name = "Resume"
-	resume.text = "Resume (Esc)"
+	resume.text = "Resume (Esc / Menu)"
 	resume.pressed.connect(close)
 	_rows.add_child(resume)
 	_heading("Audio", 20)
@@ -55,6 +55,8 @@ func _build() -> void:
 	_slider("Interface", "audio/ui", 0.0, 1.0, 0.05)
 	_heading("Controls", 20)
 	_slider("Mouse sensitivity", "controls/mouse_sensitivity", 0.0005, 0.008, 0.0005)
+	_slider("Stick sensitivity", "controls/stick_sensitivity", 1.0, 6.0, 0.2)
+	_check("Controller vibration", "controls/vibration")
 	_check("Invert camera Y", "controls/invert_y")
 	_heading("Video", 20)
 	_slider("Field of view", "video/fov", 55.0, 95.0, 1.0)
@@ -133,6 +135,7 @@ func close() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if visible and event.is_action_pressed("pause"):
+	# B (ui_cancel on a pad) backs out too; Esc is both pause and ui_cancel, so it only counts once.
+	if visible and (event.is_action_pressed("pause") or (event.is_action_pressed("ui_cancel") and event is InputEventJoypadButton)):
 		close()
 		get_viewport().set_input_as_handled()

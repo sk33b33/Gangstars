@@ -58,7 +58,7 @@ func set_open(open: bool, animate := true) -> void:
 	elif not open and _body.get_parent() == null:
 		add_child(_body)
 	_sign.visible = not open
-	_label.text = ("%s — OPEN" % display_name.to_upper()) if open else ("%s — LOCKED TURF\nOpen the turf map (M) to see what it takes" % display_name.to_upper())
+	_label.text = ("%s — OPEN" % display_name.to_upper()) if open else ("%s — LOCKED TURF\nOpen the turf map (M / View) to see what it takes" % display_name.to_upper())
 	_label.modulate = Color("#9fd8b8") if open else Color("#ffd75e")
 	var target := -1.35 if open else 0.0
 	if _tween and _tween.is_valid():

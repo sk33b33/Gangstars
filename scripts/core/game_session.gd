@@ -64,7 +64,7 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 		districts.mission_titles[id] = missions.get_mission(id).title
 	districts.district_unlocked.connect(_on_district_unlocked)
 	districts.became_unlockable.connect(func(id: String):
-		hud.show_message("%s can now be unlocked. Open the turf map (M)." % districts.display_name(id)))
+		hud.show_message("%s can now be unlocked. Open the turf map (%s)." % [districts.display_name(id), InputHints.key("turf_map")]))
 	progression.changed.connect(districts.check_unlockable)
 	turf_map = TurfMap.new()
 	turf_map.name = "TurfMap"
@@ -110,10 +110,11 @@ func _physics_process(delta: float) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if hud.is_menu_open() and event.is_action_pressed("pause"):
+	var pad_back := event is InputEventJoypadButton and event.is_action_pressed("ui_cancel")
+	if hud.is_menu_open() and (event.is_action_pressed("pause") or pad_back):
 		_close_menu()
 		get_viewport().set_input_as_handled()
-	elif turf_map.visible and (event.is_action_pressed("pause") or event.is_action_pressed("turf_map")):
+	elif turf_map.visible and (event.is_action_pressed("pause") or event.is_action_pressed("turf_map") or pad_back):
 		turf_map.close()
 		get_viewport().set_input_as_handled()
 	elif event.is_action_pressed("turf_map") and not hud.is_menu_open():
