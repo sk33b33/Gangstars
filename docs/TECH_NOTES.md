@@ -150,6 +150,34 @@ runs. Set `CK_DEBUG=1` to print every travel failure and jump with its cause.
 - Adding a district: add an entry with a `side` to `districts.json`. Its gates and approach streets
   appear wherever an east-west street crosses that side of the boundary.
 
+## Phase 6 systems
+
+| Piece | File |
+|---|---|
+| AI traffic | `scripts/vehicles/traffic_system.gd`, `traffic_car.gd` (data: `traffic` in starter.json) |
+| Drivable cars | `scripts/vehicles/drivable_car.gd`, `Player.enter_vehicle/exit_vehicle` |
+| Audio | `scripts/audio/audio_bank.gd` (synth), `audio_director.gd`, `default_bus_layout.tres` |
+| Settings / pause | `scripts/core/settings_store.gd`, `scripts/ui/pause_menu.gd`, `main.apply_settings()` |
+| Weather | `scripts/world/weather.gd` (+ `DayNight.overcast`, `NpcBrain.raining`) |
+| Lighting | `DayNight.power_on`, window emission, `scripts/world/light_pool.gd` |
+| Events | `scripts/world/neighbourhood_calendar.gd`, `data/events/calendar.json`, `NpcBrain.pending_event` |
+| Batching / LOD | `scripts/core/mesh_merger.gd`, `scripts/core/lod.gd` |
+
+Physics layers: 1 world, 2 player, 3 NPCs, 4 interactables, 5 drivable vehicles, 6 AI traffic.
+Residents collide with world, player, NPCs and drivable cars, but not AI traffic.
+
+Profiling (Xvfb + llvmpipe, street view, 1280×720):
+
+| | draw calls | objects | nodes |
+|---|---|---|---|
+| no batching / LOD | 1,551 | 1,927 | 3,390 |
+| batching + LOD | 909 | 1,285 | 2,605 |
+
+Frame time under software rendering (~200 ms) is not representative of a GPU. Headless
+simulation cost is about 1.2 ms per physics frame with 28 residents and 4 cars.
+
+Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain`, `--drive=car_player`, `--pause-menu`.
+
 ## Known limitations
 
 - Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.

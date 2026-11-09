@@ -126,7 +126,7 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 
 ## Current milestone
 
-**Phase 6 — Vehicles, richer interactions, and polish** is next. Phases 0–5 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
+**Phase 7 — Expansion content (Rooiduin)** is next. Phases 0–6 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
 
 ## Milestone log
 
@@ -139,5 +139,5 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 | 4 | Done (2026-11-09) | `ProgressionState` (cash/rep/crew/relationships, grant-once keys), `MissionManager` + 5 data-driven intro missions (talk/knock/visit/talk_distinct/reputation objectives, auto/giver start, time-limit fail + retry), recruit Boeta into player crew (follows player, guards safehouse), safehouse menu with 4 upgrades (visible props, daily income), rest, versioned atomic JSON save/load with validation. Tests 396/396 (2 consecutive runs) incl. full 5-mission playthrough, reward-once, fail/retry, save→mutate→load restore, corrupt/unknown-version/missing save fallback. Screenshots `docs/screenshots/{mission_tracker,safehouse_menu}.png` |
 | 4.5 | Done (2026-11-09) | Polish pass: jointed characters + walk cycle, physics interpolation + smooth camera, NPC acceleration, swinging doors, plot dressing, parked cars, power lines, backdrop city + depth fog. Tests 401/401 ×2. Screenshots `docs/screenshots/polish_*.png` |
 | 5 | Done (2026-11-09) | `DistrictManager` (sole unlock authority, data `data/districts/districts.json`), starter influence (rewards + friendly houses) with contested/controlled state, Rooiduin + Kalkbos locked behind boom gates (3 m colliders) with approach streets, turf map (M) with house turf states and ✓/✗ requirement checklists, unlock button → animated gate + banner, Hold the Corner + Beyond the Block missions, unlock persisted and restored on load. Tests 446/446 ×2: gate blocks simulated input, early unlocks refused, full unlock playthrough, walk-through, Kalkbos stays locked, save→relock→load. Screenshots `docs/screenshots/turf_*.png` |
-| 6 | Not started | |
+| 6 | Done (2026-11-09) | Left-hand AI traffic (4 cars incl. minibus taxi with stops), brakes for anything in lane, hoot makes pedestrians step aside; 2 drivable cars (enter/drive/hoot/exit, saved); synthesized audio (11 sounds, 3 buses, ambience by time/weather, engines); Esc pause + persisted settings (audio, controls, video, gameplay); weather spells (rain → residents skip leisure); window glow + light pool; calendar events (braai, load-shedding); 3 missions (Spaza Run, Car Trouble, Braai Night); gestures/head look; static mesh batching + LOD (draw calls 1551 → 909). Tests 518/518 ×4 incl. traffic on-road + braking, driving, events, settings, pause. Screenshots `docs/screenshots/p6_*.png` |
 | 7 | Not started | |

@@ -4,6 +4,48 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Phase 6: vehicles, richer interactions and polish (2026-11-09)
+- **Traffic:**
+  - 4 AI vehicles, including a minibus taxi that pauses at both bus stops.
+  - They drive on the left on two concentric loops (Duif → Tortel → Mossie → Kwikkie) with
+    rounded corners, and brake for anything in their lane box.
+  - Blocked for 3 s, they hoot, and the pedestrian steps aside.
+  - Kinematic, on their own physics layer (residents can't be shoved); a NavigationObstacle3D
+    only while moving.
+  - Spawned after the nav bake.
+- **Driving:**
+  - 2 drivable cars (blue hatchback by the safehouse, yellow Golf on Mossie Street).
+  - E get in/out, W/S throttle and brake, A/D steer, Q hoot; the camera follows.
+  - Speeding past pedestrians makes them scatter.
+  - Car positions are saved.
+- **Audio** (`AudioBank`, all synthesized at runtime, no assets):
+  - horn, door, whistle, car alarm, jingle, click, birds, engine loop, wind, rain, crickets;
+  - buses SFX / Ambient / UI;
+  - ambience follows clock and weather; engine pitch follows speed.
+- **Pause menu (Esc):** volumes, mouse sensitivity, invert Y, FOV, render scale, MSAA, shadows,
+  fog, fullscreen, VSync, FPS counter, weather and traffic toggles. Saved to `user://settings.cfg`.
+- **Weather:** clear / cloudy / windy / rain spells from day 2. Rain shows as particles and an
+  overcast sky with closer fog; residents skip outdoor leisure but still run errands.
+- **Lighting:** windows glow at night; `LightPool` moves 6 real lights to the streetlights
+  nearest the camera.
+- **Calendar** (`data/events/calendar.json`):
+  - street braai (drum grill with smoke, about half the residents go);
+  - load-shedding (lights out 19:00–21:00 on even days, neighbours chat at their gates).
+- **Missions:** Spaza Run (timed multi-delivery), Car Trouble (`enter_vehicle` + `drive_to`
+  objectives), Braai Night (objectives gated on the braai event).
+- **Animation:** chat gestures, folded arms on guard, heads turn to incidents, the group, or the
+  nearby player.
+- **Performance:** `MeshMerger` batches static meshes per 40 m cell and material (1,252 → 266);
+  `Lod` visibility ranges; `--profile` / `--no-lod`. Street-view draw calls 1,551 → 909.
+- **Robustness fixes found by tests:**
+  - parked cars were nudged by passing traffic (now no physics while parked);
+  - the far→mid ghost window ends only when clear of overlaps;
+  - a 90 s "moving but not arriving" trip re-plan;
+  - lanes and parked cars given clearances; Tortel and Kwikkie keep their kerbs clear;
+  - a stopped car can't deadlock a pedestrian;
+  - day 1 is always clear weather.
+
+
 ### Phase 5: turf control and locked expansion (2026-11-09)
 - `data/districts/districts.json`: Vleirand (starter), Rooiduin (east) and Kalkbos (west), each
   with unlock requirements (missions, reputation, crew, Vleirand influence).

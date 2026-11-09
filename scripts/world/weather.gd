@@ -31,7 +31,8 @@ func setup(p_district: District, p_clock: SimClock, p_day_night: DayNight) -> vo
 	clock = p_clock
 	day_night = p_day_night
 	_rng.seed = 4242
-	_next_change = _now() + 180.0
+	# The first day is always clear (a new player's first impression); spells start on day 2.
+	_next_change = (clock.day + 1) * 1440.0 + 360.0
 	_particles = CPUParticles3D.new()
 	_particles.amount = 700
 	_particles.lifetime = 0.9

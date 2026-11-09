@@ -282,11 +282,22 @@ func set_braai(on: bool) -> void:
 		smoke.scale_amount_min = 0.6
 		smoke.scale_amount_max = 1.4
 		var puff := QuadMesh.new()
-		puff.size = Vector2(0.6, 0.6)
+		puff.size = Vector2(0.7, 0.7)
+		var soft := GradientTexture2D.new()
+		soft.fill = GradientTexture2D.FILL_RADIAL
+		soft.fill_from = Vector2(0.5, 0.5)
+		soft.fill_to = Vector2(1.0, 0.5)
+		soft.width = 32
+		soft.height = 32
+		var grad := Gradient.new()
+		grad.set_color(0, Color(1, 1, 1, 1))
+		grad.set_color(1, Color(1, 1, 1, 0))
+		soft.gradient = grad
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.albedo_color = Color(0.85, 0.85, 0.85, 0.35)
+		mat.albedo_texture = soft
+		mat.albedo_color = Color(0.85, 0.85, 0.85, 0.4)
 		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 		puff.material = mat
 		smoke.mesh = puff

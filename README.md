@@ -4,14 +4,15 @@
 > on 4 streets, 28 residents with day/night routines, social groups, reactions to incidents, and a
 > rival crew that patrols at night. Five intro missions, a recruitable crew member, safehouse
 > upgrades, save/load, and a turf map with locked neighbouring districts (Rooiduin, Kalkbos) that
-> open through progression.
+> open through progression. Left-hand traffic and drivable cars, weather, braais and
+> load-shedding, synthesized audio, and a settings menu.
 > Run `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
 > ![Vleirand](docs/screenshots/district_overview.png)
 > ![Duif Street](docs/screenshots/polish_duif.png)
 > ![Tortel Lane at dusk](docs/screenshots/dusk_tortel.png)
-> ![Turf map](docs/screenshots/turf_map_unlocked.png)
+> ![Braai night](docs/screenshots/p6_braai.png)
 
 A production-minded starter kit for building a **3D open-neighbourhood gangster / street-crime game** in **Godot 4.x + GDScript** with Claude Code.
 

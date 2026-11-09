@@ -7,6 +7,7 @@ extends Node
 ##   --safehouse-menu (open the safehouse menu)  --turf-map (open the turf map)
 ##   --load=user://file.json (start from that save; goes through normal save validation)
 ##   --profile (print rendering/frame stats after the delay and quit)  --no-lod
+##   --day=N  --weather=clear|cloudy|windy|rain  --drive=<vehicle id>  --pause-menu
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
@@ -123,6 +124,16 @@ func _run_screenshot() -> void:
 			_add_camera(Vector3(-36, 9, 12), Vector3(-4, 1, 2))
 	if _args.has("debug"):
 		debug_overlay.toggle()
+	if _args.has("day"):
+		district.director.clock.day = int(_args.day)
+	if _args.has("weather"):
+		district.weather.set_kind(_args.weather)
+		district.weather.rain = float(Weather.KINDS[_args.weather][0])
+		district.weather.overcast = float(Weather.KINDS[_args.weather][1])
+	if _args.has("drive") and district.vehicles.has(_args.drive):
+		player.enter_vehicle(district.vehicles[_args.drive])
+	if _args.has("pause-menu"):
+		pause_menu.open()
 	if _args.has("safehouse-menu"):
 		session.open_safehouse_menu()
 	if _args.has("turf-map"):
