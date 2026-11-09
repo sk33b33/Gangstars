@@ -98,7 +98,7 @@ static func _build_streetlights(root: Node3D, s: Dictionary, b: Array) -> void:
 		var l := minf(lo, hi)
 		hi = maxf(lo, hi)
 		lo = l
-	var off: float = s.get("half_width", 4.0) + 0.35  # kerbside, clear of garden gates
+	var off: float = s.get("half_width", 4.0) + 0.6  # just behind the kerb: clear of parked cars and gates
 	var rot := 0.0 if s.axis == "x" else PI * 0.5
 	var t := lo + 6.0
 	var side := 1.0

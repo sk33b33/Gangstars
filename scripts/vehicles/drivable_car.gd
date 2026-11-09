@@ -54,6 +54,13 @@ func is_driven() -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	if driver == null and absf(speed) < 0.05:
+		# Parked: no physics step, so passing traffic can never nudge it out of its bay.
+		speed = 0.0
+		velocity = Vector3.ZERO
+		obstacle.velocity = Vector3.ZERO
+		interactable.set_enabled(true)
+		return
 	var throttle := 0.0
 	var steer := 0.0
 	if driver and driver.input_enabled:

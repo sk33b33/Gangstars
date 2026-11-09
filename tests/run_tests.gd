@@ -38,6 +38,8 @@ func _run() -> void:
 	_test_phase4_units()
 	print("== phase 5 units (districts, hold objective)")
 	_test_phase5_units()
+	print("== phase 6 units (traffic routes, audio, settings, calendar, rain, new objectives)")
+	_test_phase6_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -389,6 +391,249 @@ func _test_phase5_units() -> void:
 	mm.free()
 
 
+func _test_phase6_units() -> void:
+	# Left-hand traffic: driving east along z=0, the lane is on the north (-z) side.
+	var built := TrafficSystem.build_route([Vector3(-50, 0, 0), Vector3(50, 0, 0), Vector3(50, 0, -56), Vector3(-50, 0, -56)], 1.4, 6.0)
+	var route: PackedVector3Array = built.route
+	_check(route.size() == 28 and built.curves.size() == 20, "route has rounded corners (%d points)" % route.size())
+	var east_ok := false
+	for i in route.size() - 1:
+		var a2 := route[i]
+		var b2 := route[i + 1]
+		if not built.curves.has(i) and not built.curves.has(i + 1) and b2.x - a2.x > 50.0:
+			east_ok = absf(a2.z + 1.4) < 0.01 and absf(b2.z + 1.4) < 0.01
+	_check(east_ok, "eastbound lane sits 1.4 m to the left (north) of the centre line")
+
+	for n in AudioBank.names():
+		var s := AudioBank.get_stream(n)
+		_check(s != null and s.data.size() > 400, "sound '%s' is synthesized (%d bytes)" % [n, s.data.size() if s else 0])
+	_check(AudioBank.get_stream("engine").loop_mode == AudioStreamWAV.LOOP_FORWARD and AudioBank.get_stream("engine").loop_end == 11200,
+		"engine loop is seamless (whole number of cycles)")
+	_check(AudioServer.get_bus_index("SFX") >= 0 and AudioServer.get_bus_index("Ambient") >= 0 and AudioServer.get_bus_index("UI") >= 0,
+		"audio buses SFX / Ambient / UI exist")
+
+	var st := SettingsStore.new()
+	st.path = "user://test_settings.cfg"
+	st.set_value("video/fov", 500.0)
+	st.set_value("audio/sfx", 0.3)
+	st.set_value("controls/invert_y", true)
+	st.set_value("nonsense/key", 1)
+	_check(is_equal_approx(float(st.get_value("video/fov")), 95.0), "settings clamp out-of-range values")
+	_check(st.save_settings() == OK, "settings save")
+	var st2 := SettingsStore.new()
+	st2.path = st.path
+	st2.load_settings()
+	_check(is_equal_approx(float(st2.get_value("audio/sfx")), 0.3) and st2.get_value("controls/invert_y") == true, "settings load back")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(st.path))
+
+	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
+	var braai := cal.get_event("braai")
+	var ls := cal.get_event("load_shedding")
+	_check(NeighbourhoodCalendar.runs_at(braai, 1, 18.0) and not NeighbourhoodCalendar.runs_at(braai, 2, 18.0) and not NeighbourhoodCalendar.runs_at(braai, 1, 12.0),
+		"braai runs on odd days 17:00-21:00")
+	_check(NeighbourhoodCalendar.runs_at(ls, 2, 20.0) and not NeighbourhoodCalendar.runs_at(ls, 1, 20.0), "load-shedding runs on even days 19:00-21:00")
+
+	var b := NpcBrain.new([{"activity": "socializing", "destination": "poi_corner", "duration": 5.0},
+		{"activity": "shopping", "destination": "poi_shop", "duration": 5.0},
+		{"activity": "home", "destination": "home", "duration": 5.0}], 0.0)
+	b.clock_hour = 12.0
+	b.raining = true
+	b.update(0.1)
+	var cmds := b.update(2.0)
+	_check(cmds[1].destination == "poi_shop", "in the rain, leisure is skipped but errands still happen")
+	b.raining = false
+	b.on_arrived()
+	b.pending_event = {"activity": "braai", "destination": "poi_park", "duration": 7.0, "event": "braai"}
+	cmds = b.update(6.0)
+	_check(cmds[0].destination == "poi_park" and b.pending_event.is_empty(), "a pending event is taken before the next entry")
+	b.on_arrived()
+	_check(b.activity == "braai" and is_equal_approx(b.timer, 7.0), "the event sets activity and duration")
+
+	var all := MissionData.load_file("res://data/missions/intro.json")
+	var clock := SimClock.new()
+	clock.set_hour(18.0)
+	var prog := ProgressionState.new()
+	for id in ["new_face", "a_favour", "know_the_block", "first_crew"]:
+		prog.completed_mission_ids.append(id)
+	var mm := MissionManager.new()
+	mm.setup(all, prog, clock)
+	var driving := [""]
+	var braai_on := [false]
+	mm.driving_vehicle = func(): return driving[0]
+	mm.event_active = func(id): return id == "braai" and braai_on[0]
+	mm.anchor_position = func(id): return Vector3(10, 0, 4) if id == "starter_h04:gate" else (Vector3(-2, 0, -24) if id == "poi_park" else null)
+	_check(mm.start("car_trouble"), "Car Trouble starts")
+	mm.on_vehicle_entered("car_player")
+	_check(mm.current_objective("car_trouble").id == "get_in", "the wrong car doesn't count")
+	mm.on_vehicle_entered("car_mossie")
+	mm.on_player_position(Vector3(10, 0, 4))
+	_check(mm.active.has("car_trouble"), "arriving on foot doesn't count for drive_to")
+	driving[0] = "car_mossie"
+	mm.on_player_position(Vector3(11, 0, 5))
+	_check(mm.is_completed("car_trouble"), "arriving in the Golf completes Car Trouble")
+	_check(mm.start("braai_night"), "Braai Night starts")
+	mm.on_player_position(Vector3(-2, 0, -24))
+	_check(mm.current_objective("braai_night").id == "join", "the park doesn't count when there is no braai")
+	braai_on[0] = true
+	mm.on_player_position(Vector3(-2, 0, -24))
+	for npc in ["a", "b", "c"]:
+		mm.on_interaction("npc", npc)
+	_check(mm.is_completed("braai_night"), "visiting and chatting during the braai completes Braai Night")
+	mm.free()
+
+
+func _test_phase6_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var traffic := district.traffic
+	district.director.ambient_incidents = false
+	_check(traffic.cars.size() == 4, "4 AI vehicles drive (%d)" % traffic.cars.size())
+	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
+	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
+	player.global_position = Vector3(0, 0.1, -30)
+	player.snap_camera()
+	var last := traffic.cars.map(func(c): return c.global_position)
+	var travelled := traffic.cars.map(func(_c): return 0.0)
+	var off_road := 0
+	var streets: Array = district.info.streets
+	for f in 60 * 25:
+		for i in traffic.cars.size():
+			travelled[i] += traffic.cars[i].global_position.distance_to(last[i])
+			last[i] = traffic.cars[i].global_position
+		if f % 300 == 0 and _args.has("verbose"):
+			for c: TrafficCar in traffic.cars:
+				if c.speed < 1.0:
+					for n in c.candidates:
+						var l: Vector3 = c.to_local(n.global_position)
+						if n != c and l.z > 1.0 and l.z < 9.0 and absf(l.x) < 1.7:
+							print("    %s at %s blocked by %s at %s" % [c.vehicle_id, c.global_position.snapped(Vector3.ONE * 0.1), n.name, n.global_position.snapped(Vector3.ONE * 0.1)])
+		if f % 30 == 0:
+			for c: TrafficCar in traffic.cars:
+				var best := INF
+				for s in streets:
+					var across: float = absf((c.global_position.z if s.axis == "x" else c.global_position.x) - s.at)
+					var along: float = c.global_position.x if s.axis == "x" else c.global_position.z
+					if along >= minf(s.from, s.to) - 1.0 and along <= maxf(s.from, s.to) + 1.0:
+						best = minf(best, across - float(s.half_width))
+				if best > 0.3:
+					off_road += 1
+		await physics_frame
+	_check(travelled.all(func(t): return t > 60.0), "all AI vehicles keep driving (metres in 25 s: %s)" % [travelled.map(func(t): return int(t))])
+	_check(off_road == 0, "AI vehicles stay on the roads (%d off-road samples)" % off_road)
+
+	# A car brakes for the player standing in its lane, without shoving them.
+	var car: TrafficCar = traffic.cars[0]
+	for i in 600:
+		if not car.curve_points.has(car.lane_index()) and car.speed > 6.0:
+			break
+		await physics_frame
+	var stand := car.global_position + car.global_basis.z * 9.0
+	player.global_position = stand + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	for i in 180:
+		await physics_frame
+	_check(car.speed < 0.2, "a car stops for the player in its lane (speed %.1f)" % car.speed)
+	_check(Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length() < 0.3, "the player is not pushed by the car")
+	var gap := car.global_position.distance_to(player.global_position)
+	_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
+
+	# Driving.
+	player.global_position = Vector3(0, 0.1, -30)
+	player.snap_camera()
+	for i in 120:
+		await physics_frame
+	var golf: DrivableCar = district.vehicles["car_mossie"]
+	_talk(player, golf.interactable)
+	_check(player.is_driving() and player.vehicle == golf and not player.model.visible, "E on a car gets the player in")
+	var p0 := golf.global_position
+	var top_speed := 0.0
+	var hits: PackedStringArray = []
+	Input.action_press("move_forward")
+	for i in 150:
+		await physics_frame
+		top_speed = maxf(top_speed, golf.speed)
+		for j in golf.get_slide_collision_count():
+			var col := golf.get_slide_collision(j)
+			if absf(col.get_normal().y) < 0.5:
+				var hit := "%s@%s" % [col.get_collider().name, (col.get_collider() as Node3D).global_position.snapped(Vector3.ONE * 0.1)]
+				if not hits.has(hit):
+					hits.append(hit)
+	Input.action_release("move_forward")
+	var dist := golf.global_position.distance_to(p0)
+	_check(top_speed > 6.0 and dist > 5.0, "W drives the car (%.1f m, top %.1f m/s, bumped into %s)" % [dist, top_speed, hits])
+	_check(player.global_position.distance_to(golf.global_position) < 0.1, "the player rides along with the car")
+	var before := district.events.recent.size()
+	Input.action_press("shout")
+	await physics_frame
+	await physics_frame
+	Input.action_release("shout")
+	_check(district.events.recent.size() > before and district.events.recent[-1].kind == "car_horn", "Q hoots the horn")
+	var saved_pos := golf.global_position
+	_check(session.save_game() == "", "save while driving")
+	player.exit_vehicle()
+	_check(not player.is_driving() and player.model.visible and player.collision_layer != 0, "getting out restores the player")
+	_check(player.global_position.distance_to(golf.global_position) < 4.5, "the player steps out beside the car")
+	golf.global_position = Vector3(-30, 0.05, -52.7)
+	_check(session.load_game() == "" and golf.global_position.distance_to(saved_pos) < 0.3, "loading restores the car's position")
+
+	# Weather.
+	var weather := district.weather
+	weather.set_kind("rain")
+	for i in 60 * 10:
+		await physics_frame
+	_check(weather.is_raining() and district.residents.values().all(func(r): return r.brain.raining), "rain reaches every resident's brain")
+	weather.set_kind("clear")
+	for i in 60 * 12:
+		await physics_frame
+	_check(not weather.is_raining(), "rain clears again")
+
+	# Events: braai (odd days) and load-shedding (even days).
+	var clock := district.director.clock
+	clock.day = 1
+	clock.set_hour(17.2)
+	for i in 120:
+		await physics_frame
+	_check(district.director.calendar.is_active("braai") and district.is_braai_on(), "the braai starts at 17:00 on braai days")
+	var invited := district.residents.values().filter(func(r): return r.brain.pending_event.get("event", "") == "braai" or r.brain.destination_id == "poi_park").size()
+	_check(invited >= 5, "residents head for the braai (%d)" % invited)
+	clock.set_hour(21.5)
+	for i in 120:
+		await physics_frame
+	_check(not district.is_braai_on(), "the braai ends")
+	clock.day = 2
+	clock.set_hour(19.2)
+	for i in 120:
+		await physics_frame
+	_check(not district.day_night.power_on and PixelMaterials.lamp().emission_energy_multiplier < 0.1, "load-shedding cuts the lights")
+	for i in 60:
+		await physics_frame
+	_check(district.light_pool.active_count() == 0, "no streetlight pools during load-shedding")
+	clock.set_hour(21.2)
+	for i in 120:
+		await physics_frame
+	_check(district.day_night.power_on, "the power comes back after load-shedding")
+	for i in 90:
+		await physics_frame
+	_check(district.light_pool.active_count() == LightPool.POOL, "at night the nearest streetlights cast light (%d)" % district.light_pool.active_count())
+	_check(PixelMaterials.panel("window_bars").emission_energy_multiplier > 0.5, "windows glow at night")
+
+	# Settings and pause.
+	main.settings.set_value("video/fov", 82.0)
+	_check(is_equal_approx(player.camera.fov, 82.0), "settings apply immediately (FOV)")
+	main.settings.set_value("audio/sfx", 0.25)
+	_check(absf(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX")) - linear_to_db(0.25)) < 0.1, "volume settings drive the audio buses")
+	main.settings.set_value("gameplay/traffic", false)
+	_check(not traffic.visible and traffic.cars.all(func(c): return c.collision_layer == 0), "traffic can be switched off")
+	main.settings.set_value("gameplay/traffic", true)
+	_check(traffic.visible, "and back on")
+	main.pause_menu.open()
+	_check(paused and main.pause_menu.visible and main.pause_menu.control_for("video/fov") != null, "Esc menu pauses the game and shows settings")
+	main.pause_menu.close()
+	_check(not paused, "resuming unpauses")
+	_check(session.audio.played_count > 0, "sounds have played (%d)" % session.audio.played_count)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://settings.cfg"))
+
+
 func _press_toward(player: Player, action: String, seconds: float) -> void:
 	Input.action_press(action)
 	for i in int(seconds * 60):
@@ -704,6 +949,9 @@ func _test_district() -> void:
 		if f % 60 == 0:
 			_sample_states(district, seen, tiers)
 			for r: Resident in district.residents.values():
+				if r.sim_tier == "near" and r.model.mode == "talk":
+					seen["_talk_pose"] = seen.get("_talk_pose", 0) + 1
+			for r: Resident in district.residents.values():
 				if r.sim_tier != "far" and r.model.walk_amplitude() > 0.5:
 					seen["_walking_gait"] = seen.get("_walking_gait", 0) + 1
 				if district.plots[r.data.home_id].is_door_open():
@@ -770,6 +1018,8 @@ func _test_district() -> void:
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
 	await _test_turf_in_game(main, district, player)
+	print("== phase 6 in game (traffic, driving, weather, events, lighting, settings)")
+	await _test_phase6_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

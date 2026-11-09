@@ -32,6 +32,7 @@ var _stop_timer := 0.0
 var _served_stop := -1
 var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
+var _full_radius := 2.2
 
 
 func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stops: Dictionary,
@@ -58,12 +59,13 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 		Geo.box(look, Vector3(0.6, 0.12, 0.25), Vector3(-0.2, 1.52, 0), PixelMaterials.flat(Color("#f1c40f")), false)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.9, 1.5, length)
+	box.size = Vector3(1.75, 1.5, length)
 	shape.shape = box
 	shape.position = Vector3(0, 0.75, 0)
 	add_child(shape)
 	obstacle = NavigationObstacle3D.new()
-	obstacle.radius = length * 0.55
+	_full_radius = length * 0.55
+	obstacle.radius = _full_radius
 	obstacle.height = 1.6
 	obstacle.avoidance_enabled = true
 	add_child(obstacle)
@@ -105,6 +107,8 @@ func _physics_process(delta: float) -> void:
 		global_position += dir * minf(speed * delta, to.length())
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), clampf(delta * 5.0, 0.0, 1.0))
 		obstacle.velocity = dir * speed
+	# A waiting car shrinks its avoidance footprint so pedestrians can cross in front of it.
+	obstacle.radius = lerpf(1.0, _full_radius, clampf(speed / cruise_speed, 0.0, 1.0))
 
 
 ## Anything inside the lane box ahead (car-local +Z is forward).
