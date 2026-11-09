@@ -4,6 +4,39 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Visual upgrade: Forward+ lighting, rigged characters, Blender props (2026-11-09)
+- **Lighting (desktop):**
+  - The project now runs Godot's Forward+ renderer, with filmic tonemapping, ambient occlusion,
+    bounced light (SSIL), bloom on streetlights and lit windows, and softer, longer shadows
+    (`RenderQuality`).
+  - Web builds keep the Compatibility renderer through the `rendering_method.web` override, and
+    keep the old look.
+  - New setting: "Lighting effects".
+- **Characters:**
+  - Every person is now a skinned, rigged model built from code in headless Blender
+    (`tools/blender/build_character.py` → `person.glb`).
+  - The body is smooth, with clothing material slots for skin, shirt, sleeves, trousers and shoes,
+    so residents keep their data colours.
+  - A face: eyes, pupils, brows, nose, mouth and ears.
+  - Hair pieces (short, long, doek, beanie), a cap and an optional skirt.
+  - "Figure" and "Heavy" body shapes, derived from each resident's id unless the data sets them.
+  - Animations: idle, walk, run, talk and arms-folded guard. An AnimationTree blends walk and run
+    by speed and scales playback so feet don't slide. Talk and guard gestures layer onto the upper
+    body, and the head turns towards whoever the character is looking at.
+  - `CharacterModel` kept its API, so AI, missions and the player needed no changes.
+  - Preview with `tools/godot/lineup.gd`.
+- **Props:**
+  - `tools/blender/build_props.py` → `props.glb`, placed with `PropLibrary`. The set: wheelie
+    bins, two trees with wind-swaying crowns (`foliage_wind.gdshader`), aloes, satellite dishes on
+    a wall bracket, washing lines with laundry, painted tyre planters, JoJo water tanks, plastic
+    chairs on the stoep, gas bottles and crates.
+  - Yards keep their data-driven dressing. The new extras are derived per house id, so no data was
+    regenerated. Park and courtyard trees use the new trees too.
+- **New project skill:** `.claude/skills/blender-assets` (models as code: loop, conventions,
+  adding props).
+- **Render critique:** the objective beacon filled the screen when the player stood next to it. It
+  is now thinner and fades out within 6–28 m.
+
 ### Renamed to Gangstars (2026-11-09)
 - The game is called **Gangstars** everywhere: the window title, HUD, Windows exe
   (`Gangstars.exe`, `Gangstars-windows.zip`), docs and project instructions.

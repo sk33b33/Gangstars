@@ -384,15 +384,8 @@ static func _build_soccer_field(root: Node3D, c: Vector3) -> void:
 ## Small paved courtyard between the flats: benches round a tree.
 static func _build_courtyard(root: Node3D, c: Vector3) -> void:
 	Geo.patch(root, Rect2(c.x - 6, c.z - 6, 12, 12), 0.012, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color("#cfc6b8")))
-	Geo.box(root, Vector3(0.3, 2.4, 0.3), c + Vector3(0, 1.2, 0), PixelMaterials.flat(Color("#6b4630")))
-	var crown := SphereMesh.new()
-	crown.radius = 1.6
-	crown.height = 2.6
-	var mi := MeshInstance3D.new()
-	mi.mesh = crown
-	mi.material_override = PixelMaterials.flat(Color("#4f8a3c"))
-	mi.position = c + Vector3(0, 3.2, 0)
-	root.add_child(mi)
+	Geo.collider(root, Vector3(0.3, 2.4, 0.3), c + Vector3(0, 1.2, 0))
+	PropLibrary.place(root, "tree_b", c, 0.4).scale = Vector3.ONE * 1.5
 	for a in [0.0, PI * 0.5, PI, PI * 1.5]:
 		Geo.bench(root, c + Vector3(cos(a), 0, sin(a)) * 3.5, -a - PI * 0.5)
 
@@ -498,20 +491,11 @@ static func _build_court(root: Node3D, c: Vector3) -> void:
 ## Small park: lawn, a ring of trees and benches around the centre (the POI).
 static func _build_park(root: Node3D, c: Vector3) -> void:
 	Geo.patch(root, Rect2(c.x - 8, c.z - 8, 16, 16), 0.011, PixelMaterials.flat(Color("#7fae55")))
-	var trunk := PixelMaterials.flat(Color("#6b4630"))
-	var leaves := PixelMaterials.flat(Color("#3f7d3a"))
 	for i in 6:
 		var a := TAU * i / 6.0 + 0.3
 		var p := c + Vector3(cos(a), 0, sin(a)) * 6.0
-		Geo.box(root, Vector3(0.3, 2.4, 0.3), p + Vector3(0, 1.2, 0), trunk)
-		var crown := SphereMesh.new()
-		crown.radius = 1.3
-		crown.height = 2.2
-		var mi := MeshInstance3D.new()
-		mi.mesh = crown
-		mi.material_override = leaves
-		mi.position = p + Vector3(0, 3.0, 0)
-		root.add_child(mi)
+		Geo.collider(root, Vector3(0.3, 2.4, 0.3), p + Vector3(0, 1.2, 0))
+		PropLibrary.place(root, "tree_a" if i % 2 else "tree_b", p, a * 1.7).scale = Vector3.ONE * 1.35
 	for a in [0.0, PI]:
 		var p := c + Vector3(cos(a), 0, sin(a)) * 4.0
 		Geo.bench(root, p, -PI * 0.5 if a == 0.0 else PI * 0.5)

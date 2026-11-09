@@ -200,6 +200,19 @@ navigation-map iterations before emitting `navigation_rebaked`: Godot 4.5 syncs 
 asynchronously, and reading the map a fixed few frames after `bake_finished` can still see the
 old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkbos.json`).
 
+## Models and rendering
+
+- **Renderer:** Forward+ on desktop; `rendering_method.web` / `.mobile` stay `gl_compatibility`.
+  - `RenderQuality.apply()` turns on SSAO, SSIL, glow and filmic tonemapping, only under Forward+
+    and when the "video/effects" setting is on.
+  - Screenshots in this container use Mesa's lavapipe Vulkan driver
+    (`apt-get install mesa-vulkan-drivers`): drop `--rendering-driver opengl3` from the `--shot`
+    command.
+- **Models are code:** see `.claude/skills/blender-assets/SKILL.md`.
+  - Blender 4.5 LTS headless: `blender -b --factory-startup --python tools/blender/build_character.py`
+    (or `build_props.py`), then `godot --headless --path . --import`.
+  - Character line-up: `xvfb-run -a godot --path . -s tools/godot/lineup.gd -- --out=res://tests/output/lineup.png [--close]`.
+
 ## Windows build and gamepad
 
 ```bash
@@ -223,5 +236,8 @@ tools/export_windows.sh     # -> build/windows/Gangstars.exe + Gangstars-windows
 - The Windows build has not yet been tried on real Windows hardware or with a physical controller;
   both are verified only through the exported pack and simulated input.
 
-- Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.
+- Characters are one shared stylized body with mitten hands and no facial animation. Five body
+  animations exist (idle, walk, run, talk, guard): no sitting, waving or fighting yet.
+- Forward+ cost on real GPUs hasn't been measured. In this container it renders through a CPU Vulkan
+  driver, so frame rates here say nothing.
 - In software-rendered containers the game runs at about 8 FPS; this is not representative of real GPUs.

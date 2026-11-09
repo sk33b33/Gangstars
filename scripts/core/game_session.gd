@@ -438,13 +438,17 @@ func apply_snapshot(data: Dictionary) -> String:
 
 func _build_beacon() -> void:
 	var mesh := CylinderMesh.new()
-	mesh.top_radius = 0.35
-	mesh.bottom_radius = 0.35
+	mesh.top_radius = 0.28
+	mesh.bottom_radius = 0.28
 	mesh.height = 30.0
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mat.albedo_color = Color(1.0, 0.84, 0.37, 0.35)
+	# Readable from across the neighbourhood, but it fades away up close instead of filling the screen.
+	mat.distance_fade_mode = BaseMaterial3D.DISTANCE_FADE_PIXEL_ALPHA
+	mat.distance_fade_min_distance = 6.0
+	mat.distance_fade_max_distance = 28.0
 	_beacon = MeshInstance3D.new()
 	_beacon.mesh = mesh
 	_beacon.material_override = mat

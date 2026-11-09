@@ -120,41 +120,33 @@ func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
 		"lawn":
 			var lawn_x := side * (half_w - 2.1)
 			Geo.patch(self, Rect2(lawn_x - 1.8, front_z + 0.3, 3.6, -front_z - 0.8), 0.009, PixelMaterials.flat(Color("#7fae55")))
+	var roll := absi(hash(data.id))  # deterministic extras for data that predates them
 	if p.get("bin", false):
 		var bx := side * (half_w - 0.75)
-		var green := PixelMaterials.flat(Color("#2f6e3a"))
-		Geo.box(self, Vector3(0.6, 1.0, 0.7), Vector3(bx, 0.5, -0.9), green)
-		Geo.box(self, Vector3(0.64, 0.06, 0.76), Vector3(bx, 1.03, -0.9), PixelMaterials.flat(Color("#245a2e")), false)
+		PropLibrary.place(self, "wheelie_bin", Vector3(bx, 0, -0.9), PI, Color("#2f6e3a") if roll % 4 else Color("#2a2d34"))
+		Geo.collider(self, Vector3(0.6, 1.0, 0.75), Vector3(bx, 0.5, -0.9))
+	var tx := side * (half_w - 2.2)
 	if p.get("tree", false):
-		var tx := side * (half_w - 2.2)
-		Geo.box(self, Vector3(0.22, 2.0, 0.22), Vector3(tx, 1.0, -2.3), PixelMaterials.flat(Color("#6b4630")))
-		var crown := SphereMesh.new()
-		crown.radius = 1.0
-		crown.height = 1.7
-		crown.radial_segments = 10
-		crown.rings = 5
-		var mi := MeshInstance3D.new()
-		mi.mesh = crown
-		mi.material_override = PixelMaterials.flat(Color("#4f8a3c"))
-		mi.position = Vector3(tx, 2.6, -2.3)
-		add_child(mi)
+		PropLibrary.place(self, "tree_b" if roll % 2 else "tree_a", Vector3(tx, 0, -2.3), float(roll % 628) / 100.0)
+		Geo.collider(self, Vector3(0.24, 2.0, 0.24), Vector3(tx, 1.0, -2.3))
+	elif roll / 3 % 5 < 3:
+		PropLibrary.place(self, "aloe", Vector3(tx, 0, -2.3), float(roll % 300) / 100.0)
+	if str(p.get("yard", "sand")) != "paved" and roll / 7 % 20 < 9:
+		var tyre_paint: Color = [Color("#f4f1ea"), Color("#e2585e"), Color("#3d6e8f"), Color("#f1c40f")][roll / 13 % 4]
+		PropLibrary.place(self, "tyre_planters", Vector3(side * (half_w - 2.1), 0, -0.45), 0.0, tyre_paint)
+	var stoep_z := front_z + 0.55
+	if roll / 17 % 2 == 0:
+		PropLibrary.place(self, "plastic_chair", Vector3(float(kit.door_x) + 1.15 * side, 0, stoep_z), PI + 0.3 * side)
+	if roll / 19 % 20 < 7:
+		PropLibrary.place(self, "gas_bottle", Vector3(float(kit.door_x) + 1.7 * side, 0, front_z + 0.3))
 	if p.get("gate", false):
 		# Steel gate leaf standing open inside the yard, beside the garden path.
 		var gx: float = kit.door_x + GATE_WIDTH * 0.5
 		Geo.quad(self, Vector2(1.2, 1.3), Vector3(gx + 0.05, 0.7, -0.62), PixelMaterials.surface("fence_palisade", Vector2(2, 1.5), Color("#56606e"), true), PI * 0.5)
 	if p.get("dish", false):
-		var dish := CylinderMesh.new()
-		dish.top_radius = 0.38
-		dish.bottom_radius = 0.06
-		dish.height = 0.14
-		dish.radial_segments = 12
-		var d := MeshInstance3D.new()
-		d.mesh = dish
-		d.material_override = PixelMaterials.flat(Color("#dcd8d0"))
-		d.position = Vector3(float(kit.x) - side * (float(kit.w) * 0.5 - 0.7), h + 0.55, front_z - 0.6)
-		d.rotation = Vector3(-0.9, 0.0, 0.25 * side)
-		add_child(d)
-		Geo.box(self, Vector3(0.05, 0.5, 0.05), d.position - Vector3(0, 0.3, -0.1), PixelMaterials.flat(Color("#7d828c")), false)
+		# On the front wall under the eaves, at the corner away from the door, aimed at the sky.
+		var dx: float = float(kit.x) - side * (float(kit.w) * 0.5 - 0.6)
+		PropLibrary.place(self, "satellite_dish", Vector3(dx, h - 0.45, front_z + 0.02), 0.35 * side)
 	var back_space := back_z + depth  # metres between house back and rear fence
 	if p.get("wendy", false) and back_space > 2.6:
 		var wz := -depth + 1.3
@@ -164,14 +156,12 @@ func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
 		Geo.box(self, Vector3(3.3, 0.08, 2.6), Vector3(wx, 2.35, wz), PixelMaterials.surface("roof_ibr", Vector2(2, 2)), false)
 		Geo.quad(self, Vector2(0.8, 1.8), Vector3(wx - side * 0.6, 0.9, wz + 1.16), PixelMaterials.flat(Color("#6b4630")))
 	elif p.get("washing", false) and back_space > 1.6:
-		var wz2 := -depth + back_space * 0.5
-		var pole := PixelMaterials.flat(Color("#7d828c"))
-		for x in [-2.6, 2.6]:
-			Geo.box(self, Vector3(0.07, 1.9, 0.07), Vector3(float(kit.x) + x, 0.95, wz2), pole, false)
-		Geo.box(self, Vector3(5.2, 0.02, 0.02), Vector3(float(kit.x), 1.85, wz2), pole, false)
-		var cloth := PixelMaterials.panel("washing", Color.WHITE, true)
-		Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) - 1.3, 1.35, wz2), cloth)
-		Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) + 1.2, 1.35, wz2), cloth, PI)
+		PropLibrary.place(self, "washing_line", Vector3(float(kit.x), 0, -depth + back_space * 0.5))
+	# A JoJo tank in the back corner away from the wendy house / washing line.
+	if back_space > 2.2 and roll / 23 % 10 < 3:
+		var tank := Vector3(-side * (half_w - 1.0), 0, back_z - 1.0)
+		PropLibrary.place(self, "jojo_tank", tank, 0.0, Color("#2f5d3a") if roll % 3 else Color("#24323f"))
+		Geo.collider(self, Vector3(1.5, 2.0, 1.5), tank + Vector3(0, 1.0, 0))
 
 
 ## Swings the front door open and closed again (someone entering, leaving or answering).

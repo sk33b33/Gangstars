@@ -147,4 +147,6 @@ Then expand the same system to all 30 houses and increase NPC count.
   (`.claude/skills/pxl/SKILL.md`). Never hand-edit PNGs in `assets/textures/pxl/`.
 - Art direction lives in `docs/ART_BRIEF.md` (written with the `design-brief-from-conversation` skill).
   Use `render-critique-before-client` on screenshots before calling a visual milestone done.
+- 3D models are code too: Blender scripts in `tools/blender/` build the characters and props (.glb).
+  Use the `blender-assets` skill (`.claude/skills/blender-assets/SKILL.md`); never hand-edit a .glb.
 - Every change must keep `tests/run_tests.gd` green.

@@ -12,6 +12,8 @@
 > `tools/export_windows.sh` → `build/windows/Gangstars.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
+> ![Street by day](docs/screenshots/v2_street_day.png)
+> ![Characters](docs/screenshots/v2_characters.png)
 > ![Vleirand](docs/screenshots/district_overview.png)
 > ![Duif Street](docs/screenshots/polish_duif.png)
 > ![Tortel Lane at dusk](docs/screenshots/dusk_tortel.png)

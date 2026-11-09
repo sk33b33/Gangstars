@@ -1243,6 +1243,13 @@ func _test_district() -> void:
 	for hp: HousePlot in district.plots.values():
 		dressed += 1 if not hp.data.props.is_empty() else 0
 	_check(dressed == district.plots.size(), "every house has plot dressing data (%d)" % dressed)
+	var prop_kinds := {}
+	for hp: HousePlot in district.plots.values():
+		for c in hp.get_children():
+			if c is MeshInstance3D and PropLibrary.mesh(str(c.name)) != null:
+				prop_kinds[str(c.name)] = int(prop_kinds.get(str(c.name), 0)) + 1
+	_check(prop_kinds.size() >= 8 and int(prop_kinds.get("wheelie_bin", 0)) >= 10,
+		"yards are dressed with Blender-built props (%s)" % [prop_kinds])
 	var doors_used := [0]
 	for r: Resident in district.residents.values():
 		r.door_used.connect(func(_h): doors_used[0] += 1)
