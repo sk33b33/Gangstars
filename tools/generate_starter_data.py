@@ -83,6 +83,34 @@ CREW_SCHEDULES = {
 PATROL_ROUTES = {"tortel_loop": 6}
 CREW_LINES = ["This is Tortel Lane. You lost?", "Move along, my bru.", "We're watching you, new face."]
 
+HAIR_STYLES = ["short"] * 4 + ["long"] * 2 + ["doek"] * 2 + ["beanie", "bald"]
+HAIR_COLORS = ["#1d1b24", "#2b1d16", "#3a2a1e", "#1d1b24", "#5a4636", "#9a9a9a"]
+DOEK_COLORS = ["#c0392b", "#8e44ad", "#16a085", "#f1d36b", "#2e86c1", "#e67e22"]
+BEANIE_COLORS = ["#2c3e50", "#c0392b", "#27ae60", "#f4d03f"]
+KEEP_LOOKS = {  # hand-picked looks for the original five
+    "npc_faiza": {"hair_style": "doek", "hair_color": "#8e44ad", "height": 0.94, "sleeves": "long"},
+    "npc_boeta": {"hair_style": "short", "hair_color": "#1d1b24", "height": 1.04, "sleeves": "short"},
+    "npc_shireen": {"hair_style": "long", "hair_color": "#2b1d16", "height": 0.96, "sleeves": "short"},
+    "npc_lionel": {"hair_style": "beanie", "hair_color": "#2c3e50", "height": 1.06, "sleeves": "long"},
+    "npc_tasneem": {"hair_style": "doek", "hair_color": "#16a085", "height": 0.97, "sleeves": "long"},
+}
+
+
+def make_look(rng, hostile=False):
+    style = "beanie" if hostile else rng.choice(HAIR_STYLES)
+    color = {"doek": rng.choice(DOEK_COLORS), "beanie": rng.choice(BEANIE_COLORS)}.get(style, rng.choice(HAIR_COLORS))
+    return {"hair_style": style, "hair_color": "#1d1b24" if hostile else color,
+            "height": round(rng.uniform(0.9, 1.08), 2), "sleeves": rng.choice(["long", "short"])}
+
+
+def make_props(rng, hid):
+    """Deterministic plot dressing: yard surface, bin, dish, washing line or wendy house, tree."""
+    wendy = rng.random() < 0.3
+    return {"yard": rng.choice(["sand", "sand", "paved", "lawn"]), "bin": rng.random() < 0.75,
+            "dish": rng.random() < 0.4, "washing": (not wendy) and rng.random() < 0.6,
+            "wendy": wendy, "tree": rng.random() < 0.3, "gate": rng.random() < 0.7}
+
+
 KEEP_HOUSES = {
     "starter_h01": {"display_name": "Daniels family", "kit": "single_hip", "wall_color": "#e8967a", "roof": "tiles",
                     "fence": "precast", "fence_color": "#efb59c", "occupant_ids": ["npc_faiza", "npc_boeta"]},
@@ -152,6 +180,9 @@ def make_houses():
         if hid in VACANT:
             h["display_name"] = "Empty house"
         h["occupant_ids"] = []
+        h["props"] = make_props(random.Random("vleirand-props-" + hid), hid)
+        if hid == SAFEHOUSE:
+            h["props"].update({"wendy": False, "washing": False, "dish": False, "tree": False, "yard": "sand"})
         h.update(KEEP_HOUSES.get(hid, {}))
         out.append(h)
     return out
@@ -173,6 +204,7 @@ def patch_kept(r):
     """Phase 3 fields for the hand-authored residents (kept otherwise unchanged)."""
     r = dict(r)
     r["personality"] = KEEP_PERSONALITY.get(r["id"], "steady")
+    r.update(KEEP_LOOKS.get(r["id"], {}))
     r.setdefault("active_hours", [6, 22])
     for e in r["schedule"]:
         if e["destination"] != "home":
@@ -219,6 +251,7 @@ def make_residents(houses, kept):
                 "schedule": schedule,
                 "lines": rng.sample(CREW_LINES if hostile else LINES, 2),
             }
+            r.update(make_look(random.Random("vleirand-look-" + rid), hostile))
             if hostile:
                 r["faction_id"] = "tortel_crew"
             assert r["id"] not in kept_ids

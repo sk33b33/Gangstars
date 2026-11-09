@@ -58,3 +58,12 @@ Density: **16 px per metre**. Wall and ground textures tile; facade parts are qu
 1. Should characters stay low-poly capsules, or become billboard pixel sprites (pxl can animate them)? [to confirm]
 2. Is mild wear such as peeling paint and rust welcome on most houses, or only a few? [to confirm]
 3. Should the first expansion district get a different look, for example flats (courts) instead of houses? [to confirm]
+
+## Update — polish pass
+
+- Characters: jointed low-poly figures. Hair styles come from the community the photos show:
+  doeks (headscarves) for aunties, beanies for the crew, short and long hair. Height and sleeve
+  length vary per person. The player crew wears the player's red cap.
+- Yard life: wheelie bins, washing lines, wendy houses, satellite dishes (photo 3), open steel gate
+  leaves (photo 2), paved driveways (photo 1).
+- Street life: parked hatchbacks, overhead power lines, posters, and a fictional crew tag on Tortel Lane.

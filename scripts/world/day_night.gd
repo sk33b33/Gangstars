@@ -58,4 +58,5 @@ func apply() -> void:
 		sky.sky_horizon_color = horizon
 		sky.ground_horizon_color = horizon
 		sky.ground_bottom_color = horizon.darkened(0.3)
+		environment.fog_light_color = horizon
 	PixelMaterials.lamp().emission_energy_multiplier = lerpf(0.3, 4.0, night)

@@ -4,6 +4,35 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Polish pass over Phases 0–4: characters, motion, infrastructure (2026-11-09)
+- **Characters:**
+  - New jointed rig: legs with shoes, arms with hands, neck, head, eyes.
+  - Hair styles: short, long, doek, beanie, bald, with per-person colour, height and sleeves.
+  - Generated deterministically for every resident; the original five got hand-picked looks.
+  - Meshes are shared between characters.
+- **Walk cycle:** stride-matched leg and arm swing (no foot sliding), hip bob, torso twist,
+  and idle breathing. Gait blends in and out smoothly.
+- **Smooth motion:**
+  - Godot physics interpolation is on.
+  - The camera rig is top-level and follows the interpolated player position (with vertical smoothing).
+  - Residents accelerate, decelerate and ease into arrivals.
+  - Far-tier residents move every frame instead of in 0.25 s steps (animation at 10 Hz).
+  - Leaving the collision-free far tier gives a 1.5 s NPC-ghost window, so overlaps separate
+    instead of popping (this fixed two teleport flags).
+- **Doors:** hinged front doors with a dark doorway swing open when a resident leaves or enters,
+  or when someone answers your knock.
+- **Plot dressing** (data-driven `props` per house, deterministic): paved or lawn front yards,
+  wheelie bins, open gate leaves, satellite dishes, washing lines, backyard wendy houses,
+  front-yard trees. Solid props only go where no path runs.
+- **Streets:** 9 parked cars, power lines sagging between same-side poles, crew graffiti on
+  Tortel Lane, café posters, backdrop houses beyond the boundary (the street continues past the
+  barrier), and depth fog from 80 m that follows the sky colour through the day.
+- **New pxl textures:** washing, wendy_wall, tag_tortel, poster_cafe.
+- **Tests:** physics interpolation on, jointed rig present, gait animates while walking, doors
+  swing, every house dressed. 401/401 in 2 consecutive runs; frame cost 0.93 ms (was 0.70; the
+  rig and per-frame far movement cost about 0.2 ms for 28 NPCs).
+
+
 ### Phase 4: player progression and missions (2026-11-09)
 - `ProgressionState`: cash, reputation, crew influence, relationships (first meeting +1 rep,
   daily talk +2 relationship), completed/failed missions, recruits, safehouse upgrades and

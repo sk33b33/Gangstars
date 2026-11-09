@@ -21,7 +21,16 @@
       "occupant_ids": [
         "npc_faiza",
         "npc_boeta"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h02",
@@ -42,7 +51,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_shireen"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h03",
@@ -63,7 +81,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_lionel"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h04",
@@ -84,7 +111,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_tasneem"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h05",
@@ -103,7 +139,16 @@
       "fence_color": "#d9e4ea",
       "occupancy": "vacant",
       "ownership": "player",
-      "occupant_ids": []
+      "occupant_ids": [],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h06",
@@ -124,7 +169,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h06_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h07",
@@ -145,7 +199,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h07_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h08",
@@ -166,7 +229,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h08_1"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h09",
@@ -187,7 +259,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h09_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h10",
@@ -208,7 +289,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h10_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h11",
@@ -229,7 +319,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h11_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h12",
@@ -250,7 +349,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h12_1"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": false,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h13",
@@ -271,7 +379,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h13_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h14",
@@ -290,7 +407,16 @@
       "fence_color": "#ffffff",
       "occupancy": "vacant",
       "ownership": "neutral",
-      "occupant_ids": []
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h15",
@@ -311,7 +437,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h15_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h16",
@@ -332,7 +467,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h16_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h17",
@@ -353,7 +497,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h17_1"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h18",
@@ -374,7 +527,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h18_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h19",
@@ -395,7 +557,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h19_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h20",
@@ -414,7 +585,16 @@
       "fence_color": "#d9d4c8",
       "occupancy": "vacant",
       "ownership": "neutral",
-      "occupant_ids": []
+      "occupant_ids": [],
+      "props": {
+        "yard": "lawn",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h21",
@@ -435,7 +615,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h21_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": false
+      }
     },
     {
       "id": "starter_h22",
@@ -456,7 +645,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h22_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": true,
+        "gate": true
+      }
     },
     {
       "id": "starter_h23",
@@ -477,7 +675,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h23_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h24",
@@ -498,7 +705,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h24_1"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h25",
@@ -519,7 +735,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h25_1"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h26",
@@ -540,7 +765,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h26_1"
-      ]
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
     },
     {
       "id": "starter_h27",
@@ -559,7 +793,16 @@
       "fence_color": "#d9d4c8",
       "occupancy": "vacant",
       "ownership": "neutral",
-      "occupant_ids": []
+      "occupant_ids": [],
+      "props": {
+        "yard": "lawn",
+        "bin": false,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": false
+      }
     },
     {
       "id": "starter_h28",
@@ -580,7 +823,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h28_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
     },
     {
       "id": "starter_h29",
@@ -602,7 +854,16 @@
       "occupant_ids": [
         "npc_h29_1",
         "npc_h29_2"
-      ]
+      ],
+      "props": {
+        "yard": "lawn",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": false
+      }
     },
     {
       "id": "starter_h30",
@@ -623,7 +884,16 @@
       "ownership": "neutral",
       "occupant_ids": [
         "npc_h30_1"
-      ]
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
     }
   ]
 }

@@ -8,6 +8,7 @@
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
 > ![Vleirand](docs/screenshots/district_overview.png)
+> ![Duif Street](docs/screenshots/polish_duif.png)
 > ![Tortel Lane at dusk](docs/screenshots/dusk_tortel.png)
 > ![Mission tracker](docs/screenshots/mission_tracker.png)
 

@@ -23,6 +23,8 @@ shape = SubResource("cap")
 script = ExtResource("2")
 
 [node name="CameraPivot" type="Node3D" parent="."]
+physics_interpolation_mode = 2
+top_level = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
 
 [node name="Pitch" type="Node3D" parent="CameraPivot"]

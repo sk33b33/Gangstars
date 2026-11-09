@@ -450,6 +450,19 @@ func _test_district() -> void:
 		await physics_frame
 	_check(player.current_target == null, "no prompt in the middle of the road")
 
+	# Polish: smooth motion settings, jointed rig, plot dressing, swinging doors.
+	_check(ProjectSettings.get_setting("physics/common/physics_interpolation", false), "physics interpolation is enabled")
+	var some: Resident = district.residents.values()[0]
+	_check(some.model.has_node("Hips/LegL") and some.model.has_node("Hips/Torso/ArmR") and some.model.has_node("Hips/Torso/Head"),
+		"characters have a jointed rig (legs, arms, head)")
+	var dressed := 0
+	for hp: HousePlot in district.plots.values():
+		dressed += 1 if not hp.data.props.is_empty() else 0
+	_check(dressed == district.plots.size(), "every house has plot dressing data (%d)" % dressed)
+	var doors_used := [0]
+	for r: Resident in district.residents.values():
+		r.door_used.connect(func(_h): doors_used[0] += 1)
+
 	# Tiers follow distance to the player.
 	var director := district.director
 	director.update_tiers()
@@ -498,6 +511,11 @@ func _test_district() -> void:
 			district.destinations.set_enabled("poi_shop", false)
 		if f % 60 == 0:
 			_sample_states(district, seen, tiers)
+			for r: Resident in district.residents.values():
+				if r.sim_tier != "far" and r.model.walk_amplitude() > 0.5:
+					seen["_walking_gait"] = seen.get("_walking_gait", 0) + 1
+				if district.plots[r.data.home_id].is_door_open():
+					seen["_door_open"] = seen.get("_door_open", 0) + 1
 		await physics_frame
 	var real_s := (Time.get_ticks_msec() - t0) / 1000.0
 	var ms_per_frame := real_s * 1000.0 / frames
@@ -523,6 +541,8 @@ func _test_district() -> void:
 	for st in ["TRAVELLING", "AT_DESTINATION", "SOCIALIZING", "GUARDING", "AT_HOME"]:
 		_check(seen.has(st), "daytime soak shows %s" % st)
 	_check(tiers.get("far", 0) > 0 and tiers.get("near", 0) > 0, "soak exercises near and far tiers")
+	_check(seen.get("_walking_gait", 0) > 50, "walking NPCs swing their limbs (%d samples)" % seen.get("_walking_gait", 0))
+	_check(doors_used[0] > 20 and seen.get("_door_open", 0) > 0, "front doors swing when residents come and go (%d uses)" % doors_used[0])
 
 	# Night: 17:00 -> 00:30. Crew patrol/follow; residents go home by curfew.
 	district.destinations.set_enabled("poi_shop", true)

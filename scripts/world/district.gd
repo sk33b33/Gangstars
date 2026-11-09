@@ -135,6 +135,7 @@ func _spawn_residents() -> void:
 		add_child(r)
 		r.setup(npc, destinations, i * 0.11, director.clock, _lookup)
 		r.reported.connect(func(who: Resident, event_id: String): events.report(event_id, who.data.display_name))
+		r.door_used.connect(_on_door_used)
 		residents[npc.id] = r
 		i += 1
 
@@ -181,6 +182,12 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 		{"activity": "home", "destination": "home", "duration": 15.0}])
 
 
+func _on_door_used(house_id: String) -> void:
+	var plot: HousePlot = plots.get(house_id)
+	if plot:
+		plot.open_door()
+
+
 func _on_door(house_id: String) -> String:
 	var house := registry.get_house(house_id)
 	var where := house.address()
@@ -205,6 +212,7 @@ func _on_door(house_id: String) -> String:
 	if not home.is_empty():
 		var who := " and ".join(home)
 		var verb := "opens" if home.size() == 1 else "open"
+		plots[house_id].open_door(3.0)
 		return "%s %s the security gate at %s: \"Ja? Can I help you?\"" % [who, verb, where]
 	return "No answer at %s. Out: %s." % [where, ", ".join(out)]
 

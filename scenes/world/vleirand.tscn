@@ -18,6 +18,13 @@ ambient_light_source = 2
 ambient_light_color = Color(0.62, 0.68, 0.78, 1)
 ambient_light_energy = 0.55
 tonemap_mode = 0
+fog_enabled = true
+fog_light_color = Color(0.78, 0.84, 0.9, 1)
+fog_mode = 1
+fog_density = 0.55
+fog_depth_begin = 80.0
+fog_depth_end = 320.0
+fog_sky_affect = 0.0
 
 [node name="Vleirand" type="Node3D"]
 script = ExtResource("1")

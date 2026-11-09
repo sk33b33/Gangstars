@@ -25,6 +25,8 @@ const OWNERSHIP: PackedStringArray = ["neutral", "friendly", "hostile", "player"
 @export var occupancy: String = "occupied"
 @export var ownership: String = "neutral"
 @export var occupant_ids: PackedStringArray = []
+## Plot dressing: {yard: sand|paved|lawn, bin, dish, washing, wendy, tree, gate: bool}.
+@export var props: Dictionary = {}
 
 
 func address() -> String:
@@ -76,4 +78,5 @@ static func from_dict(d: Dictionary, default_district: String) -> HouseData:
 	h.occupancy = str(d.get("occupancy", "occupied"))
 	h.ownership = str(d.get("ownership", "neutral"))
 	h.occupant_ids = PackedStringArray(d.get("occupant_ids", []))
+	h.props = d.get("props", {}) if d.get("props") is Dictionary else {}
 	return h

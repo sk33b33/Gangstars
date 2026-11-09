@@ -119,7 +119,21 @@ runs. Set `CK_DEBUG=1` to print every travel failure and jump with its cause.
 - Adding a mission: append to `data/missions/intro.json` and run the tests. They check that
   prerequisites, givers, NPC targets and houses exist.
 
+## Smoothness and detail (polish pass)
+
+- `physics/common/physics_interpolation=true`. Anything moved directly (spawning at a door,
+  loading, debug teleports) must call `reset_physics_interpolation()`. The player has
+  `snap_camera()` for this.
+- Camera: `CameraPivot` is `top_level` with interpolation off; `Player._process` places it at
+  `get_global_transform_interpolated()` + 1.6 m (vertical smoothing only).
+- `CharacterModel`: Hips → LegL/LegR, Torso → ArmL/ArmR/Head(Hair, Cap). `animate(delta, speed)`
+  drives the gait; meshes are cached statically.
+- Plot dressing comes from `props` in `data/houses/starter_houses.json`, produced by the
+  generator with a per-house seed. `HousePlot._free_side()` keeps solid props off paths and driveways.
+- Street dressing (`parked_cars`, `decals`) is in `data/districts/starter.json`; backdrop houses
+  and wires are generated in `StreetBuilder`.
+
 ## Known limitations
 
-- Characters are low-poly placeholders with a walk bob; no rigged animation yet.
+- Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.
 - In software-rendered containers the game runs at about 8 FPS; this is not representative of real GPUs.

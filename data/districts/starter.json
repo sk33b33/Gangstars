@@ -202,5 +202,146 @@
         -12
       ]
     ]
-  }
+  },
+  "parked_cars": [
+    {
+      "position": [
+        -38,
+        2.9
+      ],
+      "rot": 0,
+      "color": "#c0392b"
+    },
+    {
+      "position": [
+        -6,
+        -2.9
+      ],
+      "rot": 180,
+      "color": "#ecf0f1"
+    },
+    {
+      "position": [
+        30,
+        2.9
+      ],
+      "rot": 0,
+      "color": "#2e86c1"
+    },
+    {
+      "position": [
+        16,
+        -2.9
+      ],
+      "rot": 180,
+      "color": "#7f8c8d"
+    },
+    {
+      "position": [
+        -26,
+        -53.1
+      ],
+      "rot": 0,
+      "color": "#f1c40f"
+    },
+    {
+      "position": [
+        20,
+        -58.9
+      ],
+      "rot": 180,
+      "color": "#16a085"
+    },
+    {
+      "position": [
+        36,
+        -53.1
+      ],
+      "rot": 0,
+      "color": "#8e44ad"
+    },
+    {
+      "position": [
+        -47.1,
+        -30
+      ],
+      "rot": 90,
+      "color": "#d35400"
+    },
+    {
+      "position": [
+        52.2,
+        -36
+      ],
+      "rot": 270,
+      "color": "#34495e"
+    }
+  ],
+  "decals": [
+    {
+      "texture": "tag_tortel",
+      "position": [
+        55.44,
+        0.8,
+        -32
+      ],
+      "size": [
+        2.2,
+        0.92
+      ],
+      "rot": -90
+    },
+    {
+      "texture": "tag_tortel",
+      "position": [
+        39.6,
+        1.1,
+        -7.83
+      ],
+      "size": [
+        2.0,
+        0.84
+      ],
+      "rot": 0
+    },
+    {
+      "texture": "tag_tortel",
+      "position": [
+        71.88,
+        0.9,
+        -20
+      ],
+      "size": [
+        2.4,
+        1.0
+      ],
+      "rot": -90
+    },
+    {
+      "texture": "poster_cafe",
+      "position": [
+        -14.4,
+        1.5,
+        -9.95
+      ],
+      "size": [
+        0.8,
+        0.88
+      ],
+      "rot": 0
+    },
+    {
+      "texture": "poster_cafe",
+      "position": [
+        -21.6,
+        1.5,
+        -9.95
+      ],
+      "size": [
+        0.8,
+        0.88
+      ],
+      "rot": 0
+    }
+  ]
 }

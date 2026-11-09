@@ -226,6 +226,7 @@ func apply_snapshot(data: Dictionary) -> String:
 	player.global_position = Vector3(float(p[0]), float(p[1]) + 0.05, float(p[2]))
 	player.velocity = Vector3.ZERO
 	player.pivot.rotation.y = float(pl.get("yaw", 0.0))
+	player.snap_camera()
 	for npc_id in progression.recruited_crew_ids:
 		district.apply_recruit(npc_id, SAFEHOUSE_ID)
 	for id in progression.safehouse_upgrades:

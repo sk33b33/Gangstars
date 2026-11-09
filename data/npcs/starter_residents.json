@@ -43,7 +43,11 @@
       "active_hours": [
         6,
         22
-      ]
+      ],
+      "hair_style": "doek",
+      "hair_color": "#8e44ad",
+      "height": 0.94,
+      "sleeves": "long"
     },
     {
       "id": "npc_boeta",
@@ -88,7 +92,11 @@
       "active_hours": [
         6,
         22
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.04,
+      "sleeves": "short"
     },
     {
       "id": "npc_shireen",
@@ -133,7 +141,11 @@
       "active_hours": [
         6,
         22
-      ]
+      ],
+      "hair_style": "long",
+      "hair_color": "#2b1d16",
+      "height": 0.96,
+      "sleeves": "short"
     },
     {
       "id": "npc_lionel",
@@ -178,7 +190,11 @@
       "active_hours": [
         6,
         22
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#2c3e50",
+      "height": 1.06,
+      "sleeves": "long"
     },
     {
       "id": "npc_tasneem",
@@ -223,7 +239,11 @@
       "active_hours": [
         6,
         22
-      ]
+      ],
+      "hair_style": "doek",
+      "hair_color": "#16a085",
+      "height": 0.97,
+      "sleeves": "long"
     },
     {
       "id": "npc_h06_1",
@@ -268,7 +288,11 @@
       "lines": [
         "The café ran out of bread again.",
         "Don't park in front of my gate, ne."
-      ]
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 0.99,
+      "sleeves": "long"
     },
     {
       "id": "npc_h07_1",
@@ -313,7 +337,11 @@
       "lines": [
         "Ag shame, you look lost.",
         "Môre! Lovely day, hey?"
-      ]
+      ],
+      "hair_style": "long",
+      "hair_color": "#1d1b24",
+      "height": 1.03,
+      "sleeves": "long"
     },
     {
       "id": "npc_h08_1",
@@ -358,7 +386,11 @@
       "lines": [
         "Shame, this wind.",
         "Ag shame, you look lost."
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#f4d03f",
+      "height": 0.92,
+      "sleeves": "short"
     },
     {
       "id": "npc_h09_1",
@@ -403,7 +435,11 @@
       "lines": [
         "Who are you looking for?",
         "Ag shame, you look lost."
-      ]
+      ],
+      "hair_style": "long",
+      "hair_color": "#2b1d16",
+      "height": 1.07,
+      "sleeves": "long"
     },
     {
       "id": "npc_h10_1",
@@ -448,7 +484,11 @@
       "lines": [
         "My ouma has lived here forty years.",
         "Shame, this wind."
-      ]
+      ],
+      "hair_style": "long",
+      "hair_color": "#1d1b24",
+      "height": 0.96,
+      "sleeves": "long"
     },
     {
       "id": "npc_h11_1",
@@ -493,7 +533,11 @@
       "lines": [
         "Ag shame, you look lost.",
         "My laaitie is at the court, have you seen him?"
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.08,
+      "sleeves": "long"
     },
     {
       "id": "npc_h12_1",
@@ -538,7 +582,11 @@
       "lines": [
         "Ag shame, you look lost.",
         "Everybody knows everybody here."
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#f4d03f",
+      "height": 0.99,
+      "sleeves": "short"
     },
     {
       "id": "npc_h13_1",
@@ -583,7 +631,11 @@
       "lines": [
         "My laaitie is at the court, have you seen him?",
         "Môre! Lovely day, hey?"
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.92,
+      "sleeves": "short"
     },
     {
       "id": "npc_h15_1",
@@ -628,7 +680,11 @@
       "lines": [
         "Everybody knows everybody here.",
         "My laaitie is at the court, have you seen him?"
-      ]
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 1.05,
+      "sleeves": "long"
     },
     {
       "id": "npc_h16_1",
@@ -673,7 +729,11 @@
       "lines": [
         "Who are you looking for?",
         "Shame, this wind."
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#2b1d16",
+      "height": 0.94,
+      "sleeves": "long"
     },
     {
       "id": "npc_h17_1",
@@ -718,7 +778,11 @@
       "lines": [
         "The café ran out of bread again.",
         "My ouma has lived here forty years."
-      ]
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 0.94,
+      "sleeves": "short"
     },
     {
       "id": "npc_h18_1",
@@ -763,7 +827,11 @@
       "lines": [
         "Ag shame, you look lost.",
         "Don't park in front of my gate, ne."
-      ]
+      ],
+      "hair_style": "long",
+      "hair_color": "#9a9a9a",
+      "height": 0.92,
+      "sleeves": "short"
     },
     {
       "id": "npc_h19_1",
@@ -808,7 +876,11 @@
       "lines": [
         "Môre! Lovely day, hey?",
         "My laaitie is at the court, have you seen him?"
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#9a9a9a",
+      "height": 1.0,
+      "sleeves": "short"
     },
     {
       "id": "npc_h21_1",
@@ -853,7 +925,11 @@
       "lines": [
         "Ag shame, you look lost.",
         "Who are you looking for?"
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#5a4636",
+      "height": 1.06,
+      "sleeves": "short"
     },
     {
       "id": "npc_h22_1",
@@ -898,7 +974,11 @@
       "lines": [
         "Everybody knows everybody here.",
         "Who are you looking for?"
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#27ae60",
+      "height": 0.98,
+      "sleeves": "long"
     },
     {
       "id": "npc_h23_1",
@@ -943,7 +1023,11 @@
       "lines": [
         "Who are you looking for?",
         "Môre! Lovely day, hey?"
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#2b1d16",
+      "height": 1.05,
+      "sleeves": "long"
     },
     {
       "id": "npc_h24_1",
@@ -988,7 +1072,11 @@
       "lines": [
         "Shame, this wind.",
         "My ouma has lived here forty years."
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 0.94,
+      "sleeves": "long"
     },
     {
       "id": "npc_h25_1",
@@ -1033,7 +1121,11 @@
       "lines": [
         "The café ran out of bread again.",
         "Môre! Lovely day, hey?"
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#f4d03f",
+      "height": 0.92,
+      "sleeves": "long"
     },
     {
       "id": "npc_h26_1",
@@ -1078,7 +1170,11 @@
       "lines": [
         "The café ran out of bread again.",
         "Ag shame, you look lost."
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.01,
+      "sleeves": "short"
     },
     {
       "id": "npc_h28_1",
@@ -1123,7 +1219,11 @@
       "lines": [
         "Everybody knows everybody here.",
         "Don't park in front of my gate, ne."
-      ]
+      ],
+      "hair_style": "short",
+      "hair_color": "#5a4636",
+      "height": 0.93,
+      "sleeves": "long"
     },
     {
       "id": "npc_h29_1",
@@ -1177,6 +1277,10 @@
         "We're watching you, new face.",
         "Move along, my bru."
       ],
+      "hair_style": "beanie",
+      "hair_color": "#1d1b24",
+      "height": 1.04,
+      "sleeves": "short",
       "faction_id": "tortel_crew"
     },
     {
@@ -1224,6 +1328,10 @@
         "Move along, my bru.",
         "This is Tortel Lane. You lost?"
       ],
+      "hair_style": "beanie",
+      "hair_color": "#1d1b24",
+      "height": 1.06,
+      "sleeves": "long",
       "faction_id": "tortel_crew"
     },
     {
@@ -1269,7 +1377,11 @@
       "lines": [
         "Môre! Lovely day, hey?",
         "My ouma has lived here forty years."
-      ]
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#c0392b",
+      "height": 0.99,
+      "sleeves": "short"
     }
   ]
 }

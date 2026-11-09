@@ -30,6 +30,15 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"corner": _build_corner(root, pos)
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	_build_boundary(root, b, streets, info.get("locked_neighbours", []))
+	_build_backdrop(root, b, streets)
+	for car in info.get("parked_cars", []):
+		var cp := DataFiles.to_vec2(car.get("position"))
+		_build_car(root, Vector3(cp.x, 0, cp.y), deg_to_rad(float(car.get("rot", 0))), DataFiles.to_color(car.get("color"), Color.GRAY))
+	for decal in info.get("decals", []):
+		var pos: Array = decal.get("position", [0, 0, 0])
+		var size := DataFiles.to_vec2(decal.get("size"), Vector2.ONE)
+		Geo.quad(root, size, Vector3(pos[0], pos[1], pos[2]), PixelMaterials.panel(str(decal.texture), Color.WHITE, true),
+			deg_to_rad(float(decal.get("rot", 0))))
 	for poi in info.get("pois", []):
 		var p := DataFiles.to_vec2(poi.get("position"))
 		destinations.register(str(poi.id), Vector3(p.x, 0, p.y), float(poi.get("radius", 1.0)),
@@ -89,14 +98,128 @@ static func _build_streetlights(root: Node3D, s: Dictionary, b: Array) -> void:
 	var rot := 0.0 if s.axis == "x" else PI * 0.5
 	var t := lo + 6.0
 	var side := 1.0
+	var tops := {1.0: [], -1.0: []}
 	while t < hi - 2.0:
 		var p := _world(s, t, off * side)
+		tops[side].append(p + Vector3(0, 4.9, 0))
 		var arm := _world(s, 0, -side * 0.6) - _world(s, 0, 0)
 		Geo.box(root, Vector3(0.14, 5.0, 0.14), p + Vector3(0, 2.5, 0), steel)
 		Geo.box(root, Vector3(1.2, 0.12, 0.12), p + arm + Vector3(0, 4.95, 0), steel, false, rot + PI * 0.5)
 		Geo.box(root, Vector3(0.4, 0.12, 0.3), p + arm * 1.8 + Vector3(0, 4.85, 0), lamp, false, rot)
 		t += 14.0
 		side = -side
+	for k in tops:
+		_build_wires(root, tops[k])
+
+
+## Visual-only rows of simple houses outside the boundary, so the city continues past the
+## wall (and hints at the locked districts). No colliders: they are unreachable anyway.
+static func _build_backdrop(root: Node3D, b: Array, streets: Array) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7041
+	var paints := ["#e8967a", "#a6d455", "#8fb8d8", "#f2e4b8", "#c3b0d8", "#ece9e2", "#f1d36b", "#9fd8b8"]
+	var spots: Array = []  # [position, facing rotation]
+	var minx: float = b[0]
+	var minz: float = b[1]
+	var maxx: float = b[2]
+	var maxz: float = b[3]
+	var x := minx - 18.0
+	while x <= maxx + 18.0:
+		spots.append([Vector3(x, 0, minz - 8.0), 0.0])
+		spots.append([Vector3(x, 0, maxz + 8.0), PI])
+		x += 11.0
+	for s in streets:
+		if s.axis != "x":
+			continue
+		var off: float = s.get("half_width", 4.0) + s.get("sidewalk", 2.5) + 5.0
+		for dir in [-1.0, 1.0]:
+			var edge: float = maxx if dir > 0 else minx
+			var t: float = edge + dir * 8.0
+			for i in 4:
+				spots.append([Vector3(t, 0, s.at - off), 0.0])
+				spots.append([Vector3(t, 0, s.at + off), PI])
+				t += dir * 11.0
+			# The road keeps going past the barrier.
+			Geo.patch(root, Rect2(minf(edge, edge + dir * 50.0), s.at - 4.0, 50.0, 8.0), 0.01, PixelMaterials.surface("road_asphalt", Vector2(2, 2)))
+	for spot in spots:
+		var pos: Vector3 = spot[0]
+		var w := rng.randf_range(6.5, 8.5)
+		var d := rng.randf_range(5.5, 7.0)
+		var h := 2.8 if rng.randf() < 0.75 else 5.4
+		var pivot := Node3D.new()
+		pivot.position = pos
+		pivot.rotation.y = spot[1]
+		root.add_child(pivot)
+		var wall := PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paints[rng.randi() % paints.size()]))
+		Geo.box(pivot, Vector3(w, h, d), Vector3(0, h * 0.5, 0), wall, false)
+		var roof := MeshInstance3D.new()
+		roof.mesh = Geo.roof_mesh(w + 0.6, d + 0.6, 1.3, (d + 0.6) * 0.5 if rng.randf() < 0.5 else 0.0)
+		roof.material_override = PixelMaterials.surface("roof_tiles" if rng.randf() < 0.6 else "roof_ibr", Vector2(2, 2))
+		roof.position = Vector3(0, h, 0)
+		pivot.add_child(roof)
+		Geo.quad(pivot, Vector2(1.5, 1.25), Vector3(-w * 0.25, 1.6, d * 0.5 + 0.02), PixelMaterials.panel("window_bars"))
+		Geo.quad(pivot, Vector2(1.0, 2.0), Vector3(w * 0.2, 1.0, d * 0.5 + 0.02), PixelMaterials.panel("door_gate"))
+
+
+## Two sagging cables between consecutive poles on the same side of a street.
+static func _build_wires(root: Node3D, tops: Array) -> void:
+	if tops.size() < 2:
+		return
+	var verts := PackedVector3Array()
+	for i in tops.size() - 1:
+		for drop in [0.0, 0.3]:
+			var a: Vector3 = tops[i] - Vector3(0, drop, 0)
+			var b: Vector3 = tops[i + 1] - Vector3(0, drop, 0)
+			const SEGMENTS := 10
+			for k in SEGMENTS:
+				for e in [k, k + 1]:
+					var f := float(e) / SEGMENTS
+					verts.append(a.lerp(b, f) - Vector3(0, sin(f * PI) * 0.9, 0))
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = verts
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color("#2a2a30")
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
+
+
+## Low-poly parked hatchback: body, glass cabin with roof, wheels, lights. One solid collider.
+static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	var paint := PixelMaterials.flat(color)
+	var glass := PixelMaterials.flat(Color("#29384a"))
+	var tyre := PixelMaterials.flat(Color("#1d1b24"))
+	Geo.box(pivot, Vector3(4.0, 0.62, 1.75), Vector3(0, 0.6, 0), paint, false)
+	Geo.box(pivot, Vector3(2.3, 0.5, 1.6), Vector3(-0.25, 1.15, 0), glass, false)
+	Geo.box(pivot, Vector3(2.2, 0.07, 1.62), Vector3(-0.25, 1.42, 0), paint, false)
+	Geo.box(pivot, Vector3(0.05, 0.14, 0.4), Vector3(2.0, 0.72, 0.6), PixelMaterials.lamp(), false)
+	Geo.box(pivot, Vector3(0.05, 0.14, 0.4), Vector3(2.0, 0.72, -0.6), PixelMaterials.lamp(), false)
+	Geo.box(pivot, Vector3(0.05, 0.12, 0.35), Vector3(-2.0, 0.72, 0.6), PixelMaterials.flat(Color("#a63a4c")), false)
+	Geo.box(pivot, Vector3(0.05, 0.12, 0.35), Vector3(-2.0, 0.72, -0.6), PixelMaterials.flat(Color("#a63a4c")), false)
+	var wheel := CylinderMesh.new()
+	wheel.top_radius = 0.32
+	wheel.bottom_radius = 0.32
+	wheel.height = 0.22
+	wheel.radial_segments = 12
+	for wx in [-1.3, 1.3]:
+		for wz in [-0.82, 0.82]:
+			var w := MeshInstance3D.new()
+			w.mesh = wheel
+			w.material_override = tyre
+			w.position = Vector3(wx, 0.32, wz)
+			w.rotation.x = PI * 0.5
+			pivot.add_child(w)
+	Geo.collider(pivot, Vector3(4.0, 1.4, 1.8), Vector3(0, 0.7, 0))
 
 
 ## A name sign where each cross street meets an east-west street.

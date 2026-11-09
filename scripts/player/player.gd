@@ -10,6 +10,8 @@ signal shouted(position: Vector3)
 signal interacted_with(target: Interactable, message: String)
 
 const GRAVITY := 9.8
+const CAMERA_HEIGHT := 1.6
+const CAMERA_FOLLOW := 14.0  # higher = tighter; smooths steps and landings
 
 @export var walk_speed := 3.4
 @export var sprint_speed := 6.5
@@ -32,8 +34,27 @@ var input_enabled := true
 
 
 func _ready() -> void:
-	model.build(Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"))
+	model.build(Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"),
+		{"hair_style": "short", "height": 1.02, "sleeves": "short"})
 	spring_arm.add_excluded_object(get_rid())
+	snap_camera()
+
+
+## The camera rig is top-level and follows the *interpolated* body position every rendered
+## frame, so motion stays smooth at any refresh rate (physics runs at 60 Hz).
+func _process(delta: float) -> void:
+	var target := get_global_transform_interpolated().origin + Vector3(0, CAMERA_HEIGHT, 0)
+	var p := pivot.global_position
+	p.x = target.x
+	p.z = target.z
+	p.y = lerpf(p.y, target.y, clampf(delta * CAMERA_FOLLOW, 0.0, 1.0))
+	pivot.global_position = p
+
+
+## Call after moving the player directly (spawn, load, debug teleport).
+func snap_camera() -> void:
+	reset_physics_interpolation()
+	pivot.global_position = global_position + Vector3(0, CAMERA_HEIGHT, 0)
 
 
 func _unhandled_input(event: InputEvent) -> void:

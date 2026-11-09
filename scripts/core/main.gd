@@ -68,6 +68,7 @@ func _run_screenshot() -> void:
 	if _args.has("player"):
 		var p: PackedStringArray = _args.player.split(",")
 		player.global_position = Vector3(float(p[0]), 0.1, float(p[1]))
+		player.snap_camera()
 	if _args.has("yaw"):
 		player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
 	if _args.has("pitch"):

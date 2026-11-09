@@ -24,6 +24,8 @@ const KITS := {
 var data: HouseData
 var door_interactable: Interactable
 var _door_local := Vector3.ZERO
+var _door_hinge: Node3D
+var _door_tween: Tween
 
 
 func build(house: HouseData, closing_fence := false) -> void:
@@ -47,7 +49,13 @@ func build(house: HouseData, closing_fence := false) -> void:
 	for win in kit.windows:
 		Geo.quad(self, Vector2(1.5, 1.25), Vector3(win[0], win[1] + 0.62, face), PixelMaterials.panel("window_bars"))
 	_door_local = Vector3(kit.door_x, 0.0, front_z + 0.9)
-	Geo.quad(self, Vector2(1.0, 2.0), Vector3(kit.door_x, 1.0, face), PixelMaterials.panel("door_gate"))
+	# Door on a hinge in front of a dark doorway, so it can swing open.
+	Geo.quad(self, Vector2(1.0, 2.0), Vector3(kit.door_x, 1.0, face - 0.01), PixelMaterials.flat(Color("#141218")))
+	_door_hinge = Node3D.new()
+	_door_hinge.name = "DoorHinge"
+	_door_hinge.position = Vector3(kit.door_x - 0.5, 0.0, face + 0.01)
+	add_child(_door_hinge)
+	Geo.quad(_door_hinge, Vector2(1.0, 2.0), Vector3(0.5, 1.0, 0.0), PixelMaterials.panel("door_gate"))
 	Geo.box(self, Vector3(2.2, 0.1, 1.4), Vector3(kit.door_x, 0.05, front_z + 0.7),
 		PixelMaterials.surface("sidewalk", Vector2(2, 2)), false)
 	Geo.label(self, str(house.number), Vector3(kit.door_x + 0.85, 2.1, face + 0.01), 72, Color("#1d1b24"))
@@ -61,6 +69,7 @@ func build(house: HouseData, closing_fence := false) -> void:
 		_build_garage(kit.garage, front_z)
 		gaps.append([kit.garage.x, kit.garage.w - 0.4])
 	_build_fences(gaps, closing_fence)
+	_build_props(kit, h, front_z)
 
 	door_interactable = Interactable.new()
 	door_interactable.name = "Door"
@@ -71,6 +80,96 @@ func build(house: HouseData, closing_fence := false) -> void:
 	if house.ownership == "player":
 		door_interactable.prompt = "Enter safehouse (%s)" % house.address()
 	add_child(door_interactable)
+
+
+## Front yard side that is free of the garden path and the garage/driveway.
+func _free_side(kit: Dictionary) -> float:
+	return -1.0 if kit.has("garage") or kit.door_x > 0.0 else 1.0
+
+
+## Deterministic dressing from data. Solid props only go where no path runs (yard corners,
+## back yard); thin decorative ones stay visual so they never cut off navigation.
+func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
+	var p := data.props
+	var half_w := data.plot_size.x * 0.5
+	var depth := data.plot_size.y
+	var side := _free_side(kit)
+	var back_z: float = front_z - float(kit.d)
+	match str(p.get("yard", "sand")):
+		"paved":
+			Geo.patch(self, Rect2(-half_w + 0.1, front_z, half_w * 2 - 0.2, -front_z - 0.1), 0.008,
+				PixelMaterials.surface("paving_brick", Vector2(2, 2), Color(0.92, 0.88, 0.84)))
+		"lawn":
+			var lawn_x := side * (half_w - 2.1)
+			Geo.patch(self, Rect2(lawn_x - 1.8, front_z + 0.3, 3.6, -front_z - 0.8), 0.009, PixelMaterials.flat(Color("#7fae55")))
+	if p.get("bin", false):
+		var bx := side * (half_w - 0.75)
+		var green := PixelMaterials.flat(Color("#2f6e3a"))
+		Geo.box(self, Vector3(0.6, 1.0, 0.7), Vector3(bx, 0.5, -0.9), green)
+		Geo.box(self, Vector3(0.64, 0.06, 0.76), Vector3(bx, 1.03, -0.9), PixelMaterials.flat(Color("#245a2e")), false)
+	if p.get("tree", false):
+		var tx := side * (half_w - 2.2)
+		Geo.box(self, Vector3(0.22, 2.0, 0.22), Vector3(tx, 1.0, -2.3), PixelMaterials.flat(Color("#6b4630")))
+		var crown := SphereMesh.new()
+		crown.radius = 1.0
+		crown.height = 1.7
+		crown.radial_segments = 10
+		crown.rings = 5
+		var mi := MeshInstance3D.new()
+		mi.mesh = crown
+		mi.material_override = PixelMaterials.flat(Color("#4f8a3c"))
+		mi.position = Vector3(tx, 2.6, -2.3)
+		add_child(mi)
+	if p.get("gate", false):
+		# Steel gate leaf standing open inside the yard, beside the garden path.
+		var gx: float = kit.door_x + GATE_WIDTH * 0.5
+		Geo.quad(self, Vector2(1.2, 1.3), Vector3(gx + 0.05, 0.7, -0.62), PixelMaterials.surface("fence_palisade", Vector2(2, 1.5), Color("#56606e"), true), PI * 0.5)
+	if p.get("dish", false):
+		var dish := CylinderMesh.new()
+		dish.top_radius = 0.38
+		dish.bottom_radius = 0.06
+		dish.height = 0.14
+		dish.radial_segments = 12
+		var d := MeshInstance3D.new()
+		d.mesh = dish
+		d.material_override = PixelMaterials.flat(Color("#dcd8d0"))
+		d.position = Vector3(float(kit.x) - side * (float(kit.w) * 0.5 - 0.7), h + 0.55, front_z - 0.6)
+		d.rotation = Vector3(-0.9, 0.0, 0.25 * side)
+		add_child(d)
+		Geo.box(self, Vector3(0.05, 0.5, 0.05), d.position - Vector3(0, 0.3, -0.1), PixelMaterials.flat(Color("#7d828c")), false)
+	var back_space := back_z + depth  # metres between house back and rear fence
+	if p.get("wendy", false) and back_space > 2.6:
+		var wz := -depth + 1.3
+		var wx := side * (half_w - 1.8)
+		Geo.box(self, Vector3(3.0, 2.3, 2.3), Vector3(wx, 1.15, wz),
+			PixelMaterials.surface("wendy_wall", Vector2(2, 2), Color("#cfe0e8") if side > 0 else Color("#f0d7c0")))
+		Geo.box(self, Vector3(3.3, 0.08, 2.6), Vector3(wx, 2.35, wz), PixelMaterials.surface("roof_ibr", Vector2(2, 2)), false)
+		Geo.quad(self, Vector2(0.8, 1.8), Vector3(wx - side * 0.6, 0.9, wz + 1.16), PixelMaterials.flat(Color("#6b4630")))
+	elif p.get("washing", false) and back_space > 1.6:
+		var wz2 := -depth + back_space * 0.5
+		var pole := PixelMaterials.flat(Color("#7d828c"))
+		for x in [-2.6, 2.6]:
+			Geo.box(self, Vector3(0.07, 1.9, 0.07), Vector3(float(kit.x) + x, 0.95, wz2), pole, false)
+		Geo.box(self, Vector3(5.2, 0.02, 0.02), Vector3(float(kit.x), 1.85, wz2), pole, false)
+		var cloth := PixelMaterials.panel("washing", Color.WHITE, true)
+		Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) - 1.3, 1.35, wz2), cloth)
+		Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) + 1.2, 1.35, wz2), cloth, PI)
+
+
+## Swings the front door open and closed again (someone entering, leaving or answering).
+func open_door(hold := 1.4) -> void:
+	if _door_hinge == null or not is_inside_tree():
+		return
+	if _door_tween and _door_tween.is_valid():
+		_door_tween.kill()
+	_door_tween = create_tween()
+	_door_tween.tween_property(_door_hinge, "rotation:y", 1.35, 0.35).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_door_tween.tween_interval(hold)
+	_door_tween.tween_property(_door_hinge, "rotation:y", 0.0, 0.45).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+
+
+func is_door_open() -> bool:
+	return _door_hinge != null and _door_hinge.rotation.y > 0.1
 
 
 ## Visible safehouse upgrades (props on the plot). Idempotent.

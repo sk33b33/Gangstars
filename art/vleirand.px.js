@@ -143,3 +143,48 @@ sprite("sign_locked", { w: 64, h: 24 },
   rect(0, 0, 64, 24, "l"), box(0, 0, 64, 24, "k"),
   (c) => { for (let x = -24; x < 64; x += 8) c.line(x, 23, x + 4, 19, "k", 2) },
   text(32, 3, "ROAD CLOSED", "k", { align: "c" }), text(32, 10, "LOCKED TURF", "T", { align: "c" }))
+
+// ------------------------------------------------------------------ Phase 4.5 detail pass
+pal({ E: "#e2585e", H: "#2e86c1", S: "#f1d36b" })
+
+// Washing on a line (2 m x 1 m): shirts, a towel and socks pegged to the top edge.
+sprite("_shirt", `
+  ..aaaa..
+  aaaaaaaa
+  aaaaaaaa
+  .aaaaaa.
+  .aaaaaa.
+  .aaaaaa.
+  .aaaaaa.`)
+sprite("washing", { w: 32, h: 16 },
+  stamp("_shirt", 1, 1, { swap: { a: "E" } }),
+  rect(11, 1, 6, 10, "H"), hline(11, 9, 6, "W"), hline(11, 10, 6, "H"),
+  stamp("_shirt", 19, 1, { swap: { a: "S" } }),
+  rect(28, 1, 2, 5, "W"), rect(28, 5, 3, 1, "W"),
+  (c) => { for (const x of [3, 6, 12, 16, 21, 24, 29]) c.px(x, 0, "d") })
+
+// Wendy house wall (2 m tile): painted corrugated sheeting with a rust run under a fixing.
+sprite("wendy_wall", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "w"),
+  (c) => { for (let x = 0; x < 32; x += 4) { c.vline(x, 0, 32, "W"); c.vline(x + 2, 0, 32, "v") } },
+  hline(0, 8, 32, "V"), hline(0, 24, 32, "V"),
+  px(9, 8, "R"), vline(9, 9, 6, "T"), px(25, 24, "R"), vline(25, 25, 4, "T"))
+
+// Crew tag (fictional "TORTEL"): sprayed letters with an outline and drips.
+sprite("tag_tortel", { w: 48, h: 20 },
+  text(24, 5, "TORTEL", "H", { align: "c", scale: 2, gap: 1 }),
+  (c) => {
+    // outline the letters in black, then drip a few runs down from the paint
+    const keep = []
+    for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (c.is(x, y, "H")) keep.push([x, y])
+    for (const [x, y] of keep) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
+      if (!c.is(x + dx, y + dy, "H")) c.px(x + dx, y + dy, "k")
+    for (const x of [8, 19, 30, 41]) { c.vline(x, 16, 3, "H") }
+  })
+
+// Café poster (0.6 x 0.9 m).
+sprite("poster_cafe", { w: 22, h: 24 },
+  rect(0, 0, 22, 24, "W"), box(0, 0, 22, 24, "V"),
+  rect(1, 1, 20, 7, "E"), text(11, 2, "HOT", "W", { align: "c" }),
+  text(11, 10, "BREAD", "k", { align: "c" }),
+  text(11, 17, "R12", "f", { align: "c" }))

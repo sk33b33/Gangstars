@@ -9,17 +9,23 @@ extends CharacterBody3D
 ## Leaving/entering home happens at the door marker while hidden "inside".
 
 signal reported(resident: Resident, event_id: String)
+## Emitted when stepping out of / into the house, so the house can swing its door.
+signal door_used(house_id: String)
 
 const LAYER_NPCS := 1 << 2
 const GRAVITY := 9.8
 const THINK_INTERVAL := {"near": 0.5, "mid": 1.5, "far": 3.0}
-const FAR_STEP := 0.25
 const STUCK_WINDOW := 2.5
 const STUCK_MIN_MOVE := 0.3
 const MAX_REPATHS := 3
 const UNSTICK_TIME := 0.8
 const FOLLOW_GAP := 1.6
 const TELEPORT_DISTANCE := 0.5
+const ACCELERATION := 3.5     # m/s^2: smooth starts
+const DECELERATION := 5.0     # m/s^2: smooth stops
+const SLOW_RADIUS := 1.2      # ease in over the last metre of a trip
+const GHOST_TIME := 1.5       # after leaving the far tier, ignore other NPCs while overlaps clear
+const FAR_ANIM_STEP := 0.1    # far NPCs animate at 10 Hz
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var model: CharacterModel = $Model
@@ -49,7 +55,6 @@ var travel_time := 0.0
 var max_travel_time := 0.0
 
 var _think_accum := 0.0
-var _far_accum := 0.0
 var _stuck_accum := 0.0
 var _stuck_origin := Vector3.ZERO
 var _repaths := 0
@@ -72,6 +77,9 @@ var _bubble: Label3D
 var _bubble_timer := 0.0
 var _frames_in_tier := 0
 var _marker: Label3D
+var _move_vel := Vector3.ZERO
+var _ghost_timer := 0.0
+var _far_anim_accum := 0.0
 
 
 func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: float,
@@ -88,7 +96,7 @@ func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: f
 	agent.max_speed = data.walk_speed * NpcBrain.FLEE_SPEED * 1.1
 	agent.velocity_computed.connect(_on_velocity_computed)
 	model.build(data.shirt_color, data.pants_color, data.skin_color,
-		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0))
+		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0), data.appearance())
 	name_label.text = data.display_name
 	interactable.prompt = "Talk to %s" % data.display_name
 	interactable.kind = "npc"
@@ -129,6 +137,11 @@ func set_tier(tier: String) -> void:
 	if tier == sim_tier:
 		return
 	_frames_in_tier = 0
+	if sim_tier == "far":
+		# Far NPCs move without collisions and may overlap someone; don't let physics
+		# shove them apart in one frame when they become physical again.
+		collision_mask &= ~LAYER_NPCS
+		_ghost_timer = GHOST_TIME
 	sim_tier = tier
 	_update_avoidance()
 	if tier != "near":
@@ -197,11 +210,12 @@ func _physics_process(delta: float) -> void:
 		travel_time += delta
 		max_travel_time = maxf(max_travel_time, travel_time)
 	if sim_tier == "far":
-		_far_accum += delta
-		if _far_accum >= FAR_STEP:
-			_far_step(_far_accum)
-			_far_accum = 0.0
+		_far_step(delta)
 		return
+	if _ghost_timer > 0.0:
+		_ghost_timer -= delta
+		if _ghost_timer <= 0.0:
+			collision_mask |= LAYER_NPCS
 	var desired := Vector3.ZERO
 	if _unstick_timer > 0.0:
 		# Step clear of whatever we are wedged against, then resume the path.
@@ -215,15 +229,26 @@ func _physics_process(delta: float) -> void:
 			to_next.y = 0.0
 			if to_next.length() > 0.05:
 				desired = to_next.normalized() * data.walk_speed * _speed_mult
+				# Ease in over the last stretch instead of stopping dead.
+				var left := Vector2(agent.target_position.x - global_position.x, agent.target_position.z - global_position.z).length()
+				if left < SLOW_RADIUS and brain.state != NpcBrain.State.FOLLOWING:
+					desired *= clampf(left / SLOW_RADIUS, 0.45, 1.0)
+	var rate := ACCELERATION if desired.length() > _move_vel.length() else DECELERATION
+	_move_vel = _move_vel.move_toward(desired, rate * delta)
 	if agent.avoidance_enabled:
-		agent.velocity = desired
+		agent.velocity = _move_vel
 	else:
-		_apply_velocity(desired)
+		_apply_velocity(_move_vel)
 
 
-## Far tier: advance along the same navigation path in coarse steps, without physics.
+## Far tier: advance along the same navigation path every frame, without physics.
 func _far_step(dt: float) -> void:
+	_far_anim_accum += dt
 	if not _travelling:
+		_move_vel = Vector3.ZERO
+		if _far_anim_accum >= FAR_ANIM_STEP:
+			model.animate(_far_anim_accum, 0.0)
+			_far_anim_accum = 0.0
 		return
 	if agent.is_navigation_finished():
 		_on_path_end()
@@ -234,7 +259,11 @@ func _far_step(dt: float) -> void:
 	if dist > 0.01:
 		var step := minf(dist, data.walk_speed * _speed_mult * dt)
 		global_position += to_next / dist * step
-		rotation.y = atan2(to_next.x, to_next.z)
+		rotation.y = lerp_angle(rotation.y, atan2(to_next.x, to_next.z), clampf(dt * 6.0, 0.0, 1.0))
+		_move_vel = to_next / dist * data.walk_speed * _speed_mult
+		if _far_anim_accum >= FAR_ANIM_STEP:
+			model.animate(_far_anim_accum, _move_vel.length())
+			_far_anim_accum = 0.0
 	_last_pos = global_position
 
 
@@ -270,8 +299,7 @@ func _apply_velocity(v: Vector3) -> void:
 		var to := _face_point - global_position
 		if Vector2(to.x, to.z).length() > 0.1:
 			rotation.y = lerp_angle(rotation.y, atan2(to.x, to.z), turn * 0.5)
-	if sim_tier == "near":
-		model.animate(dt, flat.length())
+	model.animate(dt, flat.length())
 	# Movement regression guards (see docs/TECH_NOTES.md):
 	# - teleport: a jump of more than TELEPORT_DISTANCE in one frame. Must never happen.
 	# - nudge: more than a walking step, from physics depenetration after a brief contact
@@ -456,14 +484,19 @@ func _on_arrived() -> void:
 
 
 func _set_inside(inside: bool) -> void:
+	var changed := inside != is_inside
 	is_inside = inside
 	visible = not inside
 	velocity = Vector3.ZERO
+	_move_vel = Vector3.ZERO
+	if changed:
+		door_used.emit(data.home_id)
 	collision_layer = 0 if inside else LAYER_NPCS
 	interactable.set_enabled(not inside)
 	_update_avoidance()
 	if not inside:
 		global_position = destinations.anchor_position(home_door_id)
+		reset_physics_interpolation()
 	else:
 		_bubble.visible = false
 	_last_pos = global_position

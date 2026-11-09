@@ -20,6 +20,15 @@ extends Resource
 ## destination "home" = own door; "@leader:<npc id>" = follow that NPC; route = patrol waypoints.
 @export var schedule: Array = []
 @export var lines: PackedStringArray = []
+## Appearance (see CharacterModel): hair style/colour, height (1.0 = 1.75 m), sleeves.
+@export var hair_style: String = "short"
+@export var hair_color: Color = Color("#1d1b24")
+@export var height: float = 1.0
+@export var sleeves: String = "long"
+
+
+func appearance() -> Dictionary:
+	return {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves}
 
 
 static func from_dict(d: Dictionary) -> NpcData:
@@ -52,6 +61,10 @@ static func from_dict(d: Dictionary) -> NpcData:
 				continue
 		n.schedule.append(entry)
 	n.lines = PackedStringArray(d.get("lines", []))
+	n.hair_style = str(d.get("hair_style", "short"))
+	n.hair_color = DataFiles.to_color(d.get("hair_color"), Color("#1d1b24"))
+	n.height = clampf(float(d.get("height", 1.0)), 0.85, 1.12)
+	n.sleeves = str(d.get("sleeves", "long"))
 	return n
 
 
