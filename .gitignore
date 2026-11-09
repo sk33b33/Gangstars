@@ -1,0 +1,7 @@
+# Godot
+.godot/
+*.tmp
+# pxl build output (textures are copied to assets/textures/pxl by tools/build_textures.sh)
+art/out/
+# test/screenshot output
+tests/output/

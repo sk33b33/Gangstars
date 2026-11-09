@@ -1,0 +1,18 @@
+{
+  "id": "starter",
+  "display_name": "Vleirand",
+  "street_name": "Duif Street",
+  "is_initially_unlocked": true,
+  "bounds": [-42, -26, 42, 22],
+  "street": { "x_from": -60, "x_to": 60, "road_half_width": 4.0, "sidewalk_width": 2.5 },
+  "pois": [
+    { "id": "poi_shop", "name": "Vleirand Cafe", "kind": "shop", "position": [-18, -8.4], "radius": 1.2 },
+    { "id": "poi_bus_stop", "name": "the bus stop", "kind": "transit", "position": [8, -5.3], "radius": 1.0 },
+    { "id": "poi_corner", "name": "the corner", "kind": "gathering", "position": [32, -5.4], "radius": 1.4 },
+    { "id": "poi_court", "name": "the sand court", "kind": "park", "position": [22, -15], "radius": 2.5 }
+  ],
+  "locked_neighbours": [
+    { "id": "district_east", "display_name": "Rooiduin", "side": "east" },
+    { "id": "district_west", "display_name": "Kalkbos", "side": "west" }
+  ]
+}

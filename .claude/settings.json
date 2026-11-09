@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(godot --headless *)",
+      "Bash(godot4 --headless *)",
+      "Bash(git status)",
+      "Bash(git diff *)"
+    ]
+  }
+}

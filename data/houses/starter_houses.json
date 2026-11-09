@@ -1,0 +1,25 @@
+{
+  "district_id": "starter",
+  "houses": [
+    { "id": "starter_h01", "number": 1, "display_name": "Daniels family", "kit": "single_hip",
+      "position": [-24, 7], "facing": "north", "wall_color": "#e8967a", "roof": "tiles",
+      "fence": "precast", "fence_color": "#efb59c", "occupancy": "occupied", "ownership": "neutral",
+      "occupant_ids": ["npc_faiza", "npc_boeta"] },
+    { "id": "starter_h02", "number": 3, "display_name": "Jacobs family", "kit": "single_gable",
+      "position": [-12, 7], "facing": "north", "wall_color": "#a6d455", "roof": "tiles",
+      "fence": "precast", "fence_color": "#a6d455", "occupancy": "occupied", "ownership": "neutral",
+      "occupant_ids": ["npc_shireen"] },
+    { "id": "starter_h03", "number": 5, "display_name": "Petersen family", "kit": "double_semi",
+      "position": [0, 7], "facing": "north", "wall_color": "#ece9e2", "roof": "ibr",
+      "fence": "palisade", "fence_color": "#ffffff", "occupancy": "occupied", "ownership": "neutral",
+      "occupant_ids": ["npc_lionel"] },
+    { "id": "starter_h04", "number": 7, "display_name": "Adams family", "kit": "double_garage",
+      "position": [12, 7], "facing": "north", "wall_color": "#bfc3c8", "roof": "ibr",
+      "fence": "palisade", "fence_color": "#ffffff", "occupancy": "occupied", "ownership": "neutral",
+      "occupant_ids": ["npc_tasneem"] },
+    { "id": "starter_h05", "number": 9, "display_name": "Your safehouse", "kit": "single_hip",
+      "position": [24, 7], "facing": "north", "wall_color": "#8fb8d8", "roof": "tiles",
+      "fence": "precast", "fence_color": "#d9e4ea", "occupancy": "vacant", "ownership": "player",
+      "occupant_ids": [] }
+  ]
+}

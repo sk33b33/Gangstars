@@ -1,0 +1,39 @@
+{
+  "residents": [
+    { "id": "npc_faiza", "display_name": "Auntie Faiza", "home_id": "starter_h01", "role": "resident",
+      "shirt_color": "#c0392b", "pants_color": "#2c3e50", "skin_color": "#a7754f", "walk_speed": 1.3, "start_delay": 2.0,
+      "schedule": [
+        { "activity": "shopping", "destination": "poi_shop", "duration": 10 },
+        { "activity": "socializing", "destination": "poi_corner", "duration": 14 },
+        { "activity": "home", "destination": "home", "duration": 18 } ],
+      "lines": ["Môre! The café has fresh bread today.", "Ag, these knees. Walk slower, man."] },
+    { "id": "npc_boeta", "display_name": "Boeta Daniels", "home_id": "starter_h01", "role": "resident",
+      "shirt_color": "#2e86c1", "pants_color": "#34495e", "skin_color": "#8d5a3b", "walk_speed": 1.6, "start_delay": 9.0,
+      "schedule": [
+        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 12 },
+        { "activity": "playing", "destination": "poi_court", "duration": 16 },
+        { "activity": "home", "destination": "home", "duration": 12 } ],
+      "lines": ["Bus is late again, my bru.", "You new here? Keep your eyes open."] },
+    { "id": "npc_shireen", "display_name": "Shireen Jacobs", "home_id": "starter_h02", "role": "resident",
+      "shirt_color": "#f4d03f", "pants_color": "#5d6d7e", "skin_color": "#b98458", "walk_speed": 1.5, "start_delay": 5.0,
+      "schedule": [
+        { "activity": "socializing", "destination": "poi_corner", "duration": 12 },
+        { "activity": "shopping", "destination": "poi_shop", "duration": 8 },
+        { "activity": "home", "destination": "home", "duration": 15 } ],
+      "lines": ["Have you seen my cousin? He owes me airtime.", "Shame, this heat."] },
+    { "id": "npc_lionel", "display_name": "Lionel Petersen", "home_id": "starter_h03", "role": "resident",
+      "shirt_color": "#27ae60", "pants_color": "#1c2833", "skin_color": "#7b4f33", "walk_speed": 1.7, "start_delay": 13.0,
+      "schedule": [
+        { "activity": "playing", "destination": "poi_court", "duration": 18 },
+        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 10 },
+        { "activity": "home", "destination": "home", "duration": 14 } ],
+      "lines": ["Court's free if you want a game.", "Everybody knows everybody on Duif Street."] },
+    { "id": "npc_tasneem", "display_name": "Tasneem Adams", "home_id": "starter_h04", "role": "resident",
+      "shirt_color": "#8e44ad", "pants_color": "#212f3d", "skin_color": "#c49a6c", "walk_speed": 1.5, "start_delay": 7.0,
+      "schedule": [
+        { "activity": "shopping", "destination": "poi_shop", "duration": 9 },
+        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 11 },
+        { "activity": "home", "destination": "home", "duration": 16 } ],
+      "lines": ["My ma says don't talk to strangers. You're a stranger.", "The café closes early on Sundays."] }
+  ]
+}
