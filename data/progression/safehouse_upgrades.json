@@ -1,0 +1,12 @@
+{
+  "upgrades": [
+    { "id": "security_light", "name": "Security light", "cost": 60,
+      "description": "A bright light over the door. The street notices.", "effect": { "reputation": 3 } },
+    { "id": "mural", "name": "Fresh paint & mural", "cost": 120,
+      "description": "A mural on the front wall. People stop to look.", "effect": { "reputation": 8 } },
+    { "id": "stash", "name": "Hidden stash", "cost": 150,
+      "description": "A safe spot for savings: +R40 every morning.", "effect": { "daily_cash": 40 } },
+    { "id": "crew_lounge", "name": "Crew stoep", "cost": 200, "requires_crew": 1,
+      "description": "Chairs on the stoep for your crew.", "effect": { "crew_influence": 15 } }
+  ]
+}

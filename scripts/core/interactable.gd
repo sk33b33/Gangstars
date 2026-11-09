@@ -9,6 +9,9 @@ const LAYER_INTERACTABLES := 1 << 3
 
 @export var prompt: String = "Interact"
 @export var radius: float = 1.2
+## What this is, for gameplay systems (missions): kind "npc" / "door", target = stable id.
+@export var kind: String = ""
+@export var target: String = ""
 
 var on_interact: Callable
 

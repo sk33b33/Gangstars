@@ -23,6 +23,8 @@ var is_navigation_ready := false
 var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
+## The player, so crew members can follow them ("@leader:player"). Set by the session.
+var player: Node3D
 
 
 func _ready() -> void:
@@ -131,17 +133,59 @@ func _spawn_residents() -> void:
 			continue
 		var r: Resident = RESIDENT_SCENE.instantiate()
 		add_child(r)
-		r.setup(npc, destinations, i * 0.11, director.clock, func(id: String) -> Resident: return residents.get(id))
+		r.setup(npc, destinations, i * 0.11, director.clock, _lookup)
 		r.reported.connect(func(who: Resident, event_id: String): events.report(event_id, who.data.display_name))
 		residents[npc.id] = r
 		i += 1
+
+
+func _lookup(id: String) -> Node3D:
+	if id == "player":
+		return player
+	return residents.get(id)
+
+
+## Mission/world queries (kept here so gameplay systems don't walk the scene tree).
+func resident_info(npc_id: String) -> Dictionary:
+	var r: Resident = residents.get(npc_id)
+	if r == null:
+		return {}
+	return {"inside": r.is_inside, "home_id": r.data.home_id, "name": r.data.display_name}
+
+
+func occupants_inside(house_id: String) -> PackedStringArray:
+	var out: PackedStringArray = []
+	var house := registry.get_house(house_id)
+	if house == null:
+		return out
+	for npc_id in house.occupant_ids:
+		var r: Resident = residents.get(npc_id)
+		if r and r.is_inside:
+			out.append(npc_id)
+	return out
+
+
+func anchor_or_null(id: String) -> Variant:
+	return destinations.anchor_position(id) if destinations.has(id) else null
+
+
+## Moves a recruited resident onto the player's crew schedule (follow, guard safehouse, corner).
+func apply_recruit(npc_id: String, safehouse_id: String) -> void:
+	var r: Resident = residents.get(npc_id)
+	if r == null or r.data.role == "player_crew":
+		return
+	r.recruit([
+		{"activity": "follow", "destination": "@leader:player", "duration": 90.0},
+		{"activity": "guard", "destination": safehouse_id + ":gate", "duration": 40.0},
+		{"activity": "socializing", "destination": "poi_corner", "duration": 25.0},
+		{"activity": "home", "destination": "home", "duration": 15.0}])
 
 
 func _on_door(house_id: String) -> String:
 	var house := registry.get_house(house_id)
 	var where := house.address()
 	if house.ownership == "player":
-		return "Your safehouse, %s. It's quiet. (Saving and upgrades arrive in Phase 4.)" % where
+		return "Your safehouse, %s." % where
 	if house.occupancy == "vacant":
 		return "%s is empty. The curtains are drawn." % where
 	var home: PackedStringArray = []

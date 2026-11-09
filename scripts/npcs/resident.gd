@@ -71,6 +71,7 @@ var _has_face_point := false
 var _bubble: Label3D
 var _bubble_timer := 0.0
 var _frames_in_tier := 0
+var _marker: Label3D
 
 
 func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: float,
@@ -90,7 +91,19 @@ func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: f
 		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0))
 	name_label.text = data.display_name
 	interactable.prompt = "Talk to %s" % data.display_name
+	interactable.kind = "npc"
+	interactable.target = data.id
 	interactable.on_interact = _talk
+	_marker = Label3D.new()
+	_marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_marker.no_depth_test = true
+	_marker.position = Vector3(0, 2.75, 0)
+	_marker.font_size = 96
+	_marker.pixel_size = 0.005
+	_marker.outline_size = 16
+	_marker.modulate = Color("#ffd75e")
+	_marker.visible = false
+	add_child(_marker)
 	_bubble = Label3D.new()
 	_bubble.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_bubble.position = Vector3(0, 2.45, 0)
@@ -129,6 +142,22 @@ func say(text: String, seconds := 3.0) -> void:
 	_bubble.text = text
 	_bubble.visible = true
 	_bubble_timer = seconds
+
+
+## Mission marker above the head: "!" = has a mission for you, "▼" = current target, "" = none.
+func set_marker(text: String) -> void:
+	_marker.text = text
+	_marker.visible = not text.is_empty()
+
+
+## Joins the player's crew: new role, cap in the player's colour, and a crew schedule.
+func recruit(schedule: Array) -> void:
+	data.role = "player_crew"
+	model.set_hat(Color("#a63a4c"))
+	brain.schedule = schedule
+	brain.active_hours = Vector2(8, 24)
+	brain.index = -1
+	interactable.prompt = "Talk to %s (your crew)" % data.display_name
 
 
 func face_point(p: Vector3) -> void:
@@ -300,11 +329,12 @@ func _think(dt: float) -> void:
 
 
 func _update_follow() -> void:
-	var leader: Resident = lookup.call(_leader_id) if lookup.is_valid() else null
-	if leader == null or leader.is_inside:
+	var leader: Node3D = lookup.call(_leader_id) if lookup.is_valid() else null
+	if leader == null or (leader is Resident and leader.is_inside):
 		_fail("leader unavailable")
 		return
-	var behind := leader.global_position - leader.global_basis.z * FOLLOW_GAP
+	var forward: Vector3 = leader.facing_dir() if leader.has_method("facing_dir") else leader.global_basis.z
+	var behind := leader.global_position - forward * FOLLOW_GAP
 	_special_point = behind
 	_set_target(0.0)
 	face_point(leader.global_position)
@@ -445,6 +475,8 @@ func _update_avoidance() -> void:
 
 func _talk() -> String:
 	var line := data.lines[_rng.randi() % data.lines.size()] if not data.lines.is_empty() else "..."
+	if data.role == "player_crew":
+		return "%s: \"Boss! I'm with you. What's the plan?\"" % data.display_name
 	if brain.is_reacting():
 		return "%s (%s): \"Did you see that? Something's going on.\"" % [data.display_name, brain.activity]
 	var where := destinations.display_name(target_id) if _travelling and not target_id.begins_with("@") else ""

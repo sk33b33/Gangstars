@@ -4,11 +4,18 @@ extends Node
 ##   --shot=res://tests/output/x.png  --shot-delay=8  --view=player|overview|street
 ##   --debug  --player=x,z  --yaw=degrees  --pitch=degrees  --interact  --hour=21.5
 ##   --incident=car_alarm|argument|scuffle (raised at the player 2 s before the shot)
+##   --safehouse-menu (open the safehouse menu)
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
 @onready var hud: Hud = $Hud
 @onready var debug_overlay: DebugOverlay = $DebugOverlay
+
+## Load the save on start (if one exists). Tests turn this off; `--new-game` also skips it.
+@export var auto_load := true
+@export var save_path := "user://savegame.json"
+
+var session: GameSession
 
 var _args := {}
 
@@ -20,13 +27,19 @@ func _ready() -> void:
 	player.interacted.connect(hud.show_message)
 	debug_overlay.setup(district, hud)
 	district.director.observer = player
+	session = GameSession.new()
+	session.name = "Session"
+	session.save_path = save_path
+	add_child(session)
+	session.setup(district, player, hud)
 	district.events.message.connect(hud.show_message)
 	player.shouted.connect(func(pos: Vector3): district.events.raise("whistle", pos))
 	if _args.has("hour"):
 		district.director.clock.set_hour(float(_args.hour))
 	if not district.is_navigation_ready:
 		await district.navigation_ready
-	hud.show_message("Welcome to Vleirand. Walk Duif Street and meet the neighbours.")
+	hud.show_message("Welcome to Vleirand. You've just moved into 13 Duif Street.")
+	session.begin(auto_load and not _args.has("new-game") and not _args.has("shot"))
 	if _args.has("shot"):
 		_run_screenshot.call_deferred()
 
@@ -66,6 +79,8 @@ func _run_screenshot() -> void:
 			_add_camera(Vector3(-36, 9, 12), Vector3(-4, 1, 2))
 	if _args.has("debug"):
 		debug_overlay.toggle()
+	if _args.has("safehouse-menu"):
+		session.open_safehouse_menu()
 	var delay := float(_args.get("shot-delay", "6"))
 	if _args.has("incident"):
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout

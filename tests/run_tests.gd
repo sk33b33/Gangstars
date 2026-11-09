@@ -34,6 +34,8 @@ func _run() -> void:
 	_test_brain_failures()
 	print("== phase 3 units (clock, reactions, time windows, crew)")
 	_test_phase3_units()
+	print("== phase 4 units (progression, missions, safehouse, saves)")
+	_test_phase4_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -209,6 +211,194 @@ func _test_phase3_units() -> void:
 	_check(crew.is_active_hours(), "crew active hours wrap past midnight")
 
 
+func _test_phase4_units() -> void:
+	# Progression: rewards once, spending, save round trip, bad data rejected.
+	var p := ProgressionState.new()
+	_check(p.grant("mission:x", {"cash": 50, "reputation": 5}) and p.cash == 150 and p.reputation == 5, "grant applies rewards")
+	_check(not p.grant("mission:x", {"cash": 50}) and p.cash == 150, "the same reward key never pays twice")
+	_check(not p.spend(1000) and p.cash == 150 and p.spend(100) and p.cash == 50, "spend checks funds")
+	_check(p.register_talk("npc_a", 1) and p.reputation == 6 and p.relationship("npc_a") == 2, "first talk: +1 rep, +2 relationship")
+	_check(not p.register_talk("npc_a", 1) and p.relationship("npc_a") == 2, "second talk the same day gives nothing")
+	_check(p.register_talk("npc_a", 2) and p.relationship("npc_a") == 4 and p.reputation == 6, "next day: relationship only")
+	var copy := ProgressionState.new()
+	_check(copy.load_dict(p.to_dict()) == "" and copy.to_dict() == p.to_dict(), "progression save round-trips")
+	var before := copy.to_dict()
+	_check(not copy.load_dict({"cash": "lots"}).is_empty() and copy.to_dict() == before, "bad progression data is rejected, state untouched")
+	var no_starter := p.to_dict()
+	no_starter.unlocked_district_ids = []
+	_check(not copy.load_dict(no_starter).is_empty(), "a save that lost the starter district is rejected")
+
+	# Mission data.
+	var all := MissionData.load_file("res://data/missions/intro.json")
+	_check(all.size() == 5, "5 intro missions load (%d)" % all.size())
+	var houses := HouseRegistry.load_file("res://data/houses/starter_houses.json")
+	var npc_ids := {}
+	for n in NpcData.load_file("res://data/npcs/starter_residents.json"):
+		npc_ids[n.id] = true
+	var ids := {}
+	for m in all:
+		ids[m.id] = true
+	for m in all:
+		for dep in m.prerequisites.get("missions", []):
+			_check(ids.has(dep), "%s prerequisite %s exists" % [m.id, dep])
+		if not m.giver.is_empty():
+			_check(npc_ids.has(m.giver), "%s giver %s exists" % [m.id, m.giver])
+		for o in m.objectives:
+			match str(o.type):
+				"talk_to": _check(npc_ids.has(o.target), "%s talks to existing NPC %s" % [m.id, o.target])
+				"knock": _check(houses.get_house(o.target) != null, "%s knocks on existing house %s" % [m.id, o.target])
+
+	# Mission manager without a scene (fake world callables).
+	var clock := SimClock.new()
+	clock.set_hour(9.0)
+	var prog := ProgressionState.new()
+	var mm := MissionManager.new()
+	mm.setup(all, prog, clock)
+	var inside := {"npc_faiza": false}
+	mm.resident_info = func(id): return {"name": id, "inside": inside.get(id, false)}
+	mm.occupants_inside = func(house): return PackedStringArray(["npc_faiza"]) if house == "starter_h01" and inside.npc_faiza else PackedStringArray()
+	mm.anchor_position = func(id): return Vector3(20, 0, -20) if id == "poi_court" else null
+	mm.check_auto_start()
+	_check(mm.active.has("new_face") and not mm.is_available("a_favour"), "New Face auto-starts; A Favour locked")
+	mm.on_interaction("npc", "npc_boeta")
+	_check(mm.is_completed("new_face") and prog.cash == 150, "talking to Boeta completes New Face (+R50)")
+	_check(mm.available_from("npc_faiza") != null, "Auntie Faiza now offers A Favour")
+	inside.npc_faiza = true
+	var note := mm.on_interaction("door", "starter_h01")
+	_check(mm.active.has("a_favour") and note.contains("Faiza"), "knocking while the giver is home starts her mission")
+	clock.advance(241.0)
+	mm.tick()
+	_check(not mm.active.has("a_favour") and mm.is_available("a_favour") and prog.failed_mission_counts.a_favour == 1,
+		"A Favour fails after its time limit and can be retried")
+	_check(prog.cash == 150, "a failed mission pays nothing")
+	mm.on_interaction("door", "starter_h01")
+	mm.on_interaction("door", "starter_h12")
+	_check(mm.current_objective("a_favour").get("id") == "return", "delivering the note advances to the return step")
+	mm.on_interaction("door", "starter_h01")
+	_check(mm.is_completed("a_favour") and prog.cash == 230, "returning completes A Favour (+R80)")
+	prog.completed_mission_ids.remove_at(prog.completed_mission_ids.find("a_favour"))
+	mm.start("a_favour")
+	mm.on_interaction("door", "starter_h12")
+	mm.on_interaction("door", "starter_h01")
+	_check(mm.is_completed("a_favour") and prog.cash == 230, "replaying a completed mission never grants its rewards again")
+	mm.on_interaction("npc", "npc_lionel")
+	mm.on_player_position(Vector3(21, 0, -21))
+	_check(mm.current_objective("know_the_block").get("id") == "park", "standing at the court completes the visit objective")
+	var saved := mm.to_dict()
+	var mm2 := MissionManager.new()
+	mm2.setup(all, prog, clock)
+	_check(mm2.load_dict(saved) == "" and mm2.current_objective("know_the_block").get("id") == "park", "mission progress round-trips")
+	_check(not mm2.load_dict({"active": {"know_the_block": {"objective": "x"}}}).is_empty(), "bad mission progress is rejected")
+	_check(mm.missing_requirements("first_crew").size() >= 1, "locked missions explain what is missing")
+	mm.free()
+	mm2.free()
+
+	# Safehouse upgrades.
+	var sh := Safehouse.load_file("res://data/progression/safehouse_upgrades.json")
+	var sp := ProgressionState.new()
+	_check(sh.upgrades.size() == 4, "4 safehouse upgrades")
+	_check(sh.why_not("crew_lounge", sp).contains("crew"), "crew lounge needs a crew member")
+	_check(sh.buy("security_light", sp) and sp.cash == 40 and sp.reputation == 3, "buying the security light costs R60, +3 rep")
+	_check(not sh.buy("security_light", sp), "an upgrade can't be bought twice")
+	_check(not sh.buy("stash", sp) and sp.cash == 40, "can't buy what you can't afford")
+	sp.add_cash(500)
+	sh.buy("stash", sp)
+	_check(sh.daily_income(sp) == 40, "stash pays R40 a day")
+
+	# Save files.
+	var path := "user://test_unit_save.json"
+	_check(SaveSystem.write(path, {"hello": 1}) == OK and SaveSystem.read(path).ok and SaveSystem.read(path).data.hello == 1, "save file round-trips")
+	var f := FileAccess.open(path, FileAccess.WRITE)
+	f.store_string("{ not json")
+	f.close()
+	_check(not SaveSystem.read(path).ok, "a corrupt save is reported, not crashed on")
+	SaveSystem.write(path, {"hello": 1})
+	var raw: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(path))
+	raw.version = 99
+	f = FileAccess.open(path, FileAccess.WRITE)
+	f.store_string(JSON.stringify(raw))
+	f.close()
+	_check(not SaveSystem.read(path).ok, "an unknown save version is refused")
+	_check(not SaveSystem.read("user://does_not_exist.json").ok, "a missing save is reported")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func _talk(player: Player, who: Interactable) -> void:
+	player.interacted_with.emit(who, who.interact(player))
+
+
+func _test_missions_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var missions := session.missions
+	var prog := session.progression
+	district.director.ambient_incidents = false
+	district.director.clock.set_hour(10.0)
+	_check(missions.active.has("new_face"), "game starts with New Face active")
+	session._refresh()
+	var boeta: Resident = district.residents["npc_boeta"]
+	_check(boeta._marker.text == "▼", "Boeta is marked as the target")
+	_check(session.hud.tracker_text().contains("NEW FACE"), "tracker shows the mission")
+	_talk(player, boeta.interactable)
+	_check(missions.is_completed("new_face"), "New Face completes in game")
+	session._refresh()
+	var faiza: Resident = district.residents["npc_faiza"]
+	_check(faiza._marker.text == "!", "Auntie Faiza shows a mission marker")
+	_talk(player, faiza.interactable)
+	_talk(player, district.plots["starter_h12"].door_interactable)
+	_talk(player, faiza.interactable)
+	_check(missions.is_completed("a_favour"), "A Favour completes in game")
+	_talk(player, district.residents["npc_lionel"].interactable)
+	for poi in ["poi_court", "poi_park", "poi_bus_stop_mossie"]:
+		player.global_position = district.destinations.anchor_position(poi) + Vector3(0, 0.1, 0)
+		for i in 30:
+			await physics_frame
+	_check(missions.is_completed("know_the_block"), "Know the Block completes by walking to the places")
+	_check(prog.reputation >= 20, "reputation is high enough for First Crew (%d)" % prog.reputation)
+	_talk(player, boeta.interactable)
+	_check(missions.active.has("first_crew"), "Boeta offers First Crew")
+	_talk(player, faiza.interactable)
+	_talk(player, district.plots["starter_h05"].door_interactable)
+	_check(missions.is_completed("first_crew") and prog.recruited_crew_ids.has("npc_boeta"), "First Crew recruits Boeta")
+	_check(boeta.data.role == "player_crew", "Boeta is now player crew")
+	_check(session.hud.is_menu_open(), "knocking on the safehouse opens its menu")
+	_check(session.buy_upgrade("security_light") and district.plots["starter_h05"].has_node("upgrade_security_light"),
+		"buying an upgrade adds its prop to the safehouse")
+	session._close_menu()
+	_check(not session.hud.is_menu_open() and player.input_enabled, "closing the menu gives control back")
+
+	# Boeta follows the player once he is out.
+	player.global_position = Vector3(10, 0.1, 4)
+	var followed := false
+	for i in 60 * 120:
+		if boeta.brain.state == NpcBrain.State.FOLLOWING and boeta.global_position.distance_to(player.global_position) < 6.0:
+			followed = true
+			break
+		await physics_frame
+	_check(followed, "recruited Boeta comes out and follows the player")
+
+	# Save, change things, load: everything comes back.
+	var cash_saved := prog.cash
+	var pos_saved := player.global_position
+	var active_saved := missions.to_dict()
+	_check(session.save_game() == "", "game saves")
+	prog.add_cash(999)
+	prog.recruited_crew_ids.clear()
+	player.global_position = Vector3(-30, 0.1, 3)
+	missions.active.clear()
+	_check(session.load_game() == "", "game loads")
+	_check(prog.cash == cash_saved and prog.recruited_crew_ids.has("npc_boeta"), "load restores cash and crew")
+	_check(player.global_position.distance_to(pos_saved) < 0.2, "load restores the player's position")
+	_check(missions.to_dict() == active_saved, "load restores active mission progress")
+	_check(not missions.start("new_face"), "completed missions stay completed after load")
+	var f := FileAccess.open(session.save_path, FileAccess.WRITE)
+	f.store_string("garbage")
+	f.close()
+	prog.add_cash(5)
+	var cash_now := prog.cash
+	_check(not session.load_game().is_empty() and prog.cash == cash_now, "a corrupt save fails safely and keeps the current game")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
+
+
 func _sample_states(district: District, seen: Dictionary, tiers: Dictionary) -> void:
 	for r: Resident in district.residents.values():
 		seen[r.state_name()] = seen.get(r.state_name(), 0) + 1
@@ -217,6 +407,8 @@ func _sample_states(district: District, seen: Dictionary, tiers: Dictionary) -> 
 
 func _test_district() -> void:
 	var main: Node = load("res://scenes/main/main.tscn").instantiate()
+	main.auto_load = false
+	main.save_path = "user://test_game_save.json"
 	root.add_child(main)
 	var district: District = main.get_node("Vleirand")
 	var player: Player = main.get_node("Player")
@@ -362,6 +554,8 @@ func _test_district() -> void:
 		nudges += r.offscreen_nudges
 		near_nudges += r.near_nudges
 	_check(tele == 0, "no teleports (>0.5 m in one frame) across day and night runs (%d)" % tele)
+	print("== phase 4 in game (missions, recruit, safehouse, save/load)")
+	await _test_missions_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

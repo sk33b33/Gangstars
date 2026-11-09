@@ -10,7 +10,7 @@ const PERSONALITIES: PackedStringArray = ["curious", "timid", "gossip", "steady"
 static func choose(role: String, personality: String, severity: int, distance: float, radius: float) -> String:
 	if distance > radius:
 		return ""
-	if role == "crew" or personality == "tough":
+	if role == "crew" or role == "player_crew" or personality == "tough":
 		return "investigate"
 	var close := distance < radius * 0.5
 	match severity:

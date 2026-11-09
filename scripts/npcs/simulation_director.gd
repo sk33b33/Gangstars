@@ -89,7 +89,7 @@ func _update_social_groups() -> void:
 				r.face_point(centre)
 		if social and _rng.randf() < 0.5:
 			var speaker: Resident = members[_rng.randi() % members.size()]
-			speaker.say(line("crew" if speaker.data.role == "crew" else "social"))
+			speaker.say(line("crew" if speaker.data.role in ["crew", "player_crew"] else "social"))
 
 
 func _on_incident(event: Dictionary) -> void:

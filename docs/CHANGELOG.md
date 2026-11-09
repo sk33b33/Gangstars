@@ -4,6 +4,27 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Phase 4: player progression and missions (2026-11-09)
+- `ProgressionState`: cash, reputation, crew influence, relationships (first meeting +1 rep,
+  daily talk +2 relationship), completed/failed missions, recruits, safehouse upgrades and
+  unlocked districts. Rewards go through `grant(key)`, which pays out once per key, ever.
+- `MissionManager` + `data/missions/intro.json`: New Face (auto-start), A Favour (4-hour time
+  limit, can fail and be retried), Know the Block, First Crew (recruits Boeta), Local Respect.
+  Objective types: talk_to (or knock while they're home), knock, visit (optional time window),
+  talk_distinct, reputation. Missions start from their giver; locked ones list what's missing.
+- Recruits join the player crew: red cap, follow the player, guard the safehouse gate, hang at the corner.
+- Safehouse (13 Duif Street): menu with 4 upgrades from `data/progression/safehouse_upgrades.json`
+  (security light, mural, stash with +R40/day, crew stoep), each with a visible prop; rest until
+  morning; save; load.
+- `SaveSystem`: versioned JSON, atomic temp-file + rename. The session validates every section
+  before applying anything; damaged, unknown-version or missing saves leave the current game
+  untouched. Saves cover clock, player position/camera, progression and active mission progress.
+  NPCs respawn from stable data.
+- HUD: cash / rep / crew line; mission tracker with distance; "!" over mission givers, "▼" over the
+  target NPC, a light beacon over target places; safehouse menu works with keyboard, mouse and controller.
+- `GameSession` node owns gameplay services; `main.gd` stays a bootstrap. `--new-game` skips auto-load.
+
+
 ### Phase 3: living neighbourhood simulation (2026-11-09)
 - `SimClock` (1 s = 1 game minute, starts 07:00) and `DayNight`: sun/moon, sky, ambient light and
   streetlight glow follow the time of day. HUD shows the clock; F7 skips an hour.

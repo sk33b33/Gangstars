@@ -4,6 +4,7 @@ extends RefCounted
 ## so it is deterministic under --fixed-fps. 1 real second = `minutes_per_second` game minutes.
 
 signal hour_changed(hour: int)
+signal day_changed(day: int)
 
 var minutes := 7.0 * 60.0   # minutes since midnight
 var day := 1
@@ -13,12 +14,21 @@ var minutes_per_second := 1.0
 func advance(dt: float) -> void:
 	var before := int(minutes / 60.0)
 	minutes += dt * minutes_per_second
-	if minutes >= 1440.0:
+	while minutes >= 1440.0:
 		minutes -= 1440.0
 		day += 1
+		day_changed.emit(day)
 	var now := int(minutes / 60.0)
 	if now != before:
 		hour_changed.emit(now)
+
+
+## Moves forward (never back) to the next occurrence of `h`, e.g. "rest until 07:00".
+func skip_to(h: float) -> void:
+	var delta := fposmod(h * 60.0 - minutes, 1440.0)
+	if delta < 1.0:
+		delta += 1440.0
+	advance(delta / minutes_per_second)
 
 
 func hour() -> float:

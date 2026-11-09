@@ -12,6 +12,7 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	legs.size = Vector3(0.36, 0.8, 0.22)
 	_add(legs, Vector3(0, 0.4, 0), pants)
 	_torso = Node3D.new()
+	_torso.name = "Torso"
 	add_child(_torso)
 	var body := CapsuleMesh.new()
 	body.radius = 0.24
@@ -35,6 +36,22 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		_add(brim, Vector3(0, 1.76, 0.18), hat, _torso)
 
 
+## Adds (or recolours) a cap, e.g. when someone joins the player's crew.
+func set_hat(color: Color) -> void:
+	if has_node("Torso/Cap"):
+		for n in ["Torso/Cap", "Torso/Brim"]:
+			(get_node(n) as MeshInstance3D).material_override = PixelMaterials.flat(color)
+		return
+	var cap := CylinderMesh.new()
+	cap.top_radius = 0.16
+	cap.bottom_radius = 0.17
+	cap.height = 0.1
+	_add(cap, Vector3(0, 1.8, 0), color, _torso).name = "Cap"
+	var brim := BoxMesh.new()
+	brim.size = Vector3(0.26, 0.03, 0.16)
+	_add(brim, Vector3(0, 1.76, 0.18), color, _torso).name = "Brim"
+
+
 ## Call every frame with horizontal speed; bobs the torso while walking.
 func animate(delta: float, speed: float) -> void:
 	if _torso == null:
@@ -46,9 +63,10 @@ func animate(delta: float, speed: float) -> void:
 		_torso.position.y = move_toward(_torso.position.y, 0.0, delta)
 
 
-func _add(mesh: Mesh, pos: Vector3, color: Color, parent: Node3D = self) -> void:
+func _add(mesh: Mesh, pos: Vector3, color: Color, parent: Node3D = self) -> MeshInstance3D:
 	var mi := MeshInstance3D.new()
 	mi.mesh = mesh
 	mi.position = pos
 	mi.material_override = PixelMaterials.flat(color)
 	parent.add_child(mi)
+	return mi

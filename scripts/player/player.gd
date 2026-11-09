@@ -6,6 +6,8 @@ extends CharacterBody3D
 signal interaction_target_changed(target: Interactable)
 signal interacted(message: String)
 signal shouted(position: Vector3)
+## Emitted with the target and its feedback; gameplay systems (missions) hook in here.
+signal interacted_with(target: Interactable, message: String)
 
 const GRAVITY := 9.8
 
@@ -73,7 +75,14 @@ func _physics_process(delta: float) -> void:
 		shouted.emit(global_position)
 	_update_target()
 	if input_enabled and current_target and Input.is_action_just_pressed("interact"):
-		interacted.emit(current_target.interact(self))
+		var msg := current_target.interact(self)
+		interacted_with.emit(current_target, msg)
+		interacted.emit(msg)
+
+
+## Direction the character faces (used by crew members following the player).
+func facing_dir() -> Vector3:
+	return model.global_basis.z
 
 
 func _look(delta_look: Vector2) -> void:

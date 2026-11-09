@@ -11,6 +11,12 @@ var _prompt: Label
 var _message: Label
 var _debug: Label
 var _clock: Label
+var _stats: Label
+var _tracker: Label
+var _menu: PanelContainer
+var _menu_list: VBoxContainer
+var _menu_title: Label
+var _menu_note: Label
 var _district := ""
 var _message_timer := 0.0
 
@@ -19,6 +25,10 @@ func _ready() -> void:
 	_title = _label(Vector2(16, 12), 18)
 	_title.text = "CONCRETE KINGS\n" + HELP
 	_clock = _label(Vector2(16, 70), 26)
+	_stats = _label(Vector2(16, 104), 22)
+	_tracker = _label(Vector2(16, 140), 20)
+	_tracker.add_theme_color_override("font_color", Color("#ffd75e"))
+	_build_menu()
 	_prompt = _label(Vector2.ZERO, 22)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -51,6 +61,87 @@ func set_clock(clock: SimClock) -> void:
 	_clock.text = "%s  ·  Day %d%s" % [clock.label(), clock.day, "  ·  night" if clock.is_night() else ""]
 
 
+func set_stats(p: ProgressionState) -> void:
+	_stats.text = "R%d   ·   Rep %d   ·   Crew %d (influence %d)" % [p.cash, p.reputation, p.recruited_crew_ids.size(), p.crew_influence]
+
+
+func set_tracker(text: String) -> void:
+	_tracker.text = text
+
+
+func tracker_text() -> String:
+	return _tracker.text
+
+
+func is_menu_open() -> bool:
+	return _menu.visible
+
+
+## Opens a simple menu. items: [{text, disabled?: bool, action: Callable}]. Keyboard,
+## mouse and controller (ui_up/ui_down/ui_accept) all work through Godot's focus system.
+func open_menu(title: String, items: Array) -> void:
+	_menu_title.text = title
+	for c in _menu_list.get_children():
+		c.queue_free()
+	var first: Button = null
+	for item in items:
+		var b := Button.new()
+		b.text = item.text
+		b.disabled = bool(item.get("disabled", false))
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.custom_minimum_size = Vector2(620, 0)
+		b.add_theme_font_size_override("font_size", 18)
+		b.pressed.connect(item.action)
+		_menu_list.add_child(b)
+		if first == null and not b.disabled:
+			first = b
+	_menu.visible = true
+	move_child(_menu, -1)
+	if first:
+		first.grab_focus.call_deferred()
+
+
+func close_menu() -> void:
+	_menu.visible = false
+	_menu_note.text = ""
+
+
+func _build_menu() -> void:
+	_menu = PanelContainer.new()
+	_menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_menu.offset_left = -330
+	_menu.offset_right = 330
+	_menu.offset_top = -260
+	_menu.offset_bottom = 260
+	_menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_menu.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.12, 0.98)
+	style.border_color = Color("#ffd75e")
+	style.set_border_width_all(2)
+	style.set_content_margin_all(18)
+	_menu.add_theme_stylebox_override("panel", style)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	_menu.add_child(box)
+	_menu_title = Label.new()
+	_menu_title.add_theme_font_size_override("font_size", 26)
+	_menu_title.add_theme_color_override("font_color", Color("#ffd75e"))
+	box.add_child(_menu_title)
+	_menu_list = VBoxContainer.new()
+	_menu_list.add_theme_constant_override("separation", 6)
+	box.add_child(_menu_list)
+	_menu_note = Label.new()
+	_menu_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_menu_note.custom_minimum_size = Vector2(620, 0)
+	_menu_note.add_theme_font_size_override("font_size", 16)
+	_menu_note.add_theme_color_override("font_color", Color("#9fd8b8"))
+	box.add_child(_menu_note)
+	_menu.visible = false
+	add_child(_menu)
+
+
 func set_prompt(target: Interactable) -> void:
 	_prompt.text = "[E]  %s" % target.prompt if target else ""
 
@@ -60,6 +151,8 @@ func show_message(text: String) -> void:
 		return
 	_message.text = text
 	_message.modulate.a = 1.0
+	if _menu.visible:
+		_menu_note.text = text
 	_message_timer = MESSAGE_TIME
 
 

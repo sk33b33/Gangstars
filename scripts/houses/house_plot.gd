@@ -66,9 +66,36 @@ func build(house: HouseData, closing_fence := false) -> void:
 	door_interactable.name = "Door"
 	door_interactable.position = _door_local + Vector3(0, 1.0, 0)
 	door_interactable.prompt = "Knock on %s" % house.address()
+	door_interactable.kind = "door"
+	door_interactable.target = house.id
 	if house.ownership == "player":
 		door_interactable.prompt = "Enter safehouse (%s)" % house.address()
 	add_child(door_interactable)
+
+
+## Visible safehouse upgrades (props on the plot). Idempotent.
+func show_upgrade(upgrade_id: String) -> void:
+	if has_node("upgrade_" + upgrade_id):
+		return
+	var root := Node3D.new()
+	root.name = "upgrade_" + upgrade_id
+	add_child(root)
+	var kit: Dictionary = KITS[data.kit]
+	var front_z := -SETBACK
+	match upgrade_id:
+		"security_light":
+			Geo.box(root, Vector3(0.5, 0.25, 0.25), Vector3(kit.door_x, 2.45, front_z + 0.15), PixelMaterials.lamp(), false)
+		"mural":
+			var mural := PixelMaterials.flat(Color("#e2585e"))
+			Geo.box(root, Vector3(2.2, 1.6, 0.04), Vector3(kit.door_x - 2.6, 1.3, front_z + 0.03), mural, false)
+			Geo.box(root, Vector3(1.4, 0.9, 0.05), Vector3(kit.door_x - 2.6, 1.3, front_z + 0.05), PixelMaterials.flat(Color("#f1d36b")), false)
+			Geo.box(root, Vector3(0.6, 0.4, 0.06), Vector3(kit.door_x - 2.6, 1.3, front_z + 0.07), PixelMaterials.flat(Color("#2f6e3a")), false)
+		"stash":
+			Geo.box(root, Vector3(0.7, 0.5, 0.5), Vector3(kit.door_x + 2.4, 0.25, front_z + 1.6), PixelMaterials.flat(Color("#6b4630")), false)
+		"crew_lounge":
+			for dx in [-1.1, 1.1]:
+				Geo.box(root, Vector3(0.5, 0.45, 0.5), Vector3(kit.door_x + dx, 0.32, front_z + 0.9), PixelMaterials.flat(Color("#2e86c1")), false)
+				Geo.box(root, Vector3(0.5, 0.5, 0.08), Vector3(kit.door_x + dx, 0.75, front_z + 0.66), PixelMaterials.flat(Color("#2e86c1")), false)
 
 
 func door_position() -> Vector3:

@@ -1,0 +1,62 @@
+{
+  "missions": [
+    {
+      "id": "new_face", "title": "New Face", "auto_start": true,
+      "description": "You've just moved into 13 Duif Street. Introduce yourself to the street.",
+      "objectives": [
+        { "id": "meet_boeta", "type": "talk_to", "target": "npc_boeta", "allow_knock": true,
+          "text": "Say hello to Boeta Daniels (5 Duif Street)" }
+      ],
+      "rewards": { "cash": 50, "reputation": 5, "relationship": { "npc_boeta": 10 } }
+    },
+    {
+      "id": "a_favour", "title": "A Favour", "giver": "npc_faiza",
+      "prerequisites": { "missions": ["new_face"] },
+      "intro": "Auntie Faiza: \"You're the new one at No. 13? Do me a favour, take this note to the Cupidos at 8 Mossie Street. Before supper, hey!\"",
+      "description": "Deliver Auntie Faiza's note.",
+      "time_limit_minutes": 240,
+      "fail_text": "The note went stale. Auntie Faiza is not impressed.",
+      "objectives": [
+        { "id": "deliver", "type": "knock", "target": "starter_h12", "text": "Deliver the note: knock at 8 Mossie Street" },
+        { "id": "return", "type": "talk_to", "target": "npc_faiza", "allow_knock": true, "text": "Tell Auntie Faiza it's done" }
+      ],
+      "rewards": { "cash": 80, "reputation": 10, "relationship": { "npc_faiza": 15, "npc_h12_1": 5 } }
+    },
+    {
+      "id": "know_the_block", "title": "Know the Block", "giver": "npc_lionel",
+      "prerequisites": { "missions": ["a_favour"] },
+      "intro": "Lionel: \"If you want people to trust you, you must know the block. Check out the court, the park and the Mossie Street bus stop.\"",
+      "description": "Learn the neighbourhood.",
+      "objectives": [
+        { "id": "court", "type": "visit", "target": "poi_court", "radius": 4, "text": "Visit the sand court" },
+        { "id": "park", "type": "visit", "target": "poi_park", "radius": 5, "text": "Visit the park" },
+        { "id": "bus", "type": "visit", "target": "poi_bus_stop_mossie", "radius": 3, "text": "Visit the Mossie Street bus stop" }
+      ],
+      "rewards": { "cash": 40, "reputation": 10, "relationship": { "npc_lionel": 10 } }
+    },
+    {
+      "id": "first_crew", "title": "First Crew", "giver": "npc_boeta",
+      "prerequisites": { "missions": ["know_the_block"], "reputation": 20 },
+      "intro": "Boeta: \"Everyone's talking about you. I want in. But my ma has to give her blessing first.\"",
+      "description": "Recruit Boeta Daniels.",
+      "objectives": [
+        { "id": "blessing", "type": "talk_to", "target": "npc_faiza", "allow_knock": true, "text": "Get Auntie Faiza's blessing" },
+        { "id": "show", "type": "knock", "target": "starter_h05", "text": "Show Boeta your safehouse (13 Duif Street)" }
+      ],
+      "rewards": { "reputation": 5, "crew_influence": 10, "recruit": "npc_boeta" }
+    },
+    {
+      "id": "local_respect", "title": "Local Respect", "giver": "npc_tasneem",
+      "prerequisites": { "missions": ["first_crew"] },
+      "intro": "Tasneem: \"People say you're alright. Prove it. Be someone the whole street can talk to.\"",
+      "description": "Earn the street's respect.",
+      "objectives": [
+        { "id": "chat", "type": "talk_distinct", "count": 5, "text": "Chat with 5 different neighbours" },
+        { "id": "rep", "type": "reputation", "value": 40, "text": "Reach 40 reputation" },
+        { "id": "corner", "type": "visit", "target": "poi_corner", "radius": 3, "window": [19, 23],
+          "text": "Show your face at the corner after dark (19:00-23:00)" }
+      ],
+      "rewards": { "cash": 120, "reputation": 15, "crew_influence": 10, "relationship": { "npc_tasneem": 10 } }
+    }
+  ]
+}

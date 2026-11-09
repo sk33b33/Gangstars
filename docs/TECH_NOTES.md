@@ -100,6 +100,25 @@ typical runs show 0–2 across about 1M NPC-frames.
 Avoidance and physics make runs slightly non-deterministic, so validate with 2–3 consecutive
 runs. Set `CK_DEBUG=1` to print every travel failure and jump with its cause.
 
+## Phase 4 progression and saves
+
+| Piece | File |
+|---|---|
+| Session wiring | `scripts/core/game_session.gd` |
+| Progression model | `scripts/progression/progression_state.gd` |
+| Missions | `scripts/missions/mission_data.gd`, `mission_manager.gd`, `data/missions/intro.json` |
+| Safehouse | `scripts/progression/safehouse.gd`, `data/progression/safehouse_upgrades.json` |
+| Saves | `scripts/save/save_system.gd` → `user://savegame.json` |
+
+- Gameplay systems learn what the player interacted with from `Interactable.kind` / `.target`
+  ("npc"/npc id, "door"/house id) via `Player.interacted_with`.
+- The mission manager only talks to the world through injected callables (`resident_info`,
+  `occupants_inside`, `anchor_position`), so it is unit-tested without scenes.
+- Saving stores stable state only. Residents restart from their homes and recruits are reapplied
+  from `recruited_crew_ids`.
+- Adding a mission: append to `data/missions/intro.json` and run the tests. They check that
+  prerequisites, givers, NPC targets and houses exist.
+
 ## Known limitations
 
 - Characters are low-poly placeholders with a walk bob; no rigged animation yet.
