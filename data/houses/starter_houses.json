@@ -1,25 +1,629 @@
 {
   "district_id": "starter",
   "houses": [
-    { "id": "starter_h01", "number": 1, "display_name": "Daniels family", "kit": "single_hip",
-      "position": [-24, 7], "facing": "north", "wall_color": "#e8967a", "roof": "tiles",
-      "fence": "precast", "fence_color": "#efb59c", "occupancy": "occupied", "ownership": "neutral",
-      "occupant_ids": ["npc_faiza", "npc_boeta"] },
-    { "id": "starter_h02", "number": 3, "display_name": "Jacobs family", "kit": "single_gable",
-      "position": [-12, 7], "facing": "north", "wall_color": "#a6d455", "roof": "tiles",
-      "fence": "precast", "fence_color": "#a6d455", "occupancy": "occupied", "ownership": "neutral",
-      "occupant_ids": ["npc_shireen"] },
-    { "id": "starter_h03", "number": 5, "display_name": "Petersen family", "kit": "double_semi",
-      "position": [0, 7], "facing": "north", "wall_color": "#ece9e2", "roof": "ibr",
-      "fence": "palisade", "fence_color": "#ffffff", "occupancy": "occupied", "ownership": "neutral",
-      "occupant_ids": ["npc_lionel"] },
-    { "id": "starter_h04", "number": 7, "display_name": "Adams family", "kit": "double_garage",
-      "position": [12, 7], "facing": "north", "wall_color": "#bfc3c8", "roof": "ibr",
-      "fence": "palisade", "fence_color": "#ffffff", "occupancy": "occupied", "ownership": "neutral",
-      "occupant_ids": ["npc_tasneem"] },
-    { "id": "starter_h05", "number": 9, "display_name": "Your safehouse", "kit": "single_hip",
-      "position": [24, 7], "facing": "north", "wall_color": "#8fb8d8", "roof": "tiles",
-      "fence": "precast", "fence_color": "#d9e4ea", "occupancy": "vacant", "ownership": "player",
-      "occupant_ids": [] }
+    {
+      "id": "starter_h01",
+      "number": 5,
+      "street": "Duif Street",
+      "display_name": "Daniels family",
+      "kit": "single_hip",
+      "position": [
+        -24,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#e8967a",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#efb59c",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_faiza",
+        "npc_boeta"
+      ]
+    },
+    {
+      "id": "starter_h02",
+      "number": 7,
+      "street": "Duif Street",
+      "display_name": "Jacobs family",
+      "kit": "single_gable",
+      "position": [
+        -12,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#a6d455",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#a6d455",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_shireen"
+      ]
+    },
+    {
+      "id": "starter_h03",
+      "number": 9,
+      "street": "Duif Street",
+      "display_name": "Petersen family",
+      "kit": "double_semi",
+      "position": [
+        0,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#ece9e2",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_lionel"
+      ]
+    },
+    {
+      "id": "starter_h04",
+      "number": 11,
+      "street": "Duif Street",
+      "display_name": "Adams family",
+      "kit": "double_garage",
+      "position": [
+        12,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#bfc3c8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tasneem"
+      ]
+    },
+    {
+      "id": "starter_h05",
+      "number": 13,
+      "street": "Duif Street",
+      "display_name": "Your safehouse",
+      "kit": "single_hip",
+      "position": [
+        24,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#8fb8d8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9e4ea",
+      "occupancy": "vacant",
+      "ownership": "player",
+      "occupant_ids": []
+    },
+    {
+      "id": "starter_h06",
+      "number": 15,
+      "street": "Duif Street",
+      "display_name": "Solomons family",
+      "kit": "single_gable",
+      "position": [
+        36,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#f1d36b",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h06_1"
+      ]
+    },
+    {
+      "id": "starter_h07",
+      "number": 3,
+      "street": "Duif Street",
+      "display_name": "Meyer family",
+      "kit": "double_garage",
+      "position": [
+        -36,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#7cc7c4",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h07_1"
+      ]
+    },
+    {
+      "id": "starter_h08",
+      "number": 1,
+      "street": "Duif Street",
+      "display_name": "Davids family",
+      "kit": "single_hip",
+      "position": [
+        -48,
+        7.0
+      ],
+      "facing": "north",
+      "wall_color": "#a6d455",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h08_1"
+      ]
+    },
+    {
+      "id": "starter_h09",
+      "number": 2,
+      "street": "Mossie Street",
+      "display_name": "Wyngaard family",
+      "kit": "single_gable",
+      "position": [
+        -42,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#7cc7c4",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h09_1"
+      ]
+    },
+    {
+      "id": "starter_h10",
+      "number": 4,
+      "street": "Mossie Street",
+      "display_name": "Isaacs family",
+      "kit": "single_gable",
+      "position": [
+        -30,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#a6d455",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#a6d455",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h10_1"
+      ]
+    },
+    {
+      "id": "starter_h11",
+      "number": 6,
+      "street": "Mossie Street",
+      "display_name": "Cupido family",
+      "kit": "single_gable",
+      "position": [
+        -18,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#f1d36b",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#f1d36b",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h11_1"
+      ]
+    },
+    {
+      "id": "starter_h12",
+      "number": 8,
+      "street": "Mossie Street",
+      "display_name": "Cupido family",
+      "kit": "double_semi",
+      "position": [
+        -6,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#ece9e2",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#ece9e2",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h12_1"
+      ]
+    },
+    {
+      "id": "starter_h13",
+      "number": 10,
+      "street": "Mossie Street",
+      "display_name": "Solomons family",
+      "kit": "single_hip",
+      "position": [
+        6,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#8fb8d8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h13_1"
+      ]
+    },
+    {
+      "id": "starter_h14",
+      "number": 12,
+      "street": "Mossie Street",
+      "display_name": "Empty house",
+      "kit": "single_hip",
+      "position": [
+        18,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#8fb8d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": []
+    },
+    {
+      "id": "starter_h15",
+      "number": 14,
+      "street": "Mossie Street",
+      "display_name": "Cupido family",
+      "kit": "single_hip",
+      "position": [
+        30,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#a6d455",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#a6d455",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h15_1"
+      ]
+    },
+    {
+      "id": "starter_h16",
+      "number": 16,
+      "street": "Mossie Street",
+      "display_name": "Fortuin family",
+      "kit": "single_hip",
+      "position": [
+        42,
+        -63.0
+      ],
+      "facing": "south",
+      "wall_color": "#c3b0d8",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#c3b0d8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h16_1"
+      ]
+    },
+    {
+      "id": "starter_h17",
+      "number": 1,
+      "street": "Mossie Street",
+      "display_name": "Abrahams family",
+      "kit": "double_garage",
+      "position": [
+        -6,
+        -49.0
+      ],
+      "facing": "north",
+      "wall_color": "#ece9e2",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h17_1"
+      ]
+    },
+    {
+      "id": "starter_h18",
+      "number": 3,
+      "street": "Mossie Street",
+      "display_name": "Samuels family",
+      "kit": "single_gable",
+      "position": [
+        6,
+        -49.0
+      ],
+      "facing": "north",
+      "wall_color": "#f1d36b",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h18_1"
+      ]
+    },
+    {
+      "id": "starter_h19",
+      "number": 5,
+      "street": "Kwikkie Street",
+      "display_name": "Josephs family",
+      "kit": "single_hip",
+      "position": [
+        -57.0,
+        -16
+      ],
+      "facing": "east",
+      "wall_color": "#bfc3c8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#bfc3c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h19_1"
+      ]
+    },
+    {
+      "id": "starter_h20",
+      "number": 3,
+      "street": "Kwikkie Street",
+      "display_name": "Empty house",
+      "kit": "single_hip",
+      "position": [
+        -57.0,
+        -28
+      ],
+      "facing": "east",
+      "wall_color": "#f0a58a",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": []
+    },
+    {
+      "id": "starter_h21",
+      "number": 1,
+      "street": "Kwikkie Street",
+      "display_name": "Solomons family",
+      "kit": "single_hip",
+      "position": [
+        -57.0,
+        -40
+      ],
+      "facing": "east",
+      "wall_color": "#f4c59a",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#f4c59a",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h21_1"
+      ]
+    },
+    {
+      "id": "starter_h22",
+      "number": 6,
+      "street": "Kwikkie Street",
+      "display_name": "Kannemeyer family",
+      "kit": "single_hip",
+      "position": [
+        -43.0,
+        -16
+      ],
+      "facing": "west",
+      "wall_color": "#9fd8b8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h22_1"
+      ]
+    },
+    {
+      "id": "starter_h23",
+      "number": 4,
+      "street": "Kwikkie Street",
+      "display_name": "Williams family",
+      "kit": "double_semi",
+      "position": [
+        -43.0,
+        -28
+      ],
+      "facing": "west",
+      "wall_color": "#ece9e2",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h23_1"
+      ]
+    },
+    {
+      "id": "starter_h24",
+      "number": 2,
+      "street": "Kwikkie Street",
+      "display_name": "Carelse family",
+      "kit": "single_hip",
+      "position": [
+        -43.0,
+        -40
+      ],
+      "facing": "west",
+      "wall_color": "#7cc7c4",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h24_1"
+      ]
+    },
+    {
+      "id": "starter_h25",
+      "number": 5,
+      "street": "Tortel Lane",
+      "display_name": "Wyngaard family",
+      "kit": "double_semi",
+      "position": [
+        44.5,
+        -16
+      ],
+      "facing": "east",
+      "wall_color": "#c3b0d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#ffffff",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h25_1"
+      ]
+    },
+    {
+      "id": "starter_h26",
+      "number": 3,
+      "street": "Tortel Lane",
+      "display_name": "Meyer family",
+      "kit": "single_gable",
+      "position": [
+        44.5,
+        -28
+      ],
+      "facing": "east",
+      "wall_color": "#a6d455",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h26_1"
+      ]
+    },
+    {
+      "id": "starter_h27",
+      "number": 1,
+      "street": "Tortel Lane",
+      "display_name": "Empty house",
+      "kit": "single_hip",
+      "position": [
+        44.5,
+        -40
+      ],
+      "facing": "east",
+      "wall_color": "#f0a58a",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": []
+    },
+    {
+      "id": "starter_h28",
+      "number": 6,
+      "street": "Tortel Lane",
+      "display_name": "Solomons family",
+      "kit": "single_gable",
+      "position": [
+        55.5,
+        -16
+      ],
+      "facing": "west",
+      "wall_color": "#c3b0d8",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h28_1"
+      ]
+    },
+    {
+      "id": "starter_h29",
+      "number": 4,
+      "street": "Tortel Lane",
+      "display_name": "Carelse family",
+      "kit": "single_hip",
+      "position": [
+        55.5,
+        -28
+      ],
+      "facing": "west",
+      "wall_color": "#f0a58a",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "hostile",
+      "occupant_ids": [
+        "npc_h29_1",
+        "npc_h29_2"
+      ]
+    },
+    {
+      "id": "starter_h30",
+      "number": 2,
+      "street": "Tortel Lane",
+      "display_name": "Wyngaard family",
+      "kit": "double_garage",
+      "position": [
+        55.5,
+        -40
+      ],
+      "facing": "west",
+      "wall_color": "#e8967a",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_h30_1"
+      ]
+    }
   ]
 }

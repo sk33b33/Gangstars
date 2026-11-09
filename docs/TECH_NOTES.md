@@ -26,6 +26,9 @@ xvfb-run -a godot --path . --rendering-driver opengl3 -- \
 
 # Rebuild pixel textures (Node >= 22.18)
 tools/build_textures.sh
+
+# Regenerate house/resident data (deterministic; keeps h01-h05 and the first 5 residents)
+python3 tools/generate_starter_data.py
 ```
 
 `--fixed-fps 60` advances exactly 1/60 s per frame, so a 10-minute soak runs in about 12 s.
@@ -57,6 +60,19 @@ Physics layers: 1 world, 2 player, 3 NPCs, 4 interactables.
   map points before spawning NPCs; otherwise queries return the origin.
 - Two residents of one house never step out together: an NPC waits inside until the doorway
   is clear, which avoids capsule overlap and depenetration pops.
+
+## Performance (Phase 2)
+
+28 residents with avoidance: about 0.72 ms per physics frame headless (10-minute soak, 36,000 frames).
+The debug overlay lists only the 6 nearest residents, so it stays cheap at scale.
+
+## NPC recovery chain
+
+1. No path: retry up to 3 times with a wider random spread around the anchor.
+2. Stuck (moved < 0.3 m in 2.5 s): step for 0.8 s along the last wall normal plus a sideways
+   component, then re-path.
+3. Still failing: the brain skips to the next schedule entry. After repeated failures, or when the
+   route home fails, the NPC goes `UNAVAILABLE` and retries home after 6 s.
 
 ## Known limitations
 

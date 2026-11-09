@@ -25,6 +25,10 @@ func set_enabled(id: String, enabled: bool) -> void:
 		_anchors[id].enabled = enabled
 
 
+func all_ids() -> PackedStringArray:
+	return PackedStringArray(_anchors.keys())
+
+
 func ids_of_kind(kind: String) -> PackedStringArray:
 	var out: PackedStringArray = []
 	for id in _anchors:

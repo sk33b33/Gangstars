@@ -10,6 +10,7 @@ const THINK_INTERVAL := 0.5
 const STUCK_WINDOW := 2.5
 const STUCK_MIN_MOVE := 0.3
 const MAX_REPATHS := 3
+const UNSTICK_TIME := 0.8
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var model: CharacterModel = $Model
@@ -29,6 +30,7 @@ var sim_tier := "near"  # Phase 3 adds distance tiers.
 var arrivals := 0
 var travel_failures := 0
 var teleport_violations := 0
+var unsticks := 0
 var travel_time := 0.0
 var max_travel_time := 0.0
 
@@ -41,6 +43,9 @@ var _check_reachable := false
 var _last_pos := Vector3.ZERO
 var _rng := RandomNumberGenerator.new()
 var _deferred: Array = []
+var _last_wall_normal := Vector3.ZERO
+var _unstick_timer := 0.0
+var _unstick_dir := Vector3.ZERO
 var _door_query: PhysicsShapeQueryParameters3D
 
 
@@ -80,7 +85,11 @@ func _physics_process(delta: float) -> void:
 	if is_inside:
 		return
 	var desired := Vector3.ZERO
-	if _travelling:
+	if _unstick_timer > 0.0:
+		# Step clear of whatever we are wedged against, then resume the path.
+		_unstick_timer -= delta
+		desired = _unstick_dir * data.walk_speed
+	elif _travelling:
 		travel_time += delta
 		max_travel_time = maxf(max_travel_time, travel_time)
 		if agent.is_navigation_finished():
@@ -107,6 +116,12 @@ func _apply_velocity(v: Vector3) -> void:
 	velocity.z = v.z
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * dt
 	move_and_slide()
+	_last_wall_normal = Vector3.ZERO
+	for i in get_slide_collision_count():
+		var n := get_slide_collision(i).get_normal()
+		n.y = 0.0
+		if n.length() > 0.5:
+			_last_wall_normal = n.normalized()
 	var flat := Vector2(velocity.x, velocity.z)
 	if flat.length() > 0.1:
 		rotation.y = lerp_angle(rotation.y, atan2(velocity.x, velocity.z), clampf(dt * 8.0, 0.0, 1.0))
@@ -145,6 +160,7 @@ func _think(dt: float) -> void:
 	_stuck_accum += dt
 	if _stuck_accum >= STUCK_WINDOW:
 		if global_position.distance_to(_stuck_origin) < STUCK_MIN_MOVE:
+			_start_unstick()
 			_retry("stuck")
 		_stuck_accum = 0.0
 		_stuck_origin = global_position
@@ -192,6 +208,16 @@ func _set_target(extra_jitter: float) -> bool:
 	_stuck_origin = global_position
 	path_status = "moving"
 	return true
+
+
+func _start_unstick() -> void:
+	var side := Vector3(-_last_wall_normal.z, 0, _last_wall_normal.x) * (1.0 if _rng.randf() < 0.5 else -1.0)
+	_unstick_dir = (_last_wall_normal + side).normalized()
+	if _unstick_dir == Vector3.ZERO:
+		var a := _rng.randf() * TAU
+		_unstick_dir = Vector3(cos(a), 0, sin(a))
+	_unstick_timer = UNSTICK_TIME
+	unsticks += 1
 
 
 func _retry(reason: String) -> void:

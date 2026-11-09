@@ -44,7 +44,7 @@ func _run_screenshot() -> void:
 		player.pitch.rotation.x = deg_to_rad(float(_args.pitch))
 	match _args.get("view", "player"):
 		"overview":
-			_add_camera(Vector3(0, 48, 40), Vector3(0, 0, -2))
+			_add_camera(Vector3(0, 105, 52), Vector3(0, 0, -30))
 		"street":
 			_add_camera(Vector3(-36, 9, 12), Vector3(-4, 1, 2))
 	if _args.has("debug"):

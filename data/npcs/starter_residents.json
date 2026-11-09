@@ -1,39 +1,912 @@
 {
   "residents": [
-    { "id": "npc_faiza", "display_name": "Auntie Faiza", "home_id": "starter_h01", "role": "resident",
-      "shirt_color": "#c0392b", "pants_color": "#2c3e50", "skin_color": "#a7754f", "walk_speed": 1.3, "start_delay": 2.0,
+    {
+      "id": "npc_faiza",
+      "display_name": "Auntie Faiza",
+      "home_id": "starter_h01",
+      "role": "resident",
+      "shirt_color": "#c0392b",
+      "pants_color": "#2c3e50",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.3,
+      "start_delay": 2.0,
       "schedule": [
-        { "activity": "shopping", "destination": "poi_shop", "duration": 10 },
-        { "activity": "socializing", "destination": "poi_corner", "duration": 14 },
-        { "activity": "home", "destination": "home", "duration": 18 } ],
-      "lines": ["Môre! The café has fresh bread today.", "Ag, these knees. Walk slower, man."] },
-    { "id": "npc_boeta", "display_name": "Boeta Daniels", "home_id": "starter_h01", "role": "resident",
-      "shirt_color": "#2e86c1", "pants_color": "#34495e", "skin_color": "#8d5a3b", "walk_speed": 1.6, "start_delay": 9.0,
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 10
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 14
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 18
+        }
+      ],
+      "lines": [
+        "Môre! The café has fresh bread today.",
+        "Ag, these knees. Walk slower, man."
+      ]
+    },
+    {
+      "id": "npc_boeta",
+      "display_name": "Boeta Daniels",
+      "home_id": "starter_h01",
+      "role": "resident",
+      "shirt_color": "#2e86c1",
+      "pants_color": "#34495e",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.6,
+      "start_delay": 9.0,
       "schedule": [
-        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 12 },
-        { "activity": "playing", "destination": "poi_court", "duration": 16 },
-        { "activity": "home", "destination": "home", "duration": 12 } ],
-      "lines": ["Bus is late again, my bru.", "You new here? Keep your eyes open."] },
-    { "id": "npc_shireen", "display_name": "Shireen Jacobs", "home_id": "starter_h02", "role": "resident",
-      "shirt_color": "#f4d03f", "pants_color": "#5d6d7e", "skin_color": "#b98458", "walk_speed": 1.5, "start_delay": 5.0,
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 12
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 16
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 12
+        }
+      ],
+      "lines": [
+        "Bus is late again, my bru.",
+        "You new here? Keep your eyes open."
+      ]
+    },
+    {
+      "id": "npc_shireen",
+      "display_name": "Shireen Jacobs",
+      "home_id": "starter_h02",
+      "role": "resident",
+      "shirt_color": "#f4d03f",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#b98458",
+      "walk_speed": 1.5,
+      "start_delay": 5.0,
       "schedule": [
-        { "activity": "socializing", "destination": "poi_corner", "duration": 12 },
-        { "activity": "shopping", "destination": "poi_shop", "duration": 8 },
-        { "activity": "home", "destination": "home", "duration": 15 } ],
-      "lines": ["Have you seen my cousin? He owes me airtime.", "Shame, this heat."] },
-    { "id": "npc_lionel", "display_name": "Lionel Petersen", "home_id": "starter_h03", "role": "resident",
-      "shirt_color": "#27ae60", "pants_color": "#1c2833", "skin_color": "#7b4f33", "walk_speed": 1.7, "start_delay": 13.0,
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 12
+        },
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 8
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Have you seen my cousin? He owes me airtime.",
+        "Shame, this heat."
+      ]
+    },
+    {
+      "id": "npc_lionel",
+      "display_name": "Lionel Petersen",
+      "home_id": "starter_h03",
+      "role": "resident",
+      "shirt_color": "#27ae60",
+      "pants_color": "#1c2833",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.7,
+      "start_delay": 13.0,
       "schedule": [
-        { "activity": "playing", "destination": "poi_court", "duration": 18 },
-        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 10 },
-        { "activity": "home", "destination": "home", "duration": 14 } ],
-      "lines": ["Court's free if you want a game.", "Everybody knows everybody on Duif Street."] },
-    { "id": "npc_tasneem", "display_name": "Tasneem Adams", "home_id": "starter_h04", "role": "resident",
-      "shirt_color": "#8e44ad", "pants_color": "#212f3d", "skin_color": "#c49a6c", "walk_speed": 1.5, "start_delay": 7.0,
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 18
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 10
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 14
+        }
+      ],
+      "lines": [
+        "Court's free if you want a game.",
+        "Everybody knows everybody on Duif Street."
+      ]
+    },
+    {
+      "id": "npc_tasneem",
+      "display_name": "Tasneem Adams",
+      "home_id": "starter_h04",
+      "role": "resident",
+      "shirt_color": "#8e44ad",
+      "pants_color": "#212f3d",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.5,
+      "start_delay": 7.0,
       "schedule": [
-        { "activity": "shopping", "destination": "poi_shop", "duration": 9 },
-        { "activity": "waiting", "destination": "poi_bus_stop", "duration": 11 },
-        { "activity": "home", "destination": "home", "duration": 16 } ],
-      "lines": ["My ma says don't talk to strangers. You're a stranger.", "The café closes early on Sundays."] }
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 9
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 11
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 16
+        }
+      ],
+      "lines": [
+        "My ma says don't talk to strangers. You're a stranger.",
+        "The café closes early on Sundays."
+      ]
+    },
+    {
+      "id": "npc_h06_1",
+      "display_name": "Ruwayda Solomons",
+      "home_id": "starter_h06",
+      "role": "resident",
+      "shirt_color": "#8e44ad",
+      "pants_color": "#2c3e50",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.53,
+      "start_delay": 8.9,
+      "schedule": [
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 9
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 18
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 26
+        }
+      ],
+      "lines": [
+        "Who are you looking for?",
+        "My ouma has lived here forty years."
+      ]
+    },
+    {
+      "id": "npc_h07_1",
+      "display_name": "Lee-Ann Meyer",
+      "home_id": "starter_h07",
+      "role": "resident",
+      "shirt_color": "#c0392b",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.38,
+      "start_delay": 40.6,
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 16
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 16
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "My ouma has lived here forty years.",
+        "The café ran out of bread again."
+      ]
+    },
+    {
+      "id": "npc_h08_1",
+      "display_name": "Taariq Davids",
+      "home_id": "starter_h08",
+      "role": "resident",
+      "shirt_color": "#fdcb6e",
+      "pants_color": "#212f3d",
+      "skin_color": "#b98458",
+      "walk_speed": 1.69,
+      "start_delay": 31.4,
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 8
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 15
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 29
+        }
+      ],
+      "lines": [
+        "My ouma has lived here forty years.",
+        "Don't park in front of my gate, ne."
+      ]
+    },
+    {
+      "id": "npc_h09_1",
+      "display_name": "Marlon Wyngaard",
+      "home_id": "starter_h09",
+      "role": "resident",
+      "shirt_color": "#e84393",
+      "pants_color": "#1c2833",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.64,
+      "start_delay": 10.7,
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 10
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 17
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Don't park in front of my gate, ne.",
+        "Who are you looking for?"
+      ]
+    },
+    {
+      "id": "npc_h10_1",
+      "display_name": "Owen Isaacs",
+      "home_id": "starter_h10",
+      "role": "resident",
+      "shirt_color": "#00b894",
+      "pants_color": "#34495e",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.73,
+      "start_delay": 8.2,
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 13
+        },
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 9
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Ag shame, you look lost.",
+        "My laaitie is at the court, have you seen him?"
+      ]
+    },
+    {
+      "id": "npc_h11_1",
+      "display_name": "Natasha Cupido",
+      "home_id": "starter_h11",
+      "role": "resident",
+      "shirt_color": "#ecf0f1",
+      "pants_color": "#1c2833",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.38,
+      "start_delay": 27.7,
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 18
+        },
+        {
+          "activity": "visiting",
+          "destination": "starter_h02:door",
+          "duration": 16
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 33
+        }
+      ],
+      "lines": [
+        "Ag shame, you look lost.",
+        "Shame, this wind."
+      ]
+    },
+    {
+      "id": "npc_h12_1",
+      "display_name": "Achmat Cupido",
+      "home_id": "starter_h12",
+      "role": "resident",
+      "shirt_color": "#fdcb6e",
+      "pants_color": "#34495e",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.5,
+      "start_delay": 25.8,
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 13
+        },
+        {
+          "activity": "visiting",
+          "destination": "starter_h01:door",
+          "duration": 17
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 22
+        }
+      ],
+      "lines": [
+        "The bus is always late on Mossie Street.",
+        "My laaitie is at the court, have you seen him?"
+      ]
+    },
+    {
+      "id": "npc_h13_1",
+      "display_name": "Ilse Solomons",
+      "home_id": "starter_h13",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#2c3e50",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.58,
+      "start_delay": 7.5,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h06:door",
+          "duration": 18
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 10
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 23
+        }
+      ],
+      "lines": [
+        "Shame, this wind.",
+        "My laaitie is at the court, have you seen him?"
+      ]
+    },
+    {
+      "id": "npc_h15_1",
+      "display_name": "Bianca Cupido",
+      "home_id": "starter_h15",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#4a4e6a",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.67,
+      "start_delay": 34.8,
+      "schedule": [
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 13
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 12
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 19
+        }
+      ],
+      "lines": [
+        "The café ran out of bread again.",
+        "My laaitie is at the court, have you seen him?"
+      ]
+    },
+    {
+      "id": "npc_h16_1",
+      "display_name": "Dawood Fortuin",
+      "home_id": "starter_h16",
+      "role": "resident",
+      "shirt_color": "#ecf0f1",
+      "pants_color": "#34495e",
+      "skin_color": "#b98458",
+      "walk_speed": 1.43,
+      "start_delay": 18.1,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h09:door",
+          "duration": 15
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 9
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 31
+        }
+      ],
+      "lines": [
+        "My ouma has lived here forty years.",
+        "Who are you looking for?"
+      ]
+    },
+    {
+      "id": "npc_h17_1",
+      "display_name": "Achmat Abrahams",
+      "home_id": "starter_h17",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#34495e",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.57,
+      "start_delay": 28.3,
+      "schedule": [
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 17
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 9
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 17
+        }
+      ],
+      "lines": [
+        "My ouma has lived here forty years.",
+        "Everybody knows everybody here."
+      ]
+    },
+    {
+      "id": "npc_h18_1",
+      "display_name": "Clint Samuels",
+      "home_id": "starter_h18",
+      "role": "resident",
+      "shirt_color": "#e84393",
+      "pants_color": "#4a4e6a",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.26,
+      "start_delay": 44.5,
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 18
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 14
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 19
+        }
+      ],
+      "lines": [
+        "Ag shame, you look lost.",
+        "My laaitie is at the court, have you seen him?"
+      ]
+    },
+    {
+      "id": "npc_h19_1",
+      "display_name": "Mymoena Josephs",
+      "home_id": "starter_h19",
+      "role": "resident",
+      "shirt_color": "#6c5ce7",
+      "pants_color": "#34495e",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.34,
+      "start_delay": 22.7,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h07:door",
+          "duration": 15
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 8
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Everybody knows everybody here.",
+        "The bus is always late on Mossie Street."
+      ]
+    },
+    {
+      "id": "npc_h21_1",
+      "display_name": "Natasha Solomons",
+      "home_id": "starter_h21",
+      "role": "resident",
+      "shirt_color": "#2e86c1",
+      "pants_color": "#4a4e6a",
+      "skin_color": "#b98458",
+      "walk_speed": 1.53,
+      "start_delay": 43.8,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h09:door",
+          "duration": 18
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 12
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 26
+        }
+      ],
+      "lines": [
+        "My ouma has lived here forty years.",
+        "Môre! Lovely day, hey?"
+      ]
+    },
+    {
+      "id": "npc_h22_1",
+      "display_name": "Monique Kannemeyer",
+      "home_id": "starter_h22",
+      "role": "resident",
+      "shirt_color": "#e67e22",
+      "pants_color": "#34495e",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.53,
+      "start_delay": 18.4,
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 16
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 8
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 19
+        }
+      ],
+      "lines": [
+        "Shame, this wind.",
+        "Everybody knows everybody here."
+      ]
+    },
+    {
+      "id": "npc_h23_1",
+      "display_name": "Tamsin Williams",
+      "home_id": "starter_h23",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#1c2833",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.29,
+      "start_delay": 2.1,
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 8
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 12
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 27
+        }
+      ],
+      "lines": [
+        "Who are you looking for?",
+        "Môre! Lovely day, hey?"
+      ]
+    },
+    {
+      "id": "npc_h24_1",
+      "display_name": "Marlon Carelse",
+      "home_id": "starter_h24",
+      "role": "resident",
+      "shirt_color": "#6c5ce7",
+      "pants_color": "#34495e",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.28,
+      "start_delay": 19.2,
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop",
+          "duration": 11
+        },
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 8
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 32
+        }
+      ],
+      "lines": [
+        "The bus is always late on Mossie Street.",
+        "Don't park in front of my gate, ne."
+      ]
+    },
+    {
+      "id": "npc_h25_1",
+      "display_name": "Ruwayda Wyngaard",
+      "home_id": "starter_h25",
+      "role": "resident",
+      "shirt_color": "#2c3e50",
+      "pants_color": "#34495e",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.74,
+      "start_delay": 5.7,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h18:door",
+          "duration": 16
+        },
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 16
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 25
+        }
+      ],
+      "lines": [
+        "The bus is always late on Mossie Street.",
+        "My ouma has lived here forty years."
+      ]
+    },
+    {
+      "id": "npc_h26_1",
+      "display_name": "Ilse Meyer",
+      "home_id": "starter_h26",
+      "role": "resident",
+      "shirt_color": "#d35400",
+      "pants_color": "#6b4630",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.38,
+      "start_delay": 1.8,
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "poi_bus_stop_mossie",
+          "duration": 13
+        },
+        {
+          "activity": "shopping",
+          "destination": "poi_shop",
+          "duration": 10
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 35
+        }
+      ],
+      "lines": [
+        "Everybody knows everybody here.",
+        "The bus is always late on Mossie Street."
+      ]
+    },
+    {
+      "id": "npc_h28_1",
+      "display_name": "Yusuf Solomons",
+      "home_id": "starter_h28",
+      "role": "resident",
+      "shirt_color": "#6c5ce7",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.32,
+      "start_delay": 6.2,
+      "schedule": [
+        {
+          "activity": "relaxing",
+          "destination": "poi_park",
+          "duration": 12
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 13
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 20
+        }
+      ],
+      "lines": [
+        "Ag shame, you look lost.",
+        "The café ran out of bread again."
+      ]
+    },
+    {
+      "id": "npc_h29_1",
+      "display_name": "Marlon Carelse",
+      "home_id": "starter_h29",
+      "role": "crew",
+      "shirt_color": "#1d1b24",
+      "pants_color": "#34495e",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.36,
+      "start_delay": 23.9,
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 13
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 10
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 8
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 26
+        }
+      ],
+      "lines": [
+        "Move along, my bru.",
+        "We're watching you, new face."
+      ],
+      "faction_id": "tortel_crew"
+    },
+    {
+      "id": "npc_h29_2",
+      "display_name": "Owen Carelse",
+      "home_id": "starter_h29",
+      "role": "crew",
+      "shirt_color": "#1d1b24",
+      "pants_color": "#6b4630",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.71,
+      "start_delay": 40.6,
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 16
+        },
+        {
+          "activity": "playing",
+          "destination": "poi_court",
+          "duration": 18
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 13
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 17
+        }
+      ],
+      "lines": [
+        "We're watching you, new face.",
+        "Move along, my bru."
+      ],
+      "faction_id": "tortel_crew"
+    },
+    {
+      "id": "npc_h30_1",
+      "display_name": "Owen Wyngaard",
+      "home_id": "starter_h30",
+      "role": "resident",
+      "shirt_color": "#8e44ad",
+      "pants_color": "#212f3d",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.51,
+      "start_delay": 40.7,
+      "schedule": [
+        {
+          "activity": "visiting",
+          "destination": "starter_h09:door",
+          "duration": 11
+        },
+        {
+          "activity": "socializing",
+          "destination": "poi_corner",
+          "duration": 11
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 22
+        }
+      ],
+      "lines": [
+        "Môre! Lovely day, hey?",
+        "The bus is always late on Mossie Street."
+      ]
+    }
   ]
 }

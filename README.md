@@ -1,11 +1,12 @@
 # Concrete Kings — Claude Code Development Kit
 
-> **Current state:** Phase 0 + 1 playable. Walk Duif Street in Vleirand, a fictional Cape Flats
-> neighbourhood, and watch 5 residents go about their routines.
+> **Current state:** Phase 2 playable. Explore Vleirand, a fictional Cape Flats neighbourhood
+> with 30 houses on 4 streets, and watch 28 residents go about their routines.
 > Run `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
-> ![Duif Street](docs/screenshots/street.png)
+> ![Vleirand](docs/screenshots/district_overview.png)
+> ![Tortel Lane](docs/screenshots/tortel_lane.png)
 
 A production-minded starter kit for building a **3D open-neighbourhood gangster / street-crime game** in **Godot 4.x + GDScript** with Claude Code.
 

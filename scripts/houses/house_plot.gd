@@ -65,9 +65,9 @@ func build(house: HouseData, closing_fence := false) -> void:
 	door_interactable = Interactable.new()
 	door_interactable.name = "Door"
 	door_interactable.position = _door_local + Vector3(0, 1.0, 0)
-	door_interactable.prompt = "Knock on No. %d" % house.number
+	door_interactable.prompt = "Knock on %s" % house.address()
 	if house.ownership == "player":
-		door_interactable.prompt = "Enter safehouse (No. %d)" % house.number
+		door_interactable.prompt = "Enter safehouse (%s)" % house.address()
 	add_child(door_interactable)
 
 

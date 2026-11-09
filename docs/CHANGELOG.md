@@ -4,6 +4,24 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Phase 2: complete 30-house starter neighbourhood (2026-11-09)
+- Vleirand now has 4 streets: Duif Street and Mossie Street (east-west through roads), plus
+  Kwikkie Street and Tortel Lane (north-south connectors) around a central public block.
+- 30 houses (`starter_h01`–`starter_h30`) with street addresses, generated deterministically
+  (per-id RNG) by `tools/generate_starter_data.py`; h01–h05 and the original residents are preserved.
+  3 vacant houses, the player safehouse, and one hostile house (Tortel crew).
+- 28 residents with varied schedules: café, two bus stops, corner, court, the new park, and
+  visits to other houses' doors.
+- `StreetBuilder` builds any list of streets from data (roads, sidewalks, kerbs, lane markings,
+  kerbside streetlights), street-name signs at junctions, rotatable bus stops, a park, and
+  boundary barriers wherever a street leaves the district.
+- NPC "unstick" recovery: a wedged resident steps away from the obstacle before re-pathing.
+- Debug overlay shows a per-state summary and the 6 nearest residents (scales to many NPCs).
+- Tests: district size, unique addresses, occupants for every occupied house, 162 reachability
+  paths, missing-destination recovery, and a frame-cost budget.
+- Fixed: a streetlight in front of a gate cut off a house; mirrored street-sign text; washed-out sand.
+
+
 ### Phase 0 + 1: first playable street slice (2026-11-09)
 - Godot 4.5.1 project (Compatibility renderer), input map (keyboard + controller), main scene.
 - Vleirand starter district: Duif Street with road, sidewalks, streetlights, Vleirand Cafe,

@@ -9,6 +9,7 @@ const OWNERSHIP: PackedStringArray = ["neutral", "friendly", "hostile", "player"
 
 @export var id: String = ""
 @export var number: int = 0
+@export var street: String = ""
 @export var display_name: String = ""
 @export var district_id: String = ""
 @export var kit: String = "single_hip"
@@ -24,6 +25,10 @@ const OWNERSHIP: PackedStringArray = ["neutral", "friendly", "hostile", "player"
 @export var occupancy: String = "occupied"
 @export var ownership: String = "neutral"
 @export var occupant_ids: PackedStringArray = []
+
+
+func address() -> String:
+	return "%d %s" % [number, street] if not street.is_empty() else "No. %d" % number
 
 
 func entrance_id() -> String:
@@ -57,6 +62,7 @@ static func from_dict(d: Dictionary, default_district: String) -> HouseData:
 	var h := HouseData.new()
 	h.id = str(d.get("id", ""))
 	h.number = int(d.get("number", 0))
+	h.street = str(d.get("street", ""))
 	h.display_name = str(d.get("display_name", ""))
 	h.district_id = str(d.get("district_id", default_district))
 	h.kit = str(d.get("kit", "single_hip"))

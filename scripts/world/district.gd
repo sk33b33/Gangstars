@@ -32,7 +32,8 @@ func _ready() -> void:
 
 
 func display_name() -> String:
-	return "%s · %s" % [info.get("display_name", "?"), info.get("street_name", "")]
+	return "%s · %d houses · %d streets" % [info.get("display_name", "?"), registry.count() if registry else 0,
+		info.get("streets", []).size()]
 
 
 func _build_houses() -> void:
@@ -46,7 +47,7 @@ func _build_houses() -> void:
 		plot.build(house, _needs_closing_fence(house, positions))
 		plots[id] = plot
 		destinations.register(house.entrance_id(), plot.door_position(), 0.1, "house_door",
-			"No. %d (%s)" % [house.number, house.display_name])
+			"%s (%s)" % [house.address(), house.display_name])
 		plot.door_interactable.on_interact = _on_door.bind(id)
 
 
@@ -110,10 +111,11 @@ func _spawn_residents() -> void:
 
 func _on_door(house_id: String) -> String:
 	var house := registry.get_house(house_id)
+	var where := house.address()
 	if house.ownership == "player":
-		return "Your safehouse, No. %d. It's quiet. (Saving and upgrades arrive in Phase 4.)" % house.number
+		return "Your safehouse, %s. It's quiet. (Saving and upgrades arrive in Phase 4.)" % where
 	if house.occupancy == "vacant":
-		return "No. %d is empty. The curtains are drawn." % house.number
+		return "%s is empty. The curtains are drawn." % where
 	var home: PackedStringArray = []
 	var out: PackedStringArray = []
 	for npc_id in house.occupant_ids:
@@ -124,11 +126,15 @@ func _on_door(house_id: String) -> String:
 			home.append(r.data.display_name)
 		else:
 			out.append("%s (%s)" % [r.data.display_name, r.destinations.display_name(r.target_id)])
+	if house.ownership == "hostile":
+		if home.is_empty():
+			return "Nobody answers at %s. Someone has sprayed TORTEL on the gate." % where
+		return "A voice behind the gate at %s: \"Wrong house, bru. Walk.\"" % where
 	if not home.is_empty():
 		var who := " and ".join(home)
 		var verb := "opens" if home.size() == 1 else "open"
-		return "%s %s the security gate at No. %d: \"Ja? Can I help you?\"" % [who, verb, house.number]
-	return "No answer at No. %d. Out: %s." % [house.number, ", ".join(out)]
+		return "%s %s the security gate at %s: \"Ja? Can I help you?\"" % [who, verb, where]
+	return "No answer at %s. Out: %s." % [where, ", ".join(out)]
 
 
 ## Debug/test helper: path from every occupied house door to every public destination.
@@ -140,6 +146,8 @@ func reachability_report() -> Dictionary:
 		pois.append(str(poi.id))
 	for id in registry.order:
 		var house := registry.get_house(id)
+		if house.occupancy != "occupied" and house.ownership != "player":
+			continue
 		var from := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(house.entrance_id()))
 		for poi_id in pois:
 			var to := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(poi_id))
