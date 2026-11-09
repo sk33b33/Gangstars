@@ -8,7 +8,8 @@
 > load-shedding, synthesized audio, and a settings menu. Rooiduin, the first expansion district
 > (flats, container shops, a soccer field and the Duin Boys), and Kalkbos to the west (limestone
 > cottages, an old quarry and the Klipspringers) are built from the same data pipeline.
-> Run `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
+> Runs on Windows/Linux/macOS desktops with keyboard + mouse or a gamepad. Windows build:
+> `tools/export_windows.sh` → `build/windows/ConcreteKings.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
 > ![Vleirand](docs/screenshots/district_overview.png)

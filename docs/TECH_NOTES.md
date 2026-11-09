@@ -200,7 +200,28 @@ navigation-map iterations before emitting `navigation_rebaked`: Godot 4.5 syncs 
 asynchronously, and reading the map a fixed few frames after `bake_finished` can still see the
 old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkbos.json`).
 
+## Windows build and gamepad
+
+```bash
+tools/export_windows.sh     # -> build/windows/ConcreteKings.exe + ConcreteKings-windows.zip (gitignored)
+```
+- The preset is "Windows Desktop" in `export_presets.cfg`. Non-resource files (`*.json`) are
+  included explicitly; tests/tools/docs/art are excluded.
+- `application/modify_resources` is off (it would need rcedit), so the exe has Godot's default
+  icon and no version info.
+- Saves and settings on Windows are in `%APPDATA%\Godot\app_userdata\Concrete Kings\`.
+- The Compatibility renderer uses OpenGL 3.3; on GPUs without it Godot falls back to ANGLE
+  (Direct3D 11).
+- Gamepad bindings are in `project.godot`.
+  - `accelerate`/`brake` are the triggers.
+  - `ui_accept`/`ui_cancel` are overridden to add A/B.
+  - On-screen button names come from `scripts/ui/input_hints.gd`.
+- Tests simulate pad input with `Input.parse_input_event` (`_test_gamepad_in_game`).
+
 ## Known limitations
+
+- The Windows build has not yet been tried on real Windows hardware or with a physical controller;
+  both are verified only through the exported pack and simulated input.
 
 - Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.
 - In software-rendered containers the game runs at about 8 FPS; this is not representative of real GPUs.

@@ -5,3 +5,5 @@
 art/out/
 # test/screenshot output
 tests/output/
+# exported builds
+build/

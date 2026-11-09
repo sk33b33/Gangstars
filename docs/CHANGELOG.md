@@ -4,6 +4,36 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Gamepad support and Windows build (2026-11-09)
+- **Gamepad (Xbox layout; other pads map to the same positions):**
+
+  | Control | Button |
+  |---|---|
+  | Move | Left stick |
+  | Camera | Right stick |
+  | Sprint | L3 |
+  | Interact / get in a car | A |
+  | Jump | B |
+  | Whistle / hoot | Y |
+  | Turf map | View |
+  | Pause | Menu |
+  | Accelerate / brake-reverse | RT / LT (the stick also works) |
+
+  - Menus work with the D-pad or stick, A to press and B to back out of the turf map, safehouse
+    menu and pause menu. Godot's default `ui_accept`/`ui_cancel` have no pad buttons, so they are
+    now overridden in `project.godot`.
+  - The A press that closes a menu no longer also interacts in the world on the same frame.
+  - On-screen help and the interaction prompt switch between keyboard and pad names, following
+    whichever device was used last (`InputHints`). Stick drift doesn't flip them.
+  - New settings: stick sensitivity, and controller vibration (short rumble on hoots and when
+    getting into a car).
+- **Windows build:**
+  - `export_presets.cfg` has a "Windows Desktop" preset (x86_64, game data embedded in the exe).
+  - `tools/export_windows.sh` produces `build/windows/ConcreteKings.exe` and a zip.
+  - It installs only the Windows export templates, pulling them out of the official archive with
+    `tools/remote_zip.py`.
+  - The packaged content was verified by booting the exported pack and rendering a screenshot.
+
 ### Kalkbos: the west district (2026-11-09)
 - **Built through the Phase 7 pipeline** (`tools/specs/kalkbos.json` → 22 houses, 22 residents):
   - limestone cottages (new `cottage` kit with a chimney) on Duif Street;
