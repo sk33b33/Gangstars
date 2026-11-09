@@ -191,6 +191,7 @@ func _draw_map() -> void:
 		_canvas.draw_rect(ar, AREA_GROUND.get(str(area.id), Color("#d8a07a")))
 	# Neighbouring districts: their real area if built, otherwise a strip beside Vleirand.
 	var overlays: Array = []
+	var labels: Array = []
 	for d in manager.neighbours():
 		var st := manager.state(str(d.id))
 		var area := district.area_by_id(str(d.id))
@@ -207,9 +208,7 @@ func _draw_map() -> void:
 		var col: Color = DISTRICT_COLORS.get(st, Color.GRAY)
 		_canvas.draw_rect(zone, Color(col, 0.25))
 		_canvas.draw_rect(zone, col, false, 2.0)
-		var label := "%s\n%s" % [str(d.display_name).to_upper(), st.to_upper()]
-		_canvas.draw_multiline_string(font, zone.position + Vector2(6, zone.size.y * 0.5), label,
-			HORIZONTAL_ALIGNMENT_LEFT, zone.size.x - 8, 14, -1, col)
+		labels.append([zone, "%s · %s" % [str(d.display_name).to_upper(), st.to_upper()], col])
 	# Streets (all areas).
 	var all_streets: Array = []
 	var all_pois: Array = []
@@ -246,6 +245,12 @@ func _draw_map() -> void:
 	for ov in overlays:
 		_canvas.draw_rect(ov[0], Color(ov[1], 0.45))
 		_canvas.draw_rect(ov[0], ov[1], false, 2.0)
+	# District names last, centred just above each zone so houses and landmarks never cover them.
+	for lb in labels:
+		var zr: Rect2 = lb[0]
+		var pos := Vector2(zr.position.x, zr.position.y - 8)
+		_canvas.draw_string_outline(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, 4, Color("#1d1b24"))
+		_canvas.draw_string(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, lb[2])
 	# Crew and player.
 	for r: Resident in district.residents.values():
 		if r.data.role == "player_crew" and not r.is_inside:

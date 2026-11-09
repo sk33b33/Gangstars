@@ -4,6 +4,45 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Kalkbos: the west district (2026-11-09)
+- **Built through the Phase 7 pipeline** (`tools/specs/kalkbos.json` → 22 houses, 22 residents):
+  - limestone cottages (new `cottage` kit with a chimney) on Duif Street;
+  - mixed singles and semis on Mossie Street;
+  - row houses on Klip Street.
+  Two houses are vacant. Stone boundary walls are a new fence type; the generator gained per-row
+  kit lists and weighted fence picks, and Rooiduin's output is byte-identical.
+- **Characters:** Gail (fish-and-chips container), the Pastor (Kalkbos Hall), Riyaad, and the
+  rival Klipspringers (Klip, Bokkie, Vossie) with a night patrol.
+- **Landmarks:**
+  - a quarry face: jagged worked benches, fallen blocks, a derrick crane, and a danger fence with
+    signs;
+  - a quarry lookout with a bench and telescope;
+  - Kalkbos Hall;
+  - "Vis en Tjips" in a container;
+  - a courtyard and a bus stop.
+  The district has its own chalk ground, traffic loop (a taxi stops at the bus stop) and a church
+  bazaar every third morning.
+- **New pxl textures:** chalk_ground, limestone_wall, sign_hall, sign_fish, sign_quarry, tag_klip.
+- **Missions** (`data/missions/kalkbos.json`):
+  - Stone and Salt (tour the lookout and the fish shop);
+  - The Long Haul (a timed errand between Kalkbos and Rooiduin);
+  - Quarry Night (face Klip, then hold the lookout after dark with your crew → Riyaad joins,
+    plus Kalkbos influence).
+  Mission prerequisites can now require unlocked districts.
+- **Unlock:** reputation 100, 2 crew, 80% Vleirand influence, and "Beyond the Block". The starter
+  district's west edge now opens straight onto Kalkbos' Duif and Mossie Streets.
+- **Fixes:**
+  - **Districts not connecting after an unlock:** the nav rebake now waits for two fresh
+    navigation-map iterations. Godot 4.5 builds them asynchronously, so a fixed 3-frame wait
+    sometimes read the old map and left a hole at the gate.
+  - **Gate colliders:** opened gates detach their collider rather than relying on layer
+    filtering.
+  - **Crew catching up:** crew more than 30 m behind the player jog (1.8×). A recruit who gets
+    home after a crew call is nudged straight back out, so a hold across three districts doesn't
+    wait for a long home timer.
+  - **Turf map:** district names are drawn last, above each zone, so houses and landmarks no
+    longer hide them.
+
 ### Phase 7: expansion content — Rooiduin (2026-11-09)
 - **Repeatable district pipeline:**
   - `tools/generate_district.py <spec>` turns a district spec (street rows, building types, plot

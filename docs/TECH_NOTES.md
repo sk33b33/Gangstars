@@ -190,8 +190,15 @@ Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain`, `--drive=car_
 5. Run the tests. Reachability is checked per district, and every door must reach every POI of
    its own district.
 
-Building types available: single_hip, single_gable, double_semi, double_garage, flats, row_house.
-Landmark types: cafe, bus_stop, court, park, corner, container_shop, soccer_field, taxi_rank, courtyard.
+Building types available: single_hip, single_gable, double_semi, double_garage, flats, row_house, cottage.
+Fence types: low_wall, palisade, precast, stone (spec `fences` is a weighted dict; rows may list `kits`).
+Landmark types: cafe, bus_stop, court, park, corner, container_shop, soccer_field, taxi_rank, courtyard,
+church_hall, quarry_face, lookout. Missions can require unlocked districts (`prerequisites.districts`).
+
+Navigation rebakes (`District.rebake_navigation`) run on a thread, then wait for two fresh
+navigation-map iterations before emitting `navigation_rebaked`: Godot 4.5 syncs maps
+asynchronously, and reading the map a fixed few frames after `bake_finished` can still see the
+old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkbos.json`).
 
 ## Known limitations
 

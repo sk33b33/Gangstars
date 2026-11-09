@@ -6,7 +6,8 @@
 > upgrades, save/load, and a turf map with locked neighbouring districts (Rooiduin, Kalkbos) that
 > open through progression. Left-hand traffic and drivable cars, weather, braais and
 > load-shedding, synthesized audio, and a settings menu. Rooiduin, the first expansion district
-> (flats, container shops, a soccer field and the Duin Boys), is built from the same data pipeline.
+> (flats, container shops, a soccer field and the Duin Boys), and Kalkbos to the west (limestone
+> cottages, an old quarry and the Klipspringers) are built from the same data pipeline.
 > Run `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
@@ -15,6 +16,8 @@
 > ![Tortel Lane at dusk](docs/screenshots/dusk_tortel.png)
 > ![Braai night](docs/screenshots/p6_braai.png)
 > ![Rooiduin flats](docs/screenshots/p7_flats.png)
+> ![Kalkbos cottages](docs/screenshots/kalk_cottages.png)
+> ![Kalkbos quarry](docs/screenshots/kalk_quarry.png)
 
 A production-minded starter kit for building a **3D open-neighbourhood gangster / street-crime game** in **Godot 4.x + GDScript** with Claude Code.
 

@@ -70,6 +70,8 @@ var _unstick_timer := 0.0
 var _unstick_dir := Vector3.ZERO
 var _door_query: PhysicsShapeQueryParameters3D
 var _speed_mult := 1.0
+## Crew further than this behind the player jog to catch up.
+const CATCH_UP_DISTANCE := 30.0
 var _incident_pos := Vector3.ZERO
 var _special_point := Vector3.ZERO
 var _leader_id := ""
@@ -392,9 +394,11 @@ func _update_follow() -> void:
 		_fail("leader unavailable")
 		return
 	var forward: Vector3 = leader.facing_dir() if leader.has_method("facing_dir") else leader.global_basis.z
-	# Crew following the player don't give up while still catching up.
-	if not leader is Resident and leader.global_position.distance_to(global_position) > 20.0:
+	# Crew following the player don't give up while still catching up, and jog when far behind.
+	var gap := leader.global_position.distance_to(global_position)
+	if not leader is Resident and gap > 20.0:
 		brain.timer = maxf(brain.timer, 20.0)
+	_speed_mult = NpcBrain.FLEE_SPEED if not leader is Resident and gap > CATCH_UP_DISTANCE else 1.2
 	var behind := leader.global_position - forward * FOLLOW_GAP
 	_special_point = behind
 	_set_target(0.0)

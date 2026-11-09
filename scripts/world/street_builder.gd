@@ -434,12 +434,26 @@ static func _build_church_hall(root: Node3D, c: Vector3, rot_y: float) -> void:
 ## Old limestone quarry: a stepped, cut cliff face (solid, unreachable), rock piles, a rusting
 ## derrick crane, and a danger fence along the front (local +Z side is the street side).
 static func _build_quarry_face(root: Node3D, c: Vector3, size: Vector2) -> void:
-	var rock := PixelMaterials.surface("limestone_wall", Vector2(4, 4), Color("#d9d2c0"))
-	var tiers := [[0.78, 4.0], [0.52, 8.0], [0.28, 12.0]]
-	for t in tiers:
-		var depth: float = size.y * float(t[0])
-		var h: float = t[1]
-		Geo.box(root, Vector3(size.x, h, depth), Vector3(c.x, h * 0.5, c.z - size.y * 0.5 + depth * 0.5), rock)
+	# Each bench is cut in uneven blocks (height and set-back vary, deterministic) and the
+	# deeper benches are darker, so it reads as a worked rock face rather than a stepped building.
+	var tiers := [[0.78, 4.0, "#ddd6c4"], [0.52, 8.0, "#cbc3ae"], [0.28, 12.0, "#b9b09a"]]
+	var jag := [[0.0, 0.0], [0.9, 1.2], [-0.6, 0.4], [0.5, 1.8], [-0.3, 0.7]]
+	var blocks := jag.size()
+	for ti in tiers.size():
+		var t: Array = tiers[ti]
+		var rock := PixelMaterials.surface("limestone_wall", Vector2(4, 4), Color(str(t[2])))
+		var bw := size.x / blocks
+		for bi in blocks:
+			var j: Array = jag[(bi + ti * 2) % blocks]
+			var h: float = float(t[1]) + float(j[0])
+			var depth: float = size.y * float(t[0]) - float(j[1])  # set back only: never nearer the street
+			var bx := c.x - size.x * 0.5 + bw * (bi + 0.5)
+			Geo.box(root, Vector3(bw + 0.02, h, depth), Vector3(bx, h * 0.5, c.z - size.y * 0.5 + depth * 0.5), rock)
+	# Fallen blocks at the foot of the face.
+	var fallen := PixelMaterials.surface("limestone_wall", Vector2(1, 1), Color("#e4ddcc"))
+	for fb in [[-0.42, 1.1, 0.4], [-0.05, 0.8, 1.1], [0.16, 1.4, 0.7]]:
+		var s3: float = fb[1]
+		Geo.box(root, Vector3(s3 * 1.4, s3, s3), Vector3(c.x + size.x * float(fb[0]), s3 * 0.5, c.z - size.y * 0.5 + size.y * 0.78 + 1.0), fallen, true, float(fb[2]))
 	var gravel := PixelMaterials.surface("chalk_ground", Vector2(2, 2), Color("#cfc8b4"))
 	for i in 5:
 		var px := c.x - size.x * 0.35 + i * size.x * 0.17

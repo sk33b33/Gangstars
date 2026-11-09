@@ -215,9 +215,13 @@ func _call_crew_if_needed() -> void:
 		return
 	for npc_id in progression.recruited_crew_ids:
 		var r: Resident = district.residents.get(npc_id)
-		if r == null or r.brain.state == NpcBrain.State.FOLLOWING or not r.brain.pending_event.is_empty():
+		if r == null or r.brain.state == NpcBrain.State.FOLLOWING:
 			continue
-		r.brain.pending_event = {"activity": "follow", "destination": "@leader:player", "duration": 120.0, "event": "crew_call"}
+		if r.brain.pending_event.is_empty():
+			r.brain.pending_event = {"activity": "follow", "destination": "@leader:player", "duration": 120.0, "event": "crew_call"}
+		elif str(r.brain.pending_event.get("event", "")) != "crew_call":
+			continue
+		# Nudge every check, so a recruit who got home after the call comes straight back out.
 		if r.brain.state == NpcBrain.State.AT_HOME:
 			r.brain.timer = minf(r.brain.timer, 1.0)
 		elif r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING]:
