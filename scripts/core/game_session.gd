@@ -17,6 +17,8 @@ var safehouse: Safehouse
 var district: District
 var player: Player
 var hud: Hud
+var districts: DistrictManager
+var turf_map: TurfMap
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -36,6 +38,20 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	missions.resident_info = district.resident_info
 	missions.occupants_inside = district.occupants_inside
 	missions.anchor_position = district.anchor_or_null
+	missions.crew_near = district.crew_near
+	districts = DistrictManager.load_file("res://data/districts/districts.json", progression, district.registry)
+	for id in missions.order:
+		districts.mission_titles[id] = missions.get_mission(id).title
+	districts.district_unlocked.connect(_on_district_unlocked)
+	districts.became_unlockable.connect(func(id: String):
+		hud.show_message("%s can now be unlocked. Open the turf map (M)." % districts.display_name(id)))
+	progression.changed.connect(districts.check_unlockable)
+	turf_map = TurfMap.new()
+	turf_map.name = "TurfMap"
+	hud.add_child(turf_map)
+	turf_map.setup(district, districts, player)
+	turf_map.unlock_requested.connect(request_unlock)
+	turf_map.closed.connect(_on_map_closed)
 	missions.message.connect(hud.show_message)
 	progression.changed.connect(func(): hud.set_stats(progression))
 	progression.recruited.connect(func(npc_id: String): district.apply_recruit(npc_id, SAFEHOUSE_ID))
@@ -52,6 +68,7 @@ func begin(load_save: bool) -> void:
 		if not err.is_empty():
 			hud.show_message("Couldn't load your save (%s). Starting a new game." % err)
 	missions.check_auto_start()
+	sync_gates()
 	_refresh()
 
 
@@ -70,6 +87,48 @@ func _unhandled_input(event: InputEvent) -> void:
 	if hud.is_menu_open() and event.is_action_pressed("pause"):
 		_close_menu()
 		get_viewport().set_input_as_handled()
+	elif turf_map.visible and (event.is_action_pressed("pause") or event.is_action_pressed("turf_map")):
+		turf_map.close()
+		get_viewport().set_input_as_handled()
+	elif event.is_action_pressed("turf_map") and not hud.is_menu_open():
+		open_turf_map()
+		get_viewport().set_input_as_handled()
+
+
+# ---------------------------------------------------------------- turf
+
+func open_turf_map() -> void:
+	player.input_enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	turf_map.open()
+
+
+func _on_map_closed() -> void:
+	player.input_enabled = true
+	if DisplayServer.get_name() != "headless":
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+## UI asks; the DistrictManager decides.
+func request_unlock(district_id: String) -> bool:
+	var ok := districts.unlock_district(district_id)
+	if not ok:
+		hud.show_message("%s is still locked." % districts.display_name(district_id))
+	if turf_map.visible:
+		turf_map.refresh()
+	return ok
+
+
+func _on_district_unlocked(district_id: String) -> void:
+	district.set_district_open(district_id, true, true)
+	hud.show_banner("%s UNLOCKED" % districts.display_name(district_id).to_upper())
+	hud.show_message("The boom gates to %s are up. New turf lies beyond." % districts.display_name(district_id))
+
+
+## Gates always mirror the saved unlock state (used on start and after loading).
+func sync_gates(animate := false) -> void:
+	for d in districts.neighbours():
+		district.set_district_open(str(d.id), districts.is_unlocked(str(d.id)), animate)
 
 
 func _on_interacted(target: Interactable, base_message: String) -> void:
@@ -231,6 +290,7 @@ func apply_snapshot(data: Dictionary) -> String:
 		district.apply_recruit(npc_id, SAFEHOUSE_ID)
 	for id in progression.safehouse_upgrades:
 		_show_upgrade(id)
+	sync_gates()
 	hud.set_stats(progression)
 	_refresh()
 	return ""
@@ -311,4 +371,4 @@ func _next_hint() -> String:
 	for id in missions.order:
 		if not missions.is_completed(id):
 			return "Next: %s — %s" % [missions.get_mission(id).title, ", ".join(missions.missing_requirements(id))]
-	return "All intro missions done. Turf expansion arrives in Phase 5."
+	return "All missions done. More turf arrives in Phase 7."

@@ -41,7 +41,8 @@ func buy(id: String, p: ProgressionState) -> bool:
 	p.safehouse_upgrades.append(id)
 	var effect: Dictionary = u.get("effect", {})
 	p.grant("upgrade:" + id, {"reputation": int(effect.get("reputation", 0)),
-		"crew_influence": int(effect.get("crew_influence", 0))})
+		"crew_influence": int(effect.get("crew_influence", 0)),
+		"influence": {"starter": int(effect.get("influence", 0))}})
 	return true
 
 

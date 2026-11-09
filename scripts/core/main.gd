@@ -4,7 +4,8 @@ extends Node
 ##   --shot=res://tests/output/x.png  --shot-delay=8  --view=player|overview|street
 ##   --debug  --player=x,z  --yaw=degrees  --pitch=degrees  --interact  --hour=21.5
 ##   --incident=car_alarm|argument|scuffle (raised at the player 2 s before the shot)
-##   --safehouse-menu (open the safehouse menu)
+##   --safehouse-menu (open the safehouse menu)  --turf-map (open the turf map)
+##   --load=user://file.json (start from that save; goes through normal save validation)
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
@@ -29,7 +30,7 @@ func _ready() -> void:
 	district.director.observer = player
 	session = GameSession.new()
 	session.name = "Session"
-	session.save_path = save_path
+	session.save_path = _args.get("load", save_path)
 	add_child(session)
 	session.setup(district, player, hud)
 	district.events.message.connect(hud.show_message)
@@ -39,7 +40,7 @@ func _ready() -> void:
 	if not district.is_navigation_ready:
 		await district.navigation_ready
 	hud.show_message("Welcome to Vleirand. You've just moved into 13 Duif Street.")
-	session.begin(auto_load and not _args.has("new-game") and not _args.has("shot"))
+	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if _args.has("shot"):
 		_run_screenshot.call_deferred()
 
@@ -82,6 +83,8 @@ func _run_screenshot() -> void:
 		debug_overlay.toggle()
 	if _args.has("safehouse-menu"):
 		session.open_safehouse_menu()
+	if _args.has("turf-map"):
+		session.open_turf_map()
 	var delay := float(_args.get("shot-delay", "6"))
 	if _args.has("incident"):
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout

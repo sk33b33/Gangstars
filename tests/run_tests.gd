@@ -36,6 +36,8 @@ func _run() -> void:
 	_test_phase3_units()
 	print("== phase 4 units (progression, missions, safehouse, saves)")
 	_test_phase4_units()
+	print("== phase 5 units (districts, hold objective)")
+	_test_phase5_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -230,7 +232,7 @@ func _test_phase4_units() -> void:
 
 	# Mission data.
 	var all := MissionData.load_file("res://data/missions/intro.json")
-	_check(all.size() == 5, "5 intro missions load (%d)" % all.size())
+	_check(all.size() == 7, "7 missions load (%d)" % all.size())
 	var houses := HouseRegistry.load_file("res://data/houses/starter_houses.json")
 	var npc_ids := {}
 	for n in NpcData.load_file("res://data/npcs/starter_residents.json"):
@@ -321,6 +323,179 @@ func _test_phase4_units() -> void:
 	_check(not SaveSystem.read(path).ok, "an unknown save version is refused")
 	_check(not SaveSystem.read("user://does_not_exist.json").ok, "a missing save is reported")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func _test_phase5_units() -> void:
+	var houses := HouseRegistry.load_file("res://data/houses/starter_houses.json")
+	var p := ProgressionState.new()
+	var dm := DistrictManager.load_file("res://data/districts/districts.json", p, houses)
+	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
+	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
+		"only the starter district is open at the start")
+	_check(dm.state("district_east") == "locked" and not dm.unlock_district("district_east"), "Rooiduin cannot be unlocked early")
+	var reqs := dm.get_unlock_requirements("district_east")
+	_check(reqs.size() == 4 and reqs.all(func(r): return not r.met), "Rooiduin lists 4 unmet requirements")
+	p.completed_mission_ids.append("hold_the_corner")
+	p.reputation = 60
+	p.recruit("npc_boeta")
+	_check(not dm.can_unlock("district_east"), "missing influence still blocks the unlock")
+	p.add_district_influence("starter", 48)
+	_check(dm.influence("starter") == 50, "friendly houses add influence (%d = 48 stored + 1 friendly house x 2)" % dm.influence("starter"))
+	var announced := [""]
+	dm.became_unlockable.connect(func(id): announced[0] = id)
+	dm.check_unlockable()
+	_check(announced[0] == "district_east" and dm.state("district_east") == "unlockable", "Rooiduin becomes unlockable and is announced")
+	var unlocked := [""]
+	dm.district_unlocked.connect(func(id): unlocked[0] = id)
+	_check(dm.unlock_district("district_east") and unlocked[0] == "district_east" and dm.state("district_east") == "unlocked", "Rooiduin unlocks")
+	_check(not dm.unlock_district("district_east"), "unlocking twice does nothing")
+	_check(dm.state("district_west") == "locked", "Kalkbos stays locked")
+	var p2 := ProgressionState.new()
+	p2.load_dict(p.to_dict())
+	var dm2 := DistrictManager.load_file("res://data/districts/districts.json", p2, houses)
+	_check(dm2.is_unlocked("district_east"), "the unlock persists through progression save data")
+	_check(SimClock.in_window(1.0, 19.0, 2.0), "hold window wraps past midnight")
+
+	# Hold objective: accumulate while in place with crew; leaving resets.
+	var all := MissionData.load_file("res://data/missions/intro.json")
+	_check(all.size() == 7, "7 missions load (%d)" % all.size())
+	var clock := SimClock.new()
+	clock.set_hour(20.0)
+	var prog := ProgressionState.new()
+	for id in ["new_face", "a_favour", "know_the_block", "first_crew", "local_respect"]:
+		prog.completed_mission_ids.append(id)
+	prog.recruit("npc_boeta")
+	var mm := MissionManager.new()
+	mm.setup(all, prog, clock)
+	var crew_here := [true]
+	mm.crew_near = func(_p, _r): return crew_here[0]
+	mm.anchor_position = func(id): return Vector3(38, 0, -5.4) if id == "poi_corner" else null
+	_check(mm.start("hold_the_corner"), "Hold the Corner starts once Local Respect is done and you have crew")
+	var corner := Vector3(38, 0, -5.4)
+	mm.on_player_position(corner)
+	for i in 10:
+		clock.advance(2.0)
+		mm.on_player_position(corner)
+	_check(mm.active.has("hold_the_corner") and int(mm.active.hold_the_corner.count) == 20, "20 minutes held")
+	crew_here[0] = false
+	clock.advance(1.0)
+	mm.on_player_position(corner)
+	_check(mm.active.hold_the_corner.count == 0.0, "holding without your crew resets the count")
+	crew_here[0] = true
+	for i in 16:
+		clock.advance(2.0)
+		mm.on_player_position(corner)
+	_check(mm.is_completed("hold_the_corner") and prog.district_influence("starter") == 25, "holding 30 minutes completes it (+25 influence)")
+	mm.free()
+
+
+func _press_toward(player: Player, action: String, seconds: float) -> void:
+	Input.action_press(action)
+	for i in int(seconds * 60):
+		await physics_frame
+	Input.action_release(action)
+
+
+func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dm := session.districts
+	var prog := session.progression
+	var missions := session.missions
+	district.director.ambient_incidents = false
+	var east_x: float = district.info.bounds[2]
+	_check(district.gates.has("district_east") and district.gates.has("district_west"), "both neighbours have boom gates")
+	_check(not district.is_district_open("district_east"), "Rooiduin gate starts closed")
+
+	# The gate physically blocks the player.
+	player.pivot.rotation.y = 0.0
+	player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
+	player.snap_camera()
+	await _press_toward(player, "move_right", 3.0)
+	_check(player.global_position.x < east_x, "the locked gate stops the player (x %.1f < %.1f)" % [player.global_position.x, east_x])
+	_check(not session.request_unlock("district_east") and not district.is_district_open("district_east"), "an early unlock request is refused")
+
+	# Turf map shows requirements.
+	session.open_turf_map()
+	_check(session.turf_map.visible and session.turf_map.panel_text().contains("✗ Complete \"Hold the Corner\""), "turf map lists Rooiduin's missing requirements")
+	_check(session.turf_map.unlock_button("district_east").disabled, "the Unlock button is disabled while locked")
+	session.turf_map.close()
+	_check(player.input_enabled, "closing the map returns control")
+
+	# Local Respect: chat, reputation, corner after dark.
+	_talk(player, district.residents["npc_tasneem"].interactable)
+	_check(missions.active.has("local_respect"), "Tasneem offers Local Respect")
+	var talked := 0
+	for r: Resident in district.residents.values():
+		if talked >= 5:
+			break
+		if r.data.role == "resident":
+			_talk(player, r.interactable)
+			talked += 1
+	prog.add_reputation(maxi(0, 40 - prog.reputation))
+	await physics_frame
+	district.director.clock.set_hour(20.0)
+	player.global_position = district.destinations.anchor_position("poi_corner") + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	for i in 30:
+		await physics_frame
+	_check(missions.is_completed("local_respect"), "Local Respect completes")
+
+	# Hold the Corner with Boeta actually beside you.
+	var boeta: Resident = district.residents["npc_boeta"]
+	_talk(player, boeta.interactable)
+	_check(missions.active.has("hold_the_corner"), "Boeta offers Hold the Corner")
+	var held := false
+	for i in 60 * 150:
+		if missions.is_completed("hold_the_corner"):
+			held = true
+			break
+		await physics_frame
+	_check(held, "holding the corner with Boeta completes the mission (%s)" % missions.objective_text("hold_the_corner"))
+	print("  rooiduin requirements: %s" % [dm.get_unlock_requirements("district_east")])
+	if not dm.can_unlock("district_east"):
+		# Top up anything still short so the unlock flow itself is tested.
+		prog.add_reputation(maxi(0, 60 - prog.reputation))
+		prog.add_district_influence("starter", 50)
+	_check(dm.can_unlock("district_east"), "Rooiduin is unlockable after Hold the Corner")
+
+	# Unlock through the map button.
+	session.open_turf_map()
+	var btn := session.turf_map.unlock_button("district_east")
+	_check(btn != null and not btn.disabled, "the Unlock button is enabled")
+	btn.pressed.emit()
+	_check(prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"), "pressing Unlock opens Rooiduin's gates")
+	_check(session.hud.banner_text().contains("ROOIDUIN UNLOCKED"), "unlock banner is shown")
+	session.turf_map.close()
+	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Kalkbos stays locked")
+
+	# Beyond the Block: walk through the open gate into Rooiduin.
+	_talk(player, district.residents["npc_lionel"].interactable)
+	_check(missions.active.has("beyond_the_block"), "Lionel offers Beyond the Block")
+	_check(missions.current_objective("beyond_the_block").get("id") == "enter", "the unlock objective is already done")
+	district.director.clock.set_hour(12.0)
+	player.pivot.rotation.y = 0.0
+	player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
+	player.snap_camera()
+	await _press_toward(player, "move_right", 7.0)
+	_check(player.global_position.x > east_x + 12.0, "the open gate lets the player through (x %.1f)" % player.global_position.x)
+	for i in 20:
+		await physics_frame
+	_check(missions.is_completed("beyond_the_block"), "walking into Rooiduin completes Beyond the Block")
+	var west_x: float = district.info.bounds[0]
+	player.global_position = Vector3(west_x + 6.0, 0.1, 0.0)
+	player.snap_camera()
+	await _press_toward(player, "move_left", 3.0)
+	_check(player.global_position.x > west_x, "Kalkbos' gate still blocks the player")
+
+	# Persistence: save, lock everything again, load.
+	_check(session.save_game() == "", "save after unlocking")
+	prog.unlocked_district_ids = PackedStringArray(["starter"])
+	district.set_district_open("district_east", false, false)
+	_check(session.load_game() == "" and prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"),
+		"after loading, Rooiduin is unlocked and its gates are open")
+	_check(district.residents.size() >= 28 and district.residents.values().any(func(r): return not r.is_inside),
+		"the starter district is still populated")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
 
 
 func _talk(player: Player, who: Interactable) -> void:
@@ -576,6 +751,8 @@ func _test_district() -> void:
 	_check(tele == 0, "no teleports (>0.5 m in one frame) across day and night runs (%d)" % tele)
 	print("== phase 4 in game (missions, recruit, safehouse, save/load)")
 	await _test_missions_in_game(main, district, player)
+	print("== phase 5 in game (gates, turf map, unlock, persistence)")
+	await _test_turf_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

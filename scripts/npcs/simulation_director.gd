@@ -116,7 +116,7 @@ func _raise_ambient() -> void:
 	if anchors.is_empty():
 		return
 	var id: String = anchors[_rng.randi() % anchors.size()]
-	if id.begins_with("patrol:"):
+	if id.begins_with("patrol:") or id.ends_with(":entrance"):
 		return
 	var roll := _rng.randf()
 	var kind := "car_alarm" if roll < 0.5 else ("argument" if roll < 0.9 else "scuffle")

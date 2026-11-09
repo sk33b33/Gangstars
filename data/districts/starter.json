@@ -110,7 +110,8 @@
         -18,
         -8.4
       ],
-      "radius": 1.2
+      "radius": 1.2,
+      "map_label": "café"
     },
     {
       "id": "poi_bus_stop",
@@ -120,7 +121,8 @@
         8,
         -5.3
       ],
-      "radius": 1.0
+      "radius": 1.0,
+      "map_label": "bus"
     },
     {
       "id": "poi_bus_stop_mossie",
@@ -130,7 +132,8 @@
         -20,
         -50.7
       ],
-      "radius": 1.0
+      "radius": 1.0,
+      "map_label": "bus"
     },
     {
       "id": "poi_corner",
@@ -140,7 +143,8 @@
         38,
         -5.4
       ],
-      "radius": 1.4
+      "radius": 1.4,
+      "map_label": "corner"
     },
     {
       "id": "poi_court",
@@ -150,7 +154,8 @@
         20,
         -20
       ],
-      "radius": 2.5
+      "radius": 2.5,
+      "map_label": "court"
     },
     {
       "id": "poi_park",
@@ -160,19 +165,8 @@
         -2,
         -24
       ],
-      "radius": 3.0
-    }
-  ],
-  "locked_neighbours": [
-    {
-      "id": "district_east",
-      "display_name": "Rooiduin",
-      "side": "east"
-    },
-    {
-      "id": "district_west",
-      "display_name": "Kalkbos",
-      "side": "west"
+      "radius": 3.0,
+      "map_label": "park"
     }
   ],
   "patrol_routes": {

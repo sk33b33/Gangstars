@@ -88,7 +88,17 @@ func recruit(npc_id: String) -> bool:
 	return true
 
 
-## Applies rewards {cash, reputation, crew_influence, relationship: {npc: n}, recruit} once per key.
+func district_influence(district_id: String) -> int:
+	return int(district_control.get(district_id, 0))
+
+
+func add_district_influence(district_id: String, amount: int) -> void:
+	district_control[district_id] = clampi(district_influence(district_id) + amount, 0, 100)
+	changed.emit()
+
+
+## Applies rewards {cash, reputation, crew_influence, relationship: {npc: n},
+## influence: {district: n}, recruit} once per key.
 func grant(key: String, rewards: Dictionary) -> bool:
 	if granted_reward_keys.has(key):
 		return false
@@ -99,6 +109,9 @@ func grant(key: String, rewards: Dictionary) -> bool:
 	var rel: Dictionary = rewards.get("relationship", {})
 	for npc in rel:
 		relationships[npc] = clampi(relationship(npc) + int(rel[npc]), -100, 100)
+	var infl: Dictionary = rewards.get("influence", {})
+	for d in infl:
+		district_control[d] = clampi(district_influence(d) + int(infl[d]), 0, 100)
 	changed.emit()
 	if rewards.has("recruit"):
 		recruit(str(rewards.recruit))

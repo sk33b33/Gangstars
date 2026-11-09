@@ -8,7 +8,8 @@ const WALL_H := 1.6
 const SIGN_COLOR := Color("#2f6e3a")
 
 
-static func build(root: Node3D, info: Dictionary, destinations: DestinationRegistry) -> void:
+## Returns {district_id: [DistrictGate]} for the boundary gates.
+static func build(root: Node3D, info: Dictionary, destinations: DestinationRegistry) -> Dictionary:
 	var b: Array = info.get("bounds", [-72, -78, 72, 22])
 	var streets: Array = info.get("streets", [])
 	var center := Vector3((b[0] + b[2]) * 0.5, -0.5, (b[1] + b[3]) * 0.5)
@@ -29,7 +30,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"park": _build_park(root, pos)
 			"corner": _build_corner(root, pos)
 			var other: push_warning("Unknown landmark type '%s'" % other)
-	_build_boundary(root, b, streets, info.get("locked_neighbours", []))
+	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations)
 	_build_backdrop(root, b, streets)
 	for car in info.get("parked_cars", []):
 		var cp := DataFiles.to_vec2(car.get("position"))
@@ -43,6 +44,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 		var p := DataFiles.to_vec2(poi.get("position"))
 		destinations.register(str(poi.id), Vector3(p.x, 0, p.y), float(poi.get("radius", 1.0)),
 			str(poi.get("kind", "poi")), str(poi.get("name", poi.id)))
+	return gates
 
 
 ## Converts a street-local rect (along, across) to a world Rect2 on the XZ plane.
@@ -306,8 +308,11 @@ static func _build_corner(root: Node3D, c: Vector3) -> void:
 
 
 ## Precast wall around the playable area. Every east-west street that crosses the boundary
-## ends at a "LOCKED TURF" barrier; the road visibly continues to hint at locked districts.
-static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: Array) -> void:
+## gets a DistrictGate for the neighbouring district on that side, and behind it an enclosed
+## approach street (walls both sides, a "coming soon" end wall) so an unlocked district can be
+## walked into. Returns {district_id: [DistrictGate]}.
+static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: Array, destinations: DestinationRegistry) -> Dictionary:
+	var gates := {}
 	var mat := PixelMaterials.surface("fence_precast", Vector2(2, WALL_H), Color("#d9d4c8"), true)
 	var minx: float = b[0]
 	var minz: float = b[1]
@@ -316,29 +321,57 @@ static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: 
 	var w := maxx - minx
 	Geo.box(root, Vector3(w, WALL_H, 0.2), Vector3((minx + maxx) * 0.5, WALL_H * 0.5, minz), mat)
 	Geo.box(root, Vector3(w, WALL_H, 0.2), Vector3((minx + maxx) * 0.5, WALL_H * 0.5, maxz), mat)
-	# Openings on the east/west walls where x-axis streets pass through.
-	var openings: Array = []
+	var crossing: Array = []
 	for s in streets:
 		if s.axis == "x" and minf(s.from, s.to) < minx and maxf(s.from, s.to) > maxx:
-			var half: float = s.get("half_width", 4.0) + s.get("sidewalk", 2.5)
-			openings.append([s.at - half, s.at + half])
-	openings.sort_custom(func(p, q): return p[0] < q[0])
-	var barrier := PixelMaterials.flat(Color("#e7c64a"))
+			crossing.append(s)
+	var main_street_at: float = crossing[0].at if not crossing.is_empty() else 0.0  # first in data = main road
+	crossing.sort_custom(func(p, q): return p.at < q.at)
 	for x in [minx, maxx]:
-		var face_dir := 1.0 if x < 0 else -1.0
-		var label := "Locked turf"
+		var side := "east" if x > 0 else "west"
+		var face := 1.0 if x < 0 else -1.0  # direction pointing into the district
+		var neighbour := {}
 		for n in neighbours:
-			if (n.get("side") == "east") == (x > 0):
-				label = "%s — LOCKED" % n.get("display_name", "?")
+			if n.get("side") == side:
+				neighbour = n
 		var z := minz
-		for o in openings:
-			_wall_z(root, x, z, o[0], mat)
-			var mid: float = (o[0] + o[1]) * 0.5
-			Geo.box(root, Vector3(0.4, 1.1, o[1] - o[0]), Vector3(x, 0.55, mid), barrier)
-			Geo.quad(root, Vector2(3.2, 1.2), Vector3(x + face_dir * 0.21, 1.35, mid), PixelMaterials.panel("sign_locked"), PI * 0.5 * face_dir)
-			Geo.label(root, label, Vector3(x + face_dir * 0.25, 2.4, mid), 64, Color("#ffd75e"), PI * 0.5 * face_dir)
-			z = o[1]
+		for s in crossing:
+			var half: float = s.get("half_width", 4.0) + s.get("sidewalk", 2.5)
+			_wall_z(root, x, z, s.at - half, mat)
+			z = s.at + half
+			if neighbour.is_empty():
+				_wall_z(root, x, s.at - half, s.at + half, mat)
+				continue
+			var gate := DistrictGate.new()
+			gate.position = Vector3(x, 0, s.at)
+			root.add_child(gate)
+			gate.setup(str(neighbour.id), str(neighbour.display_name), half * 2.0, face)
+			gates.get_or_add(str(neighbour.id), []).append(gate)
+			_build_approach(root, s, x, -face, half, neighbour, mat, destinations if is_equal_approx(s.at, main_street_at) else null)
 		_wall_z(root, x, z, maxz, mat)
+	return gates
+
+
+const APPROACH_LENGTH := 36.0
+
+
+static func _build_approach(root: Node3D, s: Dictionary, edge: float, dir: float, half: float,
+		neighbour: Dictionary, mat: Material, destinations: DestinationRegistry) -> void:
+	var x0 := edge
+	var x1 := edge + dir * APPROACH_LENGTH
+	var mid := (x0 + x1) * 0.5
+	var hw: float = s.get("half_width", 4.0)
+	for side in [-1.0, 1.0]:
+		Geo.box(root, Vector3(APPROACH_LENGTH, WALL_H, 0.2), Vector3(mid, WALL_H * 0.5, s.at + side * half), mat)
+		Geo.patch(root, Rect2(minf(x0, x1), s.at + minf(side * hw, side * half), APPROACH_LENGTH, half - hw), 0.015,
+			PixelMaterials.surface("sidewalk", Vector2(2, 2)))
+	Geo.box(root, Vector3(0.3, 2.4, half * 2.0), Vector3(x1, 1.2, s.at), PixelMaterials.surface("wendy_wall", Vector2(2, 2), Color("#e8967a")))
+	var label := Geo.label(root, "%s\nStreets under construction — more turf coming soon" % str(neighbour.display_name).to_upper(),
+		Vector3(x1 - dir * 0.2, 1.8, s.at), 64, Color("#ffd75e"), PI * 0.5 * -dir)
+	label.double_sided = false
+	var entrance_id := "%s:entrance" % neighbour.id
+	if destinations != null and not destinations.has(entrance_id):
+		destinations.register(entrance_id, Vector3(edge + dir * 20.0, 0, s.at), 2.0, "district_entrance", str(neighbour.display_name))
 
 
 static func _wall_z(root: Node3D, x: float, z0: float, z1: float, mat: Material) -> void:

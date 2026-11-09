@@ -11,6 +11,7 @@ const RESIDENT_SCENE := preload("res://scenes/npcs/resident.tscn")
 @export_file("*.json") var district_file := "res://data/districts/starter.json"
 @export_file("*.json") var houses_file := "res://data/houses/starter_houses.json"
 @export_file("*.json") var residents_file := "res://data/npcs/starter_residents.json"
+@export_file("*.json") var districts_file := "res://data/districts/districts.json"
 
 @onready var nav_region: NavigationRegion3D = $NavigationRegion3D
 
@@ -18,6 +19,7 @@ var info: Dictionary = {}
 var registry: HouseRegistry
 var destinations := DestinationRegistry.new()
 var plots: Dictionary = {}       # house id -> HousePlot
+var gates: Dictionary = {}       # neighbouring district id -> [DistrictGate]
 var residents: Dictionary = {}   # npc id -> Resident
 var is_navigation_ready := false
 var events: NeighbourhoodEvents
@@ -31,7 +33,14 @@ func _ready() -> void:
 	var raw: Variant = DataFiles.load_json(district_file)
 	info = raw if raw is Dictionary else {}
 	registry = HouseRegistry.load_file(houses_file)
-	StreetBuilder.build(nav_region, info, destinations)
+	var catalog: Variant = DataFiles.load_json(districts_file)
+	var neighbours: Array = []
+	if catalog is Dictionary:
+		for d in catalog.get("districts", []):
+			if d is Dictionary and d.has("side"):
+				neighbours.append(d)
+	info["locked_neighbours"] = neighbours
+	gates = StreetBuilder.build(nav_region, info, destinations)
 	_build_houses()
 	_register_patrol_routes()
 	events = NeighbourhoodEvents.new()
@@ -166,6 +175,14 @@ func occupants_inside(house_id: String) -> PackedStringArray:
 	return out
 
 
+## True if a recruited (player crew) member is outside within `radius` of `pos`.
+func crew_near(pos: Vector3, radius: float) -> bool:
+	for r: Resident in residents.values():
+		if r.data.role == "player_crew" and not r.is_inside and r.global_position.distance_to(pos) <= radius:
+			return true
+	return false
+
+
 func anchor_or_null(id: String) -> Variant:
 	return destinations.anchor_position(id) if destinations.has(id) else null
 
@@ -180,6 +197,18 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 		{"activity": "guard", "destination": safehouse_id + ":gate", "duration": 40.0},
 		{"activity": "socializing", "destination": "poi_corner", "duration": 25.0},
 		{"activity": "home", "destination": "home", "duration": 15.0}])
+
+
+## Opens/closes every gate to a neighbouring district. Only the session calls this, in
+## response to DistrictManager unlocks (or when restoring a save).
+func set_district_open(district_id: String, open: bool, animate := true) -> void:
+	for gate: DistrictGate in gates.get(district_id, []):
+		gate.set_open(open, animate)
+
+
+func is_district_open(district_id: String) -> bool:
+	var list: Array = gates.get(district_id, [])
+	return not list.is_empty() and list.all(func(g): return g.is_open)
 
 
 func _on_door_used(house_id: String) -> void:

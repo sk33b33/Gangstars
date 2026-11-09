@@ -133,6 +133,23 @@ runs. Set `CK_DEBUG=1` to print every travel failure and jump with its cause.
 - Street dressing (`parked_cars`, `decals`) is in `data/districts/starter.json`; backdrop houses
   and wires are generated in `StreetBuilder`.
 
+## Phase 5 turf
+
+| Piece | File |
+|---|---|
+| District catalog | `data/districts/districts.json` |
+| Unlock authority | `scripts/progression/district_manager.gd` |
+| Gates + approach streets | `scripts/world/district_gate.gd`, `StreetBuilder._build_boundary/_build_approach` |
+| Turf map | `scripts/ui/turf_map.gd` |
+
+- The flow is: TurfMap Unlock button → `GameSession.request_unlock` → `DistrictManager.unlock_district`
+  (validates) → `district_unlocked` signal → `District.set_district_open` (boom animation) + banner.
+  Nothing else opens gates. On start and after loading, `GameSession.sync_gates()` mirrors the saved state.
+- Gate colliders exist when the nav mesh is baked, so NPCs never route into neighbouring districts,
+  even after an unlock.
+- Adding a district: add an entry with a `side` to `districts.json`. Its gates and approach streets
+  appear wherever an east-west street crosses that side of the boundary.
+
 ## Known limitations
 
 - Characters use a procedural low-poly rig; there are no skinned meshes or authored animations yet.

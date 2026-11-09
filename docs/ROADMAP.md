@@ -126,7 +126,7 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 
 ## Current milestone
 
-**Phase 5 — Turf control and locked expansion** is next. Phases 0–4 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
+**Phase 6 — Vehicles, richer interactions, and polish** is next. Phases 0–5 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
 
 ## Milestone log
 
@@ -138,6 +138,6 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 | 3 | Done (2026-11-09) | 14-state brain FSM with time windows/curfew; reactions (notice/investigate/flee/report → resume) via `ReactionPolicy`; social groups with chat bubbles; crew patrol/follow/guard; SimClock + day/night lighting; near/mid/far tiers (think 0.5/1.5/3 s, far = physics-free path stepping). Tests 328/328 (3 consecutive runs): incident → all back to routine in 90 s, crew patrols/follows at night, all residents home by 00:30, 0 teleports, 0.60 ms/physics frame. Screenshots `docs/screenshots/{night_duif,dusk_tortel,incident_debug}.png` |
 | 4 | Done (2026-11-09) | `ProgressionState` (cash/rep/crew/relationships, grant-once keys), `MissionManager` + 5 data-driven intro missions (talk/knock/visit/talk_distinct/reputation objectives, auto/giver start, time-limit fail + retry), recruit Boeta into player crew (follows player, guards safehouse), safehouse menu with 4 upgrades (visible props, daily income), rest, versioned atomic JSON save/load with validation. Tests 396/396 (2 consecutive runs) incl. full 5-mission playthrough, reward-once, fail/retry, save→mutate→load restore, corrupt/unknown-version/missing save fallback. Screenshots `docs/screenshots/{mission_tracker,safehouse_menu}.png` |
 | 4.5 | Done (2026-11-09) | Polish pass: jointed characters + walk cycle, physics interpolation + smooth camera, NPC acceleration, swinging doors, plot dressing, parked cars, power lines, backdrop city + depth fog. Tests 401/401 ×2. Screenshots `docs/screenshots/polish_*.png` |
-| 5 | Not started | |
+| 5 | Done (2026-11-09) | `DistrictManager` (sole unlock authority, data `data/districts/districts.json`), starter influence (rewards + friendly houses) with contested/controlled state, Rooiduin + Kalkbos locked behind boom gates (3 m colliders) with approach streets, turf map (M) with house turf states and ✓/✗ requirement checklists, unlock button → animated gate + banner, Hold the Corner + Beyond the Block missions, unlock persisted and restored on load. Tests 446/446 ×2: gate blocks simulated input, early unlocks refused, full unlock playthrough, walk-through, Kalkbos stays locked, save→relock→load. Screenshots `docs/screenshots/turf_*.png` |
 | 6 | Not started | |
 | 7 | Not started | |

@@ -1,0 +1,12 @@
+{
+  "districts": [
+    { "id": "starter", "display_name": "Vleirand", "is_initially_unlocked": true,
+      "description": "Your starter neighbourhood: 30 houses on four streets." },
+    { "id": "district_east", "display_name": "Rooiduin", "side": "east", "is_initially_unlocked": false,
+      "description": "Red dunes and flats east of Duif Street. Rival territory.",
+      "unlock_requirements": { "missions": ["hold_the_corner"], "reputation": 60, "crew": 1, "influence": { "starter": 50 } } },
+    { "id": "district_west", "display_name": "Kalkbos", "side": "west", "is_initially_unlocked": false,
+      "description": "The old limestone quarry streets to the west.",
+      "unlock_requirements": { "missions": ["beyond_the_block"], "reputation": 100, "crew": 2, "influence": { "starter": 80 } } }
+  ]
+}

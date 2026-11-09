@@ -4,6 +4,30 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Phase 5: turf control and locked expansion (2026-11-09)
+- `data/districts/districts.json`: Vleirand (starter), Rooiduin (east) and Kalkbos (west), each
+  with unlock requirements (missions, reputation, crew, Vleirand influence).
+- `DistrictManager` is the only authority: `can_unlock`, `get_unlock_requirements`,
+  `unlock_district` (validates first), states locked / unlockable / unlocked, and contested /
+  controlled for Vleirand. "Unlockable" is announced once. Unlocks live in
+  `ProgressionState.unlocked_district_ids` (saved).
+- Influence: mission and upgrade rewards (`influence: {starter: n}`) + 2 per friendly house
+  (any occupant at relationship 15+ or in your crew), capped at 100.
+- `DistrictGate`: striped boom gates where Duif and Mossie Streets leave the district, with a
+  3 m invisible collider, a sign and a "LOCKED TURF — open the turf map (M)" label. Unlocking
+  raises the boom (animated) and relabels it "OPEN". Behind each gate is an enclosed approach
+  street ending in an "under construction" wall (real content in Phase 7).
+- Turf map (M / controller Back): district map with houses coloured yours / friendly / neutral /
+  rival / empty, landmarks, player arrow, crew dots, neighbour zones; side panel with influence
+  bar and breakdown, ✓/✗ requirement checklists and an Unlock button (a request; the manager decides).
+- Missions: Hold the Corner (stand at the corner 30 game minutes after dark with crew; stepping
+  away or losing your crew resets the count) and Beyond the Block (unlock Rooiduin, walk in).
+  New objective types `hold` and `district_unlocked`; earlier missions now also grant influence.
+- HUD banner for big moments ("ROOIDUIN UNLOCKED"). `--load=<save>` and `--turf-map` flags for
+  screenshots.
+- Fixed: stale deferred focus on rebuilt menus; map buttons replaced by name immediately.
+
+
 ### Polish pass over Phases 0–4: characters, motion, infrastructure (2026-11-09)
 - **Characters:**
   - New jointed rig: legs with shoes, arms with hands, neck, head, eyes.

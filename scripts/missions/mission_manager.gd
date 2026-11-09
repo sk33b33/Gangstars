@@ -7,6 +7,7 @@ extends Node
 ##   resident_info(npc_id) -> {inside: bool, home_id: String, name: String} or {}
 ##   occupants_inside(house_id) -> PackedStringArray of npc ids currently at home
 ##   anchor_position(anchor_id) -> Vector3 or null
+##   crew_near(position, radius) -> bool (a player crew member is close)
 
 signal mission_started(mission: MissionData)
 signal mission_updated(mission: MissionData)
@@ -22,6 +23,8 @@ var active: Dictionary = {}           # id -> {objective: int, count: int, seen:
 var resident_info: Callable
 var occupants_inside: Callable
 var anchor_position: Callable
+var crew_near: Callable
+var _last_position_minutes := -1.0
 
 
 func setup(missions: Array[MissionData], p_progression: ProgressionState, p_clock: SimClock) -> void:
@@ -112,6 +115,8 @@ func objective_text(id: String) -> String:
 			text += " (%d/%d)" % [active[id].count, int(o.get("count", 1))]
 		"reputation":
 			text += " (%d/%d)" % [progression.reputation, int(o.get("value", 0))]
+		"hold":
+			text += " (%d/%d min)" % [int(active[id].count), int(o.get("minutes", 1))]
 	var m: MissionData = catalog[id]
 	if m.time_limit_minutes > 0.0:
 		var left := m.time_limit_minutes - (absolute_minutes() - float(active[id].started))
@@ -175,9 +180,16 @@ func on_interaction(kind: String, target: String) -> String:
 
 
 func on_player_position(pos: Vector3) -> void:
+	var now := absolute_minutes()
+	var elapsed := 0.0 if _last_position_minutes < 0.0 else clampf(now - _last_position_minutes, 0.0, 30.0)
+	_last_position_minutes = now
 	for id in active.keys():
 		var o := current_objective(id)
-		if str(o.get("type", "")) != "visit" or not anchor_position.is_valid():
+		var kind := str(o.get("type", ""))
+		if kind == "hold":
+			_update_hold(id, o, pos, elapsed)
+			continue
+		if kind != "visit" or not anchor_position.is_valid():
 			continue
 		var target: Variant = anchor_position.call(str(o.target))
 		if target == null:
@@ -191,6 +203,30 @@ func on_player_position(pos: Vector3) -> void:
 			var note := _advance(id)
 			if not note.is_empty():
 				message.emit(note)
+
+
+## Hold: accumulate game minutes while in place (and in the time window, with crew if
+## required). Stepping away resets the count, so the player has to really stand their ground.
+func _update_hold(id: String, o: Dictionary, pos: Vector3, elapsed: float) -> void:
+	var target: Variant = anchor_position.call(str(o.target)) if anchor_position.is_valid() else null
+	if target == null:
+		return
+	if o.has("window"):
+		var w: Array = o.window
+		if not SimClock.in_window(clock.hour(), float(w[0]), float(w[1])):
+			return
+	var inside := Vector2(pos.x - target.x, pos.z - target.z).length() <= float(o.get("radius", 4.0))
+	var crew_ok: bool = not bool(o.get("with_crew", false)) or (crew_near.is_valid() and crew_near.call(pos, 10.0))
+	if inside and crew_ok:
+		active[id].count += elapsed
+		if active[id].count >= float(o.get("minutes", 1)):
+			message.emit(_advance(id))
+		else:
+			mission_updated.emit(catalog[id])
+	elif active[id].count > 0.0:
+		active[id].count = 0.0
+		message.emit("You left the %s. Start again." % str(o.target).trim_prefix("poi_") if not inside
+			else "Your crew isn't with you. Start again.")
 
 
 ## Periodic checks: time limits and auto-start.
@@ -216,7 +252,10 @@ func fail(id: String, reason: String) -> void:
 func _check_stat_objectives() -> void:
 	for id in active.keys():
 		var o := current_objective(id)
-		if str(o.get("type", "")) == "reputation" and progression.reputation >= int(o.get("value", 0)):
+		var t := str(o.get("type", ""))
+		var done := (t == "reputation" and progression.reputation >= int(o.get("value", 0))) \
+			or (t == "district_unlocked" and progression.unlocked_district_ids.has(str(o.get("target", ""))))
+		if done:
 			var note := _advance(id)
 			if not note.is_empty():
 				message.emit(note)
@@ -281,7 +320,7 @@ func load_dict(d: Variant) -> String:
 			return "mission %s has bad progress data" % id
 		var m: MissionData = catalog[id]
 		loaded[id] = {"objective": clampi(int(a.objective), 0, m.objectives.size() - 1),
-			"count": int(a.get("count", 0)), "seen": Array(a.get("seen", [])),
+			"count": float(a.get("count", 0)), "seen": Array(a.get("seen", [])),
 			"started": float(a.get("started", absolute_minutes()))}
 	active = loaded
 	return ""

@@ -4,7 +4,7 @@ extends CanvasLayer
 ## Observes gameplay through signals; owns no gameplay rules.
 
 const MESSAGE_TIME := 5.0
-const HELP := "WASD move · Shift sprint · E interact · Q whistle · F3 debug · F5/F6 incidents · F7 +1h · Esc frees mouse"
+const HELP := "WASD move · Shift sprint · E interact · Q whistle · M turf map · F3 debug · F5/F6 incidents · F7 +1h · Esc mouse"
 
 var _title: Label
 var _prompt: Label
@@ -17,6 +17,8 @@ var _menu: PanelContainer
 var _menu_list: VBoxContainer
 var _menu_title: Label
 var _menu_note: Label
+var _banner: Label
+var _banner_timer := 0.0
 var _district := ""
 var _message_timer := 0.0
 
@@ -29,6 +31,15 @@ func _ready() -> void:
 	_tracker = _label(Vector2(16, 140), 20)
 	_tracker.add_theme_color_override("font_color", Color("#ffd75e"))
 	_build_menu()
+	_banner = _label(Vector2.ZERO, 44)
+	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_banner.offset_left = -500
+	_banner.offset_right = 500
+	_banner.offset_top = 150
+	_banner.add_theme_color_override("font_color", Color("#9fd8b8"))
+	_banner.add_theme_constant_override("outline_size", 12)
+	_banner.visible = false
 	_prompt = _label(Vector2.ZERO, 22)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -99,7 +110,8 @@ func open_menu(title: String, items: Array) -> void:
 	_menu.visible = true
 	move_child(_menu, -1)
 	if first:
-		first.grab_focus.call_deferred()
+		var target := first
+		(func(): if is_instance_valid(target) and target.is_inside_tree(): target.grab_focus()).call_deferred()
 
 
 func close_menu() -> void:
@@ -168,7 +180,24 @@ func prompt_text() -> String:
 	return _prompt.text
 
 
+## Big centred announcement (district unlocked, etc.), fades after a few seconds.
+func show_banner(text: String, seconds := 4.0) -> void:
+	_banner.text = text
+	_banner.visible = true
+	_banner.modulate.a = 1.0
+	_banner_timer = seconds
+
+
+func banner_text() -> String:
+	return _banner.text if _banner.visible else ""
+
+
 func _process(delta: float) -> void:
+	if _banner_timer > 0.0:
+		_banner_timer -= delta
+		_banner.modulate.a = clampf(_banner_timer, 0.0, 1.0)
+		if _banner_timer <= 0.0:
+			_banner.visible = false
 	if _message_timer > 0.0:
 		_message_timer -= delta
 		_message.modulate.a = clampf(_message_timer, 0.0, 1.0)
