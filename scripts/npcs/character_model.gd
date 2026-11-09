@@ -1,109 +1,102 @@
 class_name CharacterModel
 extends Node3D
-## Low-poly person with a jointed rig: hips -> legs (with shoes), torso -> arms (with hands),
-## head (eyes, hair style). Faces +Z. A procedural walk cycle is driven by distance travelled
-## (stride-matched, so feet don't slide) and blends smoothly into an idle breathing pose.
-## Meshes are shared between all characters (built once) to keep memory and setup cheap.
-## Swap for a rigged model later without touching movement or AI code.
+## A person: the shared rigged, skinned model built in Blender (tools/blender/build_character.py
+## -> assets/models/characters/person.glb), recoloured and dressed per character. Faces +Z.
+## An AnimationTree blends idle/walk/run by speed (playback scaled so feet don't slide) and
+## layers upper-body poses ("talk" gestures, "guard" arms folded) on top while standing.
+## The tree is advanced manually from animate(), so far-away NPCs cost what their tier allows.
 
-const STRIDE := 0.85          # metres per full step cycle (two steps)
-const LEG_SWING := 0.55       # radians at full walking amplitude
-const ARM_SWING := 0.45
-const BLEND_RATE := 6.0       # how fast the gait blends in/out
+const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long"]
+const BLEND_RATE := 6.0        # how fast the gait blends in/out
+const WALK_REF := 1.5          # m/s the walk animation is authored for
+const RUN_REF := 4.5           # m/s the run animation is authored for
+## Bones the upper-body poses may drive (legs and hips keep walking/standing).
+const UPPER_BONES := ["spine", "chest", "neck", "head", "upper_arm.L", "forearm.L", "hand.L",
+	"upper_arm.R", "forearm.R", "hand.R"]
 
-static var _meshes: Dictionary = {}
-
-var _phase := 0.0
-var _amp := 0.0
-var _breath := 0.0
-var _hips: Node3D
-var _torso: Node3D
-var _head: Node3D
-var _leg_l: Node3D
-var _leg_r: Node3D
-var _arm_l: Node3D
-var _arm_r: Node3D
-var _hair: Node3D
-## Pose layered on top of the gait: "idle", "talk" (hand gestures), "guard" (arms folded).
+## Pose layered on the gait while standing: "idle", "talk" (hand gestures), "guard" (arms folded).
 var mode := "idle"
-var _look_target: Variant = null   # world position the head turns towards, or null
-var _gesture_t := 0.0
+var _root: Node3D
+var _skeleton: Skeleton3D
+var _tree: AnimationTree
+var _head_bone := -1
+var _speed := 0.0
+var _amp := 0.0
+var _talk := 0.0
+var _guard := 0.0
+var _look_target: Variant = null
+var _head_yaw := 0.0
+var _hat: MeshInstance3D
+var _hair: Array[MeshInstance3D] = []
 
 
-## opts: {hair_style, hair_color: Color, height: float (1.0 = 1.75 m), sleeves: "long"/"short"}
+## opts: {hair_style, hair_color: Color, height (1.0 = 1.75 m), sleeves: "long"/"short",
+##        figure: 0..1, heavy: 0..1, skirt: bool}
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
 	var height: float = clampf(float(opts.get("height", 1.0)), 0.85, 1.12)
 	scale = Vector3(lerpf(1.0, height, 0.5), height, lerpf(1.0, height, 0.5))
-	var long_sleeves: bool = opts.get("sleeves", "long") == "long"
-	var shoe := Color("#1d1b24")
-
-	_hips = _pivot(self, "Hips", Vector3(0, 0.9, 0))
-	_leg_l = _pivot(_hips, "LegL", Vector3(-0.1, 0, 0))
-	_leg_r = _pivot(_hips, "LegR", Vector3(0.1, 0, 0))
-	for leg in [_leg_l, _leg_r]:
-		_part(leg, "leg", Vector3(0, -0.42, 0), pants)
-		_part(leg, "shoe", Vector3(0, -0.86, 0.04), shoe)
-	_part(_hips, "pelvis", Vector3(0, 0.02, 0), pants)
-
-	_torso = _pivot(_hips, "Torso", Vector3(0, 0.05, 0))
-	_part(_torso, "chest", Vector3(0, 0.3, 0), shirt)
-	_arm_l = _pivot(_torso, "ArmL", Vector3(-0.27, 0.55, 0))
-	_arm_r = _pivot(_torso, "ArmR", Vector3(0.27, 0.55, 0))
-	for arm in [_arm_l, _arm_r]:
-		_part(arm, "upper_arm", Vector3(0, -0.15, 0), shirt)
-		_part(arm, "lower_arm", Vector3(0, -0.43, 0), shirt if long_sleeves else skin)
-		_part(arm, "hand", Vector3(0, -0.62, 0.01), skin)
-
-	_head = _pivot(_torso, "Head", Vector3(0, 0.74, 0))
-	_part(_head, "neck", Vector3(0, -0.08, 0), skin)
-	_part(_head, "head", Vector3(0, 0.06, 0), skin)
-	_part(_head, "eyes", Vector3(0, 0.09, 0.135), Color("#1d1b24"))
-	_build_hair(str(opts.get("hair_style", "short")), opts.get("hair_color", Color("#1d1b24")))
+	_root = MODEL.instantiate()
+	add_child(_root)
+	_skeleton = _root.find_child("Skeleton3D", true, false)
+	_head_bone = _skeleton.find_bone("head")
+	var skirt: bool = bool(opts.get("skirt", false))
+	var hair_color: Color = opts.get("hair_color", Color("#1d1b24"))
+	var colours := {
+		"skin": skin, "shirt": shirt, "pants": skin.darkened(0.08) if skirt else pants,
+		"forearm": shirt if opts.get("sleeves", "long") == "long" else skin,
+		"shoes": Color("#1d1b24"), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
+		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
+	}
+	var style := str(opts.get("hair_style", "short"))
+	for mi in _skeleton.get_children():
+		if not mi is MeshInstance3D:
+			continue
+		_recolour(mi, colours)
+		var n := str(mi.name)
+		if n.begins_with("Hair_"):
+			_hair.append(mi)
+			mi.visible = n == "Hair_" + style
+		elif n == "Hat_cap":
+			_hat = mi
+			mi.visible = false
+		elif n == "Skirt":
+			mi.visible = skirt
+		elif n == "Body":
+			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Figure"), clampf(float(opts.get("figure", 0.0)), 0.0, 1.0))
+			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Heavy"), clampf(float(opts.get("heavy", 0.0)), 0.0, 1.0))
+	_build_tree(_root.find_child("AnimationPlayer", true, false))
 	if hat.a > 0.0:
 		set_hat(hat)
 
 
 ## Adds (or recolours) a cap, e.g. when someone joins the player's crew. Hides the hair.
 func set_hat(color: Color) -> void:
-	if _head == null:
+	if _hat == null:
 		return
-	var cap := _head.get_node_or_null("Cap")
-	if cap == null:
-		cap = _pivot(_head, "Cap", Vector3.ZERO)
-		_part(cap, "cap", Vector3(0, 0.17, 0), color)
-		_part(cap, "brim", Vector3(0, 0.13, 0.15), color)
-	else:
-		for mi: MeshInstance3D in cap.get_children():
-			mi.material_override = PixelMaterials.flat(color)
-	if _hair:
-		_hair.visible = false
+	_hat.visible = true
+	_hat.set_surface_override_material(0, PixelMaterials.flat(color))
+	for h in _hair:
+		h.visible = false
 
 
-## Call every frame with horizontal speed (m/s). Drives the gait and idle breathing.
+## Call every frame with horizontal speed (m/s). Drives the gait, poses and head look.
 func animate(delta: float, speed: float) -> void:
-	if _hips == null:
+	if _tree == null:
 		return
-	var target_amp := clampf(speed / 1.4, 0.0, 1.3)
-	_amp = lerpf(_amp, target_amp, clampf(delta * BLEND_RATE, 0.0, 1.0))
-	_phase = fmod(_phase + speed * delta / STRIDE * TAU, TAU)
-	var s := sin(_phase)
-	_leg_l.rotation.x = s * LEG_SWING * _amp
-	_leg_r.rotation.x = -s * LEG_SWING * _amp
-	_arm_l.rotation.x = -s * ARM_SWING * _amp
-	_arm_r.rotation.x = s * ARM_SWING * _amp
-	_hips.position.y = 0.9 + absf(cos(_phase)) * 0.035 * _amp
-	_torso.rotation.y = s * 0.06 * _amp
-	_torso.rotation.x = 0.05 * minf(_amp, 1.0)
-	# Idle breathing fades in as the gait fades out.
-	_breath = fmod(_breath + delta * 1.6, TAU)
+	var k := clampf(delta * BLEND_RATE, 0.0, 1.0)
+	_speed = lerpf(_speed, speed, k)
+	_amp = lerpf(_amp, clampf(speed / 1.4, 0.0, 1.3), k)
 	var idle := 1.0 - minf(_amp, 1.0)
-	_torso.scale = Vector3(1.0, 1.0 + sin(_breath) * 0.012 * idle, 1.0)
-	_arm_l.rotation.z = -0.06 * idle
-	_arm_r.rotation.z = 0.06 * idle
-	_apply_pose(delta, idle)
+	_talk = lerpf(_talk, (1.0 if mode == "talk" else 0.0) * idle, k)
+	_guard = lerpf(_guard, (1.0 if mode == "guard" else 0.0) * idle, k)
+	_tree.set("parameters/loco/blend_position", _speed)
+	_tree.set("parameters/pace/scale", _pace(_speed))
+	_tree.set("parameters/talk_mix/blend_amount", _talk)
+	_tree.set("parameters/guard_mix/blend_amount", _guard)
+	_tree.advance(delta)
 	_apply_look(delta)
 
 
@@ -112,18 +105,24 @@ func look_at_point(p: Variant) -> void:
 	_look_target = p
 
 
-func _apply_pose(delta: float, idle: float) -> void:
-	_gesture_t += delta
-	match mode:
-		"talk":
-			_arm_r.rotation.x += (-0.55 + sin(_gesture_t * 3.7) * 0.35) * idle
-			_arm_r.rotation.z += (0.25 + sin(_gesture_t * 2.3) * 0.12) * idle
-			_arm_l.rotation.x += (-0.15 + sin(_gesture_t * 2.9 + 1.0) * 0.12) * idle
-		"guard":
-			_arm_l.rotation.x += -1.1 * idle
-			_arm_r.rotation.x += -1.1 * idle
-			_arm_l.rotation.z += 0.75 * idle
-			_arm_r.rotation.z += -0.75 * idle
+func head_yaw() -> float:
+	return _head_yaw
+
+
+func walk_amplitude() -> float:
+	return _amp
+
+
+func skeleton() -> Skeleton3D:
+	return _skeleton
+
+
+## Playback rate so the authored stride matches the real speed (no foot sliding).
+static func _pace(speed: float) -> float:
+	if speed < 0.3:
+		return 1.0
+	var ref := WALK_REF if speed <= WALK_REF else lerpf(WALK_REF, RUN_REF, clampf((speed - WALK_REF) / (RUN_REF - WALK_REF), 0.0, 1.0))
+	return clampf(speed / ref, 0.4, 1.8)
 
 
 func _apply_look(delta: float) -> void:
@@ -131,105 +130,64 @@ func _apply_look(delta: float) -> void:
 	if _look_target != null:
 		var local := global_transform.affine_inverse() * (_look_target as Vector3)
 		target_yaw = clampf(atan2(local.x, local.z), -1.05, 1.05)
-	_head.rotation.y = lerp_angle(_head.rotation.y, target_yaw, clampf(delta * 5.0, 0.0, 1.0))
+	_head_yaw = lerp_angle(_head_yaw, target_yaw, clampf(delta * 5.0, 0.0, 1.0))
+	if _head_bone >= 0 and absf(_head_yaw) > 0.001:
+		var q := _skeleton.get_bone_pose_rotation(_head_bone)
+		_skeleton.set_bone_pose_rotation(_head_bone, q * Quaternion(Vector3.UP, _head_yaw))
 
 
-func head_yaw() -> float:
-	return _head.rotation.y if _head else 0.0
+func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
+	for i in mi.mesh.get_surface_count():
+		var m := mi.mesh.surface_get_material(i)
+		var key := m.resource_name if m else ""
+		if colours.has(key):
+			mi.set_surface_override_material(i, PixelMaterials.flat(colours[key]))
 
 
-func walk_amplitude() -> float:
-	return _amp
+func _build_tree(player: AnimationPlayer) -> void:
+	for anim_name in player.get_animation_list():
+		player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+	var loco := AnimationNodeBlendSpace1D.new()
+	loco.min_space = 0.0
+	loco.max_space = RUN_REF
+	loco.add_blend_point(_anim("idle"), 0.0)
+	loco.add_blend_point(_anim("walk"), WALK_REF)
+	loco.add_blend_point(_anim("run"), RUN_REF)
+	var bt := AnimationNodeBlendTree.new()
+	bt.add_node("loco", loco)
+	bt.add_node("pace", AnimationNodeTimeScale.new())
+	bt.connect_node("pace", 0, "loco")
+	var upper := _upper_paths(player.get_animation("talk"))
+	var previous := "pace"
+	for pose in ["talk", "guard"]:
+		bt.add_node(pose, _anim(pose))
+		var mix := AnimationNodeBlend2.new()
+		mix.filter_enabled = true
+		for path in upper:
+			mix.set_filter_path(path, true)
+		bt.add_node(pose + "_mix", mix)
+		bt.connect_node(pose + "_mix", 0, previous)
+		bt.connect_node(pose + "_mix", 1, pose)
+		previous = pose + "_mix"
+	bt.connect_node("output", 0, previous)
+	_tree = AnimationTree.new()
+	_tree.tree_root = bt
+	_tree.callback_mode_process = AnimationMixer.ANIMATION_CALLBACK_MODE_PROCESS_MANUAL
+	_root.add_child(_tree)
+	_tree.anim_player = _tree.get_path_to(player)
+	_tree.active = true
 
 
-func _build_hair(style: String, color: Color) -> void:
-	_hair = _pivot(_head, "Hair", Vector3.ZERO)
-	match style:
-		"short":
-			_part(_hair, "hair_short", Vector3(0, 0.12, -0.015), color)
-		"long":
-			_part(_hair, "hair_short", Vector3(0, 0.12, -0.015), color)
-			_part(_hair, "hair_back", Vector3(0, -0.02, -0.11), color)
-		"doek":
-			_part(_hair, "doek", Vector3(0, 0.13, -0.01), color)
-			_part(_hair, "doek_knot", Vector3(0, 0.2, -0.12), color)
-		"beanie":
-			_part(_hair, "beanie", Vector3(0, 0.15, 0), color)
-		_:
-			pass
+static func _anim(anim_name: String) -> AnimationNodeAnimation:
+	var a := AnimationNodeAnimation.new()
+	a.animation = anim_name
+	return a
 
 
-func _pivot(parent: Node3D, node_name: String, pos: Vector3) -> Node3D:
-	var n := Node3D.new()
-	n.name = node_name
-	n.position = pos
-	parent.add_child(n)
-	return n
-
-
-func _part(parent: Node3D, mesh_name: String, pos: Vector3, color: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	mi.mesh = _mesh(mesh_name)
-	mi.position = pos
-	mi.material_override = PixelMaterials.flat(color)
-	parent.add_child(mi)
-	return mi
-
-
-static func _mesh(mesh_name: String) -> Mesh:
-	if _meshes.has(mesh_name):
-		return _meshes[mesh_name]
-	var m: Mesh
-	match mesh_name:
-		"leg": m = _box(Vector3(0.15, 0.82, 0.17))
-		"shoe": m = _box(Vector3(0.15, 0.08, 0.26))
-		"pelvis": m = _box(Vector3(0.38, 0.16, 0.2))
-		"chest": m = _capsule(0.2, 0.62)
-		"upper_arm": m = _box(Vector3(0.11, 0.32, 0.12))
-		"lower_arm": m = _box(Vector3(0.1, 0.26, 0.11))
-		"hand": m = _box(Vector3(0.09, 0.1, 0.1))
-		"neck": m = _box(Vector3(0.09, 0.1, 0.09))
-		"head": m = _sphere(0.14, 0.3)
-		"eyes": m = _box(Vector3(0.15, 0.035, 0.03))
-		"hair_short": m = _sphere(0.148, 0.2)
-		"hair_back": m = _box(Vector3(0.24, 0.26, 0.06))
-		"doek": m = _sphere(0.165, 0.24)
-		"doek_knot": m = _sphere(0.06, 0.1)
-		"beanie": m = _cylinder(0.15, 0.15, 0.14)
-		"cap": m = _cylinder(0.15, 0.155, 0.08)
-		"brim": m = _box(Vector3(0.24, 0.025, 0.14))
-	_meshes[mesh_name] = m
-	return m
-
-
-static func _box(size: Vector3) -> BoxMesh:
-	var b := BoxMesh.new()
-	b.size = size
-	return b
-
-
-static func _capsule(radius: float, height: float) -> CapsuleMesh:
-	var c := CapsuleMesh.new()
-	c.radius = radius
-	c.height = height
-	c.radial_segments = 12
-	c.rings = 4
-	return c
-
-
-static func _sphere(radius: float, height: float) -> SphereMesh:
-	var s := SphereMesh.new()
-	s.radius = radius
-	s.height = height
-	s.radial_segments = 12
-	s.rings = 6
-	return s
-
-
-static func _cylinder(top: float, bottom: float, height: float) -> CylinderMesh:
-	var c := CylinderMesh.new()
-	c.top_radius = top
-	c.bottom_radius = bottom
-	c.height = height
-	c.radial_segments = 12
-	return c
+static func _upper_paths(anim: Animation) -> Array[NodePath]:
+	var out: Array[NodePath] = []
+	for i in anim.get_track_count():
+		var path := anim.track_get_path(i)
+		if path.get_subname_count() > 0 and UPPER_BONES.has(str(path.get_subname(0))):
+			out.append(path)
+	return out

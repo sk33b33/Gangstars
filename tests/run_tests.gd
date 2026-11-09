@@ -1229,8 +1229,16 @@ func _test_district() -> void:
 	# Polish: smooth motion settings, jointed rig, plot dressing, swinging doors.
 	_check(ProjectSettings.get_setting("physics/common/physics_interpolation", false), "physics interpolation is enabled")
 	var some: Resident = district.residents.values()[0]
-	_check(some.model.has_node("Hips/LegL") and some.model.has_node("Hips/Torso/ArmR") and some.model.has_node("Hips/Torso/Head"),
-		"characters have a jointed rig (legs, arms, head)")
+	var sk := some.model.skeleton()
+	_check(sk != null and sk.find_bone("thigh.L") >= 0 and sk.find_bone("upper_arm.R") >= 0 and sk.find_bone("head") >= 0,
+		"characters are skinned meshes on a rig (legs, arms, head)")
+	var shapes := {}
+	var skirts := 0
+	for r: Resident in district.residents.values():
+		var body: MeshInstance3D = r.model.skeleton().get_node("Body")
+		shapes["%.1f/%.1f" % [body.get_blend_shape_value(0), body.get_blend_shape_value(1)]] = true
+		skirts += 1 if r.model.skeleton().get_node("Skirt").visible else 0
+	_check(shapes.size() >= 6 and skirts >= 3, "residents vary in build (%d body shapes, %d skirts)" % [shapes.size(), skirts])
 	var dressed := 0
 	for hp: HousePlot in district.plots.values():
 		dressed += 1 if not hp.data.props.is_empty() else 0

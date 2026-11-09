@@ -25,10 +25,20 @@ extends Resource
 @export var hair_color: Color = Color("#1d1b24")
 @export var height: float = 1.0
 @export var sleeves: String = "long"
+## Body shape (blend shapes on the rigged model): figure 0 = straight, 1 = curvy; heavy 0..1.
+## -1 = derive from the id (doek/long hair lean curvy), so generated data needs no new fields.
+@export var figure: float = -1.0
+@export var heavy: float = -1.0
+@export var skirt: int = -1   # -1 derive, 0 trousers, 1 skirt
 
 
 func appearance() -> Dictionary:
-	return {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves}
+	var h := absi(hash(id))
+	var fig := figure if figure >= 0.0 else (0.85 + float(h % 15) / 100.0 if hair_style in ["long", "doek"] else 0.0)
+	var hv := heavy if heavy >= 0.0 else (float(h / 7 % 60) / 100.0 if h % 3 == 0 else float(h / 7 % 15) / 100.0)
+	var sk := skirt == 1 or (skirt == -1 and fig > 0.5 and h / 11 % 2 == 0)
+	return {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves,
+		"figure": fig, "heavy": hv, "skirt": sk}
 
 
 static func from_dict(d: Dictionary) -> NpcData:
@@ -65,6 +75,9 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.hair_color = DataFiles.to_color(d.get("hair_color"), Color("#1d1b24"))
 	n.height = clampf(float(d.get("height", 1.0)), 0.85, 1.12)
 	n.sleeves = str(d.get("sleeves", "long"))
+	n.figure = float(d.get("figure", -1.0))
+	n.heavy = float(d.get("heavy", -1.0))
+	n.skirt = int(d.get("skirt", -1))
 	return n
 
 
