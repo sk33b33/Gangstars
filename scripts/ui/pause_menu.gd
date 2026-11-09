@@ -63,6 +63,7 @@ func _build() -> void:
 	_slider("Render scale", "video/render_scale", 0.5, 1.0, 0.05)
 	_slider("Anti-aliasing (MSAA 0-3)", "video/msaa", 0, 3, 1)
 	_check("Shadows", "video/shadows")
+	_check("Lighting effects (ambient occlusion, bloom)", "video/effects")
 	_check("Distance fog", "video/fog")
 	_check("Fullscreen", "video/fullscreen")
 	_check("VSync", "video/vsync")

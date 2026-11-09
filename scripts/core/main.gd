@@ -82,6 +82,7 @@ func apply_settings() -> void:
 	vp.scaling_3d_scale = float(settings.get_value("video/render_scale"))
 	var env: Environment = district.get_node("WorldEnvironment").environment
 	env.fog_enabled = bool(settings.get_value("video/fog"))
+	RenderQuality.apply(env, district.get_node("Sun"), bool(settings.get_value("video/effects")))
 	district.day_night.shadows_allowed = bool(settings.get_value("video/shadows"))
 	hud.set_fps_visible(bool(settings.get_value("video/show_fps")))
 	if district.traffic:
