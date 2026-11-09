@@ -41,6 +41,8 @@ var is_navigation_ready := false
 var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
+## Benches, chairs and walls residents settle into while dwelling (cosmetic).
+var spots := SpotRegistry.new()
 ## The player, so crew members can follow them ("@leader:player"). Set by the session.
 var player: Node3D
 
@@ -276,6 +278,7 @@ func _region_is_live(map: RID) -> bool:
 
 
 func _spawn_residents() -> void:
+	spots.collect(self)
 	var i := 0
 	var all_npcs: Array[NpcData] = []
 	for area in areas:
@@ -287,6 +290,7 @@ func _spawn_residents() -> void:
 		var r: Resident = RESIDENT_SCENE.instantiate()
 		add_child(r)
 		r.setup(npc, destinations, i * 0.11, director.clock, _lookup)
+		r.spots = spots
 		r.reported.connect(func(who: Resident, event_id: String): events.report(event_id, who.data.display_name))
 		r.door_used.connect(_on_door_used)
 		residents[npc.id] = r

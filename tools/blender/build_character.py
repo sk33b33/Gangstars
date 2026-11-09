@@ -11,7 +11,9 @@ Contents (Blender Z-up, character faces -Y; glTF export turns that into Godot's 
   Shape keys "Figure" (hips/chest/waist) and "Heavy" (belly/width) give body variety.
 - "Head" + face parts (eyes, pupils, brows, nose, mouth, ears): rigid on the head bone.
 - Hair_short, Hair_long, Hair_doek, Hair_beanie, Hat_cap, Skirt: optional pieces Godot toggles.
-- Actions: idle, walk, run, talk, guard (all loops, 24 fps). Walk = 1 s per two steps at
+- Accessories (Acc_glasses, Acc_sunglasses, Acc_beard, Acc_moustache, Acc_collar, Acc_chain,
+  Acc_apron) and Hair_afro / Hair_ponytail for named characters.
+- Actions: idle, walk, run, talk, guard, sit, lean, wave (all loops, 24 fps). Walk = 1 s per two steps at
   1.5 m/s; run = 0.6 s at 4.5 m/s (Godot scales playback to the real speed).
 """
 import math
@@ -80,6 +82,8 @@ MATS = {n: mat(n, c) for n, c in {
     "pants": (0.15, 0.2, 0.3), "shoes": (0.08, 0.08, 0.1), "hair": (0.05, 0.05, 0.06),
     "eye_white": (0.93, 0.92, 0.88), "pupil": (0.04, 0.03, 0.03), "lips": (0.35, 0.18, 0.15),
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
+    "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
+    "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
 }.items()}
 
 
@@ -238,6 +242,9 @@ def prim(kind, name, loc, scale=(1, 1, 1), material="skin", rot=(0, 0, 0), **kw)
         bpy.ops.mesh.primitive_cylinder_add(vertices=kw.get("seg", 16), radius=1, depth=2, location=loc)
     elif kind == "cone":
         bpy.ops.mesh.primitive_cone_add(vertices=kw.get("seg", 12), radius1=1, radius2=kw.get("r2", 0.0), depth=2, location=loc)
+    elif kind == "torus_ring":  # thin ring, flat in XY; rot=(pi/2,0,0) stands it up facing -Y (glasses rims)
+        bpy.ops.mesh.primitive_torus_add(major_segments=16, minor_segments=6, major_radius=1, minor_radius=0.12,
+                                         location=loc)
     o = bpy.context.active_object
     o.name = name
     o.scale = scale
@@ -315,7 +322,56 @@ def make_hair_pieces():
     out.append(join([dome, brim], "Hat_cap"))
     skirt = prim("cone", "Skirt", (0, 0, 0.75), (0.25, 0.22, 0.26), "skirt", seg=24, r2=0.76)
     out.append(skirt)
+    afro = prim("sphere", "Hair_afro", HEAD_C + Vector((0, 0.025, 0.05)), (0.14, 0.15, 0.135), "hair", seg=20, rings=14)
+    cut_below(afro, HEAD_C.z - 0.015)
+    out.append(afro)
+    pony_top = prim("sphere", "pony_top", HEAD_C + Vector((0, 0.008, 0.012)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)
+    cut_below(pony_top, HEAD_C.z + 0.015)
+    tie = prim("sphere", "pony_tie", HEAD_C + Vector((0, 0.11, 0.05)), (0.03, 0.03, 0.03), "hair", seg=10, rings=6)
+    tail = prim("cone", "pony_tail", HEAD_C + Vector((0, 0.135, -0.05)), (0.035, 0.035, 0.1), "hair", seg=10, r2=0.4,
+                rot=(-0.25, 0, 0))
+    out.append(join([pony_top, tie, tail], "Hair_ponytail"))
     return out
+
+
+def make_accessories():
+    """Optional extras for named characters, shown by name from data (CharacterModel opts.accessories)."""
+    out = []
+    ey = HEAD_C.y - 0.1
+    ez = HEAD_C.z + 0.017
+    frames = []
+    for s in (1, -1):
+        frames.append(prim("torus_ring", "rim", (0.036 * s, ey - 0.004, ez), (0.021, 0.021, 0.021), "acc_frame",
+                           rot=(math.pi / 2, 0, 0)))
+        frames.append(prim("cube", "arm", (0.085 * s, ey + 0.05, ez + 0.005), (0.003, 0.05, 0.003), "acc_frame", smooth=False))
+    frames.append(prim("cube", "bridge", (0, ey - 0.004, ez + 0.004), (0.012, 0.003, 0.003), "acc_frame", smooth=False))
+    out.append(join(frames, "Acc_glasses"))
+    shades = []
+    for s in (1, -1):
+        shades.append(prim("sphere", "lens", (0.037 * s, ey - 0.006, ez), (0.026, 0.007, 0.018), "acc_lens", seg=12, rings=6))
+        shades.append(prim("cube", "arm", (0.085 * s, ey + 0.05, ez + 0.006), (0.003, 0.05, 0.004), "acc_frame", smooth=False))
+    shades.append(prim("cube", "bridge", (0, ey - 0.006, ez + 0.006), (0.014, 0.003, 0.004), "acc_frame", smooth=False))
+    out.append(join(shades, "Acc_sunglasses"))
+    beard = prim("sphere", "Acc_beard", HEAD_C + Vector((0, -0.03, -0.06)), (0.085, 0.085, 0.07), "hair", seg=16, rings=10)
+    cut_below(beard, HEAD_C.z - 0.045, keep_above=False)
+    mo = prim("sphere", "mo", HEAD_C + Vector((0, -0.1, -0.038)), (0.032, 0.01, 0.009), "hair", seg=10, rings=6)
+    out.append(join([beard, prim("sphere", "mo2", HEAD_C + Vector((0, -0.1, -0.038)), (0.03, 0.01, 0.008), "hair", seg=10, rings=6)], "Acc_beard"))
+    mo.name = "Acc_moustache"
+    mo.data.name = "Acc_moustache"
+    out.append(mo)
+    collar = prim("cyl", "Acc_collar", (0, 0.008, 1.535), (0.056, 0.058, 0.014), "acc_white", seg=16)
+    out.append(collar)
+    return out
+
+
+def make_body_accessories():
+    """Chain and apron sit on the torso and bend with it."""
+    chain = prim("torus_ring", "Acc_chain", (0, -0.015, 1.455), (0.088, 0.08, 0.088), "acc_gold", rot=(0.4, 0, 0))
+    apron = prim("cube", "Acc_apron", (0, -0.125, 1.0), (0.15, 0.012, 0.3), "apron", smooth=False)
+    for v in apron.data.vertices:  # follow the belly/chest curve a little
+        v.co.y -= 0.02 * math.exp(-((v.co.z - 1.15) / 0.15) ** 2)
+        v.co.x *= 1.0 + (1.0 - v.co.z) * 0.25
+    return [chain, apron]
 
 
 # ----------------------------------------------------------------------------- skinning
@@ -333,6 +389,20 @@ def bind_auto(obj, rig):
     rig.select_set(True)
     bpy.context.view_layer.objects.active = rig
     bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+
+
+def bind_by_height(obj, rig):
+    """Chest above 1.2 m, spine 1.05-1.2, hips below (for the apron and chain)."""
+    groups = {n: obj.vertex_groups.new(name=n) for n in ("chest", "spine", "hips")}
+    for v in obj.data.vertices:
+        z = v.co.z
+        w_chest = max(0.0, min(1.0, (z - 1.12) / 0.12))
+        w_hips = max(0.0, min(1.0, (1.08 - z) / 0.12))
+        w_spine = max(0.0, 1.0 - w_chest - w_hips)
+        for n, w in (("chest", w_chest), ("spine", w_spine), ("hips", w_hips)):
+            groups[n].add([v.index], w, "REPLACE")
+    obj.parent = rig
+    obj.modifiers.new("Armature", "ARMATURE").object = rig
 
 
 def bind_skirt(obj, rig):
@@ -449,6 +519,50 @@ def pose_guard(rig, t):
     set_multi(rig, "head", [("X", -0.05)])
 
 
+def pose_sit(rig, t):
+    """Seated on a 0.45 m bench/chair: the character's origin is the middle of the seat."""
+    ph = t * 2 * math.pi
+    breathe = math.sin(ph)
+    rig.pose.bones["hips"].location = Vector((0, -0.43, 0.03))  # bone Y = up, bone Z = forward
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "thigh." + side, [("X", -1.52), ("Y", -0.06 * sign)])
+        set_rot(rig, "shin." + side, "X", 1.42)
+        set_rot(rig, "foot." + side, "X", 0.1)
+        set_multi(rig, "upper_arm." + side, [("X", -0.42), ("Y", 0.08 * sign)])
+        set_multi(rig, "forearm." + side, [("X", -0.65), ("Y", -0.25 * sign)])
+    set_rot(rig, "spine", "X", 0.06)
+    set_rot(rig, "chest", "X", 0.04 - 0.02 * breathe)
+    set_multi(rig, "neck", [("X", -0.06), ("Y", math.sin(ph * 0.5) * 0.04)])
+
+
+def pose_lean(rig, t):
+    """Back against a wall behind (+Y in Blender), one foot up on it, hands in pockets."""
+    ph = t * 2 * math.pi
+    breathe = math.sin(ph)
+    rig.pose.bones["hips"].location = Vector((0, -0.03, -0.05))
+    set_rot(rig, "spine", "X", 0.1)
+    set_rot(rig, "chest", "X", 0.03 - 0.02 * breathe)
+    set_rot(rig, "neck", "X", -0.1)
+    set_multi(rig, "thigh.L", [("X", -0.12), ("Y", -0.05)])
+    set_rot(rig, "shin.L", "X", 0.05)
+    set_multi(rig, "thigh.R", [("X", -0.55), ("Y", 0.08)])
+    set_rot(rig, "shin.R", "X", 1.35)
+    set_rot(rig, "foot.R", "X", -0.3)
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("X", 0.22), ("Y", 0.12 * sign)])
+        set_multi(rig, "forearm." + side, [("X", -0.45)])
+    set_multi(rig, "head", [("Y", math.sin(ph * 0.5) * 0.05)])
+
+
+def pose_wave(rig, t):
+    pose_idle(rig, t)
+    ph = t * 2 * math.pi
+    set_multi(rig, "upper_arm.R", [("Y", 2.35), ("X", -0.35)])
+    set_multi(rig, "forearm.R", [("Y", 0.55 + math.sin(ph * 2) * 0.35)])
+    set_multi(rig, "hand.R", [("Y", math.sin(ph * 2 + 0.4) * 0.2)])
+    set_multi(rig, "head", [("Z", -0.08), ("X", -0.04)])
+
+
 def bake_action(rig, name, frames, fn):
     reset_pose(rig)
     action = bpy.data.actions.new(name)
@@ -480,17 +594,22 @@ add_shape_keys(body)
 head, face = make_head()
 for o in (head, face):
     bind_rigid(o, rig, "head")
-for piece in make_hair_pieces():
+for piece in make_hair_pieces() + make_accessories():
     if piece.name == "Skirt":
         bind_skirt(piece, rig)
     else:
         bind_rigid(piece, rig, "head")
+for piece in make_body_accessories():
+    bind_by_height(piece, rig)
 
 bake_action(rig, "idle", 72, pose_idle)
 bake_action(rig, "walk", 24, lambda r, t: pose_walk(r, t, False))
 bake_action(rig, "run", 15, lambda r, t: pose_walk(r, t, True))
 bake_action(rig, "talk", 72, pose_talk)
 bake_action(rig, "guard", 72, pose_guard)
+bake_action(rig, "sit", 96, pose_sit)
+bake_action(rig, "lean", 96, pose_lean)
+bake_action(rig, "wave", 24, pose_wave)
 reset_pose(rig)
 
 # Every mesh gets a (flat) UV map: Godot's importer needs UVs to build tangents.

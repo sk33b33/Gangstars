@@ -55,6 +55,10 @@ static func bench(parent: Node3D, center: Vector3, rot_y := 0.0, length := 2.0) 
 	for x in [-length * 0.4, length * 0.4]:
 		box(pivot, Vector3(0.08, 0.45, 0.4), Vector3(x, 0.225, 0), PixelMaterials.flat(Color("#565a64")), false)
 	collider(pivot, Vector3(length, 1.0, 0.5), Vector3(0, 0.5, 0))
+	# Seats for residents (SpotRegistry): one per 0.9 m of bench, facing away from the backrest.
+	var seats := maxi(1, int(length / 0.9))
+	for i in seats:
+		SpotRegistry.marker(pivot, "sit", Vector3((i - (seats - 1) * 0.5) * (length / seats), 0, 0.02))
 
 
 ## Flat ground patch (visual only) covering rect (x, z, width, depth) at height y.

@@ -44,8 +44,17 @@ untar to `~/opt`, link `~/bin/blender`. For Forward+ screenshots without a GPU: 
   `CharacterModel._pace()` scales playback to real speed. Walk is authored at 1.5 m/s, run at 4.5 m/s.
 - **Bone names are an API:** `hips spine chest neck head upper_arm.L/R forearm.L/R hand.L/R thigh.L/R
   shin.L/R foot.L/R`. `CharacterModel.UPPER_BONES` and the tests use them.
-- **Optional pieces** are separate objects (`Hair_*`, `Hat_cap`, `Skirt`) that Godot shows or hides by name.
-  Add a new hair style by adding `Hair_<style>` here and the style name to `CharacterModel.HAIR_STYLES`.
+- **Optional pieces** are separate objects (`Hair_*`, `Hat_cap`, `Skirt`, `Acc_*`) that Godot shows or hides by name.
+  - Add a hair style: create `Hair_<style>` and add the name to `CharacterModel.HAIR_STYLES`.
+  - Add an accessory: create `Acc_<name>` and add the name to `CharacterModel.ACCESSORIES`. Bind it
+    with `bind_rigid(..., "head")` for head pieces or `bind_by_height` for torso pieces.
+  - Give a named character a look in `data/npcs/looks.json`. Check it with `lineup.gd --named`.
+- **Animations:**
+  - Full-body poses (sit, lean) are Blend2 nodes before the upper-body gestures (talk, guard, wave)
+    in `CharacterModel._build_tree`.
+  - A new full-body pose needs a new mix node there, plus a `base_pose` value.
+  - The sit pose assumes the character's origin is the middle of a 0.45 m seat. The lean pose assumes
+    the origin is 0.3 m in front of a wall. `SpotRegistry` markers follow those conventions.
 
 ## Adding a prop
 Write a `def my_prop(x): ...; return join(parts, "my_prop", (x, 0, 0))` in `build_props.py`, then add it

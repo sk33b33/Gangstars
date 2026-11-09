@@ -350,6 +350,8 @@ static func _build_bus_stop(root: Node3D, c: Vector3, rot_y: float, sign := "sig
 	Geo.bench(pivot, Vector3(0, 0, -0.1), 0.0, 2.4)
 	Geo.box(pivot, Vector3(0.1, 2.6, 0.1), Vector3(2.2, 1.3, 1.3), steel)
 	Geo.quad(pivot, Vector2(0.6, 0.6), Vector3(2.2, 2.6, 1.36), PixelMaterials.panel(sign))
+	SpotRegistry.marker(pivot, "lean", Vector3(2.2, 0, 1.3 + 0.32))        # against the sign pole
+	SpotRegistry.marker(pivot, "lean", Vector3(-1.95, 0, -0.4 + 0.28))     # end of the shelter wall
 
 
 ## Converted shipping container shop (spaza, barber): serving hatch, awning and sign facing +Z.
@@ -364,6 +366,10 @@ static func _build_container_shop(root: Node3D, c: Vector3, rot_y: float, sign: 
 	Geo.box(pivot, Vector3(3.4, 0.06, 1.3), Vector3(-0.8, 2.3, 1.8), PixelMaterials.flat(Color("#c0392b")), false)
 	Geo.quad(pivot, Vector2(3.6, 0.9), Vector3(0.5, 2.95, 1.22), PixelMaterials.panel(sign))
 	Geo.quad(pivot, Vector2(0.9, 2.0), Vector3(2.2, 1.0, 1.22), PixelMaterials.panel("door_gate"))
+	# Hanging around outside: against the front between hatch and door, and both short ends.
+	SpotRegistry.marker(pivot, "lean", Vector3(1.05, 0, 1.2 + 0.3))
+	SpotRegistry.marker(pivot, "lean", Vector3(3.0 + 0.3, 0, 0.3), PI * 0.5)
+	SpotRegistry.marker(pivot, "lean", Vector3(-3.0 - 0.3, 0, 0.3), -PI * 0.5)
 
 
 ## Dusty soccer pitch: red-dirt surface, white lines, two goals (solid posts).
@@ -505,6 +511,9 @@ static func _build_corner(root: Node3D, c: Vector3) -> void:
 	# A painted wall people lean on, with a bench: the neighbourhood gathering spot.
 	Geo.box(root, Vector3(6, 2.0, 0.3), c + Vector3(0, 1.0, -0.6), PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color("#e2585e")))
 	Geo.bench(root, c + Vector3(-1.5, 0, -0.15))
+	# Lean spots along the wall's face (0.3 m out from it), facing the street.
+	for x in [0.5, 1.5, 2.5]:
+		SpotRegistry.marker(root, "lean", c + Vector3(x, 0, -0.45 + 0.3))
 
 
 ## Precast wall around the playable area. Every east-west street that crosses the boundary

@@ -4,6 +4,32 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Sitting, leaning, waving and named-character looks (2026-11-09)
+- **New animations** (in `build_character.py`):
+  - **sit:** on a 0.45 m seat, hands on thighs.
+  - **lean:** back to a wall, one foot up, hands in pockets.
+  - **wave:** a one-shot greeting with the right arm.
+  Sit and lean replace the standing body. Talk, guard and wave layer on the upper body, so people
+  chat while seated and wave while walking.
+- **Spots (`SpotRegistry`):**
+  - Benches (one seat per 0.9 m), stoep chairs, the corner wall, bus-shelter poles and container
+    shop walls all register sit or lean spots.
+  - A resident who arrives to wait, relax, chat, visit, play or shop may claim the nearest free
+    spot within 7 m. They walk to it, then step into it with a scripted, physics-free move at
+    0.9 m/s, so it is never a teleport.
+  - Any new order makes them stand up and step out first. A spot is never claimed twice.
+  - Stoep chairs now face the street.
+- **Waving:** friendly residents and crew wave when the player walks up (2-minute cooldown each),
+  and sometimes when a chat starts. Rival crews don't wave.
+- **Unique looks:**
+  - `data/npcs/looks.json` overrides the generated resident data per character.
+  - New accessories: glasses, sunglasses, beard, moustache, clerical collar, chain, apron
+    (recolourable). New hair: afro, ponytail.
+  - All 13 named characters are now distinct, for example: Pastor Josephs (black, collar, grey
+    beard, glasses), Uncle Solly (white barber smock, moustache, glasses), Auntie Gail (blue apron),
+    Spider (chain and shades), Klip (bald, shades, moustache), Kaylin (afro).
+  - `tools/godot/lineup.gd --named` renders them.
+
 ### Visual upgrade: Forward+ lighting, rigged characters, Blender props (2026-11-09)
 - **Lighting (desktop):**
   - The project now runs Godot's Forward+ renderer, with filmic tonemapping, ambient occlusion,

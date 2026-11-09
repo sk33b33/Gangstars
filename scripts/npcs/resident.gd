@@ -28,6 +28,13 @@ const SLOW_RADIUS := 1.2      # ease in over the last metre of a trip
 const GHOST_TIME := 1.5       # after leaving the far tier, ignore other NPCs while overlaps clear
 const MAX_TRIP_TIME := 90.0  # a trip this long is "moving but not arriving": re-plan
 const FAR_ANIM_STEP := 0.1    # far NPCs animate at 10 Hz
+## Activities during which a resident may settle into a nearby spot, and which kinds (in order).
+const SPOT_ACTIVITIES := {"waiting": ["sit", "lean"], "relaxing": ["sit", "lean"], "socializing": ["lean", "sit"],
+	"visiting": ["sit"], "playing": ["sit"], "shopping": ["lean"]}
+const SPOT_RANGE := 7.0
+const SPOT_CHANCE := 0.75
+const SETTLE_SPEED := 0.9     # m/s while stepping into / out of a seat (scripted, no physics)
+const WAVE_COOLDOWN := 120.0
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var model: CharacterModel = $Model
@@ -84,6 +91,17 @@ var _marker: Label3D
 var _move_vel := Vector3.ZERO
 var _ghost_timer := 0.0
 var _far_anim_accum := 0.0
+var spots: SpotRegistry
+## Settling into a spot: "" | "approach" (walking to it) | "settle" | "seated" | "rise".
+var spot_phase := ""
+var _spot := -1
+var _spot_queue: Array = []    # commands that arrived while seated; run once standing again
+var _wave_cooldown := 0.0
+var _player_was_near := false
+var _prev_state := -1
+var waves := 0
+var times_settled := 0
+var settled_kinds := {}
 
 
 func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: float,
@@ -138,6 +156,8 @@ func current_path() -> PackedVector3Array:
 
 
 func set_tier(tier: String) -> void:
+	if tier == "far" and spot_phase == "approach":
+		_leave_spot()
 	if tier == sim_tier:
 		return
 	_frames_in_tier = 0
@@ -211,9 +231,32 @@ func _update_pose() -> void:
 		if pl and pl.visible and pl.global_position.distance_to(global_position) < 5.0 and _move_vel.length() < 0.8:
 			look = pl.global_position + Vector3(0, 1.5, 0)
 	model.look_at_point(look)
+	_maybe_wave(s)
+
+
+## Friendly residents wave when the player walks up, and sometimes when a chat starts.
+func _maybe_wave(s: NpcBrain.State) -> void:
+	var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
+	var near := pl != null and pl.visible and pl.global_position.distance_to(global_position) < 7.0
+	var friendly := data.role in ["resident", "player_crew"] and not brain.is_reacting()
+	if friendly and _wave_cooldown <= 0.0:
+		if near and not _player_was_near:
+			_wave_at(pl.global_position)
+		elif s == NpcBrain.State.SOCIALIZING and _prev_state != NpcBrain.State.SOCIALIZING and _rng.randf() < 0.4:
+			_wave_at(_face_point)
+	_player_was_near = near
+	_prev_state = s
+
+
+func _wave_at(p: Vector3) -> void:
+	model.wave()
+	model.look_at_point(p + Vector3(0, 1.5, 0))
+	_wave_cooldown = WAVE_COOLDOWN
+	waves += 1
 
 
 func _process(delta: float) -> void:
+	_wave_cooldown = maxf(0.0, _wave_cooldown - delta)
 	_update_pose()
 	if _bubble_timer > 0.0:
 		_bubble_timer -= delta
@@ -229,6 +272,9 @@ func _physics_process(delta: float) -> void:
 		_think(_think_accum)
 		_think_accum = 0.0
 	if is_inside:
+		return
+	if spot_phase in ["settle", "seated", "rise"]:
+		_spot_step(delta)
 		return
 	if _travelling:
 		travel_time += delta
@@ -248,6 +294,18 @@ func _physics_process(delta: float) -> void:
 		# Step clear of whatever we are wedged against, then resume the path.
 		_unstick_timer -= delta
 		desired = _unstick_dir * data.walk_speed
+	elif spot_phase == "approach":
+		var to_spot := spots.approach(_spot) - global_position
+		to_spot.y = 0.0
+		if agent.is_navigation_finished() or to_spot.length() < 0.25:
+			spot_phase = "settle"
+			model.base_pose = spots.kind(_spot)
+			_move_vel = Vector3.ZERO
+			return
+		var step_to := agent.get_next_path_position() - global_position
+		step_to.y = 0.0
+		if step_to.length() > 0.05:
+			desired = step_to.normalized() * data.walk_speed * 0.8 * clampf(to_spot.length() / SLOW_RADIUS, 0.45, 1.0)
 	elif _travelling:
 		if agent.is_navigation_finished():
 			_on_path_end()
@@ -301,7 +359,7 @@ func _on_path_end() -> void:
 
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
-	if not is_inside:
+	if not is_inside and spot_phase in ["", "approach"]:
 		_apply_velocity(safe_velocity)
 
 
@@ -420,6 +478,15 @@ func _door_blocked() -> bool:
 
 
 func _run(cmd: Dictionary) -> void:
+	if spot_phase != "" and cmd.cmd in ["go", "follow", "stop", "exit_home", "enter_home"]:
+		if spot_phase == "approach":
+			_leave_spot()
+		else:
+			# Seated or leaning: stand up and step out first, then carry on.
+			_spot_queue.append(cmd)
+			if spot_phase != "rise":
+				_rise()
+			return
 	match cmd.cmd:
 		"exit_home":
 			_set_inside(false)
@@ -547,6 +614,7 @@ func _on_arrived() -> void:
 	_speed_mult = 1.0
 	for cmd in brain.on_arrived():
 		_run(cmd)
+	_try_spot()
 
 
 func _set_inside(inside: bool) -> void:
@@ -570,6 +638,74 @@ func _set_inside(inside: bool) -> void:
 
 func _update_avoidance() -> void:
 	agent.avoidance_enabled = not is_inside and sim_tier == "near"
+
+
+# ------------------------------------------------------------------ benches, chairs, walls
+
+func _try_spot() -> void:
+	if spots == null or spot_phase != "" or sim_tier == "far" or is_inside:
+		return
+	if not brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING]:
+		return
+	var kinds: Array = SPOT_ACTIVITIES.get(brain.activity, [])
+	if kinds.is_empty() or _rng.randf() > SPOT_CHANCE:
+		return
+	# Prefer the first kind; fall back to the second if nothing of the first is free nearby.
+	for kind in kinds:
+		_spot = spots.claim(global_position, [kind], SPOT_RANGE, data.id)
+		if _spot >= 0:
+			break
+	if _spot < 0:
+		return
+	spot_phase = "approach"
+	agent.target_position = spots.approach(_spot)
+	path_status = "to a %s spot" % spots.kind(_spot)
+
+
+## Scripted (physics-free) steps into and out of a seat or wall spot; always slower than walking,
+## so it never counts as a teleport.
+func _spot_step(dt: float) -> void:
+	var target := spots.position(_spot) if spot_phase != "rise" else spots.approach(_spot)
+	var to := target - global_position
+	to.y = 0.0
+	var step := SETTLE_SPEED * dt
+	if to.length() > step:
+		global_position += to.normalized() * step
+	else:
+		global_position = Vector3(target.x, global_position.y, target.z)
+	if spot_phase != "rise":
+		rotation.y = lerp_angle(rotation.y, spots.yaw(_spot), clampf(dt * 6.0, 0.0, 1.0))
+		if spot_phase == "settle" and to.length() <= step:
+			spot_phase = "seated"
+			times_settled += 1
+			settled_kinds[spots.kind(_spot)] = int(settled_kinds.get(spots.kind(_spot), 0)) + 1
+			path_status = "%s down" % ("sitting" if spots.kind(_spot) == "sit" else "leaning")
+	elif to.length() <= step:
+		_leave_spot()
+		var queued := _spot_queue
+		_spot_queue = []
+		for cmd in queued:
+			_run(cmd)
+	_move_vel = Vector3.ZERO
+	velocity = Vector3.ZERO
+	if agent.avoidance_enabled:
+		agent.velocity = Vector3.ZERO
+	model.animate(dt, 0.0)
+	_last_pos = global_position
+
+
+func _rise() -> void:
+	spot_phase = "rise"
+	model.base_pose = ""
+
+
+func _leave_spot() -> void:
+	if spots and _spot >= 0:
+		spots.release(_spot, data.id)
+	_spot = -1
+	spot_phase = ""
+	model.base_pose = ""
+	agent.target_position = global_position
 
 
 func _talk() -> String:

@@ -7,7 +7,9 @@ extends Node3D
 ## The tree is advanced manually from animate(), so far-away NPCs cost what their tier allows.
 
 const MODEL := preload("res://assets/models/characters/person.glb")
-const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long"]
+const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail"]
+const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron"]
+const WAVE_TIME := 1.8
 const BLEND_RATE := 6.0        # how fast the gait blends in/out
 const WALK_REF := 1.5          # m/s the walk animation is authored for
 const RUN_REF := 4.5           # m/s the run animation is authored for
@@ -17,6 +19,12 @@ const UPPER_BONES := ["spine", "chest", "neck", "head", "upper_arm.L", "forearm.
 
 ## Pose layered on the gait while standing: "idle", "talk" (hand gestures), "guard" (arms folded).
 var mode := "idle"
+## Whole-body resting pose that replaces standing: "" (stand), "sit" (on a seat), "lean" (on a wall).
+var base_pose := ""
+var _sit := 0.0
+var _lean := 0.0
+var _wave := 0.0
+var _wave_timer := 0.0
 var _root: Node3D
 var _skeleton: Skeleton3D
 var _tree: AnimationTree
@@ -32,7 +40,7 @@ var _hair: Array[MeshInstance3D] = []
 
 
 ## opts: {hair_style, hair_color: Color, height (1.0 = 1.75 m), sleeves: "long"/"short",
-##        figure: 0..1, heavy: 0..1, skirt: bool}
+##        figure: 0..1, heavy: 0..1, skirt: bool, accessories: Array[String], apron_color: Color}
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
@@ -49,7 +57,10 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		"forearm": shirt if opts.get("sleeves", "long") == "long" else skin,
 		"shoes": Color("#1d1b24"), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
+		"apron": opts.get("apron_color", Color("#ece8dc")), "acc_frame": Color("#1a1a1e"), "acc_lens": Color("#101018"),
+		"acc_gold": Color("#d4a63a"), "acc_white": Color("#f4f4f0"),
 	}
+	var extras: Array = opts.get("accessories", [])
 	var style := str(opts.get("hair_style", "short"))
 	for mi in _skeleton.get_children():
 		if not mi is MeshInstance3D:
@@ -64,6 +75,8 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.visible = false
 		elif n == "Skirt":
 			mi.visible = skirt
+		elif n.begins_with("Acc_"):
+			mi.visible = extras.has(n.trim_prefix("Acc_"))
 		elif n == "Body":
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Figure"), clampf(float(opts.get("figure", 0.0)), 0.0, 1.0))
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Heavy"), clampf(float(opts.get("heavy", 0.0)), 0.0, 1.0))
@@ -92,10 +105,18 @@ func animate(delta: float, speed: float) -> void:
 	var idle := 1.0 - minf(_amp, 1.0)
 	_talk = lerpf(_talk, (1.0 if mode == "talk" else 0.0) * idle, k)
 	_guard = lerpf(_guard, (1.0 if mode == "guard" else 0.0) * idle, k)
+	var k_slow := clampf(delta * 4.0, 0.0, 1.0)
+	_sit = lerpf(_sit, 1.0 if base_pose == "sit" else 0.0, k_slow)
+	_lean = lerpf(_lean, 1.0 if base_pose == "lean" else 0.0, k_slow)
+	_wave_timer = maxf(0.0, _wave_timer - delta)
+	_wave = lerpf(_wave, 1.0 if _wave_timer > 0.3 else 0.0, k)
 	_tree.set("parameters/loco/blend_position", _speed)
 	_tree.set("parameters/pace/scale", _pace(_speed))
 	_tree.set("parameters/talk_mix/blend_amount", _talk)
 	_tree.set("parameters/guard_mix/blend_amount", _guard)
+	_tree.set("parameters/sit_mix/blend_amount", _sit)
+	_tree.set("parameters/lean_mix/blend_amount", _lean)
+	_tree.set("parameters/wave_mix/blend_amount", _wave)
 	_tree.advance(delta)
 	_apply_look(delta)
 
@@ -103,6 +124,15 @@ func animate(delta: float, speed: float) -> void:
 ## Turns the head (within ±60°) towards a world point; null looks straight ahead.
 func look_at_point(p: Variant) -> void:
 	_look_target = p
+
+
+## A short friendly wave (right arm), layered over whatever the body is doing.
+func wave() -> void:
+	_wave_timer = WAVE_TIME
+
+
+func is_waving() -> bool:
+	return _wave_timer > 0.0
 
 
 func head_yaw() -> float:
@@ -157,9 +187,17 @@ func _build_tree(player: AnimationPlayer) -> void:
 	bt.add_node("loco", loco)
 	bt.add_node("pace", AnimationNodeTimeScale.new())
 	bt.connect_node("pace", 0, "loco")
-	var upper := _upper_paths(player.get_animation("talk"))
 	var previous := "pace"
-	for pose in ["talk", "guard"]:
+	# Whole-body resting poses replace the standing gait.
+	for pose in ["sit", "lean"]:
+		bt.add_node(pose, _anim(pose))
+		bt.add_node(pose + "_mix", AnimationNodeBlend2.new())
+		bt.connect_node(pose + "_mix", 0, previous)
+		bt.connect_node(pose + "_mix", 1, pose)
+		previous = pose + "_mix"
+	# Upper-body gestures on top (legs keep walking, sitting or leaning).
+	var upper := _upper_paths(player.get_animation("talk"))
+	for pose in ["talk", "guard", "wave"]:
 		bt.add_node(pose, _anim(pose))
 		var mix := AnimationNodeBlend2.new()
 		mix.filter_enabled = true

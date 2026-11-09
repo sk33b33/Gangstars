@@ -34,27 +34,58 @@ func _run() -> void:
 	ground.material_override = PixelMaterials.flat(Color("#b9b2a2"))
 	world.add_child(ground)
 	var looks := [
-		[Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"), {"hair_style": "short", "sleeves": "short"}, "idle", 0.0],
-		[Color("#d9534f"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "doek", "hair_color": Color("#2e8b57"), "figure": 1.0, "skirt": true}, "talk", 0.0],
-		[Color("#f0c419"), Color("#2c3e50"), Color("#c58c62"), Color(0, 0, 0, 0), {"hair_style": "beanie", "hair_color": Color("#34495e"), "heavy": 0.6}, "guard", 0.0],
-		[Color("#5dade2"), Color("#1d1b24"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "long", "figure": 0.9, "height": 0.95}, "idle", 1.5],
-		[Color("#7d3c98"), Color("#566573"), Color("#4a2f22"), Color(0, 0, 0, 0), {"hair_style": "bald", "height": 1.08, "sleeves": "short"}, "idle", 4.5],
-		[Color("#27ae60"), Color("#784212"), Color("#e0ac80"), Color(0, 0, 0, 0), {"hair_style": "short", "hair_color": Color("#6e2c00"), "heavy": 0.35, "figure": 0.0}, "talk", 0.0],
+		[Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"), {"hair_style": "short", "sleeves": "short"}, "wave", 0.0],
+		[Color("#d9534f"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "doek", "hair_color": Color("#2e8b57"), "figure": 1.0, "heavy": 0.5, "skirt": true, "accessories": ["apron", "glasses"], "apron_color": Color("#f4f1ea")}, "sit", 0.0],
+		[Color("#1d1b24"), Color("#2c2c34"), Color("#c58c62"), Color(0, 0, 0, 0), {"hair_style": "short", "hair_color": Color("#b8b4ac"), "accessories": ["collar", "glasses", "beard"]}, "talk", 0.0],
+		[Color("#5dade2"), Color("#1d1b24"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "ponytail", "figure": 0.9, "height": 0.95}, "lean", 0.0],
+		[Color("#7d3c98"), Color("#566573"), Color("#4a2f22"), Color(0, 0, 0, 0), {"hair_style": "beanie", "accessories": ["sunglasses", "chain"], "heavy": 0.4}, "guard", 0.0],
+		[Color("#27ae60"), Color("#784212"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "afro", "hair_color": Color("#1d1b24")}, "idle", 1.5],
 	]
+	if args.has("named"):
+		# The named characters, exactly as the game dresses them (resident data + looks.json).
+		looks = []
+		for f in ["starter", "rooiduin", "kalkbos"]:
+			for n in NpcData.load_file("res://data/npcs/%s_residents.json" % f):
+				if not n.id.get_slice("_", n.id.get_slice_count("_") - 1).is_valid_int():
+					looks.append([n.shirt_color, n.pants_color, n.skin_color, Color(0, 0, 0, 0), n.appearance(), "idle", 0.0, n.display_name])
 	var models: Array = []
+	var spacing := 0.85 if looks.size() > 6 else 1.0
 	for i in looks.size():
 		var l: Array = looks[i]
 		var m := CharacterModel.new()
 		world.add_child(m)
-		m.position = Vector3((i - (looks.size() - 1) * 0.5) * 1.0, 0, 0)
+		m.position = Vector3((i - (looks.size() - 1) * 0.5) * spacing, 0, 0)
+		if l.size() > 7:
+			var tag := Label3D.new()
+			tag.text = str(l[7]).replace(" ", "\n")
+			tag.font_size = 22
+			tag.pixel_size = 0.004
+			tag.position = m.position + Vector3(0, 2.05, 0)
+			tag.modulate = Color("#1d1b24")
+			tag.outline_size = 0
+			world.add_child(tag)
 		m.build(l[0], l[1], l[2], l[3], l[4])
-		m.mode = l[5]
+		match str(l[5]):
+			"sit", "lean":
+				m.base_pose = l[5]
+			"wave":
+				pass
+			_:
+				m.mode = l[5]
+		if l[5] == "sit":
+			var seat := MeshInstance3D.new()
+			seat.mesh = PropLibrary.mesh("plastic_chair")
+			seat.position = m.position
+			world.add_child(seat)
 		models.append([m, float(l[6])])
 	var cam := Camera3D.new()
 	world.add_child(cam)
 	if args.has("close"):
 		cam.position = Vector3(-1.0, 1.55, 1.6)
 		cam.look_at(Vector3(-1.5, 1.45, 0))
+	elif args.has("named"):
+		cam.position = Vector3(0, 1.25, 6.6)
+		cam.look_at(Vector3(0, 1.1, 0))
 	else:
 		cam.position = Vector3(0, 1.4, 5.2)
 		cam.look_at(Vector3(0, 0.95, 0))
@@ -63,6 +94,8 @@ func _run() -> void:
 	var frames := int(args.get("frames", "40"))
 	for f in frames:
 		for pair in models:
+			if f % 60 == 0 and models.find(pair) == 0:
+				(pair[0] as CharacterModel).wave()
 			(pair[0] as CharacterModel).animate(1.0 / 60.0, pair[1])
 		await process_frame
 	await RenderingServer.frame_post_draw

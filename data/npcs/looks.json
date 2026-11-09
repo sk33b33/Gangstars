@@ -1,0 +1,118 @@
+{
+  "_comment": "Per-character look overrides, merged over the generated resident data (any NpcData field). accessories: glasses, sunglasses, beard, moustache, collar, chain, apron. Hair: short, long, doek, beanie, bald, afro, ponytail.",
+  "looks": {
+    "npc_faiza": {
+      "figure": 1.0,
+      "heavy": 0.55,
+      "skirt": 1,
+      "accessories": [
+        "glasses"
+      ]
+    },
+    "npc_boeta": {
+      "hair_style": "short",
+      "accessories": [
+        "beard"
+      ],
+      "heavy": 0.2
+    },
+    "npc_shireen": {
+      "hair_style": "ponytail",
+      "figure": 0.95,
+      "heavy": 0.0,
+      "skirt": 0
+    },
+    "npc_lionel": {
+      "hair_style": "short",
+      "hair_color": "#a7a39a",
+      "accessories": [
+        "moustache"
+      ],
+      "heavy": 0.45,
+      "height": 1.06
+    },
+    "npc_tasneem": {
+      "height": 0.87,
+      "figure": 0.6,
+      "heavy": 0.0,
+      "skirt": 0,
+      "hair_color": "#16a085"
+    },
+    "npc_rooi_rachel": {
+      "figure": 1.0,
+      "heavy": 0.7,
+      "skirt": 1,
+      "accessories": [
+        "apron",
+        "glasses"
+      ],
+      "apron_color": "#f6e7c8"
+    },
+    "npc_rooi_solly": {
+      "accessories": [
+        "moustache",
+        "glasses",
+        "apron"
+      ],
+      "apron_color": "#f4f4f0",
+      "heavy": 0.3,
+      "hair_color": "#a7a39a"
+    },
+    "npc_rooi_kaylin": {
+      "hair_style": "afro",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "sleeves": "short",
+      "height": 1.02
+    },
+    "npc_rooi_spider": {
+      "accessories": [
+        "sunglasses",
+        "chain"
+      ],
+      "heavy": 0.1,
+      "sleeves": "short",
+      "height": 1.08
+    },
+    "npc_kalk_gail": {
+      "figure": 1.0,
+      "heavy": 0.4,
+      "skirt": 0,
+      "accessories": [
+        "apron"
+      ],
+      "apron_color": "#3d6e8f"
+    },
+    "npc_kalk_pastor": {
+      "shirt_color": "#1d1b24",
+      "pants_color": "#26262e",
+      "sleeves": "long",
+      "hair_style": "short",
+      "hair_color": "#b8b4ac",
+      "accessories": [
+        "collar",
+        "glasses",
+        "beard"
+      ],
+      "heavy": 0.35
+    },
+    "npc_kalk_riyaad": {
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "accessories": [
+        "beard"
+      ],
+      "heavy": 0.0
+    },
+    "npc_kalk_klip": {
+      "hair_style": "bald",
+      "accessories": [
+        "sunglasses",
+        "moustache"
+      ],
+      "heavy": 0.55,
+      "sleeves": "short",
+      "height": 1.1
+    }
+  }
+}

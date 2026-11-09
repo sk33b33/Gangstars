@@ -903,6 +903,39 @@ func _pad_axis(axis: JoyAxis, value: float) -> void:
 	Input.parse_input_event(e)
 
 
+func _test_greetings(main: Node, district: District, player: Player) -> void:
+	district.director.clock.set_hour(11.0)
+	var who: Resident = null
+	for i in 600:
+		for r: Resident in district.residents.values():
+			if not r.is_inside and r.data.role == "resident" and r.sim_tier == "near" and not r.brain.is_reacting():
+				who = r
+				break
+		if who:
+			break
+		await physics_frame
+	_check(who != null, "a friendly resident is out and about to greet")
+	if who == null:
+		return
+	who._wave_cooldown = 0.0
+	player.global_position = who.global_position + Vector3(15, 0.1, 0)
+	await physics_frame
+	await process_frame
+	var before := who.waves
+	player.global_position = who.global_position + Vector3(3, 0.1, 0)
+	for i in 10:
+		await process_frame
+	_check(who.waves == before + 1 and who.model.is_waving(), "%s waves when the player walks up" % who.data.display_name)
+	for i in 10:
+		await process_frame
+	_check(who.waves == before + 1, "...and only once (cooldown)")
+	var rival: Resident = district.residents["npc_rooi_spider"]
+	rival._wave_cooldown = 0.0
+	rival._player_was_near = false
+	rival._maybe_wave(rival.brain.state)
+	_check(rival.waves == 0 or not rival.data.role in ["resident", "player_crew"], "rival crew don't wave")
+
+
 func _test_gamepad_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var hud := session.hud
@@ -1239,6 +1272,18 @@ func _test_district() -> void:
 		shapes["%.1f/%.1f" % [body.get_blend_shape_value(0), body.get_blend_shape_value(1)]] = true
 		skirts += 1 if r.model.skeleton().get_node("Skirt").visible else 0
 	_check(shapes.size() >= 6 and skirts >= 3, "residents vary in build (%d body shapes, %d skirts)" % [shapes.size(), skirts])
+	var pastor_sk: Skeleton3D = district.residents["npc_kalk_pastor"].model.skeleton()
+	var spider_sk: Skeleton3D = district.residents["npc_rooi_spider"].model.skeleton()
+	_check(pastor_sk.get_node("Acc_collar").visible and pastor_sk.get_node("Acc_beard").visible and not pastor_sk.get_node("Acc_chain").visible
+		and spider_sk.get_node("Acc_chain").visible and spider_sk.get_node("Acc_sunglasses").visible,
+		"named characters have their own looks (pastor's collar and beard, Spider's chain and shades)")
+	_check(district.residents["npc_rooi_kaylin"].model.skeleton().get_node("Hair_afro").visible, "Kaylin has an afro (looks.json)")
+	var sp := district.spots
+	_check(sp.count("sit") >= 20 and sp.count("lean") >= 3, "benches, chairs and the corner wall offer spots (%d sit, %d lean)" % [sp.count("sit"), sp.count("lean")])
+	var a := sp.claim(sp.position(0), ["sit"], 1.0, "test_a")
+	_check(a == 0 and sp.claim(sp.position(0), ["sit"], 0.5, "test_b") != 0, "a claimed spot isn't handed out twice")
+	sp.release(a, "test_a")
+	_check(sp.owner_of(0).is_empty(), "released spots are free again")
 	var dressed := 0
 	for hp: HousePlot in district.plots.values():
 		dressed += 1 if not hp.data.props.is_empty() else 0
@@ -1315,6 +1360,8 @@ func _test_district() -> void:
 					seen["_walking_gait"] = seen.get("_walking_gait", 0) + 1
 				if district.plots[r.data.home_id].is_door_open():
 					seen["_door_open"] = seen.get("_door_open", 0) + 1
+				if r.spot_phase == "seated":
+					seen["_seated_" + r.model.base_pose] = seen.get("_seated_" + r.model.base_pose, 0) + 1
 		await physics_frame
 	var real_s := (Time.get_ticks_msec() - t0) / 1000.0
 	var ms_per_frame := real_s * 1000.0 / frames
@@ -1342,6 +1389,15 @@ func _test_district() -> void:
 	_check(tiers.get("far", 0) > 0 and tiers.get("near", 0) > 0, "soak exercises near and far tiers")
 	_check(seen.get("_walking_gait", 0) > 50, "walking NPCs swing their limbs (%d samples)" % seen.get("_walking_gait", 0))
 	_check(doors_used[0] > 20 and seen.get("_door_open", 0) > 0, "front doors swing when residents come and go (%d uses)" % doors_used[0])
+	var settled := 0
+	var kinds := {}
+	for r: Resident in district.residents.values():
+		settled += r.times_settled
+		for k in r.settled_kinds:
+			kinds[k] = int(kinds.get(k, 0)) + int(r.settled_kinds[k])
+	_check(int(kinds.get("sit", 0)) > 0 and int(kinds.get("lean", 0)) > 0 and seen.get("_seated_sit", 0) > 0,
+		"residents sit on benches/chairs and lean on walls (%s)" % [kinds])
+	_check(settled >= 5, "settling into spots is common (%d times)" % settled)
 
 	# Night: 17:00 -> 01:00 (two hours after the latest curfew). Crew patrol/follow; residents go home by curfew.
 	district.destinations.set_enabled("poi_shop", true)
@@ -1386,6 +1442,8 @@ func _test_district() -> void:
 	await _test_kalkbos_in_game(main, district, player)
 	print("== gamepad (prompts, triggers, menus with A/B)")
 	await _test_gamepad_in_game(main, district, player)
+	print("== greetings (waves)")
+	await _test_greetings(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

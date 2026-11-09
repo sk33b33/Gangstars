@@ -136,7 +136,8 @@ func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
 		PropLibrary.place(self, "tyre_planters", Vector3(side * (half_w - 2.1), 0, -0.45), 0.0, tyre_paint)
 	var stoep_z := front_z + 0.55
 	if roll / 17 % 2 == 0:
-		PropLibrary.place(self, "plastic_chair", Vector3(float(kit.door_x) + 1.15 * side, 0, stoep_z), PI + 0.3 * side)
+		var chair := PropLibrary.place(self, "plastic_chair", Vector3(float(kit.door_x) + 1.15 * side, 0, stoep_z), 0.3 * side)
+		SpotRegistry.marker(self, "sit", chair.position, chair.rotation.y)
 	if roll / 19 % 20 < 7:
 		PropLibrary.place(self, "gas_bottle", Vector3(float(kit.door_x) + 1.7 * side, 0, front_z + 0.3))
 	if p.get("gate", false):

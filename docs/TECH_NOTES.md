@@ -211,7 +211,13 @@ old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkb
 - **Models are code:** see `.claude/skills/blender-assets/SKILL.md`.
   - Blender 4.5 LTS headless: `blender -b --factory-startup --python tools/blender/build_character.py`
     (or `build_props.py`), then `godot --headless --path . --import`.
-  - Character line-up: `xvfb-run -a godot --path . -s tools/godot/lineup.gd -- --out=res://tests/output/lineup.png [--close]`.
+  - Character line-up: `xvfb-run -a godot --path . -s tools/godot/lineup.gd -- --out=res://tests/output/lineup.png [--close | --named]`.
+- **Spots:** `SpotRegistry` collects Marker3D nodes in the groups `spot_sit` and `spot_lean`. Add one
+  with `SpotRegistry.marker(parent, kind, local_pos, rot_y)`, facing the way the person should face.
+  - Sit markers go at the middle of the seat.
+  - Lean markers go 0.3 m out from the wall face.
+  - The approach point (0.85 m for sit, 0.55 m for lean, straight out in front) must be on the
+    navigation mesh.
 
 ## Windows build and gamepad
 
