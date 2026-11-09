@@ -80,7 +80,7 @@ func set_enabled(on: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
 	for car in cars:
 		car.collision_layer = TrafficCar.LAYER_VEHICLES if on else 0
-		car.obstacle.avoidance_enabled = on
+		car.obstacle.avoidance_enabled = false
 
 
 func _physics_process(_delta: float) -> void:

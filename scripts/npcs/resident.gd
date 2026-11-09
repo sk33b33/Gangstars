@@ -13,6 +13,7 @@ signal reported(resident: Resident, event_id: String)
 signal door_used(house_id: String)
 
 const LAYER_NPCS := 1 << 2
+const LAYER_VEHICLES := 1 << 4
 const GRAVITY := 9.8
 const THINK_INTERVAL := {"near": 0.5, "mid": 1.5, "far": 3.0}
 const STUCK_WINDOW := 2.5
@@ -25,6 +26,7 @@ const ACCELERATION := 3.5     # m/s^2: smooth starts
 const DECELERATION := 5.0     # m/s^2: smooth stops
 const SLOW_RADIUS := 1.2      # ease in over the last metre of a trip
 const GHOST_TIME := 1.5       # after leaving the far tier, ignore other NPCs while overlaps clear
+const MAX_TRIP_TIME := 90.0  # a trip this long is "moving but not arriving": re-plan
 const FAR_ANIM_STEP := 0.1    # far NPCs animate at 10 Hz
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
@@ -140,7 +142,7 @@ func set_tier(tier: String) -> void:
 	if sim_tier == "far":
 		# Far NPCs move without collisions and may overlap someone; don't let physics
 		# shove them apart in one frame when they become physical again.
-		collision_mask &= ~LAYER_NPCS
+		collision_mask &= ~(LAYER_NPCS | LAYER_VEHICLES)
 		_ghost_timer = GHOST_TIME
 	sim_tier = tier
 	_update_avoidance()
@@ -235,7 +237,10 @@ func _physics_process(delta: float) -> void:
 	if _ghost_timer > 0.0:
 		_ghost_timer -= delta
 		if _ghost_timer <= 0.0:
-			collision_mask |= LAYER_NPCS
+			if _overlaps_body():
+				_ghost_timer = 0.5  # still inside someone: wait until we've walked clear
+			else:
+				collision_mask |= LAYER_NPCS | LAYER_VEHICLES
 	var desired := Vector3.ZERO
 	if _unstick_timer > 0.0:
 		# Step clear of whatever we are wedged against, then resume the path.
@@ -367,6 +372,11 @@ func _think(dt: float) -> void:
 		if not agent.is_target_reachable():
 			_retry("unreachable")
 			return
+	if travel_time > MAX_TRIP_TIME:
+		travel_time = 0.0
+		_start_unstick()
+		_retry("trip too long")
+		return
 	_stuck_accum += dt
 	if _stuck_accum >= STUCK_WINDOW:
 		if global_position.distance_to(_stuck_origin) < STUCK_MIN_MOVE:
@@ -467,6 +477,33 @@ func _set_target(extra_jitter: float) -> bool:
 	_check_reachable = true
 	path_status = "moving"
 	return true
+
+
+var _overlap_query: PhysicsShapeQueryParameters3D
+
+
+## True if this NPC's capsule currently overlaps another NPC or a vehicle.
+func _overlaps_body() -> bool:
+	if _overlap_query == null:
+		var capsule := CapsuleShape3D.new()
+		capsule.radius = 0.32
+		capsule.height = 1.75
+		_overlap_query = PhysicsShapeQueryParameters3D.new()
+		_overlap_query.shape = capsule
+		_overlap_query.collision_mask = LAYER_NPCS | LAYER_VEHICLES
+		_overlap_query.exclude = [get_rid()]
+	_overlap_query.transform = Transform3D(Basis(), global_position + Vector3(0, 0.875, 0))
+	return not get_world_3d().direct_space_state.intersect_shape(_overlap_query, 1).is_empty()
+
+
+## Hooted at by a car: walk sideways out of the lane for a moment, then carry on.
+func step_aside(direction: Vector3) -> void:
+	if is_inside:
+		return
+	direction.y = 0.0
+	_unstick_dir = direction.normalized()
+	_unstick_timer = 1.6
+	say("Ja, ja, I'm moving!", 2.0)
 
 
 func _start_unstick() -> void:

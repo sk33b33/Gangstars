@@ -577,10 +577,14 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 
 	# Weather.
 	var weather := district.weather
+	weather.enabled = true
+	district.director.clock.set_hour(12.0)
 	weather.set_kind("rain")
 	for i in 60 * 10:
 		await physics_frame
 	_check(weather.is_raining() and district.residents.values().all(func(r): return r.brain.raining), "rain reaches every resident's brain")
+	var leisure_only: Resident = district.residents["npc_h06_1"]
+	_check(not leisure_only.brain._any_entry_allowed(), "in the rain a resident with only outdoor leisure plans has nothing to go out for")
 	weather.set_kind("clear")
 	for i in 60 * 12:
 		await physics_frame
@@ -935,6 +939,11 @@ func _test_district() -> void:
 	director.ambient_incidents = true
 
 	# Soak: simulated minutes of daytime routine (07:00 onwards), ambient incidents on.
+	# The observer stands on the sidewalk, not in a traffic lane (cars would queue behind them).
+	# Weather is off for this baseline (rain keeps leisure-only residents home; tested separately).
+	district.weather.enabled = false
+	player.global_position = Vector3(-30, 0.1, 5.4)
+	player.snap_camera()
 	director.clock.set_hour(7.0)
 	var seen := {}
 	var tiers := {}
@@ -984,12 +993,12 @@ func _test_district() -> void:
 	_check(seen.get("_walking_gait", 0) > 50, "walking NPCs swing their limbs (%d samples)" % seen.get("_walking_gait", 0))
 	_check(doors_used[0] > 20 and seen.get("_door_open", 0) > 0, "front doors swing when residents come and go (%d uses)" % doors_used[0])
 
-	# Night: 17:00 -> 00:30. Crew patrol/follow; residents go home by curfew.
+	# Night: 17:00 -> 01:00 (two hours after the latest curfew). Crew patrol/follow; residents go home by curfew.
 	district.destinations.set_enabled("poi_shop", true)
 	director.ambient_incidents = false
 	director.clock.set_hour(17.0)
 	var night_seen := {}
-	for f in 60 * 60 * 7 + 60 * 30:
+	for f in 60 * 60 * 8:
 		if f % 60 == 0:
 			_sample_states(district, night_seen, tiers)
 		await physics_frame
@@ -1003,8 +1012,9 @@ func _test_district() -> void:
 			crew_out += 0 if r.is_inside else 1
 		elif not r.is_inside:
 			residents_out += 1
-			print("    still out at midnight: %s %s %s" % [r.data.id, r.state_name(), r.brain.last_transition])
-	_check(residents_out == 0, "all residents are home by 00:30 (%d still out)" % residents_out)
+			print("    still out at midnight: %s %s %s at %s path=%s target=%s tier=%s" % [r.data.id, r.state_name(), r.brain.last_transition,
+				r.global_position.snapped(Vector3.ONE * 0.1), r.path_status, r.target_id, r.sim_tier])
+	_check(residents_out == 0, "all residents are home by 01:00 (%d still out)" % residents_out)
 	_check(crew_out >= 1, "the crew is still out after midnight (%d)" % crew_out)
 	var tele := 0
 	var nudges := 0

@@ -7,7 +7,10 @@ extends AnimatableBody3D
 
 signal honked(car: TrafficCar)
 
-const LAYER_VEHICLES := 1 << 4
+## AI traffic has its own layer (6): residents don't collide with it (cars brake for them and
+## they steer around cars), so a car corner can never shove a pedestrian; the player and
+## drivable cars do collide with it.
+const LAYER_VEHICLES := 1 << 5
 const CORNER_SPEED := 3.5
 const ACCEL := 2.5
 const BRAKE := 9.0
@@ -33,6 +36,7 @@ var _served_stop := -1
 var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
 var _full_radius := 2.2
+var blocker: Node3D
 
 
 func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stops: Dictionary,
@@ -98,6 +102,10 @@ func _physics_process(delta: float) -> void:
 		if blocked_time > HONK_AFTER:
 			blocked_time = -2.0
 			honked.emit(self)
+			# A hoot makes a pedestrian in the lane step aside (away from the lane centre).
+			if blocker is Resident:
+				var side: float = signf(to_local(blocker.global_position).x)
+				blocker.step_aside(global_basis.x * (side if side != 0.0 else 1.0))
 	else:
 		blocked_time = 0.0
 	_was_blocked = blocked
@@ -107,8 +115,10 @@ func _physics_process(delta: float) -> void:
 		global_position += dir * minf(speed * delta, to.length())
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), clampf(delta * 5.0, 0.0, 1.0))
 		obstacle.velocity = dir * speed
-	# A waiting car shrinks its avoidance footprint so pedestrians can cross in front of it.
+	# Moving cars push walkers aside via avoidance; a waiting car has no avoidance footprint,
+	# so a pedestrian it is waiting for can always walk on (no car <-> pedestrian deadlock).
 	obstacle.radius = lerpf(1.0, _full_radius, clampf(speed / cruise_speed, 0.0, 1.0))
+	obstacle.avoidance_enabled = speed > 0.5 and visible
 
 
 ## Anything inside the lane box ahead (car-local +Z is forward).
@@ -119,7 +129,9 @@ func is_blocked() -> bool:
 			continue
 		var local := to_local(n.global_position)
 		if local.z > 1.0 and local.z < reach and absf(local.x) < HALF_WIDTH + 0.7:
+			blocker = n
 			return true
+	blocker = null
 	return false
 
 
