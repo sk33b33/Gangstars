@@ -1,4 +1,4 @@
-# Concrete Kings — Claude Code Development Kit
+# Gangstars — Claude Code Development Kit
 
 > **Current state:** Phase 3 playable. Vleirand, a fictional Cape Flats neighbourhood, has 30 houses
 > on 4 streets, 28 residents with day/night routines, social groups, reactions to incidents, and a
@@ -9,7 +9,7 @@
 > (flats, container shops, a soccer field and the Duin Boys), and Kalkbos to the west (limestone
 > cottages, an old quarry and the Klipspringers) are built from the same data pipeline.
 > Runs on Windows/Linux/macOS desktops with keyboard + mouse or a gamepad. Windows build:
-> `tools/export_windows.sh` → `build/windows/ConcreteKings.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
+> `tools/export_windows.sh` → `build/windows/Gangstars.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.
 >
 > ![Vleirand](docs/screenshots/district_overview.png)

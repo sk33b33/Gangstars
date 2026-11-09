@@ -203,13 +203,13 @@ old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkb
 ## Windows build and gamepad
 
 ```bash
-tools/export_windows.sh     # -> build/windows/ConcreteKings.exe + ConcreteKings-windows.zip (gitignored)
+tools/export_windows.sh     # -> build/windows/Gangstars.exe + Gangstars-windows.zip (gitignored)
 ```
 - The preset is "Windows Desktop" in `export_presets.cfg`. Non-resource files (`*.json`) are
   included explicitly; tests/tools/docs/art are excluded.
 - `application/modify_resources` is off (it would need rcedit), so the exe has Godot's default
   icon and no version info.
-- Saves and settings on Windows are in `%APPDATA%\Godot\app_userdata\Concrete Kings\`.
+- Saves and settings on Windows are in `%APPDATA%\Godot\app_userdata\Gangstars\`.
 - The Compatibility renderer uses OpenGL 3.3; on GPUs without it Godot falls back to ANGLE
   (Direct3D 11).
 - Gamepad bindings are in `project.godot`.

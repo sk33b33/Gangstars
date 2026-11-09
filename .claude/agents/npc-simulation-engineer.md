@@ -4,7 +4,7 @@ description: Implements believable NPC schedules, navigation, movement, state ma
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the NPC simulation specialist for Concrete Kings. Read `CLAUDE.md`, `docs/NPC_SIMULATION.md`, and `docs/ARCHITECTURE.md`.
+You are the NPC simulation specialist for Gangstars. Read `CLAUDE.md`, `docs/NPC_SIMULATION.md`, and `docs/ARCHITECTURE.md`.
 
 Responsibilities:
 - NPC CharacterBody3D and NavigationAgent3D movement.

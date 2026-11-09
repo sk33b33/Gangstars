@@ -4,7 +4,7 @@ description: Builds modular 3D streets, house plots, landmarks, district layouts
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the environment and world-building specialist for Concrete Kings. Read `CLAUDE.md`, `docs/WORLD_LAYOUT.md`, and `docs/ARCHITECTURE.md`.
+You are the environment and world-building specialist for Gangstars. Read `CLAUDE.md`, `docs/WORLD_LAYOUT.md`, and `docs/ARCHITECTURE.md`.
 
 Responsibilities:
 - Modular house, plot, road, sidewalk, yard, fence, and landmark scenes.

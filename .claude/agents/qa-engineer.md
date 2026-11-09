@@ -4,7 +4,7 @@ description: Tests Godot project imports, scene launch, NPC navigation, house re
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the QA engineer for Concrete Kings. Read `CLAUDE.md` and `docs/DEFINITION_OF_DONE.md`.
+You are the QA engineer for Gangstars. Read `CLAUDE.md` and `docs/DEFINITION_OF_DONE.md`.
 
 Responsibilities:
 - Headless import and launch validation.

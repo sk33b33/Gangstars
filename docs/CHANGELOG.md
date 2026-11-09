@@ -4,6 +4,13 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Renamed to Gangstars (2026-11-09)
+- The game is called **Gangstars** everywhere: the window title, HUD, Windows exe
+  (`Gangstars.exe`, `Gangstars-windows.zip`), docs and project instructions.
+- Godot keys the save folder to the project name, so saves and settings now live in
+  `app_userdata/Gangstars/`. Saves made under the old name don't carry over (copy them across by
+  hand if needed).
+
 ### Gamepad support and Windows build (2026-11-09)
 - **Gamepad (Xbox layout; other pads map to the same positions):**
 
@@ -29,7 +36,7 @@ All notable development milestones should be recorded here.
     getting into a car).
 - **Windows build:**
   - `export_presets.cfg` has a "Windows Desktop" preset (x86_64, game data embedded in the exe).
-  - `tools/export_windows.sh` produces `build/windows/ConcreteKings.exe` and a zip.
+  - `tools/export_windows.sh` produces `build/windows/Gangstars.exe` and a zip.
   - It installs only the Windows export templates, pulling them out of the official archive with
     `tools/remote_zip.py`.
   - The packaged content was verified by booting the exported pack and rendering a screenshot.

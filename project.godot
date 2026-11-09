@@ -1,9 +1,9 @@
-; Engine configuration file. Concrete Kings — Godot 4.5.1 (see docs/TECH_NOTES.md)
+; Engine configuration file. Gangstars — Godot 4.5.1 (see docs/TECH_NOTES.md)
 config_version=5
 
 [application]
 
-config/name="Concrete Kings"
+config/name="Gangstars"
 config/description="3D neighbourhood crime-and-empire game. Starter district: Vleirand."
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.5", "GL Compatibility")

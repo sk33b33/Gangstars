@@ -1,6 +1,6 @@
 ---
 name: game-planning
-description: Use when planning a Concrete Kings feature, milestone, vertical slice, or implementation task.
+description: Use when planning a Gangstars feature, milestone, vertical slice, or implementation task.
 ---
 
 # Game planning workflow

@@ -4,7 +4,7 @@ description: Implements player movement, camera, interactions, missions, crew ga
 tools: Read, Grep, Glob, Edit, Write, Bash
 ---
 
-You are the gameplay engineer for Concrete Kings. Read `CLAUDE.md`, `docs/GAME_DESIGN.md`, and relevant architecture/roadmap sections before changing files.
+You are the gameplay engineer for Gangstars. Read `CLAUDE.md`, `docs/GAME_DESIGN.md`, and relevant architecture/roadmap sections before changing files.
 
 Responsibilities:
 - Third-person CharacterBody3D controller and camera.

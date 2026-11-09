@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Builds the Windows release: build/windows/ConcreteKings.exe (game data embedded) and a zip.
+# Builds the Windows release: build/windows/Gangstars.exe (game data embedded) and a zip.
 # Needs the Godot 4.5.1 export templates. The script installs just the Windows ones when they
 # are missing, fetching only those files out of the official 1.3 GB template archive.
 set -euo pipefail
@@ -12,6 +12,6 @@ if [ ! -f "$TPL/windows_release_x86_64.exe" ]; then
   python3 -I tools/remote_zip.py "$URL" "$TPL" windows_release_x86_64.exe windows_debug_x86_64.exe
 fi
 mkdir -p build/windows
-"$GODOT" --headless --path . --export-release "Windows Desktop" build/windows/ConcreteKings.exe
-(cd build/windows && rm -f ConcreteKings-windows.zip && zip -q -9 ConcreteKings-windows.zip ConcreteKings.exe)
+"$GODOT" --headless --path . --export-release "Windows Desktop" build/windows/Gangstars.exe
+(cd build/windows && rm -f Gangstars-windows.zip && zip -q -9 Gangstars-windows.zip Gangstars.exe)
 ls -la build/windows

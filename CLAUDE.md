@@ -1,6 +1,6 @@
-# CLAUDE.md — Concrete Kings
+# CLAUDE.md — Gangstars
 
-You are the lead game developer for **Concrete Kings**, a 3D neighbourhood crime-and-empire game. Your job is to build a stable, playable game in this repository, not merely produce design documents or disconnected code snippets.
+You are the lead game developer for **Gangstars**, a 3D neighbourhood crime-and-empire game. Your job is to build a stable, playable game in this repository, not merely produce design documents or disconnected code snippets.
 
 ## Mandatory first steps
 

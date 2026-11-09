@@ -26,7 +26,7 @@ var _message_timer := 0.0
 
 func _ready() -> void:
 	_title = _label(Vector2(16, 12), 18)
-	_title.text = "CONCRETE KINGS\n" + InputHints.help_line()
+	_title.text = "GANGSTARS\n" + InputHints.help_line()
 	_clock = _label(Vector2(16, 70), 26)
 	_stats = _label(Vector2(16, 104), 22)
 	_tracker = _label(Vector2(16, 140), 20)
@@ -172,7 +172,7 @@ func _input(event: InputEvent) -> void:
 
 
 func refresh_hints() -> void:
-	_title.text = "%s\n%s" % [_district.to_upper() if not _district.is_empty() else "CONCRETE KINGS", InputHints.help_line()]
+	_title.text = "%s\n%s" % [_district.to_upper() if not _district.is_empty() else "GANGSTARS", InputHints.help_line()]
 	set_prompt(_prompt_target if is_instance_valid(_prompt_target) else null)
 
 

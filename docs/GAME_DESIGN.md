@@ -1,8 +1,8 @@
-# Game Design Document — Concrete Kings
+# Game Design Document — Gangstars
 
 ## 1. High concept
 
-**Concrete Kings** is a stylized, third-person 3D neighbourhood crime-and-empire game. The player starts as a small-time operator in one compact community and gradually builds influence, relationships, resources, and control. The emphasis is on a believable living neighbourhood, character movement, street-level exploration, and gradual territory expansion.
+**Gangstars** is a stylized, third-person 3D neighbourhood crime-and-empire game. The player starts as a small-time operator in one compact community and gradually builds influence, relationships, resources, and control. The emphasis is on a believable living neighbourhood, character movement, street-level exploration, and gradual territory expansion.
 
 The game should feel grounded and character-driven rather than like a static strategy map. Houses, streets, residents, crews, and local businesses form a connected simulation.
 
