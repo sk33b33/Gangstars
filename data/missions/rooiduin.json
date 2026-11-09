@@ -1,0 +1,135 @@
+{
+  "missions": [
+    {
+      "id": "new_turf",
+      "title": "New Turf",
+      "giver": "npc_rooi_rachel",
+      "prerequisites": {
+        "missions": [
+          "beyond_the_block"
+        ]
+      },
+      "intro": "Ma Rachel: \"So you're the one from Vleirand everyone's talking about. Walk with me: see the field, the spaza, and greet Uncle Solly at Kings Cuts.\"",
+      "description": "Get to know Rooiduin.",
+      "objectives": [
+        {
+          "id": "field",
+          "type": "visit",
+          "target": "rooi_field",
+          "radius": 5,
+          "text": "See the soccer field"
+        },
+        {
+          "id": "spaza",
+          "type": "visit",
+          "target": "rooi_spaza",
+          "radius": 3,
+          "text": "Stop at Duin Spaza"
+        },
+        {
+          "id": "solly",
+          "type": "talk_to",
+          "target": "npc_rooi_solly",
+          "allow_knock": true,
+          "text": "Greet Uncle Solly (Kings Cuts barber)"
+        }
+      ],
+      "rewards": {
+        "cash": 60,
+        "reputation": 8,
+        "influence": {
+          "district_east": 10
+        },
+        "relationship": {
+          "npc_rooi_rachel": 10
+        }
+      }
+    },
+    {
+      "id": "clean_cut",
+      "title": "Clean Cut",
+      "giver": "npc_rooi_solly",
+      "prerequisites": {
+        "missions": [
+          "new_turf"
+        ]
+      },
+      "intro": "Uncle Solly: \"My clipper blades are at the café in Vleirand, the auntie there keeps them for me. Fetch them before closing? No blades, no fades.\"",
+      "description": "A cross-district errand for the barber.",
+      "time_limit_minutes": 300,
+      "fail_text": "The café closed. Solly cuts with scissors today and he is not happy.",
+      "objectives": [
+        {
+          "id": "fetch",
+          "type": "visit",
+          "target": "poi_shop",
+          "radius": 3,
+          "text": "Fetch the blades from Vleirand Cafe (Vleirand)"
+        },
+        {
+          "id": "return",
+          "type": "talk_to",
+          "target": "npc_rooi_solly",
+          "allow_knock": true,
+          "text": "Bring them to Uncle Solly in Rooiduin"
+        }
+      ],
+      "rewards": {
+        "cash": 150,
+        "reputation": 8,
+        "influence": {
+          "district_east": 10
+        },
+        "relationship": {
+          "npc_rooi_solly": 15
+        }
+      }
+    },
+    {
+      "id": "dune_truce",
+      "title": "Dune Truce",
+      "giver": "npc_rooi_rachel",
+      "prerequisites": {
+        "missions": [
+          "clean_cut"
+        ]
+      },
+      "intro": "Ma Rachel: \"The Duin Boys chase the kids off the field every night. Talk to Spider, then stand on that field with your crew. Show them it belongs to everyone.\"",
+      "description": "Make the field safe again.",
+      "objectives": [
+        {
+          "id": "spider",
+          "type": "talk_to",
+          "target": "npc_rooi_spider",
+          "allow_knock": true,
+          "text": "Talk to Spider at the Duin Boys' flats (8 Mossie Street)"
+        },
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "rooi_field",
+          "radius": 7,
+          "minutes": 20,
+          "window": [
+            19,
+            2
+          ],
+          "with_crew": true,
+          "text": "Hold the soccer field with your crew after dark"
+        }
+      ],
+      "rewards": {
+        "reputation": 15,
+        "crew_influence": 10,
+        "influence": {
+          "district_east": 25
+        },
+        "recruit": "npc_rooi_kaylin",
+        "relationship": {
+          "npc_rooi_rachel": 15,
+          "npc_rooi_kaylin": 20
+        }
+      }
+    }
+  ]
+}

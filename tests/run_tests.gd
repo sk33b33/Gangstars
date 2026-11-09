@@ -349,7 +349,7 @@ func _test_phase5_units() -> void:
 	_check(announced[0] == "district_east" and dm.state("district_east") == "unlockable", "Rooiduin becomes unlockable and is announced")
 	var unlocked := [""]
 	dm.district_unlocked.connect(func(id): unlocked[0] = id)
-	_check(dm.unlock_district("district_east") and unlocked[0] == "district_east" and dm.state("district_east") == "unlocked", "Rooiduin unlocks")
+	_check(dm.unlock_district("district_east") and unlocked[0] == "district_east" and dm.state("district_east") == "contested", "Rooiduin unlocks (and starts contested)")
 	_check(not dm.unlock_district("district_east"), "unlocking twice does nothing")
 	_check(dm.state("district_west") == "locked", "Kalkbos stays locked")
 	var p2 := ProgressionState.new()
@@ -486,7 +486,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 4, "4 AI vehicles drive (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 6, "6 AI vehicles drive across both districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -494,7 +494,9 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var last := traffic.cars.map(func(c): return c.global_position)
 	var travelled := traffic.cars.map(func(_c): return 0.0)
 	var off_road := 0
-	var streets: Array = district.info.streets
+	var streets: Array = []
+	for area in district.areas:
+		streets.append_array(area.get("streets", []))
 	for f in 60 * 25:
 		for i in traffic.cars.size():
 			travelled[i] += traffic.cars[i].global_position.distance_to(last[i])

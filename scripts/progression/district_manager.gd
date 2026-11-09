@@ -91,7 +91,8 @@ func state(id: String) -> String:
 	if bool(get_district(id).get("is_initially_unlocked", false)):
 		return "controlled" if influence(id) >= CONTROLLED_INFLUENCE else "contested"
 	if is_unlocked(id):
-		return "unlocked"
+		# Unlocked districts are turf like Vleirand: contested until you build influence there.
+		return "controlled" if influence(id) >= CONTROLLED_INFLUENCE else "contested"
 	return "unlockable" if can_unlock(id) else "locked"
 
 

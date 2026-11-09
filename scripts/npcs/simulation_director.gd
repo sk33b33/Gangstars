@@ -122,15 +122,19 @@ func _on_incident(event: Dictionary) -> void:
 
 ## Invite a deterministic share of residents to the event; power cuts switch the lights off.
 func _on_event_started(e: Dictionary) -> void:
-	events.message.emit(str(e.get("start_text", e.name)))
+	if not str(e.get("start_text", "")).is_empty():
+		events.message.emit(str(e.start_text))
 	if e.get("power_off", false):
 		district.day_night.power_on = false
 	if e.id == "braai":
 		district.set_braai(true)
 	var chance := float(e.get("join_chance", 0.5))
+	var where := str(e.get("district", "*"))
 	for r: Resident in district.residents.values():
 		if r.data.role != "resident":
 			continue
+		if where != "*" and district.resident_district(r) != where:
+			continue  # residents only go to events in their own district
 		var roll := float(hash(r.data.id + str(e.id) + str(clock.day)) % 1000) / 1000.0
 		if roll < chance:
 			r.brain.pending_event = {"activity": str(e.get("activity", e.id)), "destination": str(e.anchor),
@@ -138,7 +142,8 @@ func _on_event_started(e: Dictionary) -> void:
 
 
 func _on_event_ended(e: Dictionary) -> void:
-	events.message.emit(str(e.get("end_text", "")))
+	if not str(e.get("end_text", "")).is_empty():
+		events.message.emit(str(e.end_text))
 	if e.get("power_off", false):
 		district.day_night.power_on = true
 	if e.id == "braai":

@@ -19,6 +19,13 @@ const KITS := {
 		"windows": [[-3.6, 1.0], [-3.6, 3.7], [-1.2, 3.7]]},
 	"double_garage": {"w": 6.0, "d": 7.0, "x": -2.5, "storeys": 2, "door_x": -1.0, "roof": "gable", "roof_h": 1.0,
 		"windows": [[-4.0, 1.0], [-4.0, 3.7], [-1.6, 3.7]], "garage": {"x": 2.6, "w": 3.8, "d": 6.5}},
+	# Rooiduin: 3-storey walk-up flats (external stair tower, balconies) and narrow row houses.
+	"flats": {"w": 16.0, "d": 8.0, "x": -1.2, "storeys": 3, "door_x": 8.0, "roof": "flat", "roof_h": 0.0,
+		"windows": [[-7.0, 1.0], [-3.5, 1.0], [0.0, 1.0], [3.5, 1.0], [-7.0, 3.8], [-3.5, 3.8], [0.0, 3.8], [3.5, 3.8],
+			[-7.0, 6.6], [-3.5, 6.6], [0.0, 6.6], [3.5, 6.6]],
+		"stair": {"x": 8.0, "w": 2.6}, "balconies": true},
+	"row_house": {"w": 7.4, "d": 7.0, "x": 0.0, "storeys": 1, "door_x": -2.0, "roof": "gable_side", "roof_h": 1.1,
+		"windows": [[1.2, 1.0]]},
 }
 
 var data: HouseData
@@ -69,6 +76,8 @@ func build(house: HouseData, closing_fence := false) -> void:
 		_build_garage(kit.garage, front_z)
 		gaps.append([kit.garage.x, kit.garage.w - 0.4])
 	_build_fences(gaps, closing_fence)
+	if kit.has("stair"):
+		_build_flats_extras(kit, h, front_z)
 	_build_props(kit, h, front_z)
 
 	door_interactable = Interactable.new()
@@ -217,12 +226,35 @@ func _build_roof(kit: Dictionary, h: float, center: Vector3) -> void:
 		"gable_side":
 			mi.mesh = Geo.roof_mesh(d, w, kit.roof_h, 0.0)
 			mi.rotation.y = PI * 0.5
+		"flat":
+			Geo.box(self, Vector3(kit.w + 0.3, 0.35, kit.d + 0.3), Vector3(center.x, h + 0.175, center.z),
+				PixelMaterials.flat(Color("#8a8f96")), false)
+			return
 		_:
 			mi.mesh = Geo.roof_mesh(w, d, kit.roof_h, 0.0)
 	var tex := "roof_tiles" if data.roof == "tiles" else "roof_ibr"
 	mi.material_override = PixelMaterials.surface(tex, Vector2(2, 2))
 	mi.position = Vector3(center.x, h, center.z)
 	add_child(mi)
+
+
+## Flats: external stair tower, a balcony with a steel railing on every upper floor, and
+## laundry on some railings (data props "washing").
+func _build_flats_extras(kit: Dictionary, h: float, front_z: float) -> void:
+	var st: Dictionary = kit.stair
+	var wall := PixelMaterials.surface("wall_plaster", Vector2(2, 2), data.wall_color.darkened(0.12))
+	Geo.box(self, Vector3(st.w, h + 0.6, 2.6), Vector3(st.x, (h + 0.6) * 0.5, front_z - 1.3), wall)
+	var slab := PixelMaterials.flat(Color("#a7acb4"))
+	var rail := PixelMaterials.surface("fence_palisade", Vector2(2, 1.0), Color("#56606e"), true)
+	var cloth := PixelMaterials.panel("washing", Color.WHITE, true)
+	for s in range(1, int(kit.storeys)):
+		var y: float = s * STOREY
+		Geo.box(self, Vector3(kit.w, 0.15, 1.1), Vector3(kit.x, y, front_z + 0.55), slab, false)
+		Geo.box(self, Vector3(kit.w, 1.0, 0.04), Vector3(kit.x, y + 0.55, front_z + 1.08), rail, false)
+		if data.props.get("washing", false) and s % 2 == 1:
+			Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) - 4.0, y + 0.6, front_z + 1.12), cloth)
+		elif data.props.get("washing", false):
+			Geo.quad(self, Vector2(2.0, 1.0), Vector3(float(kit.x) + 2.5, y + 0.6, front_z + 1.12), cloth)
 
 
 func _build_garage(g: Dictionary, front_z: float) -> void:

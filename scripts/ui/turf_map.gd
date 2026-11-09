@@ -12,7 +12,9 @@ const STATE_COLORS := {
 	"player": Color("#e2585e"), "friendly": Color("#5fbf6a"), "hostile": Color("#8e44ad"),
 	"neutral": Color("#c9c6bf"), "vacant": Color("#6d7177"),
 }
-const DISTRICT_COLORS := {"locked": Color("#c0392b"), "unlockable": Color("#f1c40f"), "unlocked": Color("#5fbf6a")}
+const DISTRICT_COLORS := {"locked": Color("#c0392b"), "unlockable": Color("#f1c40f"), "unlocked": Color("#5fbf6a"),
+	"contested": Color("#e67e22"), "controlled": Color("#5fbf6a")}
+const AREA_GROUND := {"starter": Color("#d9c49a")}
 const MAP_SIZE := Vector2(640, 520)
 
 var district: District
@@ -64,8 +66,13 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 	_side.custom_minimum_size = Vector2(400, 0)
 	_side.add_theme_constant_override("separation", 6)
 	scroll.add_child(_side)
-	var b: Array = district.info.get("bounds", [-72, -78, 72, 22])
-	_world_rect = Rect2(b[0] - 40.0, b[1] - 6.0, (b[2] - b[0]) + 80.0, (b[3] - b[1]) + 12.0)
+	# The map covers every built area plus a 40 m strip for neighbours that aren't built yet.
+	var r := Rect2()
+	for i in district.areas.size():
+		var ab: Array = district.areas[i].get("bounds", [-72, -78, 72, 22])
+		var ar := Rect2(ab[0], ab[1], ab[2] - ab[0], ab[3] - ab[1])
+		r = ar if i == 0 else r.merge(ar)
+	_world_rect = r.grow_individual(40.0, 6.0, 6.0, 6.0)
 	_map_scale = minf(MAP_SIZE.x / _world_rect.size.x, MAP_SIZE.y / _world_rect.size.y)
 	_map_offset = (MAP_SIZE - _world_rect.size * _map_scale) * 0.5
 	visible = false
@@ -104,7 +111,7 @@ func refresh() -> void:
 		_side.add_child(HSeparator.new())
 		_add_label("%s (%s) — %s" % [d.display_name, d.side, st.to_upper()], 20, DISTRICT_COLORS.get(st, Color.WHITE))
 		_add_label(str(d.get("description", "")), 14, Color("#c9c6bf"))
-		if st != "unlocked":
+		if not manager.is_unlocked(id):
 			for r in manager.get_unlock_requirements(id):
 				_add_label(("✓ " if r.met else "✗ ") + r.text, 16, Color("#9fd8b8") if r.met else Color("#e2585e"))
 			var btn := Button.new()
@@ -178,25 +185,41 @@ func _draw_map() -> void:
 	var font := ThemeDB.fallback_font
 	_canvas.draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#3a3326"))
 	var b: Array = district.info.get("bounds", [-72, -78, 72, 22])
-	var inner := Rect2(_to_map(Vector3(b[0], 0, b[1])), Vector2(b[2] - b[0], b[3] - b[1]) * _map_scale)
-	_canvas.draw_rect(inner, Color("#d9c49a"))
-	# Neighbouring districts beyond the boundary.
+	for area in district.areas:
+		var ab: Array = area.get("bounds", b)
+		var ar := Rect2(_to_map(Vector3(ab[0], 0, ab[1])), Vector2(ab[2] - ab[0], ab[3] - ab[1]) * _map_scale)
+		_canvas.draw_rect(ar, AREA_GROUND.get(str(area.id), Color("#d8a07a")))
+	# Neighbouring districts: their real area if built, otherwise a strip beside Vleirand.
+	var overlays: Array = []
 	for d in manager.neighbours():
 		var st := manager.state(str(d.id))
-		var east: bool = d.side == "east"
-		var zx: float = b[2] if east else b[0] - 40.0
-		var zone := Rect2(_to_map(Vector3(zx, 0, b[1])), Vector2(40.0, b[3] - b[1]) * _map_scale)
+		var area := district.area_by_id(str(d.id))
+		var zone: Rect2
+		if not area.is_empty():
+			var ab: Array = area.bounds
+			zone = Rect2(_to_map(Vector3(ab[0], 0, ab[1])), Vector2(ab[2] - ab[0], ab[3] - ab[1]) * _map_scale)
+			if not manager.is_unlocked(str(d.id)):
+				overlays.append([zone, DISTRICT_COLORS.get(st, Color.GRAY)])
+		else:
+			var east: bool = d.side == "east"
+			var zx: float = b[2] if east else b[0] - 40.0
+			zone = Rect2(_to_map(Vector3(zx, 0, b[1])), Vector2(40.0, b[3] - b[1]) * _map_scale)
 		var col: Color = DISTRICT_COLORS.get(st, Color.GRAY)
 		_canvas.draw_rect(zone, Color(col, 0.25))
 		_canvas.draw_rect(zone, col, false, 2.0)
 		var label := "%s\n%s" % [str(d.display_name).to_upper(), st.to_upper()]
 		_canvas.draw_multiline_string(font, zone.position + Vector2(6, zone.size.y * 0.5), label,
 			HORIZONTAL_ALIGNMENT_LEFT, zone.size.x - 8, 14, -1, col)
-	# Streets.
-	for s in district.info.get("streets", []):
+	# Streets (all areas).
+	var all_streets: Array = []
+	var all_pois: Array = []
+	for area in district.areas:
+		all_streets.append_array(area.get("streets", []))
+		all_pois.append_array(area.get("pois", []))
+	for s in all_streets:
 		var hw: float = s.get("half_width", 4.0)
-		var a0 := maxf(minf(s.from, s.to), b[0] - 40.0)
-		var a1 := minf(maxf(s.from, s.to), b[2] + 40.0)
+		var a0 := maxf(minf(s.from, s.to), _world_rect.position.x)
+		var a1 := minf(maxf(s.from, s.to), _world_rect.end.x)
 		var r: Rect2
 		if s.axis == "x":
 			r = Rect2(_to_map(Vector3(a0, 0, s.at - hw)), Vector2(a1 - a0, hw * 2) * _map_scale)
@@ -215,11 +238,14 @@ func _draw_map() -> void:
 		poly.append(poly[0])
 		_canvas.draw_polyline(poly, Color("#1d1b24"), 1.0)
 	# Landmarks.
-	for poi in district.info.get("pois", []):
+	for poi in all_pois:
 		var pp := DataFiles.to_vec2(poi.get("position"))
 		var m := _to_map(Vector3(pp.x, 0, pp.y))
 		_canvas.draw_circle(m, 5.0, Color("#2e86c1"))
 		_canvas.draw_string(font, m + Vector2(7, 4), str(poi.get("map_label", poi.get("name", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	for ov in overlays:
+		_canvas.draw_rect(ov[0], Color(ov[1], 0.45))
+		_canvas.draw_rect(ov[0], ov[1], false, 2.0)
 	# Crew and player.
 	for r: Resident in district.residents.values():
 		if r.data.role == "player_crew" and not r.is_inside:

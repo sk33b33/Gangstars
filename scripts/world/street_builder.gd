@@ -12,9 +12,14 @@ const SIGN_COLOR := Color("#2f6e3a")
 static func build(root: Node3D, info: Dictionary, destinations: DestinationRegistry) -> Dictionary:
 	var b: Array = info.get("bounds", [-72, -78, 72, 22])
 	var streets: Array = info.get("streets", [])
-	var center := Vector3((b[0] + b[2]) * 0.5, -0.5, (b[1] + b[3]) * 0.5)
-	# Ground: one solid slab whose top is y = 0, larger than the bounds so the world never ends.
-	Geo.box(root, Vector3(b[2] - b[0] + 80, 1, b[3] - b[1] + 80), center, PixelMaterials.surface("yard_sand", Vector2(2, 2), Color(0.86, 0.8, 0.7)))
+	# Ground: one solid slab (top at y = 0) extending past the bounds so the world never ends.
+	# Sides shared with another area get no margin (that area brings its own ground).
+	var m: Dictionary = {"west": 40.0, "east": 40.0, "north": 40.0, "south": 40.0}
+	m.merge(info.get("ground_margin", {}), true)
+	var g0 := Vector2(float(b[0]) - float(m.west), float(b[1]) - float(m.north))
+	var g1 := Vector2(float(b[2]) + float(m.east), float(b[3]) + float(m.south))
+	Geo.box(root, Vector3(g1.x - g0.x, 1, g1.y - g0.y), Vector3((g0.x + g1.x) * 0.5, -0.5, (g0.y + g1.y) * 0.5),
+		PixelMaterials.surface(str(info.get("ground_texture", "yard_sand")), Vector2(2, 2), DataFiles.to_color(info.get("ground_tint"), Color(0.86, 0.8, 0.7))))
 	for s in streets:
 		_build_street(root, s)
 	for s in streets:
@@ -29,9 +34,13 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"court": _build_court(root, pos)
 			"park": _build_park(root, pos)
 			"corner": _build_corner(root, pos)
+			"container_shop": _build_container_shop(root, pos, _facing_rot(lm), str(lm.get("sign", "sign_spaza")), DataFiles.to_color(lm.get("color"), Color("#2b6fb5")))
+			"soccer_field": _build_soccer_field(root, pos)
+			"taxi_rank": _build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
+			"courtyard": _build_courtyard(root, pos)
 			var other: push_warning("Unknown landmark type '%s'" % other)
-	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations)
-	_build_backdrop(root, b, streets)
+	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
+	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
 	for car in info.get("parked_cars", []):
 		if car.get("drivable", false):
 			continue  # spawned as a DrivableCar after the nav bake
@@ -84,6 +93,58 @@ static func _build_street(root: Node3D, s: Dictionary) -> void:
 	while (t - a1) * step < 0.0:
 		Geo.box(root, Vector3(2.0, 0.02, 0.15), _world(s, t + step, 0) + Vector3(0, 0.02, 0), paint, false, rot)
 		t += 5.0 * step
+	_build_crossings(root, s, minf(w0, w1), maxf(w0, w1), hw, rot, paint)
+
+
+const CROSSING_SPACING := 24.0
+const CROSSING_START := 16.0
+const CROSSING_WIDTH := 3.0
+
+
+## Residents walk on pavements and cross at zebra crossings: the roadway is carved out of the
+## nav mesh (a projected NavigationObstacle3D, applied at bake time) except at the crossings.
+## Vehicles and the player don't use the nav mesh, so this only shapes where people walk.
+static func _build_crossings(root: Node3D, s: Dictionary, c0: float, c1: float, hw: float, rot: float, paint: Material) -> void:
+	var centres: Array = []
+	var t := c0 + CROSSING_START
+	while t < c1 - 6.0:
+		centres.append(t)
+		t += CROSSING_SPACING
+	var seg_start := c0
+	for cx in centres:
+		_carve_road(root, s, seg_start, cx - CROSSING_WIDTH * 0.5, hw)
+		seg_start = cx + CROSSING_WIDTH * 0.5
+		var k := -hw + 0.6
+		while k <= hw - 0.4:
+			Geo.box(root, Vector3(CROSSING_WIDTH, 0.02, 0.45), _world(s, cx, k) + Vector3(0, 0.022, 0), paint, false, rot)
+			k += 0.9
+	_carve_road(root, s, seg_start, c1, hw)
+
+
+static func _carve_road(root: Node3D, s: Dictionary, a0: float, a1: float, hw: float) -> void:
+	if a1 - a0 < 0.5:
+		return
+	var obstacle := NavigationObstacle3D.new()
+	obstacle.name = "RoadCarve"
+	obstacle.vertices = PackedVector3Array([_world(s, a0, -hw), _world(s, a1, -hw), _world(s, a1, hw), _world(s, a0, hw)])
+	obstacle.height = 2.0
+	obstacle.position = Vector3(0, -0.5, 0)
+	obstacle.avoidance_enabled = false
+	obstacle.affect_navigation_mesh = true
+	obstacle.carve_navigation_mesh = true
+	root.add_child(obstacle)
+
+
+## Centres of the zebra crossings on a street (for tests / tools).
+static func crossing_centres(s: Dictionary) -> Array:
+	var c0: float = minf(s.get("sidewalk_from", s.from), s.get("sidewalk_to", s.to))
+	var c1: float = maxf(s.get("sidewalk_from", s.from), s.get("sidewalk_to", s.to))
+	var out: Array = []
+	var t := c0 + CROSSING_START
+	while t < c1 - 6.0:
+		out.append(t)
+		t += CROSSING_SPACING
+	return out
 
 
 static func _build_streetlights(root: Node3D, s: Dictionary, b: Array) -> void:
@@ -118,7 +179,11 @@ static func _build_streetlights(root: Node3D, s: Dictionary, b: Array) -> void:
 
 ## Visual-only rows of simple houses outside the boundary, so the city continues past the
 ## wall (and hints at the locked districts). No colliders: they are unreachable anyway.
-static func _build_backdrop(root: Node3D, b: Array, streets: Array) -> void:
+static func _facing_rot(lm: Dictionary) -> float:
+	return {"south": 0.0, "north": PI, "east": PI * 0.5, "west": -PI * 0.5}.get(str(lm.get("facing", "south")), 0.0)
+
+
+static func _build_backdrop(root: Node3D, b: Array, streets: Array, skip: Array = []) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7041
 	var paints := ["#e8967a", "#a6d455", "#8fb8d8", "#f2e4b8", "#c3b0d8", "#ece9e2", "#f1d36b", "#9fd8b8"]
@@ -129,14 +194,18 @@ static func _build_backdrop(root: Node3D, b: Array, streets: Array) -> void:
 	var maxz: float = b[3]
 	var x := minx - 18.0
 	while x <= maxx + 18.0:
-		spots.append([Vector3(x, 0, minz - 8.0), 0.0])
-		spots.append([Vector3(x, 0, maxz + 8.0), PI])
+		if not skip.has("north"):
+			spots.append([Vector3(x, 0, minz - 8.0), 0.0])
+		if not skip.has("south"):
+			spots.append([Vector3(x, 0, maxz + 8.0), PI])
 		x += 11.0
 	for s in streets:
 		if s.axis != "x":
 			continue
 		var off: float = s.get("half_width", 4.0) + s.get("sidewalk", 2.5) + 5.0
 		for dir in [-1.0, 1.0]:
+			if skip.has("east" if dir > 0 else "west"):
+				continue
 			var edge: float = maxx if dir > 0 else minx
 			var t: float = edge + dir * 8.0
 			for i in 4:
@@ -267,17 +336,62 @@ static func _build_cafe(root: Node3D, c: Vector3) -> void:
 
 
 ## Shelter open towards local +Z; rot_y = PI turns it to face north.
-static func _build_bus_stop(root: Node3D, c: Vector3, rot_y: float) -> void:
+static func _build_bus_stop(root: Node3D, c: Vector3, rot_y: float, sign := "sign_bus", panel_color := Color("#9fb6c9")) -> void:
 	var pivot := Node3D.new()
 	pivot.position = c
 	pivot.rotation.y = rot_y
 	root.add_child(pivot)
 	var steel := PixelMaterials.flat(Color("#565a64"))
-	Geo.box(pivot, Vector3(3.2, 2.2, 0.1), Vector3(0, 1.1, -0.4), PixelMaterials.flat(Color("#9fb6c9")))
+	Geo.box(pivot, Vector3(3.2, 2.2, 0.1), Vector3(0, 1.1, -0.4), PixelMaterials.flat(panel_color))
 	Geo.box(pivot, Vector3(3.4, 0.1, 1.4), Vector3(0, 2.3, 0.1), steel, false)
 	Geo.bench(pivot, Vector3(0, 0, -0.1), 0.0, 2.4)
 	Geo.box(pivot, Vector3(0.1, 2.6, 0.1), Vector3(2.2, 1.3, 1.3), steel)
-	Geo.quad(pivot, Vector2(0.6, 0.6), Vector3(2.2, 2.6, 1.36), PixelMaterials.panel("sign_bus"))
+	Geo.quad(pivot, Vector2(0.6, 0.6), Vector3(2.2, 2.6, 1.36), PixelMaterials.panel(sign))
+
+
+## Converted shipping container shop (spaza, barber): serving hatch, awning and sign facing +Z.
+static func _build_container_shop(root: Node3D, c: Vector3, rot_y: float, sign: String, color: Color) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	Geo.box(pivot, Vector3(6.0, 2.6, 2.4), Vector3(0, 1.3, 0), PixelMaterials.surface("container_wall", Vector2(2, 2), color))
+	Geo.quad(pivot, Vector2(2.4, 1.1), Vector3(-0.8, 1.45, 1.22), PixelMaterials.flat(Color("#141218")))
+	Geo.box(pivot, Vector3(2.8, 0.08, 0.5), Vector3(-0.8, 0.9, 1.45), PixelMaterials.flat(Color("#8a5a3c")), false)
+	Geo.box(pivot, Vector3(3.4, 0.06, 1.3), Vector3(-0.8, 2.3, 1.8), PixelMaterials.flat(Color("#c0392b")), false)
+	Geo.quad(pivot, Vector2(3.6, 0.9), Vector3(0.5, 2.95, 1.22), PixelMaterials.panel(sign))
+	Geo.quad(pivot, Vector2(0.9, 2.0), Vector3(2.2, 1.0, 1.22), PixelMaterials.panel("door_gate"))
+
+
+## Dusty soccer pitch: red-dirt surface, white lines, two goals (solid posts).
+static func _build_soccer_field(root: Node3D, c: Vector3) -> void:
+	Geo.patch(root, Rect2(c.x - 14, c.z - 9, 28, 18), 0.011, PixelMaterials.surface("sand_red", Vector2(2, 2), Color(0.85, 0.72, 0.62)))
+	var paint := PixelMaterials.flat(Color("#f1eee8"))
+	for z in [-9.0, 9.0]:
+		Geo.box(root, Vector3(28, 0.02, 0.12), Vector3(c.x, 0.02, c.z + z), paint, false)
+	for x in [-14.0, 0.0, 14.0]:
+		Geo.box(root, Vector3(0.12, 0.02, 18), Vector3(c.x + x, 0.02, c.z), paint, false)
+	for side in [-1.0, 1.0]:
+		var gx: float = c.x + side * 13.6
+		for gz in [-1.8, 1.8]:
+			Geo.box(root, Vector3(0.12, 2.0, 0.12), Vector3(gx, 1.0, c.z + gz), paint)
+		Geo.box(root, Vector3(0.12, 0.12, 3.7), Vector3(gx, 2.0, c.z), paint, false)
+
+
+## Small paved courtyard between the flats: benches round a tree.
+static func _build_courtyard(root: Node3D, c: Vector3) -> void:
+	Geo.patch(root, Rect2(c.x - 6, c.z - 6, 12, 12), 0.012, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color("#cfc6b8")))
+	Geo.box(root, Vector3(0.3, 2.4, 0.3), c + Vector3(0, 1.2, 0), PixelMaterials.flat(Color("#6b4630")))
+	var crown := SphereMesh.new()
+	crown.radius = 1.6
+	crown.height = 2.6
+	var mi := MeshInstance3D.new()
+	mi.mesh = crown
+	mi.material_override = PixelMaterials.flat(Color("#4f8a3c"))
+	mi.position = c + Vector3(0, 3.2, 0)
+	root.add_child(mi)
+	for a in [0.0, PI * 0.5, PI, PI * 1.5]:
+		Geo.bench(root, c + Vector3(cos(a), 0, sin(a)) * 3.5, -a - PI * 0.5)
 
 
 static func _build_court(root: Node3D, c: Vector3) -> void:
@@ -323,7 +437,7 @@ static func _build_corner(root: Node3D, c: Vector3) -> void:
 ## gets a DistrictGate for the neighbouring district on that side, and behind it an enclosed
 ## approach street (walls both sides, a "coming soon" end wall) so an unlocked district can be
 ## walked into. Returns {district_id: [DistrictGate]}.
-static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: Array, destinations: DestinationRegistry) -> Dictionary:
+static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: Array, destinations: DestinationRegistry, open_sides: Array = []) -> Dictionary:
 	var gates := {}
 	var mat := PixelMaterials.surface("fence_precast", Vector2(2, WALL_H), Color("#d9d4c8"), true)
 	var minx: float = b[0]
@@ -340,8 +454,8 @@ static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: 
 	var main_street_at: float = crossing[0].at if not crossing.is_empty() else 0.0  # first in data = main road
 	crossing.sort_custom(func(p, q): return p.at < q.at)
 	for x in [minx, maxx]:
-		var side := "east" if x > 0 else "west"
-		var face := 1.0 if x < 0 else -1.0  # direction pointing into the district
+		var side := "east" if is_equal_approx(x, maxx) else "west"
+		var face := 1.0 if is_equal_approx(x, minx) else -1.0  # direction pointing into the district
 		var neighbour := {}
 		for n in neighbours:
 			if n.get("side") == side:
@@ -351,6 +465,8 @@ static func _build_boundary(root: Node3D, b: Array, streets: Array, neighbours: 
 			var half: float = s.get("half_width", 4.0) + s.get("sidewalk", 2.5)
 			_wall_z(root, x, z, s.at - half, mat)
 			z = s.at + half
+			if open_sides.has(side):
+				continue  # an open street into an adjacent area (its gate lives on the other side)
 			if neighbour.is_empty():
 				_wall_z(root, x, s.at - half, s.at + half, mat)
 				continue
@@ -377,13 +493,15 @@ static func _build_approach(root: Node3D, s: Dictionary, edge: float, dir: float
 		Geo.box(root, Vector3(APPROACH_LENGTH, WALL_H, 0.2), Vector3(mid, WALL_H * 0.5, s.at + side * half), mat)
 		Geo.patch(root, Rect2(minf(x0, x1), s.at + minf(side * hw, side * half), APPROACH_LENGTH, half - hw), 0.015,
 			PixelMaterials.surface("sidewalk", Vector2(2, 2)))
+	var entrance_id := "%s:entrance" % neighbour.id
+	if destinations != null and not destinations.has(entrance_id):
+		destinations.register(entrance_id, Vector3(edge + dir * 20.0, 0, s.at), 2.0, "district_entrance", str(neighbour.display_name))
+	if neighbour.has("data"):
+		return  # the approach leads into a built district: no dead-end wall
 	Geo.box(root, Vector3(0.3, 2.4, half * 2.0), Vector3(x1, 1.2, s.at), PixelMaterials.surface("wendy_wall", Vector2(2, 2), Color("#e8967a")))
 	var label := Geo.label(root, "%s\nStreets under construction — more turf coming soon" % str(neighbour.display_name).to_upper(),
 		Vector3(x1 - dir * 0.2, 1.8, s.at), 64, Color("#ffd75e"), PI * 0.5 * -dir)
 	label.double_sided = false
-	var entrance_id := "%s:entrance" % neighbour.id
-	if destinations != null and not destinations.has(entrance_id):
-		destinations.register(entrance_id, Vector3(edge + dir * 20.0, 0, s.at), 2.0, "district_entrance", str(neighbour.display_name))
 
 
 static func _wall_z(root: Node3D, x: float, z0: float, z1: float, mat: Material) -> void:

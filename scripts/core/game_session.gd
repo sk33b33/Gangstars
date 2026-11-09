@@ -24,7 +24,23 @@ var last_save_error := ""
 
 var _track_accum := 0.0
 var _reckless_cooldown := 0.0
+var current_area := "starter"
 var _beacon: MeshInstance3D
+
+
+## Missions from every district in the catalog (`missions` field), starter first.
+static func _load_all_missions() -> Array[MissionData]:
+	var out: Array[MissionData] = []
+	var catalog: Variant = DataFiles.load_json("res://data/districts/districts.json")
+	var files: PackedStringArray = [MISSIONS_FILE]
+	if catalog is Dictionary:
+		for d in catalog.get("districts", []):
+			var f := str(d.get("missions", ""))
+			if not f.is_empty() and not files.has(f):
+				files.append(f)
+	for f in files:
+		out.append_array(MissionData.load_file(f))
+	return out
 
 
 func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
@@ -36,7 +52,7 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	missions = MissionManager.new()
 	missions.name = "Missions"
 	add_child(missions)
-	missions.setup(MissionData.load_file(MISSIONS_FILE), progression, district.director.clock)
+	missions.setup(_load_all_missions(), progression, district.director.clock)
 	missions.resident_info = district.resident_info
 	missions.occupants_inside = district.occupants_inside
 	missions.anchor_position = district.anchor_or_null
@@ -88,6 +104,7 @@ func _physics_process(delta: float) -> void:
 		missions.on_player_position(player.global_position)
 		missions.tick()
 		_check_reckless(TRACK_INTERVAL)
+		_check_area()
 		_refresh()
 
 
@@ -180,6 +197,17 @@ func _setup_audio() -> void:
 	if district.traffic:
 		for car in district.traffic.cars:
 			audio.attach_engine(car)
+
+
+## Announces district changes as the player crosses into another area.
+func _check_area() -> void:
+	var a := district.area_at(player.global_position)
+	if a.is_empty() or a == current_area:
+		return
+	current_area = a
+	var name_text := districts.display_name(a) if a != "starter" else "Vleirand"
+	hud.show_banner(name_text.to_upper(), 3.0)
+	hud.set_district_name("%s · %s" % [name_text, districts.state(a)])
 
 
 func _on_vehicle_changed(car: DrivableCar) -> void:

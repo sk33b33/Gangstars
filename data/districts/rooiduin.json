@@ -1,0 +1,323 @@
+{
+  "id": "district_east",
+  "display_name": "Rooiduin",
+  "street_name": "Rooiduin",
+  "bounds": [
+    108,
+    -78,
+    228,
+    22
+  ],
+  "houses_file": "res://data/houses/rooiduin_houses.json",
+  "residents_file": "res://data/npcs/rooiduin_residents.json",
+  "ground_texture": "sand_red",
+  "ground_tint": "#f2e2d6",
+  "ground_margin": {
+    "west": 0
+  },
+  "open_sides": [
+    "west"
+  ],
+  "backdrop_skip": [
+    "west"
+  ],
+  "streets": [
+    {
+      "id": "duif_r",
+      "name": "Duif Street",
+      "axis": "x",
+      "at": 0,
+      "from": 88,
+      "to": 240,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "mossie_r",
+      "name": "Mossie Street",
+      "axis": "x",
+      "at": -56,
+      "from": 88,
+      "to": 240,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "duin",
+      "name": "Duin Road",
+      "axis": "z",
+      "at": 168,
+      "from": -4,
+      "to": -52,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    },
+    {
+      "id": "kers",
+      "name": "Kers Street",
+      "axis": "z",
+      "at": 220,
+      "from": -4,
+      "to": -52,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    }
+  ],
+  "landmarks": [
+    {
+      "type": "container_shop",
+      "position": [
+        120,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_spaza",
+      "color": "#2b6fb5"
+    },
+    {
+      "type": "container_shop",
+      "position": [
+        200,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_barber",
+      "color": "#d64541"
+    },
+    {
+      "type": "soccer_field",
+      "position": [
+        130,
+        -34
+      ]
+    },
+    {
+      "type": "taxi_rank",
+      "position": [
+        196,
+        -48.8
+      ],
+      "facing": "north"
+    },
+    {
+      "type": "courtyard",
+      "position": [
+        204,
+        -30
+      ]
+    }
+  ],
+  "pois": [
+    {
+      "id": "rooi_spaza",
+      "name": "Duin Spaza",
+      "kind": "shop",
+      "position": [
+        120,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "spaza"
+    },
+    {
+      "id": "rooi_barber",
+      "name": "Kings Cuts",
+      "kind": "shop",
+      "position": [
+        200,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "barber"
+    },
+    {
+      "id": "rooi_field",
+      "name": "the soccer field",
+      "kind": "court",
+      "position": [
+        130,
+        -34
+      ],
+      "radius": 4.0,
+      "map_label": "field"
+    },
+    {
+      "id": "rooi_taxi",
+      "name": "the taxi rank",
+      "kind": "transit",
+      "position": [
+        196,
+        -50.7
+      ],
+      "radius": 1.0,
+      "map_label": "taxi"
+    },
+    {
+      "id": "rooi_courtyard",
+      "name": "the courtyard",
+      "kind": "gathering",
+      "position": [
+        204,
+        -30
+      ],
+      "radius": 2.5,
+      "map_label": "yard"
+    }
+  ],
+  "patrol_routes": {
+    "rooi_loop": [
+      [
+        160,
+        -5.4
+      ],
+      [
+        173,
+        -12
+      ],
+      [
+        173,
+        -46
+      ],
+      [
+        150,
+        -50.8
+      ],
+      [
+        118,
+        -50.8
+      ],
+      [
+        118,
+        -5.4
+      ]
+    ]
+  },
+  "parked_cars": [
+    {
+      "position": [
+        140,
+        3.4
+      ],
+      "rot": 0,
+      "color": "#7f8c8d"
+    },
+    {
+      "position": [
+        210,
+        -3.4
+      ],
+      "rot": 180,
+      "color": "#c0392b"
+    }
+  ],
+  "decals": [
+    {
+      "texture": "tag_duin",
+      "position": [
+        186,
+        0.8,
+        -62.94
+      ],
+      "size": [
+        2.2,
+        0.92
+      ],
+      "rot": 0
+    },
+    {
+      "texture": "tag_duin",
+      "position": [
+        108.12,
+        0.9,
+        -24
+      ],
+      "size": [
+        2.4,
+        1.0
+      ],
+      "rot": 90
+    },
+    {
+      "texture": "tag_duin",
+      "position": [
+        199.0,
+        0.45,
+        -8.78
+      ],
+      "size": [
+        1.6,
+        0.66
+      ],
+      "rot": 0
+    }
+  ],
+  "traffic": {
+    "lane_offset": 1.3,
+    "corner_radius": 6.0,
+    "taxi_stops": [
+      "rooi_taxi"
+    ],
+    "taxi_wait": 5.0,
+    "loops": [
+      {
+        "points": [
+          [
+            168,
+            0
+          ],
+          [
+            220,
+            0
+          ],
+          [
+            220,
+            -56
+          ],
+          [
+            168,
+            -56
+          ]
+        ],
+        "cars": [
+          {
+            "id": "rooi_taxi_1",
+            "color": "#f1eee8",
+            "start": 0.2,
+            "taxi": true
+          }
+        ]
+      },
+      {
+        "points": [
+          [
+            168,
+            -56
+          ],
+          [
+            220,
+            -56
+          ],
+          [
+            220,
+            0
+          ],
+          [
+            168,
+            0
+          ]
+        ],
+        "cars": [
+          {
+            "id": "rooi_traffic_1",
+            "color": "#8e44ad",
+            "start": 0.6
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -11,7 +11,13 @@ var extra_obstacles: Array = []    # e.g. drivable cars
 
 func setup(p_district: District) -> void:
 	district = p_district
-	var spec: Dictionary = district.info.get("traffic", {})
+	for area in district.areas:
+		_setup_area(area.get("traffic", {}))
+
+
+func _setup_area(spec: Dictionary) -> void:
+	if spec.is_empty():
+		return
 	var offset := float(spec.get("lane_offset", 1.4))
 	var radius := float(spec.get("corner_radius", 6.0))
 	var stop_points: Array = []

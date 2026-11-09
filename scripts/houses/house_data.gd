@@ -2,7 +2,7 @@ class_name HouseData
 extends Resource
 ## One house plot. Loaded from data/houses/*.json. `id` is the stable save key.
 
-const KITS: PackedStringArray = ["single_hip", "single_gable", "double_semi", "double_garage"]
+const KITS: PackedStringArray = ["single_hip", "single_gable", "double_semi", "double_garage", "flats", "row_house"]
 const FACING_ROTATION := {"south": 0.0, "north": PI, "east": PI * 0.5, "west": -PI * 0.5}
 const OCCUPANCY: PackedStringArray = ["occupied", "vacant"]
 const OWNERSHIP: PackedStringArray = ["neutral", "friendly", "hostile", "player", "mission"]

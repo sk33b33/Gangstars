@@ -188,3 +188,45 @@ sprite("poster_cafe", { w: 22, h: 24 },
   rect(1, 1, 20, 7, "E"), text(11, 2, "HOT", "W", { align: "c" }),
   text(11, 10, "BREAD", "k", { align: "c" }),
   text(11, 17, "R12", "f", { align: "c" }))
+
+// ------------------------------------------------------------------ Phase 7: Rooiduin
+pal({ J: "#c8714a", K: "#a85a3a", O: "#dd8a5e", U: "#8e4a30", Q: "#d64541", Y: "#2b6fb5" })
+
+// Red dune sand: granular (sparse speckle is the material itself), with a few wind ripples.
+sprite("sand_red", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "J"), noise(0, 0, 32, 32, "KOU", 0.12, 17),
+  line(2, 9, 12, 7, "O"), line(17, 22, 29, 20, "O"), line(5, 27, 11, 26, "K"))
+
+// Shipping container side (2 m tile, tintable): vertical corrugation, top rail, rust runs.
+sprite("container_wall", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "w"),
+  (c) => { for (let x = 0; x < 32; x += 4) { c.vline(x, 0, 32, "W"); c.vline(x + 1, 0, 32, "W"); c.vline(x + 3, 0, 32, "V") } },
+  rect(0, 0, 32, 2, "V"), hline(0, 2, 32, "u"),
+  vline(6, 3, 7, "T"), px(6, 2, "R"), vline(22, 3, 4, "T"), px(22, 2, "R"), dither(0, 29, 32, 3, "w", "V", 0.4))
+
+sprite("sign_barber", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "k"), box(0, 0, 64, 16, "M"),
+  (c) => { for (let y = -8; y < 16; y += 4) c.line(2, y, 8, y + 6, "Q", 2) },
+  rect(2, 1, 1, 14, "W"), rect(8, 1, 1, 14, "W"),
+  text(36, 3, "KINGS", "S", { align: "c" }), text(36, 9, "CUTS", "W", { align: "c" }))
+
+sprite("sign_spaza", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "Y"), box(0, 0, 64, 16, "B"), hline(1, 1, 62, "C"),
+  text(32, 3, "DUIN SPAZA", "W", { align: "c" }), text(32, 9, "COLD DRINKS", "S", { align: "c" }))
+
+sprite("sign_taxi", { w: 16, h: 16 },
+  rect(0, 0, 16, 16, "W"), box(0, 0, 16, 16, "k"), text(8, 2, "TAXI", "k", { align: "c" }),
+  rect(2, 9, 12, 4, "W"), box(2, 9, 12, 4, "k"), rect(4, 10, 2, 2, "C"), rect(7, 10, 2, 2, "C"), rect(10, 10, 2, 2, "C"),
+  px(4, 13, "k"), px(11, 13, "k"))
+
+// Fictional rival crew tag (Rooiduin).
+sprite("tag_duin", { w: 48, h: 20 },
+  text(24, 2, "DUIN", "Q", { align: "c", scale: 2, gap: 1 }),
+  text(24, 14, "BOYS", "W", { align: "c" }),
+  (c) => {
+    const keep = []
+    for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (c.is(x, y, "QW")) keep.push([x, y])
+    for (const [x, y] of keep) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
+      if (!c.is(x + dx, y + dy, "QW")) c.px(x + dx, y + dy, "k")
+    for (const x of [12, 25, 35]) c.vline(x, 12, 2, "Q")
+  })

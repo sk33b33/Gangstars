@@ -17,7 +17,9 @@ const RESIDENT_SCENE := preload("res://scenes/npcs/resident.tscn")
 
 @onready var nav_region: NavigationRegion3D = $NavigationRegion3D
 
-var info: Dictionary = {}
+var info: Dictionary = {}       # the starter area's data (kept for compatibility)
+## Every built area (starter first): district data dictionaries with an "id".
+var areas: Array = []
 var registry: HouseRegistry
 var destinations := DestinationRegistry.new()
 var plots: Dictionary = {}       # house id -> HousePlot
@@ -41,17 +43,11 @@ var player: Node3D
 
 
 func _ready() -> void:
-	var raw: Variant = DataFiles.load_json(district_file)
-	info = raw if raw is Dictionary else {}
-	registry = HouseRegistry.load_file(houses_file)
-	var catalog: Variant = DataFiles.load_json(districts_file)
-	var neighbours: Array = []
-	if catalog is Dictionary:
-		for d in catalog.get("districts", []):
-			if d is Dictionary and d.has("side"):
-				neighbours.append(d)
-	info["locked_neighbours"] = neighbours
-	gates = StreetBuilder.build(nav_region, info, destinations)
+	_load_areas()
+	for area in areas:
+		var built := StreetBuilder.build(nav_region, area, destinations)
+		for id in built:
+			gates.get_or_add(id, []).append_array(built[id])
 	_build_houses()
 	_register_patrol_routes()
 	events = NeighbourhoodEvents.new()
@@ -74,6 +70,64 @@ func _ready() -> void:
 	add_child(light_pool)
 	light_pool.setup(day_night, LightPool.collect_lamps(nav_region))
 	_bake_navigation()
+
+
+## Data pipeline: the starter district file, then every catalog district with a `data` file.
+## All areas share one navigation bake; the gates (solid at bake time) keep them disconnected,
+## so residents stay in their own district while the player can travel once a gate opens.
+func _load_areas() -> void:
+	var raw: Variant = DataFiles.load_json(district_file)
+	info = raw if raw is Dictionary else {}
+	info["id"] = str(info.get("id", "starter"))
+	var catalog: Variant = DataFiles.load_json(districts_file)
+	var neighbours: Array = []
+	var extra: Array = []
+	if catalog is Dictionary:
+		for d in catalog.get("districts", []):
+			if not d is Dictionary:
+				continue
+			if d.has("side"):
+				neighbours.append(d)
+			if d.has("data") and str(d.id) != info.id:
+				var a: Variant = DataFiles.load_json(str(d.data))
+				if a is Dictionary:
+					a["id"] = str(d.id)
+					extra.append(a)
+	info["locked_neighbours"] = neighbours
+	if not info.has("houses_file"):
+		info["houses_file"] = houses_file
+	if not info.has("residents_file"):
+		info["residents_file"] = residents_file
+	areas = [info]
+	areas.append_array(extra)
+	registry = HouseRegistry.new()
+	for area in areas:
+		var reg := HouseRegistry.load_file(str(area.get("houses_file", "")))
+		registry.errors.append_array(reg.errors)
+		for id in reg.order:
+			registry.add(reg.get_house(id))
+
+
+## Which area a world position is in ("" if outside every area, e.g. an approach street).
+func area_at(pos: Vector3) -> String:
+	for area in areas:
+		var b: Array = area.get("bounds", [0, 0, 0, 0])
+		if pos.x >= float(b[0]) and pos.x <= float(b[2]) and pos.z >= float(b[1]) and pos.z <= float(b[3]):
+			return str(area.id)
+	return ""
+
+
+func area_by_id(id: String) -> Dictionary:
+	for area in areas:
+		if area.id == id:
+			return area
+	return {}
+
+
+## District a resident lives in (via their home's district_id).
+func resident_district(r: Resident) -> String:
+	var h := registry.get_house(r.data.home_id)
+	return h.district_id if h else ""
 
 
 func display_name() -> String:
@@ -99,7 +153,9 @@ func _build_houses() -> void:
 
 
 func _register_patrol_routes() -> void:
-	var routes: Dictionary = info.get("patrol_routes", {})
+	var routes: Dictionary = {}
+	for area in areas:
+		routes.merge(area.get("patrol_routes", {}))
 	for route_id in routes:
 		var points: Array = routes[route_id]
 		for i in points.size():
@@ -154,7 +210,10 @@ func _on_bake_finished() -> void:
 
 ## Vehicles move, so they are created after the bake and never carve the nav mesh.
 func _spawn_vehicles() -> void:
-	for c in info.get("parked_cars", []):
+	var cars: Array = []
+	for area in areas:
+		cars.append_array(area.get("parked_cars", []))
+	for c in cars:
 		if not c.get("drivable", false):
 			continue
 		var car := DrivableCar.new()
@@ -181,7 +240,10 @@ func _region_is_live(map: RID) -> bool:
 
 func _spawn_residents() -> void:
 	var i := 0
-	for npc in NpcData.load_file(residents_file):
+	var all_npcs: Array[NpcData] = []
+	for area in areas:
+		all_npcs.append_array(NpcData.load_file(str(area.get("residents_file", ""))))
+	for npc in all_npcs:
 		if registry.get_house(npc.home_id) == null:
 			push_warning("Resident %s has unknown home %s; not spawned." % [npc.id, npc.home_id])
 			continue
@@ -357,13 +419,17 @@ func _on_door(house_id: String) -> String:
 func reachability_report() -> Dictionary:
 	var map := nav_region.get_navigation_map()
 	var report := {"ok": 0, "failed": PackedStringArray()}
-	var pois: PackedStringArray = []
-	for poi in info.get("pois", []):
-		pois.append(str(poi.id))
+	var pois_by_area := {}
+	for area in areas:
+		var list: PackedStringArray = []
+		for poi in area.get("pois", []):
+			list.append(str(poi.id))
+		pois_by_area[str(area.id)] = list
 	for id in registry.order:
 		var house := registry.get_house(id)
 		if house.occupancy != "occupied" and house.ownership != "player":
 			continue
+		var pois: PackedStringArray = pois_by_area.get(house.district_id, PackedStringArray())
 		var from := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(house.entrance_id()))
 		for poi_id in pois:
 			var to := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(poi_id))

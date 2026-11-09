@@ -1,0 +1,708 @@
+{
+  "district_id": "district_east",
+  "houses": [
+    {
+      "id": "rooi_h01",
+      "number": 1,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Lottering block",
+      "kit": "flats",
+      "position": [
+        122,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#f0c8a8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h01_1",
+        "npc_rooi_h01_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h02",
+      "number": 3,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Titus block",
+      "kit": "flats",
+      "position": [
+        146,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e0d0b0",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h02_1",
+        "npc_rooi_h02_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h03",
+      "number": 5,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Hartnick family",
+      "kit": "row_house",
+      "position": [
+        164,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d8d8d0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_rachel"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h04",
+      "number": 7,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Maans family",
+      "kit": "row_house",
+      "position": [
+        172,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#c8b8d8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_solly"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h05",
+      "number": 9,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Jacobs family",
+      "kit": "row_house",
+      "position": [
+        180,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#a8c8e0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h05_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h06",
+      "number": 11,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Empty house",
+      "kit": "row_house",
+      "position": [
+        188,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e8b4a0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h07",
+      "number": 13,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Booysen family",
+      "kit": "row_house",
+      "position": [
+        196,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#a8c8e0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h07_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h08",
+      "number": 15,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Witbooi family",
+      "kit": "row_house",
+      "position": [
+        204,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e0d0b0",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h08_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h09",
+      "number": 17,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Booysen family",
+      "kit": "row_house",
+      "position": [
+        212,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d8d8d0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_kaylin"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h10",
+      "number": 19,
+      "street": "Duif Street",
+      "district_id": "district_east",
+      "display_name": "Lottering family",
+      "kit": "row_house",
+      "position": [
+        220,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d9c8a0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h10_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h11",
+      "number": 2,
+      "street": "Mossie Street",
+      "district_id": "district_east",
+      "display_name": "Booysen block",
+      "kit": "flats",
+      "position": [
+        122,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#f0c8a8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h11_1",
+        "npc_rooi_h11_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h12",
+      "number": 4,
+      "street": "Mossie Street",
+      "district_id": "district_east",
+      "display_name": "Van Wyk block",
+      "kit": "flats",
+      "position": [
+        146,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h12_1",
+        "npc_rooi_h12_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h13",
+      "number": 6,
+      "street": "Mossie Street",
+      "district_id": "district_east",
+      "display_name": "Hartnick block",
+      "kit": "flats",
+      "position": [
+        170,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#b8d4c8",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#b8d4c8",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h13_1",
+        "npc_rooi_h13_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h14",
+      "number": 8,
+      "street": "Mossie Street",
+      "district_id": "district_east",
+      "display_name": "Fortuin block",
+      "kit": "flats",
+      "position": [
+        194,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e0d0b0",
+      "occupancy": "occupied",
+      "ownership": "hostile",
+      "occupant_ids": [
+        "npc_rooi_spider",
+        "npc_rooi_dune_2",
+        "npc_rooi_dune_3"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h15",
+      "number": 8,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Jacobs family",
+      "kit": "row_house",
+      "position": [
+        175.0,
+        -14
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#f0c8a8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h15_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h16",
+      "number": 6,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Lottering family",
+      "kit": "row_house",
+      "position": [
+        175.0,
+        -22
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h16_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h17",
+      "number": 4,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Empty house",
+      "kit": "row_house",
+      "position": [
+        175.0,
+        -30
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "rooi_h18",
+      "number": 2,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Maans family",
+      "kit": "row_house",
+      "position": [
+        175.0,
+        -38
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h18_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h19",
+      "number": 3,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Maans family",
+      "kit": "row_house",
+      "position": [
+        161.0,
+        -14
+      ],
+      "facing": "east",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e8b4a0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h19_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "rooi_h20",
+      "number": 1,
+      "street": "Duin Road",
+      "district_id": "district_east",
+      "display_name": "Damons family",
+      "kit": "row_house",
+      "position": [
+        161.0,
+        -22
+      ],
+      "facing": "east",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d9c8a0",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9c8a0",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_rooi_h20_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    }
+  ]
+}

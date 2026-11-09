@@ -237,7 +237,7 @@
       "id": "car_mossie",
       "drivable": true,
       "position": [
-        -26,
+        -38,
         -52.6
       ],
       "rot": 0,
@@ -246,7 +246,7 @@
     },
     {
       "position": [
-        20,
+        12,
         -59.4
       ],
       "rot": 180,
@@ -403,5 +403,13 @@
       "poi_bus_stop_mossie"
     ],
     "taxi_wait": 4.0
-  }
+  },
+  "houses_file": "res://data/houses/starter_houses.json",
+  "residents_file": "res://data/npcs/starter_residents.json",
+  "ground_margin": {
+    "east": 36
+  },
+  "backdrop_skip": [
+    "east"
+  ]
 }
