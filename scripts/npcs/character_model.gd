@@ -25,6 +25,10 @@ var _leg_r: Node3D
 var _arm_l: Node3D
 var _arm_r: Node3D
 var _hair: Node3D
+## Pose layered on top of the gait: "idle", "talk" (hand gestures), "guard" (arms folded).
+var mode := "idle"
+var _look_target: Variant = null   # world position the head turns towards, or null
+var _gesture_t := 0.0
 
 
 ## opts: {hair_style, hair_color: Color, height: float (1.0 = 1.75 m), sleeves: "long"/"short"}
@@ -99,6 +103,39 @@ func animate(delta: float, speed: float) -> void:
 	_torso.scale = Vector3(1.0, 1.0 + sin(_breath) * 0.012 * idle, 1.0)
 	_arm_l.rotation.z = -0.06 * idle
 	_arm_r.rotation.z = 0.06 * idle
+	_apply_pose(delta, idle)
+	_apply_look(delta)
+
+
+## Turns the head (within ±60°) towards a world point; null looks straight ahead.
+func look_at_point(p: Variant) -> void:
+	_look_target = p
+
+
+func _apply_pose(delta: float, idle: float) -> void:
+	_gesture_t += delta
+	match mode:
+		"talk":
+			_arm_r.rotation.x += (-0.55 + sin(_gesture_t * 3.7) * 0.35) * idle
+			_arm_r.rotation.z += (0.25 + sin(_gesture_t * 2.3) * 0.12) * idle
+			_arm_l.rotation.x += (-0.15 + sin(_gesture_t * 2.9 + 1.0) * 0.12) * idle
+		"guard":
+			_arm_l.rotation.x += -1.1 * idle
+			_arm_r.rotation.x += -1.1 * idle
+			_arm_l.rotation.z += 0.75 * idle
+			_arm_r.rotation.z += -0.75 * idle
+
+
+func _apply_look(delta: float) -> void:
+	var target_yaw := 0.0
+	if _look_target != null:
+		var local := global_transform.affine_inverse() * (_look_target as Vector3)
+		target_yaw = clampf(atan2(local.x, local.z), -1.05, 1.05)
+	_head.rotation.y = lerp_angle(_head.rotation.y, target_yaw, clampf(delta * 5.0, 0.0, 1.0))
+
+
+func head_yaw() -> float:
+	return _head.rotation.y if _head else 0.0
 
 
 func walk_amplitude() -> float:

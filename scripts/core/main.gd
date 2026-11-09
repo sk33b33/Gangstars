@@ -6,6 +6,7 @@ extends Node
 ##   --incident=car_alarm|argument|scuffle (raised at the player 2 s before the shot)
 ##   --safehouse-menu (open the safehouse menu)  --turf-map (open the turf map)
 ##   --load=user://file.json (start from that save; goes through normal save validation)
+##   --profile (print rendering/frame stats after the delay and quit)  --no-lod
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
@@ -25,6 +26,8 @@ var _args := {}
 
 func _ready() -> void:
 	_args = _parse_args(OS.get_cmdline_user_args())
+	if _args.has("no-lod"):
+		district.use_lod = false
 	hud.set_district_name(district.display_name())
 	player.interaction_target_changed.connect(hud.set_prompt)
 	player.interacted.connect(hud.show_message)
@@ -56,6 +59,8 @@ func _ready() -> void:
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if _args.has("shot"):
 		_run_screenshot.call_deferred()
+	elif _args.has("profile"):
+		_run_profile.call_deferred()
 
 
 func _process(_delta: float) -> void:
@@ -136,6 +141,37 @@ func _run_screenshot() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(path.get_base_dir()))
 	var err := get_viewport().get_texture().get_image().save_png(path)
 	print("screenshot %s -> %s" % [path, error_string(err)])
+	get_tree().quit()
+
+
+## Prints frame/render statistics after the world has settled (windowed run needed for
+## draw-call numbers; headless reports zeros for rendering).
+func _run_profile() -> void:
+	if _args.has("player"):
+		var p: PackedStringArray = _args.player.split(",")
+		player.global_position = Vector3(float(p[0]), 0.1, float(p[1]))
+		player.snap_camera()
+	if _args.has("yaw"):
+		player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
+	if _args.has("hour"):
+		district.director.clock.set_hour(float(_args.hour))
+	await get_tree().create_timer(float(_args.get("shot-delay", "8"))).timeout
+	var frames := 120
+	var draw := 0
+	var objs := 0
+	var prims := 0
+	var t0 := Time.get_ticks_usec()
+	for i in frames:
+		await RenderingServer.frame_post_draw
+		draw += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
+		objs += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_OBJECTS_IN_FRAME)
+		prims += RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
+	var frame_ms := (Time.get_ticks_usec() - t0) / 1000.0 / frames
+	print("PROFILE merge=%s" % district.merge_stats)
+	print("PROFILE lod=%s lod_instances=%d nodes=%d draw_calls=%d objects=%d primitives=%d frame_ms=%.2f process_ms=%.3f physics_ms=%.3f" % [
+		district.use_lod, district.lod_count, Performance.get_monitor(Performance.OBJECT_NODE_COUNT),
+		draw / frames, objs / frames, prims / frames, frame_ms,
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0])
 	get_tree().quit()
 
 

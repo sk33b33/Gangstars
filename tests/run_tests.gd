@@ -498,6 +498,23 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
 
 
+## Mission progress equality; `started` is a float that JSON may round in the last digits.
+func _same_progress(a: Dictionary, b: Dictionary) -> bool:
+	var aa: Dictionary = a.get("active", {})
+	var bb: Dictionary = b.get("active", {})
+	if aa.keys().size() != bb.keys().size():
+		return false
+	for id in aa:
+		if not bb.has(id):
+			return false
+		var x: Dictionary = aa[id]
+		var y: Dictionary = bb[id]
+		if int(x.objective) != int(y.objective) or not is_equal_approx(float(x.count), float(y.count)) \
+				or Array(x.seen) != Array(y.seen) or absf(float(x.started) - float(y.started)) > 0.01:
+			return false
+	return true
+
+
 func _talk(player: Player, who: Interactable) -> void:
 	player.interacted_with.emit(who, who.interact(player))
 
@@ -563,7 +580,7 @@ func _test_missions_in_game(main: Node, district: District, player: Player) -> v
 	_check(session.load_game() == "", "game loads")
 	_check(prog.cash == cash_saved and prog.recruited_crew_ids.has("npc_boeta"), "load restores cash and crew")
 	_check(player.global_position.distance_to(pos_saved) < 0.2, "load restores the player's position")
-	_check(missions.to_dict() == active_saved, "load restores active mission progress")
+	_check(_same_progress(missions.to_dict(), active_saved), "load restores active mission progress")
 	_check(not missions.start("new_face"), "completed missions stay completed after load")
 	var f := FileAccess.open(session.save_path, FileAccess.WRITE)
 	f.store_string("garbage")

@@ -26,6 +26,10 @@ var vehicles: Dictionary = {}    # drivable car id -> DrivableCar
 var traffic: TrafficSystem
 var weather: Weather
 var light_pool: LightPool
+## Set false before adding to the tree to skip LOD ranges (profiling A/B).
+var use_lod := true
+var lod_count := 0
+var merge_stats := {}
 var _braai: Node3D
 var residents: Dictionary = {}   # npc id -> Resident
 var is_navigation_ready := false
@@ -139,6 +143,11 @@ func _on_bake_finished() -> void:
 	destinations.navigation_map = map
 	_spawn_residents()
 	_spawn_vehicles()
+	if use_lod:
+		merge_stats = MeshMerger.merge(nav_region)
+		lod_count = Lod.apply(nav_region)
+		for r: Resident in residents.values():
+			lod_count += Lod.apply(r.model, true)
 	is_navigation_ready = true
 	navigation_ready.emit()
 

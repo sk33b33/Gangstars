@@ -190,7 +190,27 @@ func react(event: Dictionary, reaction: String) -> void:
 		_run(cmd)
 
 
+## Pose and gaze (near tier only): chat gestures, folded arms on guard, heads turn towards
+## incidents, the group, or the player standing close by.
+func _update_pose() -> void:
+	if is_inside or sim_tier != "near":
+		return
+	var s := brain.state
+	model.mode = "talk" if s == NpcBrain.State.SOCIALIZING else ("guard" if s == NpcBrain.State.GUARDING else "idle")
+	var look: Variant = null
+	if s == NpcBrain.State.NOTICING or s == NpcBrain.State.INVESTIGATING:
+		look = _incident_pos
+	elif s == NpcBrain.State.SOCIALIZING and _has_face_point:
+		look = _face_point
+	else:
+		var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
+		if pl and pl.visible and pl.global_position.distance_to(global_position) < 5.0 and _move_vel.length() < 0.8:
+			look = pl.global_position + Vector3(0, 1.5, 0)
+	model.look_at_point(look)
+
+
 func _process(delta: float) -> void:
+	_update_pose()
 	if _bubble_timer > 0.0:
 		_bubble_timer -= delta
 		if _bubble_timer <= 0.0:
