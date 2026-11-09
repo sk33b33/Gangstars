@@ -75,10 +75,7 @@ static func _build_street(root: Node3D, s: Dictionary) -> void:
 
 static func _build_streetlights(root: Node3D, s: Dictionary, b: Array) -> void:
 	var steel := PixelMaterials.flat(Color("#7d828c"))
-	var lamp := StandardMaterial3D.new()
-	lamp.albedo_color = Color("#fff0a8")
-	lamp.emission_enabled = true
-	lamp.emission = Color("#ffc85e")
+	var lamp := PixelMaterials.lamp()
 	var lo: float = s.get("sidewalk_from", s.from)
 	var hi: float = s.get("sidewalk_to", s.to)
 	if s.axis == "x":
@@ -141,7 +138,7 @@ static func _build_bus_stop(root: Node3D, c: Vector3, rot_y: float) -> void:
 	var steel := PixelMaterials.flat(Color("#565a64"))
 	Geo.box(pivot, Vector3(3.2, 2.2, 0.1), Vector3(0, 1.1, -0.4), PixelMaterials.flat(Color("#9fb6c9")))
 	Geo.box(pivot, Vector3(3.4, 0.1, 1.4), Vector3(0, 2.3, 0.1), steel, false)
-	Geo.box(pivot, Vector3(2.4, 0.45, 0.4), Vector3(0, 0.225, -0.1), PixelMaterials.flat(Color("#7d828c")))
+	Geo.bench(pivot, Vector3(0, 0, -0.1), 0.0, 2.4)
 	Geo.box(pivot, Vector3(0.1, 2.6, 0.1), Vector3(2.2, 1.3, 1.3), steel)
 	Geo.quad(pivot, Vector2(0.6, 0.6), Vector3(2.2, 2.6, 1.36), PixelMaterials.panel("sign_bus"))
 
@@ -154,7 +151,7 @@ static func _build_court(root: Node3D, c: Vector3) -> void:
 		Geo.box(root, Vector3(0.15, 3.0, 0.15), Vector3(hx, 1.5, c.z), steel)
 		Geo.box(root, Vector3(0.1, 1.0, 1.6), Vector3(hx - side * 0.2, 3.0, c.z), PixelMaterials.flat(Color("#f1eee8")), false)
 	for bz in [-4.0, 4.0]:
-		Geo.box(root, Vector3(2.0, 0.45, 0.45), Vector3(c.x - 8.5, 0.225, c.z + bz), PixelMaterials.flat(Color("#8a5a3c")))
+		Geo.bench(root, Vector3(c.x - 8.5, 0, c.z + bz), PI * 0.5)
 
 
 ## Small park: lawn, a ring of trees and benches around the centre (the POI).
@@ -176,13 +173,13 @@ static func _build_park(root: Node3D, c: Vector3) -> void:
 		root.add_child(mi)
 	for a in [0.0, PI]:
 		var p := c + Vector3(cos(a), 0, sin(a)) * 4.0
-		Geo.box(root, Vector3(0.45, 0.45, 2.0), p + Vector3(0, 0.225, 0), PixelMaterials.flat(Color("#8a5a3c")))
+		Geo.bench(root, p, -PI * 0.5 if a == 0.0 else PI * 0.5)
 
 
 static func _build_corner(root: Node3D, c: Vector3) -> void:
 	# A painted wall people lean on, with a bench: the neighbourhood gathering spot.
 	Geo.box(root, Vector3(6, 2.0, 0.3), c + Vector3(0, 1.0, -0.6), PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color("#e2585e")))
-	Geo.box(root, Vector3(2.0, 0.45, 0.45), c + Vector3(-1.5, 0.225, -0.15), PixelMaterials.flat(Color("#8a5a3c")))
+	Geo.bench(root, c + Vector3(-1.5, 0, -0.15))
 
 
 ## Precast wall around the playable area. Every east-west street that crosses the boundary

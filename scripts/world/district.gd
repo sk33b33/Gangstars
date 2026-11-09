@@ -20,6 +20,9 @@ var destinations := DestinationRegistry.new()
 var plots: Dictionary = {}       # house id -> HousePlot
 var residents: Dictionary = {}   # npc id -> Resident
 var is_navigation_ready := false
+var events: NeighbourhoodEvents
+var director: SimulationDirector
+var day_night: DayNight
 
 
 func _ready() -> void:
@@ -28,6 +31,18 @@ func _ready() -> void:
 	registry = HouseRegistry.load_file(houses_file)
 	StreetBuilder.build(nav_region, info, destinations)
 	_build_houses()
+	_register_patrol_routes()
+	events = NeighbourhoodEvents.new()
+	events.name = "Events"
+	add_child(events)
+	director = SimulationDirector.new()
+	director.name = "SimulationDirector"
+	add_child(director)
+	director.setup(self, events)
+	day_night = DayNight.new()
+	day_night.name = "DayNight"
+	add_child(day_night)
+	day_night.setup(director.clock, $Sun, $WorldEnvironment.environment)
 	_bake_navigation()
 
 
@@ -48,7 +63,19 @@ func _build_houses() -> void:
 		plots[id] = plot
 		destinations.register(house.entrance_id(), plot.door_position(), 0.1, "house_door",
 			"%s (%s)" % [house.address(), house.display_name])
+		destinations.register(house.id + ":gate", plot.gate_position(), 0.3, "house_gate",
+			"the gate of %s" % house.address())
 		plot.door_interactable.on_interact = _on_door.bind(id)
+
+
+func _register_patrol_routes() -> void:
+	var routes: Dictionary = info.get("patrol_routes", {})
+	for route_id in routes:
+		var points: Array = routes[route_id]
+		for i in points.size():
+			var p := DataFiles.to_vec2(points[i])
+			destinations.register("patrol:%s:%d" % [route_id, i], Vector3(p.x, 0, p.y), 0.8, "patrol",
+				"patrol point %d" % i)
 
 
 ## A plot closes its own +X side only when no neighbour sits there.
@@ -104,7 +131,8 @@ func _spawn_residents() -> void:
 			continue
 		var r: Resident = RESIDENT_SCENE.instantiate()
 		add_child(r)
-		r.setup(npc, destinations, i * 0.11)
+		r.setup(npc, destinations, i * 0.11, director.clock, func(id: String) -> Resident: return residents.get(id))
+		r.reported.connect(func(who: Resident, event_id: String): events.report(event_id, who.data.display_name))
 		residents[npc.id] = r
 		i += 1
 

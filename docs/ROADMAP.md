@@ -126,7 +126,7 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 
 ## Current milestone
 
-**Phase 3 — Living neighbourhood simulation** is next. Phases 0–2 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
+**Phase 4 — Player progression and missions** is next. Phases 0–3 are validated (see the log below). Do not mark a phase complete until its acceptance criteria are demonstrated in the running game.
 
 ## Milestone log
 
@@ -135,7 +135,7 @@ The roadmap is intentionally ordered around playable milestones. Do not skip ahe
 | 0 | Done (2026-11-09) | Godot 4.5.1 project launches headless and windowed; input map, main/world scenes, F3 debug overlay; `docs/TECH_NOTES.md` |
 | 1 | Done (2026-11-09) | 5 data-driven house plots (4 kits), 5 NavigationAgent3D residents, door → shop/bus stop/corner/court loops, door + NPC interactions. `tests/run_tests.gd`: 65/65 pass incl. 20/20 reachability and 10-min soak (0 teleports, 0 stuck, recovery from closed café). Screenshots in `docs/screenshots/` |
 | 2 | Done (2026-11-09) | 30 houses on 4 connected streets from deterministic data (`tools/generate_starter_data.py`), 28 residents (incl. 2 rival crew), 6 public destinations + house visits. Tests 284/284: 162/162 door→destination paths, 10-min soak with 0 teleports, max trip <90 s, 0.72 ms/physics frame headless, recovery from a closed café and a missing destination. Screenshots `docs/screenshots/district_*.png` |
-| 3 | Not started | |
+| 3 | Done (2026-11-09) | 14-state brain FSM with time windows/curfew; reactions (notice/investigate/flee/report → resume) via `ReactionPolicy`; social groups with chat bubbles; crew patrol/follow/guard; SimClock + day/night lighting; near/mid/far tiers (think 0.5/1.5/3 s, far = physics-free path stepping). Tests 328/328 (3 consecutive runs): incident → all back to routine in 90 s, crew patrols/follows at night, all residents home by 00:30, 0 teleports, 0.60 ms/physics frame. Screenshots `docs/screenshots/{night_duif,dusk_tortel,incident_debug}.png` |
 | 4 | Not started | |
 | 5 | Not started | |
 | 6 | Not started | |

@@ -75,6 +75,11 @@ func door_position() -> Vector3:
 	return to_global(_door_local)
 
 
+## Point on the sidewalk just outside the garden gate (crew guard spot, meeting point).
+func gate_position() -> Vector3:
+	return to_global(Vector3(_door_local.x, 0.0, 1.0))
+
+
 func _build_roof(kit: Dictionary, h: float, center: Vector3) -> void:
 	var overhang := 0.4
 	var w: float = kit.w + overhang * 2

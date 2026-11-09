@@ -4,17 +4,21 @@ extends CanvasLayer
 ## Observes gameplay through signals; owns no gameplay rules.
 
 const MESSAGE_TIME := 5.0
+const HELP := "WASD move · Shift sprint · E interact · Q whistle · F3 debug · F5/F6 incidents · F7 +1h · Esc frees mouse"
 
 var _title: Label
 var _prompt: Label
 var _message: Label
 var _debug: Label
+var _clock: Label
+var _district := ""
 var _message_timer := 0.0
 
 
 func _ready() -> void:
 	_title = _label(Vector2(16, 12), 18)
-	_title.text = "CONCRETE KINGS\nWASD move · Shift sprint · E interact · F3 debug · Esc frees mouse"
+	_title.text = "CONCRETE KINGS\n" + HELP
+	_clock = _label(Vector2(16, 70), 26)
 	_prompt = _label(Vector2.ZERO, 22)
 	_prompt.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -39,7 +43,12 @@ func _ready() -> void:
 
 
 func set_district_name(text: String) -> void:
-	_title.text = "%s\nWASD move · Shift sprint · E interact · F3 debug · Esc frees mouse" % text.to_upper()
+	_district = text
+	_title.text = "%s\n%s" % [text.to_upper(), HELP]
+
+
+func set_clock(clock: SimClock) -> void:
+	_clock.text = "%s  ·  Day %d%s" % [clock.label(), clock.day, "  ·  night" if clock.is_night() else ""]
 
 
 func set_prompt(target: Interactable) -> void:

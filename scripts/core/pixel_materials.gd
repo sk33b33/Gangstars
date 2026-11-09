@@ -42,6 +42,19 @@ static func flat(color: Color) -> StandardMaterial3D:
 	return mat
 
 
+## Shared streetlight/window glow material; DayNight drives its emission energy.
+static func lamp() -> StandardMaterial3D:
+	if _cache.has("lamp"):
+		return _cache["lamp"]
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color("#fff0a8")
+	mat.emission_enabled = true
+	mat.emission = Color("#ffc85e")
+	mat.emission_energy_multiplier = 0.3
+	_cache["lamp"] = mat
+	return mat
+
+
 static func _base(tex_name: String, tint: Color, alpha: bool) -> StandardMaterial3D:
 	var mat := StandardMaterial3D.new()
 	var path := TEX_DIR + tex_name + ".png"

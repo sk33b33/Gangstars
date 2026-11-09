@@ -28,6 +28,35 @@ static func box(parent: Node3D, size: Vector3, center: Vector3, mat: Material, s
 	return body
 
 
+## Invisible solid collider. Used where the visual is lower than the nav-mesh obstacle
+## threshold (~0.5 m), e.g. benches, so the bake still carves them out.
+static func collider(parent: Node3D, size: Vector3, center: Vector3, rot_y := 0.0) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.position = center
+	body.rotation.y = rot_y
+	var shape := CollisionShape3D.new()
+	var box_shape := BoxShape3D.new()
+	box_shape.size = size
+	shape.shape = box_shape
+	body.add_child(shape)
+	parent.add_child(body)
+	return body
+
+
+## Bench (seat + backrest) facing local +Z, with a 1 m collider so navigation avoids it.
+static func bench(parent: Node3D, center: Vector3, rot_y := 0.0, length := 2.0) -> void:
+	var pivot := Node3D.new()
+	pivot.position = center
+	pivot.rotation.y = rot_y
+	parent.add_child(pivot)
+	var wood := PixelMaterials.flat(Color("#8a5a3c"))
+	box(pivot, Vector3(length, 0.1, 0.45), Vector3(0, 0.45, 0), wood, false)
+	box(pivot, Vector3(length, 0.4, 0.08), Vector3(0, 0.75, -0.2), wood, false)
+	for x in [-length * 0.4, length * 0.4]:
+		box(pivot, Vector3(0.08, 0.45, 0.4), Vector3(x, 0.225, 0), PixelMaterials.flat(Color("#565a64")), false)
+	collider(pivot, Vector3(length, 1.0, 0.5), Vector3(0, 0.5, 0))
+
+
 ## Flat ground patch (visual only) covering rect (x, z, width, depth) at height y.
 static func patch(parent: Node3D, rect: Rect2, y: float, mat: Material) -> MeshInstance3D:
 	var mesh := PlaneMesh.new()

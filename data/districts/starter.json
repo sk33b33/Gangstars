@@ -3,33 +3,204 @@
   "display_name": "Vleirand",
   "street_name": "Starter district",
   "is_initially_unlocked": true,
-  "bounds": [-72, -78, 72, 22],
+  "bounds": [
+    -72,
+    -78,
+    72,
+    22
+  ],
   "streets": [
-    { "id": "duif", "name": "Duif Street", "axis": "x", "at": 0, "from": -90, "to": 90, "half_width": 4.0, "sidewalk": 2.5 },
-    { "id": "mossie", "name": "Mossie Street", "axis": "x", "at": -56, "from": -90, "to": 90, "half_width": 4.0, "sidewalk": 2.5 },
-    { "id": "kwikkie", "name": "Kwikkie Street", "axis": "z", "at": -50, "from": -4, "to": -52, "half_width": 4.0, "sidewalk": 2.5,
-      "sidewalk_from": -6.5, "sidewalk_to": -49.5 },
-    { "id": "tortel", "name": "Tortel Lane", "axis": "z", "at": 50, "from": -4, "to": -52, "half_width": 3.0, "sidewalk": 2.0,
-      "sidewalk_from": -6.5, "sidewalk_to": -49.5 }
+    {
+      "id": "duif",
+      "name": "Duif Street",
+      "axis": "x",
+      "at": 0,
+      "from": -90,
+      "to": 90,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "mossie",
+      "name": "Mossie Street",
+      "axis": "x",
+      "at": -56,
+      "from": -90,
+      "to": 90,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "kwikkie",
+      "name": "Kwikkie Street",
+      "axis": "z",
+      "at": -50,
+      "from": -4,
+      "to": -52,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    },
+    {
+      "id": "tortel",
+      "name": "Tortel Lane",
+      "axis": "z",
+      "at": 50,
+      "from": -4,
+      "to": -52,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    }
   ],
   "landmarks": [
-    { "type": "cafe", "position": [-18, -14] },
-    { "type": "bus_stop", "position": [8, -7.2], "facing": "south" },
-    { "type": "bus_stop", "position": [-20, -48.8], "facing": "north" },
-    { "type": "court", "position": [20, -20] },
-    { "type": "park", "position": [-2, -24] },
-    { "type": "corner", "position": [38, -7.4] }
+    {
+      "type": "cafe",
+      "position": [
+        -18,
+        -14
+      ]
+    },
+    {
+      "type": "bus_stop",
+      "position": [
+        8,
+        -7.2
+      ],
+      "facing": "south"
+    },
+    {
+      "type": "bus_stop",
+      "position": [
+        -20,
+        -48.8
+      ],
+      "facing": "north"
+    },
+    {
+      "type": "court",
+      "position": [
+        20,
+        -20
+      ]
+    },
+    {
+      "type": "park",
+      "position": [
+        -2,
+        -24
+      ]
+    },
+    {
+      "type": "corner",
+      "position": [
+        38,
+        -7.4
+      ]
+    }
   ],
   "pois": [
-    { "id": "poi_shop", "name": "Vleirand Cafe", "kind": "shop", "position": [-18, -8.4], "radius": 1.2 },
-    { "id": "poi_bus_stop", "name": "the Duif Street bus stop", "kind": "transit", "position": [8, -5.3], "radius": 1.0 },
-    { "id": "poi_bus_stop_mossie", "name": "the Mossie Street bus stop", "kind": "transit", "position": [-20, -50.7], "radius": 1.0 },
-    { "id": "poi_corner", "name": "the corner", "kind": "gathering", "position": [38, -5.4], "radius": 1.4 },
-    { "id": "poi_court", "name": "the sand court", "kind": "court", "position": [20, -20], "radius": 2.5 },
-    { "id": "poi_park", "name": "the park", "kind": "park", "position": [-2, -24], "radius": 3.0 }
+    {
+      "id": "poi_shop",
+      "name": "Vleirand Cafe",
+      "kind": "shop",
+      "position": [
+        -18,
+        -8.4
+      ],
+      "radius": 1.2
+    },
+    {
+      "id": "poi_bus_stop",
+      "name": "the Duif Street bus stop",
+      "kind": "transit",
+      "position": [
+        8,
+        -5.3
+      ],
+      "radius": 1.0
+    },
+    {
+      "id": "poi_bus_stop_mossie",
+      "name": "the Mossie Street bus stop",
+      "kind": "transit",
+      "position": [
+        -20,
+        -50.7
+      ],
+      "radius": 1.0
+    },
+    {
+      "id": "poi_corner",
+      "name": "the corner",
+      "kind": "gathering",
+      "position": [
+        38,
+        -5.4
+      ],
+      "radius": 1.4
+    },
+    {
+      "id": "poi_court",
+      "name": "the sand court",
+      "kind": "court",
+      "position": [
+        20,
+        -20
+      ],
+      "radius": 2.5
+    },
+    {
+      "id": "poi_park",
+      "name": "the park",
+      "kind": "park",
+      "position": [
+        -2,
+        -24
+      ],
+      "radius": 3.0
+    }
   ],
   "locked_neighbours": [
-    { "id": "district_east", "display_name": "Rooiduin", "side": "east" },
-    { "id": "district_west", "display_name": "Kalkbos", "side": "west" }
-  ]
+    {
+      "id": "district_east",
+      "display_name": "Rooiduin",
+      "side": "east"
+    },
+    {
+      "id": "district_west",
+      "display_name": "Kalkbos",
+      "side": "west"
+    }
+  ],
+  "patrol_routes": {
+    "tortel_loop": [
+      [
+        38,
+        -5.4
+      ],
+      [
+        46,
+        -12
+      ],
+      [
+        46,
+        -46
+      ],
+      [
+        30,
+        -50.7
+      ],
+      [
+        54,
+        -48
+      ],
+      [
+        54,
+        -12
+      ]
+    ]
+  }
 }

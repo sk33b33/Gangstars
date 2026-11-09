@@ -1,0 +1,9 @@
+{
+  "social": ["Did you hear about the Davids' laaitie?", "Ag, this wind again.", "Is the café still open?",
+    "My cousin is coming on Sunday.", "Eish, prices these days.", "Hey! Long time, hoe gaan dit?",
+    "Who's that new face on the block?", "The bus never comes on time."],
+  "crew": ["Keep an eye on the lane.", "Nobody moves on our corner.", "Quiet night, hey.", "Stay sharp."],
+  "investigate": ["What's going on there?", "Ey! What's all the noise?", "Let me see..."],
+  "flee": ["Hai, I'm going inside!", "Not again...", "Lock the gate!"],
+  "report": ["Did you see that out there?", "There's trouble on the street!"]
+}

@@ -12,7 +12,12 @@ extends Resource
 @export var skin_color: Color = Color("#a7754f")
 @export var walk_speed: float = 1.5
 @export var start_delay: float = 0.0
-## Array of {activity: String, destination: String, duration: float}; destination "home" = own door.
+## curious / timid / gossip / steady / tough (see ReactionPolicy).
+@export var personality: String = "steady"
+## Hours (start, end) the NPC is out and about; wraps midnight if start > end.
+@export var active_hours: Vector2 = Vector2(6, 22)
+## Array of {activity, destination, duration, window?: Vector2, route?: PackedStringArray}.
+## destination "home" = own door; "@leader:<npc id>" = follow that NPC; route = patrol waypoints.
 @export var schedule: Array = []
 @export var lines: PackedStringArray = []
 
@@ -29,13 +34,23 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.skin_color = DataFiles.to_color(d.get("skin_color"), Color("#a7754f"))
 	n.walk_speed = clampf(float(d.get("walk_speed", 1.5)), 0.5, 4.0)
 	n.start_delay = maxf(0.0, float(d.get("start_delay", 0.0)))
+	n.personality = str(d.get("personality", "steady"))
+	n.active_hours = DataFiles.to_vec2(d.get("active_hours"), Vector2(6, 22))
 	for e in d.get("schedule", []):
-		if e is Dictionary and e.has("destination"):
-			n.schedule.append({
-				"activity": str(e.get("activity", "idle")),
-				"destination": str(e.destination),
-				"duration": maxf(1.0, float(e.get("duration", 10.0))),
-			})
+		if not e is Dictionary or not (e.has("destination") or e.has("route")):
+			continue
+		var entry := {
+			"activity": str(e.get("activity", "idle")),
+			"destination": str(e.get("destination", "")),
+			"duration": maxf(1.0, float(e.get("duration", 10.0))),
+		}
+		if e.has("window"):
+			entry["window"] = DataFiles.to_vec2(e.window, Vector2(0, 24))
+		if e.has("route"):
+			entry["route"] = PackedStringArray(e.route)
+			if entry.route.is_empty():
+				continue
+		n.schedule.append(entry)
 	n.lines = PackedStringArray(d.get("lines", []))
 	return n
 

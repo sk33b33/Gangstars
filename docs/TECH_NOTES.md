@@ -74,8 +74,33 @@ The debug overlay lists only the 6 nearest residents, so it stays cheap at scale
 3. Still failing: the brain skips to the next schedule entry. After repeated failures, or when the
    route home fails, the NPC goes `UNAVAILABLE` and retries home after 6 s.
 
+## Phase 3 simulation
+
+| Piece | File | Role |
+|---|---|---|
+| `SimClock` | `scripts/core/sim_clock.gd` | Time of day, advanced on physics ticks (deterministic) |
+| `SimulationDirector` | `scripts/npcs/simulation_director.gd` | Tiers, social groups, incident delivery, ambient incidents |
+| `NeighbourhoodEvents` | `scripts/world/neighbourhood_events.gd` | Incident hub; HUD listens to `message` |
+| `ReactionPolicy` | `scripts/npcs/reaction_policy.gd` | Pure choice of notice/investigate/flee/report |
+| `DayNight` | `scripts/world/day_night.gd` | Sun/moon, sky, ambient, lamp emission |
+
+Tiers, by distance from the player:
+
+| Tier | Distance | Think interval | Movement |
+|---|---|---|---|
+| near | < 30 m | 0.5 s | physics + avoidance, bubbles, walk bob |
+| mid | 30–60 m | 1.5 s | physics, no avoidance |
+| far | > 60 m | 3.0 s | steps along the same nav path every 0.25 s, no physics |
+
+Movement guards: a **teleport** (more than 0.5 m in one frame) must never happen and is asserted
+to be 0. A **nudge** (more than a walking step, from physics depenetration after brief contact,
+mostly when leaving the far tier) is counted and kept rare. The test allows 20 per run;
+typical runs show 0–2 across about 1M NPC-frames.
+
+Avoidance and physics make runs slightly non-deterministic, so validate with 2–3 consecutive
+runs. Set `CK_DEBUG=1` to print every travel failure and jump with its cause.
+
 ## Known limitations
 
 - Characters are low-poly placeholders with a walk bob; no rigged animation yet.
-- All NPCs are on the "near" simulation tier; distance tiers come in Phase 3.
 - In software-rendered containers the game runs at about 8 FPS; this is not representative of real GPUs.

@@ -37,6 +37,21 @@ func ids_of_kind(kind: String) -> PackedStringArray:
 	return out
 
 
+## Nearest enabled anchor of `kind` to `from`, excluding `exclude_id`; "" if none.
+func nearest_of_kind(from: Vector3, kind: String, exclude_id := "") -> String:
+	var best := ""
+	var best_d := INF
+	for id in _anchors:
+		var a: Dictionary = _anchors[id]
+		if a.kind != kind or not a.enabled or id == exclude_id:
+			continue
+		var d := from.distance_squared_to(a.position)
+		if d < best_d:
+			best_d = d
+			best = id
+	return best
+
+
 func anchor_position(id: String) -> Vector3:
 	return _anchors[id].position if _anchors.has(id) else Vector3.ZERO
 

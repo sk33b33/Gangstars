@@ -2,7 +2,8 @@ extends Node
 ## Bootstraps the session: district, player, HUD, debug overlay; wires their signals.
 ## Optional user args (after `--`) for automated screenshots:
 ##   --shot=res://tests/output/x.png  --shot-delay=8  --view=player|overview|street
-##   --debug  --player=x,z  --yaw=degrees  --pitch=degrees  --interact
+##   --debug  --player=x,z  --yaw=degrees  --pitch=degrees  --interact  --hour=21.5
+##   --incident=car_alarm|argument|scuffle (raised at the player 2 s before the shot)
 
 @onready var district: District = $Vleirand
 @onready var player: Player = $Player
@@ -18,6 +19,11 @@ func _ready() -> void:
 	player.interaction_target_changed.connect(hud.set_prompt)
 	player.interacted.connect(hud.show_message)
 	debug_overlay.setup(district, hud)
+	district.director.observer = player
+	district.events.message.connect(hud.show_message)
+	player.shouted.connect(func(pos: Vector3): district.events.raise("whistle", pos))
+	if _args.has("hour"):
+		district.director.clock.set_hour(float(_args.hour))
 	if not district.is_navigation_ready:
 		await district.navigation_ready
 	hud.show_message("Welcome to Vleirand. Walk Duif Street and meet the neighbours.")
@@ -25,8 +31,19 @@ func _ready() -> void:
 		_run_screenshot.call_deferred()
 
 
+func _process(_delta: float) -> void:
+	hud.set_clock(district.director.clock)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("toggle_debug"):
+	if event.is_action_pressed("debug_incident"):
+		district.events.raise("argument", player.global_position + Vector3(2, 0, 0), "you")
+	elif event.is_action_pressed("debug_danger"):
+		district.events.raise("scuffle", player.global_position + Vector3(2, 0, 0), "you")
+	elif event.is_action_pressed("debug_time"):
+		var clock := district.director.clock
+		clock.set_hour(clock.hour() + 1.0)
+	elif event.is_action_pressed("toggle_debug"):
 		debug_overlay.toggle()
 	elif event.is_action_pressed("debug_reachability"):
 		var text := debug_overlay.run_reachability()
@@ -49,7 +66,12 @@ func _run_screenshot() -> void:
 			_add_camera(Vector3(-36, 9, 12), Vector3(-4, 1, 2))
 	if _args.has("debug"):
 		debug_overlay.toggle()
-	await get_tree().create_timer(float(_args.get("shot-delay", "6"))).timeout
+	var delay := float(_args.get("shot-delay", "6"))
+	if _args.has("incident"):
+		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
+		district.events.raise(_args.incident, player.global_position + Vector3(0, 0, -6), "you")
+		delay = 3.0
+	await get_tree().create_timer(delay).timeout
 	if _args.has("interact") and player.current_target:
 		hud.show_message(player.current_target.interact(player))
 		await get_tree().create_timer(0.3).timeout

@@ -14,12 +14,20 @@
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 10
+          "duration": 10,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 14
+          "duration": 14,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "home",
@@ -30,6 +38,11 @@
       "lines": [
         "Môre! The café has fresh bread today.",
         "Ag, these knees. Walk slower, man."
+      ],
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
       ]
     },
     {
@@ -46,12 +59,20 @@
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -62,6 +83,11 @@
       "lines": [
         "Bus is late again, my bru.",
         "You new here? Keep your eyes open."
+      ],
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
       ]
     },
     {
@@ -78,12 +104,20 @@
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "home",
@@ -94,6 +128,11 @@
       "lines": [
         "Have you seen my cousin? He owes me airtime.",
         "Shame, this heat."
+      ],
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
       ]
     },
     {
@@ -110,12 +149,20 @@
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 10
+          "duration": 10,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -126,6 +173,11 @@
       "lines": [
         "Court's free if you want a game.",
         "Everybody knows everybody on Duif Street."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
       ]
     },
     {
@@ -142,12 +194,20 @@
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 9
+          "duration": 9,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 11
+          "duration": 11,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -158,6 +218,11 @@
       "lines": [
         "My ma says don't talk to strangers. You're a stranger.",
         "The café closes early on Sundays."
+      ],
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
       ]
     },
     {
@@ -170,16 +235,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.53,
       "start_delay": 8.9,
+      "personality": "gossip",
+      "active_hours": [
+        5,
+        21
+      ],
       "schedule": [
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 9
+          "duration": 9,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "home",
@@ -188,8 +266,8 @@
         }
       ],
       "lines": [
-        "Who are you looking for?",
-        "My ouma has lived here forty years."
+        "The café ran out of bread again.",
+        "Don't park in front of my gate, ne."
       ]
     },
     {
@@ -202,16 +280,29 @@
       "skin_color": "#9a6a45",
       "walk_speed": 1.38,
       "start_delay": 40.6,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "home",
@@ -220,8 +311,8 @@
         }
       ],
       "lines": [
-        "My ouma has lived here forty years.",
-        "The café ran out of bread again."
+        "Ag shame, you look lost.",
+        "Môre! Lovely day, hey?"
       ]
     },
     {
@@ -234,16 +325,29 @@
       "skin_color": "#b98458",
       "walk_speed": 1.69,
       "start_delay": 31.4,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 15
+          "duration": 15,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -252,8 +356,8 @@
         }
       ],
       "lines": [
-        "My ouma has lived here forty years.",
-        "Don't park in front of my gate, ne."
+        "Shame, this wind.",
+        "Ag shame, you look lost."
       ]
     },
     {
@@ -266,16 +370,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.64,
       "start_delay": 10.7,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 10
+          "duration": 10,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 17
+          "duration": 17,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -284,8 +401,8 @@
         }
       ],
       "lines": [
-        "Don't park in front of my gate, ne.",
-        "Who are you looking for?"
+        "Who are you looking for?",
+        "Ag shame, you look lost."
       ]
     },
     {
@@ -298,16 +415,29 @@
       "skin_color": "#8d5a3b",
       "walk_speed": 1.73,
       "start_delay": 8.2,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 13
+          "duration": 13,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 9
+          "duration": 9,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -316,8 +446,8 @@
         }
       ],
       "lines": [
-        "Ag shame, you look lost.",
-        "My laaitie is at the court, have you seen him?"
+        "My ouma has lived here forty years.",
+        "Shame, this wind."
       ]
     },
     {
@@ -330,16 +460,29 @@
       "skin_color": "#9a6a45",
       "walk_speed": 1.38,
       "start_delay": 27.7,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "visiting",
           "destination": "starter_h02:door",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "home",
@@ -349,7 +492,7 @@
       ],
       "lines": [
         "Ag shame, you look lost.",
-        "Shame, this wind."
+        "My laaitie is at the court, have you seen him?"
       ]
     },
     {
@@ -362,16 +505,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.5,
       "start_delay": 25.8,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 13
+          "duration": 13,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "visiting",
           "destination": "starter_h01:door",
-          "duration": 17
+          "duration": 17,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "home",
@@ -380,8 +536,8 @@
         }
       ],
       "lines": [
-        "The bus is always late on Mossie Street.",
-        "My laaitie is at the court, have you seen him?"
+        "Ag shame, you look lost.",
+        "Everybody knows everybody here."
       ]
     },
     {
@@ -394,16 +550,29 @@
       "skin_color": "#7b4f33",
       "walk_speed": 1.58,
       "start_delay": 7.5,
+      "personality": "steady",
+      "active_hours": [
+        5,
+        21
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h06:door",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 10
+          "duration": 10,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -412,8 +581,8 @@
         }
       ],
       "lines": [
-        "Shame, this wind.",
-        "My laaitie is at the court, have you seen him?"
+        "My laaitie is at the court, have you seen him?",
+        "Môre! Lovely day, hey?"
       ]
     },
     {
@@ -426,16 +595,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.67,
       "start_delay": 34.8,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 13
+          "duration": 13,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -444,7 +626,7 @@
         }
       ],
       "lines": [
-        "The café ran out of bread again.",
+        "Everybody knows everybody here.",
         "My laaitie is at the court, have you seen him?"
       ]
     },
@@ -458,16 +640,29 @@
       "skin_color": "#b98458",
       "walk_speed": 1.43,
       "start_delay": 18.1,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h09:door",
-          "duration": 15
+          "duration": 15,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 9
+          "duration": 9,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -476,8 +671,8 @@
         }
       ],
       "lines": [
-        "My ouma has lived here forty years.",
-        "Who are you looking for?"
+        "Who are you looking for?",
+        "Shame, this wind."
       ]
     },
     {
@@ -490,16 +685,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.57,
       "start_delay": 28.3,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 17
+          "duration": 17,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 9
+          "duration": 9,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -508,8 +716,8 @@
         }
       ],
       "lines": [
-        "My ouma has lived here forty years.",
-        "Everybody knows everybody here."
+        "The café ran out of bread again.",
+        "My ouma has lived here forty years."
       ]
     },
     {
@@ -522,16 +730,29 @@
       "skin_color": "#a7754f",
       "walk_speed": 1.26,
       "start_delay": 44.5,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 14
+          "duration": 14,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "home",
@@ -541,7 +762,7 @@
       ],
       "lines": [
         "Ag shame, you look lost.",
-        "My laaitie is at the court, have you seen him?"
+        "Don't park in front of my gate, ne."
       ]
     },
     {
@@ -554,16 +775,29 @@
       "skin_color": "#7b4f33",
       "walk_speed": 1.34,
       "start_delay": 22.7,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h07:door",
-          "duration": 15
+          "duration": 15,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -572,8 +806,8 @@
         }
       ],
       "lines": [
-        "Everybody knows everybody here.",
-        "The bus is always late on Mossie Street."
+        "Môre! Lovely day, hey?",
+        "My laaitie is at the court, have you seen him?"
       ]
     },
     {
@@ -586,16 +820,29 @@
       "skin_color": "#b98458",
       "walk_speed": 1.53,
       "start_delay": 43.8,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h09:door",
-          "duration": 18
+          "duration": 18,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -604,8 +851,8 @@
         }
       ],
       "lines": [
-        "My ouma has lived here forty years.",
-        "Môre! Lovely day, hey?"
+        "Ag shame, you look lost.",
+        "Who are you looking for?"
       ]
     },
     {
@@ -618,16 +865,29 @@
       "skin_color": "#c49a6c",
       "walk_speed": 1.53,
       "start_delay": 18.4,
+      "personality": "steady",
+      "active_hours": [
+        8,
+        23
+      ],
       "schedule": [
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -636,8 +896,8 @@
         }
       ],
       "lines": [
-        "Shame, this wind.",
-        "Everybody knows everybody here."
+        "Everybody knows everybody here.",
+        "Who are you looking for?"
       ]
     },
     {
@@ -650,16 +910,29 @@
       "skin_color": "#8d5a3b",
       "walk_speed": 1.29,
       "start_delay": 2.1,
+      "personality": "steady",
+      "active_hours": [
+        8,
+        23
+      ],
       "schedule": [
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -682,16 +955,29 @@
       "skin_color": "#9a6a45",
       "walk_speed": 1.28,
       "start_delay": 19.2,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "waiting",
           "destination": "poi_bus_stop",
-          "duration": 11
+          "duration": 11,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 8
+          "duration": 8,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -700,8 +986,8 @@
         }
       ],
       "lines": [
-        "The bus is always late on Mossie Street.",
-        "Don't park in front of my gate, ne."
+        "Shame, this wind.",
+        "My ouma has lived here forty years."
       ]
     },
     {
@@ -714,16 +1000,29 @@
       "skin_color": "#7b4f33",
       "walk_speed": 1.74,
       "start_delay": 5.7,
+      "personality": "gossip",
+      "active_hours": [
+        5,
+        21
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h18:door",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 16
+          "duration": 16,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -732,8 +1031,8 @@
         }
       ],
       "lines": [
-        "The bus is always late on Mossie Street.",
-        "My ouma has lived here forty years."
+        "The café ran out of bread again.",
+        "Môre! Lovely day, hey?"
       ]
     },
     {
@@ -746,16 +1045,29 @@
       "skin_color": "#9a6a45",
       "walk_speed": 1.38,
       "start_delay": 1.8,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "waiting",
           "destination": "poi_bus_stop_mossie",
-          "duration": 13
+          "duration": 13,
+          "window": [
+            6,
+            20
+          ]
         },
         {
           "activity": "shopping",
           "destination": "poi_shop",
-          "duration": 10
+          "duration": 10,
+          "window": [
+            7,
+            19
+          ]
         },
         {
           "activity": "home",
@@ -764,8 +1076,8 @@
         }
       ],
       "lines": [
-        "Everybody knows everybody here.",
-        "The bus is always late on Mossie Street."
+        "The café ran out of bread again.",
+        "Ag shame, you look lost."
       ]
     },
     {
@@ -778,16 +1090,29 @@
       "skin_color": "#7b4f33",
       "walk_speed": 1.32,
       "start_delay": 6.2,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "relaxing",
           "destination": "poi_park",
-          "duration": 12
+          "duration": 12,
+          "window": [
+            8,
+            20
+          ]
         },
         {
           "activity": "playing",
           "destination": "poi_court",
-          "duration": 13
+          "duration": 13,
+          "window": [
+            9,
+            20
+          ]
         },
         {
           "activity": "home",
@@ -796,8 +1121,8 @@
         }
       ],
       "lines": [
-        "Ag shame, you look lost.",
-        "The café ran out of bread again."
+        "Everybody knows everybody here.",
+        "Don't park in front of my gate, ne."
       ]
     },
     {
@@ -806,35 +1131,51 @@
       "home_id": "starter_h29",
       "role": "crew",
       "shirt_color": "#1d1b24",
-      "pants_color": "#34495e",
-      "skin_color": "#9a6a45",
-      "walk_speed": 1.36,
-      "start_delay": 23.9,
+      "pants_color": "#4a4e6a",
+      "skin_color": "#6a4128",
+      "walk_speed": 1.51,
+      "start_delay": 9.1,
+      "personality": "tough",
+      "active_hours": [
+        10,
+        2
+      ],
       "schedule": [
         {
-          "activity": "socializing",
-          "destination": "poi_corner",
-          "duration": 13
+          "activity": "patrol",
+          "route": [
+            "patrol:tortel_loop:0",
+            "patrol:tortel_loop:1",
+            "patrol:tortel_loop:2",
+            "patrol:tortel_loop:3",
+            "patrol:tortel_loop:4",
+            "patrol:tortel_loop:5"
+          ],
+          "duration": 1,
+          "window": [
+            17,
+            2
+          ]
         },
         {
-          "activity": "playing",
-          "destination": "poi_court",
-          "duration": 10
-        },
-        {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 8
+          "duration": 25
+        },
+        {
+          "activity": "guard",
+          "destination": "starter_h29:gate",
+          "duration": 30
         },
         {
           "activity": "home",
           "destination": "home",
-          "duration": 26
+          "duration": 20
         }
       ],
       "lines": [
-        "Move along, my bru.",
-        "We're watching you, new face."
+        "We're watching you, new face.",
+        "Move along, my bru."
       ],
       "faction_id": "tortel_crew"
     },
@@ -844,35 +1185,44 @@
       "home_id": "starter_h29",
       "role": "crew",
       "shirt_color": "#1d1b24",
-      "pants_color": "#6b4630",
-      "skin_color": "#8d5a3b",
-      "walk_speed": 1.71,
-      "start_delay": 40.6,
+      "pants_color": "#212f3d",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.67,
+      "start_delay": 40.1,
+      "personality": "tough",
+      "active_hours": [
+        10,
+        2
+      ],
       "schedule": [
         {
-          "activity": "socializing",
-          "destination": "poi_corner",
-          "duration": 16
+          "activity": "follow",
+          "destination": "@leader:npc_h29_1",
+          "duration": 70,
+          "window": [
+            17,
+            2
+          ]
         },
         {
-          "activity": "playing",
-          "destination": "poi_court",
-          "duration": 18
+          "activity": "guard",
+          "destination": "starter_h29:gate",
+          "duration": 35
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 13
+          "duration": 20
         },
         {
           "activity": "home",
           "destination": "home",
-          "duration": 17
+          "duration": 15
         }
       ],
       "lines": [
-        "We're watching you, new face.",
-        "Move along, my bru."
+        "Move along, my bru.",
+        "This is Tortel Lane. You lost?"
       ],
       "faction_id": "tortel_crew"
     },
@@ -886,16 +1236,29 @@
       "skin_color": "#7b4f33",
       "walk_speed": 1.51,
       "start_delay": 40.7,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
       "schedule": [
         {
           "activity": "visiting",
           "destination": "starter_h09:door",
-          "duration": 11
+          "duration": 11,
+          "window": [
+            9,
+            21
+          ]
         },
         {
           "activity": "socializing",
           "destination": "poi_corner",
-          "duration": 11
+          "duration": 11,
+          "window": [
+            10,
+            22
+          ]
         },
         {
           "activity": "home",
@@ -905,7 +1268,7 @@
       ],
       "lines": [
         "Môre! Lovely day, hey?",
-        "The bus is always late on Mossie Street."
+        "My ouma has lived here forty years."
       ]
     }
   ]

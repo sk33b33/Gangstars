@@ -5,6 +5,7 @@ extends CharacterBody3D
 
 signal interaction_target_changed(target: Interactable)
 signal interacted(message: String)
+signal shouted(position: Vector3)
 
 const GRAVITY := 9.8
 
@@ -68,6 +69,8 @@ func _physics_process(delta: float) -> void:
 		model.rotation.y = lerp_angle(model.rotation.y, atan2(velocity.x, velocity.z), clampf(delta * 12.0, 0.0, 1.0))
 	model.animate(delta, flat.length())
 
+	if input_enabled and Input.is_action_just_pressed("shout"):
+		shouted.emit(global_position)
 	_update_target()
 	if input_enabled and current_target and Input.is_action_just_pressed("interact"):
 		interacted.emit(current_target.interact(self))

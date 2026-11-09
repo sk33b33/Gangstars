@@ -63,6 +63,24 @@ LINES = [
     "Everybody knows everybody here.", "My laaitie is at the court, have you seen him?",
     "Don't park in front of my gate, ne.", "The bus is always late on Mossie Street.",
     "Who are you looking for?", "My ouma has lived here forty years.", "Shame, this wind."]
+WINDOWS = {"shopping": [7, 19], "waiting": [6, 20], "socializing": [10, 22], "playing": [9, 20],
+           "relaxing": [8, 20], "visiting": [9, 21]}
+PERSONALITIES = ["curious"] * 3 + ["timid"] * 3 + ["gossip"] * 2 + ["steady"] * 3
+ACTIVE_HOURS = [[6, 22]] * 4 + [[5, 21], [8, 23]]
+KEEP_PERSONALITY = {"npc_faiza": "gossip", "npc_boeta": "curious", "npc_shireen": "timid",
+                    "npc_lionel": "steady", "npc_tasneem": "curious"}
+# Rival crew (Tortel Lane): the leader patrols at night, the second member follows him.
+CREW_SCHEDULES = {
+    1: [{"activity": "patrol", "route": "tortel_loop", "duration": 1, "window": [17, 2]},
+        {"activity": "socializing", "destination": "poi_corner", "duration": 25},
+        {"activity": "guard", "destination": "{home}:gate", "duration": 30},
+        {"activity": "home", "destination": "home", "duration": 20}],
+    2: [{"activity": "follow", "destination": "@leader:{leader}", "duration": 70, "window": [17, 2]},
+        {"activity": "guard", "destination": "{home}:gate", "duration": 35},
+        {"activity": "socializing", "destination": "poi_corner", "duration": 20},
+        {"activity": "home", "destination": "home", "duration": 15}],
+}
+PATROL_ROUTES = {"tortel_loop": 6}
 CREW_LINES = ["This is Tortel Lane. You lost?", "Move along, my bru.", "We're watching you, new face."]
 
 KEEP_HOUSES = {
@@ -139,10 +157,33 @@ def make_houses():
     return out
 
 
+def expand_crew(template, home_id, leader_id):
+    out = []
+    for e in template:
+        e = dict(e)
+        if "route" in e:
+            e["route"] = ["patrol:%s:%d" % (e["route"], i) for i in range(PATROL_ROUTES[e["route"]])]
+        if "destination" in e:
+            e["destination"] = e["destination"].replace("{home}", home_id).replace("{leader}", leader_id)
+        out.append(e)
+    return out
+
+
+def patch_kept(r):
+    """Phase 3 fields for the hand-authored residents (kept otherwise unchanged)."""
+    r = dict(r)
+    r["personality"] = KEEP_PERSONALITY.get(r["id"], "steady")
+    r.setdefault("active_hours", [6, 22])
+    for e in r["schedule"]:
+        if e["destination"] != "home":
+            e["window"] = WINDOWS.get(e["activity"], [6, 22])
+    return r
+
+
 def make_residents(houses, kept):
     occupied = [h for h in houses if h["occupancy"] == "occupied"]
     doors = [h["id"] + ":door" for h in occupied]
-    residents = list(kept)
+    residents = [patch_kept(r) for r in kept]
     kept_ids = {r["id"] for r in kept}
     for h in occupied:
         if h["occupant_ids"]:
@@ -155,21 +196,26 @@ def make_residents(houses, kept):
             rng = random.Random("vleirand-npc-" + rid)
             first = rng.choice(FIRST)
             if hostile:
-                stops = ["poi_corner", "poi_court", rng.choice(["poi_shop", "poi_corner"])]
+                schedule = expand_crew(CREW_SCHEDULES[k + 1], h["id"], "npc_%s_1" % h["id"].replace("starter_", ""))
             else:
                 stops = rng.sample(POIS, 2)
                 if rng.random() < 0.35:
                     other = rng.choice([d for d in doors if d != h["id"] + ":door"])
                     stops[rng.randrange(2)] = other
-            schedule = [{"activity": "visiting" if s.endswith(":door") else ACTIVITY[s],
-                         "destination": s, "duration": rng.randint(8, 18)} for s in stops]
-            schedule.append({"activity": "home", "destination": "home", "duration": rng.randint(15, 35)})
+                schedule = []
+                for s in stops:
+                    act = "visiting" if s.endswith(":door") else ACTIVITY[s]
+                    schedule.append({"activity": act, "destination": s, "duration": rng.randint(8, 18),
+                                     "window": WINDOWS[act]})
+                schedule.append({"activity": "home", "destination": "home", "duration": rng.randint(15, 35)})
             r = {
                 "id": rid, "display_name": f"{first} {surname}", "home_id": h["id"],
                 "role": "crew" if hostile else "resident",
                 "shirt_color": "#1d1b24" if hostile else rng.choice(SHIRTS),
                 "pants_color": rng.choice(PANTS), "skin_color": rng.choice(SKIN),
                 "walk_speed": round(rng.uniform(1.25, 1.8), 2), "start_delay": round(rng.uniform(1.0, 45.0), 1),
+                "personality": "tough" if hostile else rng.choice(PERSONALITIES),
+                "active_hours": [10, 2] if hostile else rng.choice(ACTIVE_HOURS),
                 "schedule": schedule,
                 "lines": rng.sample(CREW_LINES if hostile else LINES, 2),
             }

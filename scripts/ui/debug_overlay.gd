@@ -112,14 +112,18 @@ func _text() -> String:
 	var lines: PackedStringArray = ["DEBUG  fps %d  houses %d  npcs %d  nav polys %d" % [
 		Engine.get_frames_per_second(), district.registry.count(), district.residents.size(),
 		district.nav_region.navigation_mesh.get_polygon_count() if district.nav_region.navigation_mesh else 0],
-		"  ".join(summary), "Nearest residents:"]
+		"  ".join(summary),
+		"clock %s  tiers near %d / mid %d / far %d  reactions %d" % [district.director.clock.label(),
+			district.director.tier_counts.near, district.director.tier_counts.mid, district.director.tier_counts.far,
+			district.director.reactions_delivered],
+		"Nearest residents:"]
 	var near: Array = district.residents.values()
 	var cam := get_viewport().get_camera_3d()
 	var origin := cam.global_position if cam else Vector3.ZERO
 	near.sort_custom(func(a, b): return a.global_position.distance_squared_to(origin) < b.global_position.distance_squared_to(origin))
 	for r: Resident in near.slice(0, DETAIL_COUNT):
-		lines.append("%s  [%s]  home %s  -> %s\n    path: %s | arrivals %d | tier %s\n    last: %s" % [
-			r.data.id, r.state_name(), r.data.home_id, r.target_id if not r.target_id.is_empty() else "-",
+		lines.append("%s (%s)  [%s]  home %s  -> %s\n    path: %s | arrivals %d | tier %s\n    last: %s" % [
+			r.data.id, r.data.personality, r.state_name(), r.data.home_id, r.target_id if not r.target_id.is_empty() else "-",
 			r.path_status, r.arrivals, r.sim_tier, r.brain.last_transition])
 	if not _reach_text.is_empty():
 		lines.append(_reach_text)

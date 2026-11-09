@@ -88,3 +88,15 @@ For each selected NPC show:
 - Navigation path status.
 - Last state transition.
 - Simulation tier.
+
+## As built (Phase 3)
+
+- States: AT_HOME, PREPARING_TO_LEAVE, TRAVELLING, AT_DESTINATION, SOCIALIZING, PATROLLING,
+  FOLLOWING, GUARDING, NOTICING, INVESTIGATING, FLEEING, REPORTING, RETURNING_HOME, UNAVAILABLE.
+- Schedule entry: `{activity, destination | route, duration, window?: [start, end]}`; `active_hours` per NPC.
+  Special destinations: `home`, `<house>:door`, `<house>:gate`, `patrol:<route>:<i>`, `@leader:<npc>`.
+- Reaction table (`ReactionPolicy`): crew/tough → investigate; noise → notice (curious + close →
+  investigate); disturbance → curious investigate / timid flee / gossip report / others notice;
+  danger → gossip report / curious investigate from afar, flee when close / others flee.
+- Reactions escalate only. When the reaction ends, the NPC resumes its schedule entry, patrol
+  waypoint or trip home. Fleeing ends hidden inside for 25 s.
