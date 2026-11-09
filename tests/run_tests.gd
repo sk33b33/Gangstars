@@ -232,7 +232,7 @@ func _test_phase4_units() -> void:
 
 	# Mission data.
 	var all := MissionData.load_file("res://data/missions/intro.json")
-	_check(all.size() == 7, "7 missions load (%d)" % all.size())
+	_check(all.size() == 10, "10 missions load (%d)" % all.size())
 	var houses := HouseRegistry.load_file("res://data/houses/starter_houses.json")
 	var npc_ids := {}
 	for n in NpcData.load_file("res://data/npcs/starter_residents.json"):
@@ -358,7 +358,7 @@ func _test_phase5_units() -> void:
 
 	# Hold objective: accumulate while in place with crew; leaving resets.
 	var all := MissionData.load_file("res://data/missions/intro.json")
-	_check(all.size() == 7, "7 missions load (%d)" % all.size())
+	_check(all.size() == 10, "10 missions load (%d)" % all.size())
 	var clock := SimClock.new()
 	clock.set_hour(20.0)
 	var prog := ProgressionState.new()

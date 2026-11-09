@@ -24,6 +24,9 @@ var resident_info: Callable
 var occupants_inside: Callable
 var anchor_position: Callable
 var crew_near: Callable
+## driving_vehicle() -> String (vehicle id or ""); event_active(id) -> bool
+var driving_vehicle: Callable
+var event_active: Callable
 var _last_position_minutes := -1.0
 
 
@@ -127,7 +130,7 @@ func objective_text(id: String) -> String:
 func start(id: String) -> bool:
 	if not is_available(id):
 		return false
-	active[id] = {"objective": 0, "count": 0, "seen": [], "started": absolute_minutes()}
+	active[id] = {"objective": 0, "count": 0.0, "seen": [], "started": absolute_minutes()}
 	var m: MissionData = catalog[id]
 	mission_started.emit(m)
 	message.emit("Mission started: %s — %s" % [m.title, objective_text(id)])
@@ -163,10 +166,12 @@ func on_interaction(kind: String, target: String) -> String:
 			"knock":
 				hit = kind == "door" and target == str(o.target)
 			"talk_distinct":
+				if not _event_ok(o):
+					continue
 				for npc in talked:
 					if not active[id].seen.has(npc):
 						active[id].seen.append(npc)
-						active[id].count += 1
+						active[id].count += 1.0
 				hit = active[id].count >= int(o.get("count", 1))
 				if not hit and not talked.is_empty():
 					mission_updated.emit(catalog[id])
@@ -189,7 +194,13 @@ func on_player_position(pos: Vector3) -> void:
 		if kind == "hold":
 			_update_hold(id, o, pos, elapsed)
 			continue
-		if kind != "visit" or not anchor_position.is_valid():
+		if kind == "drive_to":
+			var driving: String = driving_vehicle.call() if driving_vehicle.is_valid() else ""
+			if driving.is_empty() or (o.has("vehicle") and driving != str(o.vehicle)):
+				continue
+		elif kind != "visit" or not anchor_position.is_valid():
+			continue
+		if not _event_ok(o):
 			continue
 		var target: Variant = anchor_position.call(str(o.target))
 		if target == null:
@@ -229,6 +240,20 @@ func _update_hold(id: String, o: Dictionary, pos: Vector3, elapsed: float) -> vo
 			else "Your crew isn't with you. Start again.")
 
 
+func _event_ok(o: Dictionary) -> bool:
+	if not o.has("event"):
+		return true
+	return event_active.is_valid() and bool(event_active.call(str(o.event)))
+
+
+## The player got into a vehicle (objective type enter_vehicle).
+func on_vehicle_entered(vehicle_id: String) -> void:
+	for id in active.keys():
+		var o := current_objective(id)
+		if str(o.get("type", "")) == "enter_vehicle" and str(o.get("target", "")) == vehicle_id:
+			message.emit(_advance(id))
+
+
 ## Periodic checks: time limits and auto-start.
 func tick() -> void:
 	for id in active.keys():
@@ -264,7 +289,7 @@ func _check_stat_objectives() -> void:
 func _advance(id: String) -> String:
 	var m: MissionData = catalog[id]
 	active[id].objective += 1
-	active[id].count = 0
+	active[id].count = 0.0
 	active[id].seen = []
 	if active[id].objective >= m.objectives.size():
 		return _complete(id)

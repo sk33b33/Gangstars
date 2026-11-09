@@ -8,6 +8,8 @@ signal interacted(message: String)
 signal shouted(position: Vector3)
 ## Emitted with the target and its feedback; gameplay systems (missions) hook in here.
 signal interacted_with(target: Interactable, message: String)
+signal vehicle_changed(car: DrivableCar)   # null when stepping out
+signal honked(position: Vector3)
 
 const GRAVITY := 9.8
 const CAMERA_HEIGHT := 1.6
@@ -31,6 +33,10 @@ const CAMERA_FOLLOW := 14.0  # higher = tighter; smooths steps and landings
 
 var current_target: Interactable
 var input_enabled := true
+var vehicle: DrivableCar
+var invert_y := false
+var _saved_layer := 0
+var _saved_mask := 0
 
 
 func _ready() -> void:
@@ -66,7 +72,54 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 
+func is_driving() -> bool:
+	return vehicle != null
+
+
+## Gets into a car: hide, stop colliding, ride along with it (camera follows the car).
+func enter_vehicle(car: DrivableCar) -> void:
+	if vehicle or car == null or car.is_driven():
+		return
+	vehicle = car
+	car.driver = self
+	_saved_layer = collision_layer
+	_saved_mask = collision_mask
+	collision_layer = 0
+	collision_mask = 0
+	model.visible = false
+	velocity = Vector3.ZERO
+	if current_target:
+		current_target = null
+		interaction_target_changed.emit(null)
+	pivot.rotation.y = car.rotation.y + PI
+	vehicle_changed.emit(car)
+
+
+func exit_vehicle() -> void:
+	if vehicle == null:
+		return
+	var car := vehicle
+	global_position = car.exit_position() + Vector3(0, 0.05, 0)
+	car.driver = null
+	vehicle = null
+	collision_layer = _saved_layer
+	collision_mask = _saved_mask
+	model.visible = true
+	snap_camera()
+	vehicle_changed.emit(null)
+
+
 func _physics_process(delta: float) -> void:
+	if vehicle:
+		global_position = vehicle.global_position
+		if input_enabled and Input.is_action_just_pressed("interact"):
+			exit_vehicle()
+		elif input_enabled and Input.is_action_just_pressed("shout"):
+			honked.emit(global_position)
+		var look_v := Input.get_vector("look_left", "look_right", "look_up", "look_down")
+		if look_v != Vector2.ZERO:
+			_look(look_v * stick_sensitivity * delta)
+		return
 	var look := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	if look != Vector2.ZERO:
 		_look(look * stick_sensitivity * delta)
@@ -108,7 +161,8 @@ func facing_dir() -> Vector3:
 
 func _look(delta_look: Vector2) -> void:
 	pivot.rotate_y(-delta_look.x)
-	pitch.rotation.x = clampf(pitch.rotation.x - delta_look.y, min_pitch, max_pitch)
+	var dy := -delta_look.y if invert_y else delta_look.y
+	pitch.rotation.x = clampf(pitch.rotation.x - dy, min_pitch, max_pitch)
 
 
 ## Picks the nearest enabled interactable, preferring ones in front of the camera.

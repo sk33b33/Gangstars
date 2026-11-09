@@ -33,6 +33,8 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations)
 	_build_backdrop(root, b, streets)
 	for car in info.get("parked_cars", []):
+		if car.get("drivable", false):
+			continue  # spawned as a DrivableCar after the nav bake
 		var cp := DataFiles.to_vec2(car.get("position"))
 		_build_car(root, Vector3(cp.x, 0, cp.y), deg_to_rad(float(car.get("rot", 0))), DataFiles.to_color(car.get("color"), Color.GRAY))
 	for decal in info.get("decals", []):
@@ -193,7 +195,13 @@ static func _build_wires(root: Node3D, tops: Array) -> void:
 
 
 ## Low-poly parked hatchback: body, glass cabin with roof, wheels, lights. One solid collider.
-static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color) -> void:
+## Car model (long axis = local X, front at +X). solid=false for moving vehicles, which
+## carry their own collision. Returns the pivot.
+static func build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0) -> Node3D:
+	return _build_car(root, c, rot_y, color, solid, length)
+
+
+static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0) -> Node3D:
 	var pivot := Node3D.new()
 	pivot.position = c
 	pivot.rotation.y = rot_y
@@ -221,7 +229,11 @@ static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color) -> 
 			w.position = Vector3(wx, 0.32, wz)
 			w.rotation.x = PI * 0.5
 			pivot.add_child(w)
-	Geo.collider(pivot, Vector3(4.0, 1.4, 1.8), Vector3(0, 0.7, 0))
+	if not is_equal_approx(length, 4.0):
+		pivot.scale = Vector3(length / 4.0, 1.25, 1.12)  # minibus taxi: longer, taller
+	if solid:
+		Geo.collider(pivot, Vector3(4.0, 1.4, 1.8), Vector3(0, 0.7, 0))
+	return pivot
 
 
 ## A name sign where each cross street meets an east-west street.

@@ -419,6 +419,8 @@ func _go(dest: String) -> void:
 			_special_point = _incident_pos + Vector3(cos(a), 0, sin(a)) * _rng.randf_range(3.0, 5.0)
 		"@report":
 			target_id = destinations.nearest_of_kind(global_position, "house_door", home_door_id)
+		"@gate":
+			target_id = data.home_id + ":gate"
 		_:
 			target_id = dest
 	if dest == "@incident":

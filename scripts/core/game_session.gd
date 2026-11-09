@@ -19,9 +19,11 @@ var player: Player
 var hud: Hud
 var districts: DistrictManager
 var turf_map: TurfMap
+var audio: AudioDirector
 var last_save_error := ""
 
 var _track_accum := 0.0
+var _reckless_cooldown := 0.0
 var _beacon: MeshInstance3D
 
 
@@ -39,6 +41,8 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	missions.occupants_inside = district.occupants_inside
 	missions.anchor_position = district.anchor_or_null
 	missions.crew_near = district.crew_near
+	missions.driving_vehicle = func() -> String: return player.vehicle.vehicle_id if player.is_driving() else ""
+	missions.event_active = func(id: String) -> bool: return district.director.calendar.is_active(id)
 	districts = DistrictManager.load_file("res://data/districts/districts.json", progression, district.registry)
 	for id in missions.order:
 		districts.mission_titles[id] = missions.get_mission(id).title
@@ -52,11 +56,14 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	turf_map.setup(district, districts, player)
 	turf_map.unlock_requested.connect(request_unlock)
 	turf_map.closed.connect(_on_map_closed)
+	_setup_audio()
 	missions.message.connect(hud.show_message)
 	progression.changed.connect(func(): hud.set_stats(progression))
 	progression.recruited.connect(func(npc_id: String): district.apply_recruit(npc_id, SAFEHOUSE_ID))
 	district.director.clock.day_changed.connect(_on_new_day)
 	player.interacted_with.connect(_on_interacted)
+	player.honked.connect(func(pos: Vector3): district.events.raise("car_horn", pos))
+	player.vehicle_changed.connect(_on_vehicle_changed)
 	_build_beacon()
 	hud.set_stats(progression)
 
@@ -80,6 +87,7 @@ func _physics_process(delta: float) -> void:
 		_track_accum = 0.0
 		missions.on_player_position(player.global_position)
 		missions.tick()
+		_check_reckless(TRACK_INTERVAL)
 		_refresh()
 
 
@@ -141,8 +149,57 @@ func _on_interacted(target: Interactable, base_message: String) -> void:
 			base_message += "  (%s %+d)" % [_relationship_word(rel), rel]
 	var text := base_message if extra.is_empty() else base_message + "\n" + extra
 	hud.show_message(text)
+	if target.kind == "vehicle" and district.vehicles.has(target.target):
+		player.enter_vehicle(district.vehicles[target.target])
 	if target.kind == "door" and target.target == SAFEHOUSE_ID:
 		open_safehouse_menu()
+
+
+func _setup_audio() -> void:
+	audio = AudioDirector.new()
+	audio.name = "Audio"
+	add_child(audio)
+	audio.clock = district.director.clock
+	audio.weather = district.weather
+	audio.listener_node = player
+	district.weather.follow = player
+	district.weather.changed.connect(func(k: String):
+		if k == "rain":
+			hud.show_message("It starts to rain. People hurry indoors."))
+	district.door_opened.connect(func(pos: Vector3): audio.play_at("door", pos + Vector3(0, 1, 0), -4.0))
+	district.vehicle_horn.connect(func(pos: Vector3): audio.play_at("horn", pos + Vector3(0, 1, 0)))
+	player.honked.connect(func(pos: Vector3): audio.play_at("horn", pos + Vector3(0, 1, 0), 2.0))
+	player.shouted.connect(func(pos: Vector3): audio.play_at("whistle", pos + Vector3(0, 1.7, 0)))
+	district.events.incident_started.connect(func(e: Dictionary):
+		if e.kind == "car_alarm":
+			audio.play_at("alarm", e.position + Vector3(0, 1, 0), -2.0))
+	districts.district_unlocked.connect(func(_id): audio.play_ui("jingle"))
+	missions.mission_completed.connect(func(_m, _g): audio.play_ui("jingle", -6.0))
+	for car in district.vehicles.values():
+		audio.attach_engine(car, -8.0)
+	if district.traffic:
+		for car in district.traffic.cars:
+			audio.attach_engine(car)
+
+
+func _on_vehicle_changed(car: DrivableCar) -> void:
+	if car:
+		hud.show_message("You get into %s. W/S drive, A/D steer, Q hoot, E get out." % car.display_name)
+		missions.on_vehicle_entered(car.vehicle_id)
+	else:
+		hud.show_message("You get out.")
+
+
+## Speeding past people on foot makes them scatter (a severity-2 incident), with a cooldown.
+func _check_reckless(dt: float) -> void:
+	_reckless_cooldown = maxf(0.0, _reckless_cooldown - dt)
+	if not player.is_driving() or _reckless_cooldown > 0.0 or absf(player.vehicle.speed) < 9.0:
+		return
+	for r: Resident in district.residents.values():
+		if not r.is_inside and r.global_position.distance_to(player.vehicle.global_position) < 7.0:
+			district.events.raise("reckless_driving", player.vehicle.global_position)
+			_reckless_cooldown = 6.0
+			return
 
 
 static func _relationship_word(rel: int) -> String:
@@ -165,6 +222,8 @@ func _on_new_day(day: int) -> void:
 # ---------------------------------------------------------------- safehouse menu
 
 func open_safehouse_menu() -> void:
+	if audio:
+		audio.play_ui("click")
 	var items: Array = []
 	for u in safehouse.upgrades:
 		var id := str(u.id)
@@ -238,7 +297,16 @@ func snapshot() -> Dictionary:
 			"yaw": player.pivot.rotation.y},
 		"progression": progression.to_dict(),
 		"missions": missions.to_dict(),
+		"vehicles": _vehicles_snapshot(),
 	}
+
+
+func _vehicles_snapshot() -> Dictionary:
+	var out := {}
+	for id in district.vehicles:
+		var car: DrivableCar = district.vehicles[id]
+		out[id] = {"position": [car.global_position.x, car.global_position.y, car.global_position.z], "yaw": car.rotation.y}
+	return out
 
 
 ## Returns "" on success, otherwise the error.
@@ -276,6 +344,18 @@ func apply_snapshot(data: Dictionary) -> String:
 	if not err.is_empty():
 		return err
 	# Everything validated: apply.
+	if player.is_driving():
+		player.exit_vehicle()
+	var vehicles: Variant = data.get("vehicles", {})
+	if vehicles is Dictionary:
+		for id in vehicles:
+			var car: DrivableCar = district.vehicles.get(id)
+			var v: Variant = vehicles[id]
+			if car and v is Dictionary and v.get("position") is Array and v.position.size() == 3:
+				car.global_position = Vector3(float(v.position[0]), float(v.position[1]) + 0.05, float(v.position[2]))
+				car.rotation.y = float(v.get("yaw", 0.0))
+				car.speed = 0.0
+				car.reset_physics_interpolation()
 	progression.load_dict(data.progression)
 	missions.load_dict(data.missions)
 	var clock := district.director.clock

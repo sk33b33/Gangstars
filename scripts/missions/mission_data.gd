@@ -10,8 +10,11 @@ extends Resource
 ##   hold {target, radius, minutes, window?, with_crew?} - stay at a place for N game minutes
 ##                                                    (leaving resets; optionally with crew nearby)
 ##   district_unlocked {target: district_id}        - a district has been unlocked
+##   enter_vehicle {target: vehicle_id}             - get into that car
+##   drive_to {target, radius, vehicle?}            - arrive somewhere while driving
+## visit / talk_distinct may add "event": id       - only counts while that calendar event runs
 
-const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked"]
+const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked", "enter_vehicle", "drive_to"]
 
 @export var id := ""
 @export var title := ""
@@ -53,7 +56,7 @@ func validate() -> PackedStringArray:
 	for o in objectives:
 		if not o is Dictionary or not OBJECTIVE_TYPES.has(str(o.get("type", ""))):
 			problems.append("%s: bad objective %s" % [id, o])
-		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked"] and str(o.get("target", "")).is_empty():
+		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked", "enter_vehicle", "drive_to"] and str(o.get("target", "")).is_empty():
 			problems.append("%s: objective %s needs a target" % [id, o.get("id", "?")])
 	return problems
 

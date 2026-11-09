@@ -13,6 +13,8 @@ const KINDS := {
 	"car_alarm": {"severity": 1, "radius": 16.0, "text": "A car alarm goes off near %s."},
 	"argument": {"severity": 2, "radius": 18.0, "text": "A loud argument breaks out near %s."},
 	"scuffle": {"severity": 3, "radius": 22.0, "text": "A scuffle starts near %s!"},
+	"car_horn": {"severity": 1, "radius": 16.0, "text": ""},
+	"reckless_driving": {"severity": 2, "radius": 12.0, "text": "People jump out of the way of your car!"},
 }
 
 var _next_id := 1
@@ -32,7 +34,8 @@ func raise(kind: String, position: Vector3, place_name := "the street") -> Dicti
 	if recent.size() > 8:
 		recent.pop_front()
 	incident_started.emit(event)
-	message.emit(event.text)
+	if not str(event.text).is_empty():
+		message.emit(event.text)
 	return event
 
 

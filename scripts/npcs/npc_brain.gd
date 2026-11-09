@@ -40,6 +40,12 @@ var transitions := 0
 var clock_hour := 12.0
 var active_hours := Vector2(6, 22)
 var reaction := ""
+## Set by Weather: outdoor leisure is skipped while it rains (errands still happen).
+var raining := false
+## One-off event entry (braai, load-shedding) taken before the next schedule entry.
+var pending_event: Dictionary = {}
+var _current_event: Dictionary = {}
+const RAIN_SKIPPED := ["socializing", "playing", "relaxing", "braai"]
 var reacting_to := ""
 
 var _failures := 0
@@ -67,6 +73,8 @@ func is_active_hours() -> bool:
 
 
 func current_entry() -> Dictionary:
+	if not _current_event.is_empty():
+		return _current_event
 	return schedule[index] if index >= 0 and index < schedule.size() else {}
 
 
@@ -237,12 +245,16 @@ func _entry_allowed(e: Dictionary) -> bool:
 		return true
 	if not is_active_hours():
 		return false
+	if raining and RAIN_SKIPPED.has(str(e.get("activity", ""))) and not e.has("route"):
+		return false
 	if e.has("window"):
 		return SimClock.in_window(clock_hour, e.window.x, e.window.y)
 	return true
 
 
 func _any_entry_allowed() -> bool:
+	if not pending_event.is_empty() and _entry_allowed(pending_event):
+		return true
 	for e in schedule:
 		if e.destination != HOME and _entry_allowed(e):
 			return true
@@ -250,6 +262,16 @@ func _any_entry_allowed() -> bool:
 
 
 func _go_to_next(reason := "") -> Array:
+	_current_event = {}
+	if not pending_event.is_empty():
+		var pe := pending_event
+		pending_event = {}
+		if _entry_allowed(pe):
+			_current_event = pe
+			destination_id = pe.destination
+			activity = "walking"
+			_set_state(State.TRAVELLING, "joining " + str(pe.get("activity", "an event")))
+			return [{"cmd": "go", "destination": destination_id}]
 	if schedule.is_empty():
 		return _return_home("no schedule")
 	for _i in schedule.size():

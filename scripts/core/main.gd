@@ -17,6 +17,8 @@ extends Node
 @export var save_path := "user://savegame.json"
 
 var session: GameSession
+var settings := SettingsStore.new()
+var pause_menu: PauseMenu
 
 var _args := {}
 
@@ -32,13 +34,24 @@ func _ready() -> void:
 	session.name = "Session"
 	session.save_path = _args.get("load", save_path)
 	add_child(session)
-	session.setup(district, player, hud)
+	settings.load_settings()
+	pause_menu = PauseMenu.new()
+	pause_menu.name = "PauseMenu"
+	hud.add_child(pause_menu)
+	pause_menu.setup(settings)
+	pause_menu.quit_requested.connect(func(): get_tree().quit())
+	pause_menu.resumed.connect(func():
+		if DisplayServer.get_name() != "headless":
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	settings.changed.connect(apply_settings)
 	district.events.message.connect(hud.show_message)
 	player.shouted.connect(func(pos: Vector3): district.events.raise("whistle", pos))
 	if _args.has("hour"):
 		district.director.clock.set_hour(float(_args.hour))
 	if not district.is_navigation_ready:
 		await district.navigation_ready
+	session.setup(district, player, hud)
+	apply_settings()
 	hud.show_message("Welcome to Vleirand. You've just moved into 13 Duif Street.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if _args.has("shot"):
@@ -49,7 +62,31 @@ func _process(_delta: float) -> void:
 	hud.set_clock(district.director.clock)
 
 
+## Pushes settings into the engine and game objects (called at start and on every change).
+func apply_settings() -> void:
+	settings.apply_engine()
+	player.mouse_sensitivity = float(settings.get_value("controls/mouse_sensitivity"))
+	player.invert_y = bool(settings.get_value("controls/invert_y"))
+	player.camera.fov = float(settings.get_value("video/fov"))
+	var vp := get_viewport()
+	vp.msaa_3d = int(settings.get_value("video/msaa")) as Viewport.MSAA
+	vp.scaling_3d_scale = float(settings.get_value("video/render_scale"))
+	var env: Environment = district.get_node("WorldEnvironment").environment
+	env.fog_enabled = bool(settings.get_value("video/fog"))
+	district.day_night.shadows_allowed = bool(settings.get_value("video/shadows"))
+	hud.set_fps_visible(bool(settings.get_value("video/show_fps")))
+	if district.traffic:
+		district.traffic.set_enabled(bool(settings.get_value("gameplay/traffic")))
+	if district.weather:
+		district.weather.enabled = bool(settings.get_value("gameplay/weather"))
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause") and not pause_menu.visible and not hud.is_menu_open() \
+			and not session.turf_map.visible:
+		pause_menu.open()
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("debug_incident"):
 		district.events.raise("argument", player.global_position + Vector3(2, 0, 0), "you")
 	elif event.is_action_pressed("debug_danger"):

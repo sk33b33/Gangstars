@@ -260,6 +260,136 @@
           "starter": 5
         }
       }
+    },
+    {
+      "id": "spaza_run",
+      "title": "Spaza Run",
+      "giver": "npc_h12_1",
+      "prerequisites": {
+        "missions": [
+          "a_favour"
+        ]
+      },
+      "intro": "Achmat Cupido: \"Faiza says you're reliable. My aunties can't walk to the café any more. Get their groceries out before dark?\"",
+      "description": "Deliver groceries across the neighbourhood.",
+      "time_limit_minutes": 180,
+      "fail_text": "The milk went warm and the aunties went hungry.",
+      "objectives": [
+        {
+          "id": "collect",
+          "type": "visit",
+          "target": "poi_shop",
+          "radius": 3,
+          "text": "Collect the groceries at Vleirand Café"
+        },
+        {
+          "id": "kwikkie",
+          "type": "knock",
+          "target": "starter_h19",
+          "text": "Deliver to 5 Kwikkie Street"
+        },
+        {
+          "id": "tortel",
+          "type": "knock",
+          "target": "starter_h25",
+          "text": "Deliver to 5 Tortel Lane"
+        },
+        {
+          "id": "back",
+          "type": "talk_to",
+          "target": "npc_h12_1",
+          "allow_knock": true,
+          "text": "Tell Achmat it's done (8 Mossie Street)"
+        }
+      ],
+      "rewards": {
+        "cash": 90,
+        "reputation": 6,
+        "influence": {
+          "starter": 3
+        },
+        "relationship": {
+          "npc_h12_1": 10,
+          "npc_h19_1": 5,
+          "npc_h25_1": 5
+        }
+      }
+    },
+    {
+      "id": "car_trouble",
+      "title": "Car Trouble",
+      "giver": "npc_tasneem",
+      "prerequisites": {
+        "missions": [
+          "first_crew"
+        ]
+      },
+      "intro": "Tasneem: \"My cousin left his yellow Golf on Mossie Street again. Bring it round to my house? Gently, hey.\"",
+      "description": "Fetch Tasneem's cousin's car.",
+      "objectives": [
+        {
+          "id": "get_in",
+          "type": "enter_vehicle",
+          "target": "car_mossie",
+          "text": "Find the yellow Golf on Mossie Street and get in"
+        },
+        {
+          "id": "drive",
+          "type": "drive_to",
+          "target": "starter_h04:gate",
+          "radius": 8,
+          "vehicle": "car_mossie",
+          "text": "Drive it to Tasneem's house (11 Duif Street)"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 8,
+        "influence": {
+          "starter": 3
+        },
+        "relationship": {
+          "npc_tasneem": 10
+        }
+      }
+    },
+    {
+      "id": "braai_night",
+      "title": "Braai Night",
+      "giver": "npc_faiza",
+      "prerequisites": {
+        "missions": [
+          "know_the_block"
+        ]
+      },
+      "intro": "Auntie Faiza: \"There's a braai at the park on braai nights. Come, meet everyone properly!\"",
+      "description": "Join the neighbourhood braai.",
+      "objectives": [
+        {
+          "id": "join",
+          "type": "visit",
+          "target": "poi_park",
+          "radius": 7,
+          "event": "braai",
+          "text": "Join the braai at the park (braai nights, 17:00-21:00)"
+        },
+        {
+          "id": "mingle",
+          "type": "talk_distinct",
+          "count": 3,
+          "event": "braai",
+          "text": "Chat with 3 neighbours at the braai"
+        }
+      ],
+      "rewards": {
+        "reputation": 8,
+        "influence": {
+          "starter": 5
+        },
+        "relationship": {
+          "npc_faiza": 10
+        }
+      }
     }
   ]
 }

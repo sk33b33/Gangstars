@@ -1,0 +1,12 @@
+{
+  "events": [
+    { "id": "braai", "name": "Street braai at the park", "every_days": 2, "offset": 1, "hours": [17, 21],
+      "anchor": "poi_park", "activity": "braai", "join_chance": 0.55, "duration": 45,
+      "start_text": "Someone's lit a braai at the park. The smell drifts down the street.",
+      "end_text": "The braai at the park is winding down." },
+    { "id": "load_shedding", "name": "Load-shedding (stage 2)", "every_days": 2, "offset": 0, "hours": [19, 21],
+      "anchor": "@gate", "activity": "chatting at the gate", "join_chance": 0.4, "duration": 30, "power_off": true,
+      "start_text": "Load-shedding! Stage 2 until 21:00. The lights go out across Vleirand.",
+      "end_text": "The power is back. Somebody cheers down the street." }
+  ]
+}

@@ -18,6 +18,8 @@ var events: NeighbourhoodEvents
 var observer: Node3D
 var tier_counts := {"near": 0, "mid": 0, "far": 0}
 var reactions_delivered := 0
+var calendar: NeighbourhoodCalendar
+var _calendar_accum := 0.0
 
 var _tier_accum := 0.0
 var _social_accum := 0.0
@@ -32,6 +34,9 @@ func setup(p_district: District, p_events: NeighbourhoodEvents) -> void:
 	events.incident_started.connect(_on_incident)
 	_rng.seed = 20261109
 	_ambient_timer = _rng.randf_range(ambient_interval.x, ambient_interval.y)
+	calendar = NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
+	calendar.event_started.connect(_on_event_started)
+	calendar.event_ended.connect(_on_event_ended)
 	var raw: Variant = DataFiles.load_json("res://data/npcs/chatter.json")
 	_chatter = raw if raw is Dictionary else {}
 
@@ -44,6 +49,10 @@ func _physics_process(delta: float) -> void:
 	if _tier_accum >= 0.5:
 		_tier_accum = 0.0
 		update_tiers()
+	_calendar_accum += delta
+	if _calendar_accum >= 1.0 and district.is_navigation_ready:
+		_calendar_accum = 0.0
+		calendar.update(clock)
 	_social_accum += delta
 	if _social_accum >= 2.0:
 		_social_accum = 0.0
@@ -109,6 +118,34 @@ func _on_incident(event: Dictionary) -> void:
 				"flee": r.say(line("flee"), 5.0)
 				"report": r.say(line("report"), 5.0)
 				"notice": r.say("?", 2.5)
+
+
+## Invite a deterministic share of residents to the event; power cuts switch the lights off.
+func _on_event_started(e: Dictionary) -> void:
+	events.message.emit(str(e.get("start_text", e.name)))
+	if e.get("power_off", false):
+		district.day_night.power_on = false
+	if e.id == "braai":
+		district.set_braai(true)
+	var chance := float(e.get("join_chance", 0.5))
+	for r: Resident in district.residents.values():
+		if r.data.role != "resident":
+			continue
+		var roll := float(hash(r.data.id + str(e.id) + str(clock.day)) % 1000) / 1000.0
+		if roll < chance:
+			r.brain.pending_event = {"activity": str(e.get("activity", e.id)), "destination": str(e.anchor),
+				"duration": float(e.get("duration", 30)), "event": str(e.id)}
+
+
+func _on_event_ended(e: Dictionary) -> void:
+	events.message.emit(str(e.get("end_text", "")))
+	if e.get("power_off", false):
+		district.day_night.power_on = true
+	if e.id == "braai":
+		district.set_braai(false)
+	for r: Resident in district.residents.values():
+		if r.brain.pending_event.get("event", "") == e.id:
+			r.brain.pending_event = {}
 
 
 func _raise_ambient() -> void:

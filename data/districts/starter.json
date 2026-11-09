@@ -201,7 +201,7 @@
     {
       "position": [
         -38,
-        2.9
+        3.3
       ],
       "rot": 0,
       "color": "#c0392b"
@@ -209,39 +209,45 @@
     {
       "position": [
         -6,
-        -2.9
+        -3.3
       ],
       "rot": 180,
       "color": "#ecf0f1"
     },
     {
+      "id": "car_player",
+      "drivable": true,
       "position": [
-        30,
-        2.9
+        31,
+        3.3
       ],
       "rot": 0,
-      "color": "#2e86c1"
+      "color": "#2e86c1",
+      "name": "your blue hatchback"
     },
     {
       "position": [
         16,
-        -2.9
+        -3.3
       ],
       "rot": 180,
       "color": "#7f8c8d"
     },
     {
+      "id": "car_mossie",
+      "drivable": true,
       "position": [
         -26,
-        -53.1
+        -52.7
       ],
       "rot": 0,
-      "color": "#f1c40f"
+      "color": "#f1c40f",
+      "name": "the yellow Golf"
     },
     {
       "position": [
         20,
-        -58.9
+        -59.3
       ],
       "rot": 180,
       "color": "#16a085"
@@ -249,14 +255,14 @@
     {
       "position": [
         36,
-        -53.1
+        -52.7
       ],
       "rot": 0,
       "color": "#8e44ad"
     },
     {
       "position": [
-        -47.1,
+        -46.7,
         -30
       ],
       "rot": 90,
@@ -264,7 +270,7 @@
     },
     {
       "position": [
-        52.2,
+        53.4,
         -36
       ],
       "rot": 270,
@@ -337,5 +343,81 @@
       ],
       "rot": 0
     }
-  ]
+  ],
+  "traffic": {
+    "lane_offset": 1.4,
+    "corner_radius": 6.0,
+    "loops": [
+      {
+        "points": [
+          [
+            -50,
+            0
+          ],
+          [
+            50,
+            0
+          ],
+          [
+            50,
+            -56
+          ],
+          [
+            -50,
+            -56
+          ]
+        ],
+        "cars": [
+          {
+            "id": "traffic_1",
+            "color": "#e67e22",
+            "start": 0.1
+          },
+          {
+            "id": "traffic_2",
+            "color": "#bdc3c7",
+            "start": 0.55
+          }
+        ]
+      },
+      {
+        "points": [
+          [
+            -50,
+            -56
+          ],
+          [
+            50,
+            -56
+          ],
+          [
+            50,
+            0
+          ],
+          [
+            -50,
+            0
+          ]
+        ],
+        "cars": [
+          {
+            "id": "taxi_1",
+            "color": "#f1eee8",
+            "start": 0.3,
+            "taxi": true
+          },
+          {
+            "id": "traffic_3",
+            "color": "#27ae60",
+            "start": 0.8
+          }
+        ]
+      }
+    ],
+    "taxi_stops": [
+      "poi_bus_stop",
+      "poi_bus_stop_mossie"
+    ],
+    "taxi_wait": 4.0
+  }
 }

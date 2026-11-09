@@ -18,6 +18,7 @@ var _menu_list: VBoxContainer
 var _menu_title: Label
 var _menu_note: Label
 var _banner: Label
+var _fps: Label
 var _banner_timer := 0.0
 var _district := ""
 var _message_timer := 0.0
@@ -31,6 +32,11 @@ func _ready() -> void:
 	_tracker = _label(Vector2(16, 140), 20)
 	_tracker.add_theme_color_override("font_color", Color("#ffd75e"))
 	_build_menu()
+	_fps = _label(Vector2.ZERO, 16)
+	_fps.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	_fps.offset_left = -120
+	_fps.offset_top = -30
+	_fps.visible = false
 	_banner = _label(Vector2.ZERO, 44)
 	_banner.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -192,7 +198,13 @@ func banner_text() -> String:
 	return _banner.text if _banner.visible else ""
 
 
+func set_fps_visible(v: bool) -> void:
+	_fps.visible = v
+
+
 func _process(delta: float) -> void:
+	if _fps.visible:
+		_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _banner_timer > 0.0:
 		_banner_timer -= delta
 		_banner.modulate.a = clampf(_banner_timer, 0.0, 1.0)

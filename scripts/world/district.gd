@@ -4,6 +4,8 @@ extends Node3D
 ## Everything is built from data files; navigation is baked at load from the built geometry.
 
 signal navigation_ready
+signal vehicle_horn(position: Vector3)
+signal door_opened(position: Vector3)
 
 const HOUSE_SCENE := preload("res://scenes/houses/house_plot.tscn")
 const RESIDENT_SCENE := preload("res://scenes/npcs/resident.tscn")
@@ -20,6 +22,11 @@ var registry: HouseRegistry
 var destinations := DestinationRegistry.new()
 var plots: Dictionary = {}       # house id -> HousePlot
 var gates: Dictionary = {}       # neighbouring district id -> [DistrictGate]
+var vehicles: Dictionary = {}    # drivable car id -> DrivableCar
+var traffic: TrafficSystem
+var weather: Weather
+var light_pool: LightPool
+var _braai: Node3D
 var residents: Dictionary = {}   # npc id -> Resident
 var is_navigation_ready := false
 var events: NeighbourhoodEvents
@@ -54,6 +61,14 @@ func _ready() -> void:
 	day_night.name = "DayNight"
 	add_child(day_night)
 	day_night.setup(director.clock, $Sun, $WorldEnvironment.environment)
+	weather = Weather.new()
+	weather.name = "Weather"
+	add_child(weather)
+	weather.setup(self, director.clock, day_night)
+	light_pool = LightPool.new()
+	light_pool.name = "LightPool"
+	add_child(light_pool)
+	light_pool.setup(day_night, LightPool.collect_lamps(nav_region))
 	_bake_navigation()
 
 
@@ -123,8 +138,29 @@ func _on_bake_finished() -> void:
 		push_error("Navigation map never synced after bake; NPC movement will fail.")
 	destinations.navigation_map = map
 	_spawn_residents()
+	_spawn_vehicles()
 	is_navigation_ready = true
 	navigation_ready.emit()
+
+
+## Vehicles move, so they are created after the bake and never carve the nav mesh.
+func _spawn_vehicles() -> void:
+	for c in info.get("parked_cars", []):
+		if not c.get("drivable", false):
+			continue
+		var car := DrivableCar.new()
+		add_child(car)
+		car.setup(str(c.id), str(c.get("name", c.id)), DataFiles.to_color(c.get("color"), Color.GRAY))
+		var p := DataFiles.to_vec2(c.get("position"))
+		car.global_position = Vector3(p.x, 0.05, p.y)
+		car.rotation.y = deg_to_rad(float(c.get("rot", 0))) + PI * 0.5
+		car.reset_physics_interpolation()
+		vehicles[car.vehicle_id] = car
+	traffic = TrafficSystem.new()
+	traffic.name = "Traffic"
+	add_child(traffic)
+	traffic.setup(self)
+	traffic.extra_obstacles.append_array(vehicles.values())
 
 
 func _region_is_live(map: RID) -> bool:
@@ -206,6 +242,55 @@ func set_district_open(district_id: String, open: bool, animate := true) -> void
 		gate.set_open(open, animate)
 
 
+## Drum braai with smoke at the park while the braai event runs.
+func set_braai(on: bool) -> void:
+	if _braai == null:
+		_braai = Node3D.new()
+		_braai.name = "Braai"
+		_braai.position = destinations.anchor_position("poi_park") + Vector3(2.5, 0, 2.5)
+		add_child(_braai)
+		var drum := CylinderMesh.new()
+		drum.top_radius = 0.35
+		drum.bottom_radius = 0.35
+		drum.height = 0.8
+		var mi := MeshInstance3D.new()
+		mi.mesh = drum
+		mi.material_override = PixelMaterials.flat(Color("#2a2a30"))
+		mi.position = Vector3(0, 0.6, 0)
+		mi.rotation.z = PI * 0.5
+		_braai.add_child(mi)
+		Geo.box(_braai, Vector3(0.9, 0.05, 0.6), Vector3(0, 0.98, 0), PixelMaterials.flat(Color("#7d828c")), false)
+		Geo.box(_braai, Vector3(0.7, 0.04, 0.45), Vector3(0, 1.0, 0), PixelMaterials.lamp(), false)
+		var smoke := CPUParticles3D.new()
+		smoke.name = "Smoke"
+		smoke.amount = 40
+		smoke.lifetime = 4.0
+		smoke.direction = Vector3(0.2, 1, 0)
+		smoke.spread = 12.0
+		smoke.gravity = Vector3(0.3, 0.6, 0)
+		smoke.initial_velocity_min = 0.4
+		smoke.initial_velocity_max = 0.8
+		smoke.scale_amount_min = 0.6
+		smoke.scale_amount_max = 1.4
+		var puff := QuadMesh.new()
+		puff.size = Vector2(0.6, 0.6)
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.albedo_color = Color(0.85, 0.85, 0.85, 0.35)
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		puff.material = mat
+		smoke.mesh = puff
+		smoke.position = Vector3(0, 1.1, 0)
+		_braai.add_child(smoke)
+	_braai.visible = on
+	(_braai.get_node("Smoke") as CPUParticles3D).emitting = on
+
+
+func is_braai_on() -> bool:
+	return _braai != null and _braai.visible
+
+
 func is_district_open(district_id: String) -> bool:
 	var list: Array = gates.get(district_id, [])
 	return not list.is_empty() and list.all(func(g): return g.is_open)
@@ -215,6 +300,7 @@ func _on_door_used(house_id: String) -> void:
 	var plot: HousePlot = plots.get(house_id)
 	if plot:
 		plot.open_door()
+		door_opened.emit(plot.door_position())
 
 
 func _on_door(house_id: String) -> String:
@@ -242,6 +328,7 @@ func _on_door(house_id: String) -> String:
 		var who := " and ".join(home)
 		var verb := "opens" if home.size() == 1 else "open"
 		plots[house_id].open_door(3.0)
+		door_opened.emit(plots[house_id].door_position())
 		return "%s %s the security gate at %s: \"Ja? Can I help you?\"" % [who, verb, where]
 	return "No answer at %s. Out: %s." % [where, ", ".join(out)]
 
