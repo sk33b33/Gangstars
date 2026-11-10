@@ -6,6 +6,7 @@ extends Node
 
 const MISSIONS_FILE := "res://data/missions/intro.json"
 const CREW_MISSIONS_FILE := "res://data/missions/crews.json"
+const DEALING_MISSIONS_FILE := "res://data/missions/dealing.json"
 const UPGRADES_FILE := "res://data/progression/safehouse_upgrades.json"
 const SAFEHOUSE_ID := "starter_h05"
 const TRACK_INTERVAL := 0.25
@@ -23,6 +24,8 @@ var turf_map: TurfMap
 var audio: AudioDirector
 var police: PoliceDispatch
 var crew_picker: CrewPicker
+var dealing: DealingController
+var phone: Phone
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -35,7 +38,7 @@ var _beacon: MeshInstance3D
 static func _load_all_missions() -> Array[MissionData]:
 	var out: Array[MissionData] = []
 	var catalog: Variant = DataFiles.load_json("res://data/districts/districts.json")
-	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE]
+	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE, DEALING_MISSIONS_FILE]
 	if catalog is Dictionary:
 		for d in catalog.get("districts", []):
 			var f := str(d.get("missions", ""))
@@ -91,6 +94,25 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	police.audio = audio
 	police.player_knocked_out.connect(func(): hud.show_banner("KNOCKED OUT", 4.0))
 	police.player_woke.connect(func(): hud.show_message("You come round at the safehouse. Someone fined you R%d." % PoliceDispatch.FINE))
+	dealing = DealingController.new()
+	dealing.name = "Dealing"
+	add_child(dealing)
+	dealing.setup(district, player, progression, missions, police)
+	dealing.message.connect(hud.show_message)
+	phone = Phone.new()
+	phone.name = "Phone"
+	hud.add_child(phone)
+	phone.setup(dealing)
+	phone.closed.connect(func():
+		player.input_enabled = true
+		if DisplayServer.get_name() != "headless":
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
+	dealing.ringing.connect(func(c: Dictionary):
+		if audio:
+			audio.play_at("ring", player.global_position + Vector3(0, 1.2, 0), 0.0)
+		player.rumble(0.3, 0.0, 0.4))
+	dealing.state.order_changed.connect(phone.refresh)
+	dealing.state.client_changed.connect(func(_id: String): phone.refresh())
 	police.heat.changed.connect(func(level: int):
 		if level > 0:
 			hud.show_message("Police heat %s" % "★".repeat(level)))
@@ -178,7 +200,26 @@ func _physics_process(delta: float) -> void:
 		_refresh()
 
 
+func toggle_phone() -> void:
+	if phone.is_open():
+		phone.close()
+		return
+	if hud.is_menu_open() or turf_map.visible or (crew_picker and crew_picker.visible) or player.is_down():
+		return
+	player.input_enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	phone.open()
+
+
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("phone"):
+		toggle_phone()
+		get_viewport().set_input_as_handled()
+		return
+	if phone and phone.is_open() and (event.is_action_pressed("pause") or (event is InputEventJoypadButton and event.is_action_pressed("ui_cancel"))):
+		phone.close()
+		get_viewport().set_input_as_handled()
+		return
 	var pad_back := event is InputEventJoypadButton and event.is_action_pressed("ui_cancel")
 	if hud.is_menu_open() and (event.is_action_pressed("pause") or pad_back):
 		_close_menu()
@@ -234,7 +275,14 @@ func sync_gates(animate := false) -> void:
 func _on_interacted(target: Interactable, base_message: String) -> void:
 	if target == null:
 		return
+	if target.kind == "npc" and dealing.handles(target.target):
+		hud.show_message(dealing.try_sell(target.target))
+		return
 	var extra := missions.on_interaction(target.kind, target.target)
+	if target.kind == "npc":
+		var contact := dealing.on_chat(target.target)
+		if not contact.is_empty():
+			extra = contact if extra.is_empty() else extra + "\n" + contact
 	if target.kind == "npc":
 		var rel := progression.relationship(target.target)
 		if rel != 0:
@@ -364,6 +412,13 @@ func open_safehouse_menu() -> void:
 		elif not why.is_empty():
 			label += "  [%s]" % why
 		items.append({"text": label, "disabled": not why.is_empty(), "action": buy_upgrade.bind(id)})
+	for r in dealing.restock_items():
+		var idx: int = r.index
+		items.append({"text": "%s   (have %d bankies, %d drinks)" % [r.label, int(dealing.state.stock.weed), int(dealing.state.stock.drink)],
+			"disabled": progression.cash < int(r.cost),
+			"action": func():
+				hud.show_message("Your crew's runner drops off the stock." if dealing.buy_stock(idx) else "You can't afford that.")
+				open_safehouse_menu()})
 	items.append({"text": "Rest until morning (07:00)", "action": _rest})
 	items.append({"text": "Save game", "action": func(): _menu_feedback(save_game())})
 	items.append({"text": "Load last save", "disabled": not SaveSystem.exists(save_path),
@@ -428,6 +483,7 @@ func snapshot() -> Dictionary:
 		"progression": progression.to_dict(),
 		"missions": missions.to_dict(),
 		"vehicles": _vehicles_snapshot(),
+		"dealing": dealing.state.to_dict(),
 	}
 
 
@@ -498,6 +554,8 @@ func apply_snapshot(data: Dictionary) -> String:
 				car.reset_physics_interpolation()
 	progression.load_dict(data.progression)
 	missions.load_dict(data.missions)
+	if data.get("dealing") is Dictionary:
+		dealing.state.load_dict(data.dealing)
 	var clock := district.director.clock
 	clock.minutes = clampf(float(c.minutes), 0.0, 1439.9)
 	clock.day = maxi(1, int(c.get("day", 1)))

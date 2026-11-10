@@ -159,6 +159,10 @@ func _run_screenshot() -> void:
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
 		district.events.raise(_args.incident, player.global_position + Vector3(0, 0, -6), "you")
 		delay = 3.0
+	if _args.has("hustle"):
+		await get_tree().create_timer(maxf(delay - 2.0, 0.1)).timeout
+		_stage_hustle()
+		delay = 1.5
 	if _args.has("firefight") or _args.has("follow"):
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
 		await _stage_police_shot(_args.has("firefight"))
@@ -173,6 +177,36 @@ func _run_screenshot() -> void:
 	var err := get_viewport().get_texture().get_image().save_png(path)
 	print("screenshot %s -> %s" % [path, error_string(err)])
 	get_tree().quit()
+
+
+## Screenshot staging: some stock, a few clients near the player (different moods), one ringing,
+## and the phone open (unless --hustle=street, which shows the mood faces in the world).
+func _stage_hustle() -> void:
+	var d := session.dealing
+	d.state.add_stock("weed", 6)
+	d.state.add_stock("drink", 10)
+	if not session.progression.completed_mission_ids.has("the_smokkie"):
+		session.progression.completed_mission_ids.append("the_smokkie")
+	session.missions.active["bankies"] = {"objective": 0, "count": 0.0, "seen": [], "started": d.minutes()}
+	var near: Array = district.residents.values().filter(func(r): return not r.is_inside and d._could_be_client(r))
+	near.sort_custom(func(a, b): return a.global_position.distance_to(player.global_position) < b.global_position.distance_to(player.global_position))
+	var moods := [90.0, 62.0, 40.0, 28.0]
+	for i in mini(4, near.size()):
+		d.on_chat(near[i].data.id)
+		d.state.clients[near[i].data.id].mood = moods[i]
+	if near.size() > 4:
+		d.on_chat(near[4].data.id)
+		d.state.clients[near[4].data.id].status = "lost"
+		d.state.clients[near[4].data.id].rival = "Dune Cruisers"
+	if not near.is_empty():
+		var c: Dictionary = d.state.clients[near[0].data.id]
+		d.state.call = {"npc": near[0].data.id, "product": c.product, "qty": 1, "place": str(c.home) + ":gate", "rings_until": d.minutes() + 30.0}
+	if str(_args.hustle) != "street":
+		session.toggle_phone()
+	elif near.size() >= 2:
+		var c0: Vector3 = near[0].global_position
+		player.global_position = c0 + Vector3(2.0, 0.1, 1.5)
+		_add_camera(c0 + Vector3(3.0, 2.4, 4.0), c0 + Vector3(0, 1.8, 0))
 
 
 ## Screenshot staging: frames the officer nearest the player. With firefight, the player stands

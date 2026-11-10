@@ -26,6 +26,8 @@ var anchor_position: Callable
 var crew_near: Callable
 ## driving_vehicle() -> String (vehicle id or ""); event_active(id) -> bool
 var driving_vehicle: Callable
+## stat_value(name) -> int, for "stat" objectives (counters such as drinks_sold, contacts).
+var stat_value: Callable
 var event_active: Callable
 var _last_position_minutes := -1.0
 
@@ -128,6 +130,9 @@ func objective_text(id: String) -> String:
 			text += " (%d/%d)" % [active[id].count, int(o.get("count", 1))]
 		"reputation":
 			text += " (%d/%d)" % [progression.reputation, int(o.get("value", 0))]
+		"stat":
+			if stat_value.is_valid():
+				text += " (%d/%d)" % [mini(int(stat_value.call(str(o.get("stat", "")))), int(o.get("value", 1))), int(o.get("value", 1))]
 		"hold":
 			text += " (%d/%d min)" % [int(active[id].count), int(o.get("minutes", 1))]
 	var m: MissionData = catalog[id]
@@ -273,6 +278,7 @@ func tick() -> void:
 		var m: MissionData = catalog[id]
 		if m.time_limit_minutes > 0.0 and absolute_minutes() - float(active[id].started) > m.time_limit_minutes:
 			fail(id, m.fail_text if not m.fail_text.is_empty() else "Out of time.")
+	_check_stat_objectives()
 	check_auto_start()
 
 
@@ -292,7 +298,8 @@ func _check_stat_objectives() -> void:
 		var o := current_objective(id)
 		var t := str(o.get("type", ""))
 		var done := (t == "reputation" and progression.reputation >= int(o.get("value", 0))) \
-			or (t == "district_unlocked" and progression.unlocked_district_ids.has(str(o.get("target", ""))))
+			or (t == "district_unlocked" and progression.unlocked_district_ids.has(str(o.get("target", "")))) \
+			or (t == "stat" and stat_value.is_valid() and int(stat_value.call(str(o.get("stat", "")))) >= int(o.get("value", 1)))
 		if done:
 			var note := _advance(id)
 			if not note.is_empty():

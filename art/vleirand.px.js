@@ -291,3 +291,28 @@ sprite("sign_police", { w: 64, h: 16 },
   poly([2, 2, 12, 2, 12, 9, 7, 13, 2, 9], "#f5c400"), poly([3, 3, 11, 3, 11, 8, 7, 12, 3, 8], "#123f8c"),
   text(7, 3, "P", "#ffffff", { align: "c" }),
   text(38, 2, "POLICE", "#ffffff", { align: "c" }), text(38, 8, "POLISIE", "#f5c400", { align: "c" }))
+
+// Client mood faces for the phone and over clients' heads (16x16, outlined).
+const MOODS = {
+  mood_happy: ["#5fd36b", (c) => { c.line(4, 9, 6, 11, "#10301a"); c.line(6, 11, 9, 11, "#10301a"); c.line(9, 11, 11, 9, "#10301a") }],
+  mood_ok:    ["#d9e05a", (c) => { c.line(5, 10, 10, 10, "#33300a"); c.px(4, 9, "#33300a"); c.px(11, 9, "#33300a") }],
+  mood_meh:   ["#f0a33a", (c) => { c.line(5, 10, 10, 10, "#3a2208") }],
+  mood_angry: ["#e2463c", (c) => { c.line(5, 11, 7, 10, "#3a0b08"); c.line(8, 10, 10, 11, "#3a0b08"); c.line(4, 4, 6, 5, "#3a0b08"); c.line(11, 4, 9, 5, "#3a0b08") }],
+  mood_lost:  ["#8a8f99", (c) => { c.line(5, 10, 10, 10, "#22252b"); c.line(11, 2, 14, 5, "#22252b"); c.line(14, 2, 11, 5, "#22252b") }],
+}
+for (const [name, [col, mouth]] of Object.entries(MOODS)) {
+  sprite(name, { w: 16, h: 16 },
+    circ(7, 7, 7, "#1d1b24"), circ(7, 7, 6, col),
+    rect(5, 5, 1, 2, "#1d1b24"), rect(9, 5, 1, 2, "#1d1b24"), mouth)
+}
+
+// Phone, stock icons.
+sprite("icon_phone", { w: 12, h: 16 },
+  rect(1, 0, 10, 16, "#1d1b24"), rect(2, 2, 8, 10, "#7fd1ff"), rect(5, 13, 2, 1, "#8a8f99"))
+sprite("icon_bankie", { w: 12, h: 12 },
+  rect(2, 3, 8, 8, "#e9f2df"), rect(2, 3, 8, 1, "#9fb59a"), rect(4, 6, 4, 3, "#4f8a3c"))
+sprite("icon_drink", { w: 8, h: 14 },
+  rect(3, 0, 2, 4, "#5a3c1c"), rect(2, 4, 4, 10, "#7a4a1c"), rect(2, 7, 4, 3, "#f1e2b4"))
+sprite("sign_shebeen", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "#2a2a30"), rect(0, 14, 64, 2, "#e2585e"),
+  text(32, 2, "AUNTY MAVIS", "#ffd75e", { align: "c" }), text(32, 8, "COLD DRINKS", "#f4f4f0", { align: "c" }))

@@ -122,6 +122,15 @@
       ],
       "facing": "south",
       "tag": "STYLERS"
+    },
+    {
+      "type": "shebeen",
+      "id": "shebeen",
+      "position": [
+        26,
+        -42
+      ],
+      "facing": "south"
     }
   ],
   "pois": [
@@ -190,6 +199,17 @@
       ],
       "radius": 3.0,
       "map_label": "park"
+    },
+    {
+      "id": "poi_shebeen",
+      "name": "Aunty Mavis' smokkie",
+      "kind": "social",
+      "position": [
+        26,
+        -37.2
+      ],
+      "radius": 2.5,
+      "map_label": "smokkie"
     }
   ],
   "patrol_routes": {

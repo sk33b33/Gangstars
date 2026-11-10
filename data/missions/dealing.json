@@ -1,0 +1,78 @@
+{
+  "_comment": "The early-game hustle (game-like, abstract): Aunty Mavis' smokkie and street sales by phone.",
+  "missions": [
+    {
+      "id": "the_smokkie",
+      "title": "The Smokkie",
+      "giver": "npc_mavis",
+      "prerequisites": {
+        "missions": [
+          "new_face"
+        ]
+      },
+      "intro": "Aunty Mavis: \"You're the new one at No. 13? I need hands behind my counter. Bring your own stock from your crew's runner (your safehouse), serve my evening crowd, and no trouble in my place.\"",
+      "description": "Work Aunty Mavis' counter at the smokkie.",
+      "objectives": [
+        {
+          "id": "serve",
+          "type": "stat",
+          "stat": "drinks_sold",
+          "value": 3,
+          "text": "Serve 3 drinks at the smokkie counter (stock up at your safehouse; busy 17:00–23:00)"
+        },
+        {
+          "id": "report",
+          "type": "talk_to",
+          "target": "npc_mavis",
+          "allow_knock": true,
+          "text": "Tell Aunty Mavis how it went"
+        }
+      ],
+      "rewards": {
+        "cash": 80,
+        "reputation": 10,
+        "relationship": {
+          "npc_mavis": 15
+        }
+      }
+    },
+    {
+      "id": "bankies",
+      "title": "Bankies",
+      "giver": "npc_mavis",
+      "prerequisites": {
+        "missions": [
+          "the_smokkie"
+        ]
+      },
+      "intro": "Aunty Mavis: \"People keep asking me for bankies. Give them your number and they'll call you. But SAPS walk past here every day, so watch who's looking before you hand anything over.\"",
+      "description": "Build a client list and sell on the street without getting caught.",
+      "objectives": [
+        {
+          "id": "contacts",
+          "type": "stat",
+          "stat": "contacts",
+          "value": 3,
+          "text": "Save 3 clients to your phone (chat to neighbours)"
+        },
+        {
+          "id": "deals",
+          "type": "stat",
+          "stat": "street_deals",
+          "value": 3,
+          "text": "Answer calls and make 3 street deals without SAPS seeing"
+        }
+      ],
+      "rewards": {
+        "cash": 150,
+        "reputation": 15,
+        "influence": {
+          "starter": 10
+        },
+        "relationship": {
+          "npc_mavis": 10
+        }
+      }
+    }
+  ]
+}

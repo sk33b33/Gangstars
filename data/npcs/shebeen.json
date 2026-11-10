@@ -1,0 +1,49 @@
+{
+  "_comment": "Aunty Mavis runs the smokkie (shebeen) in Westridge.",
+  "residents": [
+    {
+      "id": "npc_mavis",
+      "display_name": "Aunty Mavis",
+      "home_id": "shebeen",
+      "role": "resident",
+      "shirt_color": "#b03a6e",
+      "pants_color": "#3b2f4a",
+      "skin_color": "#6b4430",
+      "walk_speed": 1.2,
+      "start_delay": 15.0,
+      "schedule": [
+        {
+          "activity": "guard",
+          "destination": "shebeen:host",
+          "duration": 90
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 10
+        }
+      ],
+      "lines": [
+        "Cold ones, warm welcome.",
+        "No trouble in my place, you hear?",
+        "You want to work the counter? Bring your own stock."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        10,
+        23
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e2585e",
+      "height": 0.96,
+      "sleeves": "short",
+      "figure": 1.0,
+      "heavy": 0.6,
+      "skirt": 1,
+      "accessories": [
+        "apron"
+      ],
+      "apron_color": "#f6e7c8"
+    }
+  ]
+}

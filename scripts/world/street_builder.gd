@@ -43,6 +43,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"lookout": _build_lookout(root, pos, _facing_rot(lm))
 			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
 			"police_post": _build_police_post(root, pos, _facing_rot(lm), str(lm.get("id", "saps")), destinations)
+			"shebeen": _build_shebeen(root, pos, _facing_rot(lm), str(lm.get("id", "shebeen")), destinations)
 			"crew_den": _build_crew_den(root, pos, _facing_rot(lm), str(lm.get("id", "den")), str(lm.get("tag", "")), destinations)
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
@@ -393,6 +394,34 @@ static func _build_police_post(root: Node3D, c: Vector3, rot_y: float, id: Strin
 	Geo.box(pivot, Vector3(0.08, 4.2, 0.08), Vector3(-2.7, 2.1, 1.6), flag)
 	var door := pivot.global_transform * Vector3(1.9, 0, 2.2) if pivot.is_inside_tree() else c + Vector3(1.9, 0, 2.2).rotated(Vector3.UP, rot_y)
 	destinations.register(id + ":door", door, 0.4, "police_post", "the police post")
+
+
+## Aunty Mavis' smokkie (shebeen): a small brick house with a serving hatch, crates, plastic
+## chairs and a speaker. Registers "<id>:door" (Mavis' home), "<id>:host" (where she stands) and
+## "<id>:counter" (where the player serves).
+static func _build_shebeen(root: Node3D, c: Vector3, rot_y: float, id: String, destinations: DestinationRegistry) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	Geo.box(pivot, Vector3(6.0, 2.7, 4.0), Vector3(0, 1.35, 0), PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color("#c9a27c")))
+	Geo.box(pivot, Vector3(6.6, 0.12, 4.6), Vector3(0, 2.76, 0), PixelMaterials.surface("roof_ibr", Vector2(2, 2), Color("#8f9aa3")), false)
+	Geo.quad(pivot, Vector2(3.6, 0.9), Vector3(-0.6, 2.25, 2.01), PixelMaterials.panel("sign_shebeen"))
+	Geo.quad(pivot, Vector2(1.6, 0.9), Vector3(-1.2, 1.25, 2.01), PixelMaterials.flat(Color("#141218")))   # serving hatch
+	Geo.box(pivot, Vector3(1.9, 0.08, 0.45), Vector3(-1.2, 0.85, 2.2), PixelMaterials.flat(Color("#8a5a3c")), false)
+	Geo.quad(pivot, Vector2(0.9, 2.0), Vector3(1.9, 1.0, 2.01), PixelMaterials.panel("door_gate"))
+	var crate := PixelMaterials.flat(Color("#c0392b"))
+	for k in 3:
+		Geo.box(pivot, Vector3(0.5, 0.3, 0.36), Vector3(2.6, 0.15 + k * 0.3, -0.6 + (k % 2) * 0.05), crate, false)
+	Geo.box(pivot, Vector3(0.35, 0.6, 0.3), Vector3(-2.7, 0.3, 2.3), PixelMaterials.flat(Color("#1d1b24")), false)   # speaker
+	for k in 3:
+		var chair := PropLibrary.place(pivot, "plastic_chair", Vector3(-2.2 + k * 1.2, 0, 4.2), PI + (k - 1) * 0.3)
+		SpotRegistry.marker(pivot, "sit", chair.position, chair.rotation.y)
+	SpotRegistry.marker(pivot, "lean", Vector3(0.6, 0, 2.0 + 0.3))
+	var place := func(local: Vector3) -> Vector3: return c + local.rotated(Vector3.UP, rot_y)
+	destinations.register(id + ":door", place.call(Vector3(1.9, 0, 2.6)), 0.4, "shebeen", "the smokkie")
+	destinations.register(id + ":host", place.call(Vector3(-0.2, 0, 2.6)), 0.4, "shebeen", "the smokkie")
+	destinations.register(id + ":counter", place.call(Vector3(-1.2, 0, 2.8)), 0.6, "shebeen", "the smokkie counter")
 
 
 ## A crew's hangout: a painted Wendy house with an old couch and a tag, door facing +Z.

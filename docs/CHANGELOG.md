@@ -4,6 +4,33 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### The hustle: smokkie, phone and clients (2026-11-10)
+- **Aunty Mavis' smokkie** (shebeen) in Westridge, with a counter, chairs and
+  a "smokkie night" crowd every evening (17:00–23:00). Mavis (`npc_mavis`) gives two missions
+  (`data/missions/dealing.json`):
+  - *The Smokkie*: serve 3 drinks at her counter, then report back.
+  - *Bankies*: save 3 client contacts, then make 3 street deals.
+- **Stock:** buy bankies (weed) and drinks from your crew's runner in the safehouse menu. Prices,
+  timings and mood rules live in `data/dealing/dealing.json`.
+- **Phone (P / D-pad up):** stock, contacts with mood faces, open orders, and incoming calls
+  (answer or decline). Once *Bankies* starts, chatting to an interested neighbour saves them as a
+  contact.
+- **Calls and street deals:** clients ring with orders. Answering sends them to wait at their gate
+  until a deadline; talk to them to hand over. If an officer with line of sight (18 m) or a police
+  bakkie (25 m) sees it, it's a bust: stock lost, heat +2, client spooked.
+- **Client moods:** fast and on-time deals cheer clients up; late, declined, missed and busted deals
+  annoy them. Below 25 they buy from a rival crew instead (you get a message, and the phone
+  shows who). The phone has a "win them back" button. Emoji-style faces (happy, ok, meh, angry,
+  lost) float over clients within 16 m and show in the phone.
+- **Missions:** new `stat` objective type (`{stat, value}`) for game counters (drinks sold,
+  contacts, street deals).
+- **Saving:** stock, clients, orders and stats are saved.
+- Kept fictional and game-like: no real-world specifics.
+- **New:** DealingState (pure logic, unit-tested), DealingController, Phone UI, shebeen landmark,
+  mood/phone/item sprites, a ring sound.
+- **Tests:** dealing unit and in-game tests. The traffic "stops for the player" test is now robust
+  to queued cars.
+
 ### Crew names (2026-11-10)
 - The fictional crews are renamed in a more Cape Flats style: Tortel Laaities, Spine Road Stylers,
   Dune Cruisers and Rock Royals (internal ids unchanged).

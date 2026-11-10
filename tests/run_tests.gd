@@ -45,6 +45,7 @@ func _run() -> void:
 	print("== Rocklands units")
 	_test_kalkbos_units()
 	_test_combat_units()
+	_test_dealing_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -518,7 +519,7 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 24, "24 missions load from the district and crew catalogs")
+	_check(GameSession._load_all_missions().size() == 26, "26 missions load (story, districts, crews, the hustle)")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
@@ -777,21 +778,42 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 
 	# A car brakes for the player standing in its lane, without shoving them.
 	var car: TrafficCar = traffic.cars[0]
-	for i in 600:
-		# On a straight with no corner coming up within the next few route points.
-		var li := car.lane_index()
-		var straight := true
-		for k in 4:
-			straight = straight and not car.curve_points.has((li + k) % car.route.size())
-		if straight and car.speed > 6.0:
-			break
+	var found_straight := false
+	var stand := car.global_position
+	for i in 60 * 90:
+		# Wait for >= 9 m of straight lane ahead of the car, then stand at the end of it.
+		if car.speed > 6.0 and not car.curve_points.has(car.lane_index()):
+			var walked := 0.0
+			var prev := car.global_position
+			var ok := false
+			for k in car.route.size():
+				var ri := (car.lane_index() + k) % car.route.size()
+				if car.curve_points.has(ri):
+					break
+				walked += prev.distance_to(car.route[ri])
+				prev = car.route[ri]
+				if walked >= 9.0:
+					stand = prev
+					ok = true
+					break
+			if ok:
+				found_straight = true
+				break
 		await physics_frame
-	var stand := car.global_position + car.global_basis.z * 9.0
 	player.global_position = stand + Vector3(0, 0.1, 0)
 	player.snap_camera()
 	for i in 180:
 		await physics_frame
-	_check(car.speed < 0.2, "a car stops for the player in its lane (speed %.1f)" % car.speed)
+	var slowest := car.speed
+	for i in 360:
+		slowest = minf(slowest, car.speed)
+		if car.speed < 0.2:
+			break
+		await physics_frame
+	slowest = minf(slowest, car.speed)
+	# (Or it is held back further up the lane, queued behind another car that stopped first.)
+	var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 2.0
+	_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
 	_check(Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length() < 0.3, "the player is not pushed by the car")
 	var gap := car.global_position.distance_to(player.global_position)
 	_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
@@ -913,6 +935,53 @@ func _pad_axis(axis: JoyAxis, value: float) -> void:
 	e.axis = axis
 	e.axis_value = value
 	Input.parse_input_event(e)
+
+
+func _test_dealing_units() -> void:
+	print("== dealing units (stock, clients, calls, orders, moods, rivals)")
+	var d := DealingState.load_default()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 1
+	var rival := func(_npc: String) -> String: return "Dune Cruisers"
+	_check(not d.take_stock("weed", 1) and d.sell_counter("drink") == -1, "no stock, no sale")
+	d.add_stock("weed", 5)
+	d.add_stock("drink", 3)
+	_check(d.sell_counter("drink") == 25 and d.stat("drinks_sold") == 1, "a drink over the counter: R25")
+	d.add_client("c1", "Client One", "weed", "starter_h03", 0.0, rng)
+	_check(d.is_client("c1") and d.stat("contacts") == 1 and d.mood_icon("c1") == "ok", "a new contact starts OK")
+	d.enabled = true
+	d.tick(2000.0, rng, rival)
+	_check(d.call.get("npc", "") == "c1", "a client calls when they're due")
+	var o := d.answer(2000.0, rng)
+	_check(not o.is_empty() and d.order_for("c1").place == "starter_h03:gate" and d.call.is_empty(), "answering turns the call into an order at their gate")
+	var cash := d.complete("c1", 2010.0)
+	_check(cash == 45 and int(d.stock.weed) == 4 and d.stat("street_deals") == 1, "a street deal pays R45 and uses stock")
+	_check(float(d.clients.c1.mood) > 70.0 and d.mood_icon("c1") == "happy", "a fast delivery makes them happy")
+	d.clients.c1.next_call = 0.0
+	d.tick(2100.0, rng, rival)
+	d.decline(rival)
+	_check(float(d.clients.c1.mood) < 80.0, "declining an order annoys them")
+	d.clients.c1.next_call = 0.0
+	d.tick(2200.0, rng, rival)
+	d.tick(2200.0 + 31.0, rng, rival)
+	_check(d.call.is_empty() and d.stats.missed == 1, "an unanswered call is a missed call")
+	d.clients.c1.next_call = 0.0
+	d.tick(2300.0, rng, rival)
+	d.answer(2300.0, rng)
+	d.tick(2300.0 + 999.0, rng, rival)
+	_check(d.order_for("c1").is_empty(), "a late order expires")
+	_check(d.clients.c1.status == "lost" and d.clients.c1.rival == "Dune Cruisers" and d.mood_icon("c1") == "lost",
+		"too many letdowns and the client buys from a rival crew (%s, mood %.0f)" % [d.clients.c1.status, float(d.clients.c1.mood)])
+	_check(d.win_back("c1") and d.is_client("c1") and int(d.stock.weed) == 3, "a free bankie wins them back")
+	d.clients.c1.next_call = 0.0
+	d.tick(3000.0, rng, rival)
+	d.answer(3000.0, rng)
+	d.bust("c1")
+	_check(d.order_for("c1").is_empty() and d.stats.busts == 1 and int(d.stock.weed) == 2, "a bust loses the goods")
+	var saved := d.to_dict()
+	var d2 := DealingState.load_default()
+	d2.load_dict(saved)
+	_check(d2.is_client("c1") and int(d2.stock.weed) == 2 and d2.stats.busts == 1, "the hustle is saved")
 
 
 func _test_combat_units() -> void:
@@ -1128,6 +1197,8 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 			player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
 			if rival.fight_target == player:
 				break
+			if i % 60 == 59 and not rival._line_of_sight(player):   # they walked behind a wall: step back into view
+				player.global_position = _clear_spot_near(district, rival, 9.0)
 			if i % 60 == 0 and _args.has("verbose"):
 				var dir := (rival.global_position - player.global_position).normalized()
 				print("    rival %s %s d=%.1f aiming=%s dot=%.2f los=%s tier=%s input=%s state=%s spot=%s" % [rival.data.id, rival.data.faction_id, rival.global_position.distance_to(player.global_position), player.aiming, (-player.pivot.global_basis.z).dot(dir), rival._line_of_sight(player), rival.sim_tier, player.input_enabled, rival.state_name(), rival.spot_phase])
@@ -1153,6 +1224,121 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	_check(prog.cash == cash0 + 150, "Tortel Laaities' perk pays out once (+R150)")
 	_check(district.residents["npc_h29_1"].is_ally() and not district.residents["npc_viper_slang"].is_ally(), "allies follow your crew")
 	session.choose_crew("vlakte_vipers")
+
+
+func _test_dealing_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dealing := session.dealing
+	var missions := session.missions
+	var prog := session.progression
+	player.health.revive(Health.MAX_HP)
+	session.police.heat.clear()
+	_check(district.destinations.has("shebeen:counter") and district.residents.has("npc_mavis"), "Aunty Mavis' smokkie is open")
+	# The Smokkie: talk to Mavis (she gives the mission).
+	if not missions.is_completed("new_face"):
+		prog.completed_mission_ids.append("new_face")
+	var mavis: Resident = district.residents["npc_mavis"]
+	for i in 60 * 60:
+		if not mavis.is_inside:
+			break
+		district.director.clock.set_hour(14.0)
+		await physics_frame
+	_talk(player, mavis.interactable)
+	_check(missions.active.has("the_smokkie"), "Aunty Mavis gives you The Smokkie")
+	# Restock from the safehouse menu.
+	prog.add_cash(500)
+	var before := int(dealing.state.stock.drink)
+	_check(dealing.buy_stock(1) and int(dealing.state.stock.drink) == before + 12, "buy a crate of drinks from your crew's runner")
+	_check(dealing.buy_stock(0) and int(dealing.state.stock.weed) >= 5, "...and some bankies")
+	# Evening: the crowd gathers; serve them at the counter.
+	district.director.clock.set_hour(18.5)
+	var served := 0
+	for i in 60 * 240:
+		if dealing.state.stat("drinks_sold") >= 3:
+			break
+		if i % 120 == 0:
+			player.global_position = district.destinations.anchor_position("shebeen:counter") + Vector3(0, 0.1, 0)
+			var note := dealing.serve_counter()
+			if note.begins_with("You served"):
+				served += 1
+		await physics_frame
+	_check(dealing.state.stat("drinks_sold") >= 3, "the evening crowd buys drinks at the counter (%d sold)" % dealing.state.stat("drinks_sold"))
+	_talk(player, mavis.interactable)
+	_check(missions.is_completed("the_smokkie"), "The Smokkie completes")
+	_talk(player, mavis.interactable)
+	_check(missions.active.has("bankies") and dealing.collecting_contacts(), "Mavis gives you Bankies; people can save your number now")
+	# Save contacts by chatting.
+	district.director.clock.set_hour(11.0)
+	var saved := 0
+	for r: Resident in district.residents.values():
+		if saved >= 4:
+			break
+		if district.resident_district(r) == "starter" and not r.is_inside and dealing._could_be_client(r):
+			var note := dealing.on_chat(r.data.id)
+			saved += 1 if not note.is_empty() else 0
+	for i in 60 * 90:
+		if saved >= 3:
+			break
+		for r: Resident in district.residents.values():
+			if district.resident_district(r) == "starter" and dealing._could_be_client(r) and not dealing.state.clients.has(r.data.id):
+				saved += 1 if not dealing.on_chat(r.data.id).is_empty() else 0
+				break
+		await physics_frame
+	_check(dealing.state.stat("contacts") >= 3, "clients saved to the phone (%d)" % dealing.state.stat("contacts"))
+	# A call comes in; answer it on the phone; the client comes out; hand over.
+	var client := ""
+	for npc in dealing.state.clients:
+		var r: Resident = district.residents[npc]
+		if r.brain.is_active_hours():
+			client = npc
+			break
+	dealing.state.clients[client].next_call = 0.0
+	dealing.state.call = {}
+	dealing.state.orders.clear()
+	for i in 60 * 5:
+		if dealing.state.call.get("npc", "") == client:
+			break
+		dealing.state.clients[client].next_call = 0.0
+		await physics_frame
+	_check(dealing.state.call.get("npc", "") == client, "a client calls")
+	session.toggle_phone()
+	_check(session.phone.is_open() and not player.input_enabled, "the phone opens (%s)" % InputHints.key("phone"))
+	var answer: Button = session.phone.find_child("Answer", true, false)
+	_check(answer != null, "the call shows Answer / Decline")
+	if answer:
+		answer.pressed.emit()
+	session.toggle_phone()
+	_check(not dealing.state.order_for(client).is_empty() and player.input_enabled, "answering takes the order")
+	var cr: Resident = district.residents[client]
+	var gate := district.destinations.anchor_position(dealing.state.order_for(client).place)
+	for i in 60 * 120:
+		if not cr.is_inside and cr.global_position.distance_to(gate) < 3.0:
+			break
+		await physics_frame
+	_check(not cr.is_inside and cr.global_position.distance_to(gate) < 3.0, "the client comes out to wait at their gate")
+	# Make sure no officer is watching, then hand over.
+	player.global_position = cr.global_position + (cr.global_position - gate).normalized() * 0.0 + Vector3(1.2, 0.1, 0.0)
+	await physics_frame
+	var watching := dealing.police_watching(player.global_position)
+	var cash0 := prog.cash
+	_talk(player, cr.interactable)
+	if watching:
+		_check(dealing.state.stats.busts >= 1, "SAPS were watching: busted")
+	else:
+		_check(prog.cash > cash0 and dealing.state.stat("street_deals") >= 1, "a street deal for cash (R%d)" % (prog.cash - cash0))
+	# Police see a deal: bust.
+	var cop: Resident = null
+	for r: Resident in district.residents.values():
+		if r.data.role == "police" and not r.is_inside:
+			cop = r
+			break
+	if cop:
+		player.global_position = _clear_spot_near(district, cop, 6.0)
+		await physics_frame
+		_check(dealing.police_watching(player.global_position), "an officer nearby can see you deal")
+	_check(dealing.state.mood_icon(client) != "", "clients show a mood face (%s)" % dealing.state.mood_icon(client))
+	var snap := session.snapshot()
+	_check(snap.has("dealing") and snap.dealing.clients.has(client), "the phone's contacts are saved")
 
 
 ## A point on the navigation mesh about `dist` from `who` with a clear line of sight to them
@@ -1212,8 +1398,9 @@ func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 	player.global_position = yard_dog.yard_plot.global_transform * Vector3(0, 0.1, 3.0)
 	player.snap_camera()
 	yard_dog._cooldown = 0.0
-	if yard_dog.state == "nap":
-		yard_dog._timer = 0.0
+	yard_dog.state = "idle"          # awake and ready, whatever it was doing earlier in the run
+	yard_dog.model.lying = false
+	yard_dog._timer = 5.0
 	var heard := [0]
 	var on_bark := func(_p: Vector3, _pitch: float): heard[0] += 1
 	district.dog_barked.connect(on_bark)
@@ -1221,6 +1408,8 @@ func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 	for i in 60 * 20:
 		if yard_dog.barks > barks0 and heard[0] > 0:
 			break
+		if i % 120 == 0 and _args.has("verbose"):
+			print("    dog %s state=%s active=%s d=%.1f cool=%.1f visible=%s" % [yard_dog.dog_id, yard_dog.state, yard_dog.is_physics_processing(), yard_dog.global_position.distance_to(player.global_position), yard_dog._cooldown, player.visible])
 		await physics_frame
 	district.dog_barked.disconnect(on_bark)
 	_check(yard_dog.barks > barks0 and heard[0] > 0, "a yard dog barks at the player walking past (%d barks)" % (yard_dog.barks - barks0))
@@ -1798,6 +1987,8 @@ func _test_district() -> void:
 	await _test_combat_in_game(main, district, player)
 	print("== crews (choice, allies and rivals, perks, crew missions)")
 	await _test_crews_in_game(main, district, player)
+	print("== the hustle (smokkie, phone, street deals, client moods)")
+	await _test_dealing_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

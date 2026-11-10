@@ -68,6 +68,23 @@
       "duration": 35,
       "start_text": "",
       "end_text": ""
+    },
+    {
+      "id": "smokkie_night",
+      "name": "Evening at Aunty Mavis' smokkie",
+      "every_days": 1,
+      "offset": 0,
+      "hours": [
+        17,
+        23
+      ],
+      "anchor": "poi_shebeen",
+      "activity": "socializing",
+      "join_chance": 0.35,
+      "duration": 40,
+      "start_text": "Music starts up at Aunty Mavis' smokkie.",
+      "end_text": "",
+      "district": "starter"
     }
   ]
 }

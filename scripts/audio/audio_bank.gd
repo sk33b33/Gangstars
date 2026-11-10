@@ -27,13 +27,14 @@ static func get_stream(stream_name: String) -> AudioStreamWAV:
 		"bark": s = _bark()
 		"gunshot": s = _gunshot()
 		"siren": s = _siren()
+		"ring": s = _ring()
 		_: push_warning("AudioBank: unknown sound " + stream_name)
 	_cache[stream_name] = s
 	return s
 
 
 static func names() -> PackedStringArray:
-	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets", "bark", "gunshot", "siren"]
+	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets", "bark", "gunshot", "siren", "ring"]
 
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -108,6 +109,19 @@ static func _siren() -> AudioStreamWAV:
 		var f := 960.0 if fmod(t, 0.8) < 0.4 else 720.0
 		phase += TAU * f / RATE
 		out[i] = (sin(phase) * 0.6 + sin(phase * 2.0) * 0.15) * 0.3 * _env(t, 1.6, 0.03, 0.1)
+	return _wav(out)
+
+
+## A cellphone ring: two short warbled tones.
+static func _ring() -> AudioStreamWAV:
+	var n := int(RATE * 0.9)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	for i in n:
+		var t := float(i) / RATE
+		var on := fmod(t, 0.45) < 0.32
+		var f: float = 1300.0 + 180.0 * signf(sin(TAU * 18.0 * t))
+		out[i] = (sin(TAU * f * t) * 0.35 if on else 0.0) * _env(fmod(t, 0.45), 0.32, 0.01, 0.03)
 	return _wav(out)
 
 

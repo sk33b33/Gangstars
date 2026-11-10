@@ -261,6 +261,25 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
   within 6 m, or when aimed at within 15 m.
 - Crew missions use `prerequisites.member_of`; story text varies with `intro_by_crew`.
 
+## Dealing (the hustle)
+
+- `data/dealing/dealing.json` holds the tuning: products, restock lots, call timing, order windows
+  and mood rules.
+- `DealingState` is pure logic and unit-tested. It holds stock, clients (mood, status, rival),
+  orders, the ringing call and stats. `tick(minutes, rng, rival_for, can_call)` drives calls and
+  expiries.
+- `DealingController` (a child of the GameSession) links the state to the world:
+  - contacts are saved from chats (`on_chat`);
+  - `answer()` sets the client's `brain.pending_event` so they wait at their gate;
+  - `try_sell` / `police_watching` handle street deals;
+  - the smokkie counter is an Interactable (`serve_counter`);
+  - mood faces are Sprite3D billboards.
+- `Phone` (`scripts/ui/phone.gd`) is the HUD panel; `GameSession.toggle_phone()` opens it.
+- Missions use the `stat` objective, read through `MissionManager.stat_value`
+  (`DealingState.stat`).
+- Screenshots: `--hustle` stages clients and an open phone; `--hustle=street` shows the faces in
+  the world.
+
 ## Windows build and gamepad
 
 ```bash
