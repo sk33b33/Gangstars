@@ -252,12 +252,15 @@ def police():
     """Double cab with a canopy (prisoner section) and a roof light bar."""
     W, F, R = 1.84, -2.5, 2.5
     p = bakkie_base(W, F, R, 0.6, 0.98)
-    band(p[0], 0.5, 0.74, "police_blue")
-    band(p[0], 0.76, 0.81, "police_yellow")
+    # Livery from reference photos: a blue band edged in yellow above and below.
+    band(p[0], 0.56, 0.6, "police_yellow")
+    band(p[0], 0.6, 0.72, "police_blue")
+    band(p[0], 0.72, 0.76, "police_yellow")
     cabin(p, [(-1.35, 0.98), (-0.7, 1.62), (0.6, 1.64), (0.6, 0.98)], W - 0.12, -0.7, 0.62, 1.64,
           [(-1.35, 0.99, -0.7, 1.62), (-0.05, 0.99, -0.05, 1.63), (0.6, 0.99, 0.6, 1.64)])
     can = box((0, 1.56, 1.32), (W - 0.04, 1.86, 0.68), "paint", 0.04)
-    band(can, 1.05, 1.12, "police_blue")
+    band(can, 1.53, 1.6, "police_blue")
+    band(can, 1.5, 1.53, "police_yellow")
     p.append(can)
     for s in (1, -1):   # small barred canopy windows
         p.append(box((s * (W / 2 - 0.01), 1.6, 1.42), (0.02, 1.2, 0.28), "glass"))
@@ -270,7 +273,10 @@ def police():
     wheels(p, 3.1, 1.58, 0.35)
     lights_and_plates(p, F, R, W, 0.78, 0.52)
     bumpers(p, F, R, W, 0.44)
-    p.append(box((0, F - 0.12, 0.62), (1.1, 0.08, 0.5), "trim", 0.03))   # nudge bar
+    for s in (1, -1):   # chrome bull bar
+        p.append(cyl((s * 0.42, F - 0.16, 0.6), 0.03, 0.55, "chrome", axis="Z", seg=10))
+    p.append(cyl((0, F - 0.16, 0.86), 0.03, 0.9, "chrome", axis="X", seg=10))
+    p.append(cyl((0, F - 0.16, 0.5), 0.03, 0.9, "chrome", axis="X", seg=10))
     mirrors(p, -1.1, 1.1, W)
     seams(p, [-1.3, -0.05, 0.62], 0.44, 0.98, W)
     return finish(p, "police", 18)

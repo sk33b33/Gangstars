@@ -69,11 +69,12 @@ func _run() -> void:
 		looks = []
 	if args.has("armed"):
 		var cop := {"hair_style": "short", "sleeves": "short", "accessories": ["police_cap", "police_vest", "dutybelt"]}
-		var navy := Color("#1c2740")
+		var navy := Color("#9db4d6")
+		var trousers := Color("#2b3b63")
 		looks = [
-			[navy, navy, Color("#6b4430"), Color(0, 0, 0, 0), cop, "aim:pistol", 0.0],
-			[navy, navy, Color("#a7754f"), Color(0, 0, 0, 0), cop.merged({"figure": 0.9, "hair_style": "ponytail"}), "holster:pistol", 0.0],
-			[navy, navy, Color("#4a2f22"), Color(0, 0, 0, 0), cop, "aim:shotgun", 0.0],
+			[navy, trousers, Color("#6b4430"), Color(0, 0, 0, 0), cop, "aim:pistol", 0.0],
+			[navy, trousers, Color("#a7754f"), Color(0, 0, 0, 0), cop.merged({"figure": 0.9, "hair_style": "ponytail"}), "holster:pistol", 0.0],
+			[navy, trousers, Color("#4a2f22"), Color(0, 0, 0, 0), cop, "aim:shotgun", 0.0],
 			[Color("#7a1f1f"), Color("#1c2833"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"hair_style": "beanie", "accessories": ["sunglasses", "chain"]}, "aim:pistol", 0.0],
 			[Color("#2c3e50"), Color("#4a4e6a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "bald"}, "holster:shotgun", 1.5],
 			[Color("#7a1f1f"), Color("#1c2833"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "short"}, "down", 0.0],

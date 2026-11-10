@@ -75,7 +75,7 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
 		"apron": opts.get("apron_color", Color("#ece8dc")), "acc_frame": Color("#1a1a1e"), "acc_lens": Color("#101018"),
 		"acc_gold": Color("#d4a63a"), "acc_white": Color("#f4f4f0"),
-		"uniform": Color("#1c2740"), "vest": Color("#1a1d24"), "badge": Color("#e8b400"), "belt": Color("#121214"),
+		"uniform": Color("#25366a"), "vest": Color("#5b7097"), "badge": Color("#e8b400"), "belt": Color("#121214"),
 	}
 	var extras: Array = opts.get("accessories", [])
 	var style := str(opts.get("hair_style", "short"))
@@ -98,8 +98,28 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Figure"), clampf(float(opts.get("figure", 0.0)), 0.0, 1.0))
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Heavy"), clampf(float(opts.get("heavy", 0.0)), 0.0, 1.0))
 	_build_tree(_root.find_child("AnimationPlayer", true, false))
+	if extras.has("police_vest"):
+		_vest_lettering()
 	if hat.a > 0.0:
 		set_hat(hat)
+
+
+## White "POLICE" across the vest, front and back (follows the chest bone).
+func _vest_lettering() -> void:
+	var chest := BoneAttachment3D.new()
+	chest.bone_name = "chest"
+	_skeleton.add_child(chest)
+	for front in [true, false]:
+		var l := Label3D.new()
+		l.text = "POLICE"
+		l.font_size = 40
+		l.pixel_size = 0.0028
+		l.outline_size = 0
+		l.modulate = Color("#f4f4f0")
+		l.double_sided = false
+		l.position = Vector3(0, 0.06 if front else 0.09, 0.142 if front else -0.142)
+		l.rotation.y = 0.0 if front else PI
+		chest.add_child(l)
 
 
 ## Adds (or recolours) a cap, e.g. when someone joins the player's crew. Hides the hair.

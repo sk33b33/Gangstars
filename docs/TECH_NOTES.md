@@ -235,6 +235,20 @@ old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkb
   - LOD: physics stops beyond 60 m.
   - Barks go `District.dog_barked` → `AudioDirector` ("bark").
 
+## Police and combat
+
+- **Shots:** `CombatSystem` (District child). `fire()` raycasts on `SHOT_MASK` (world, player,
+  NPCs, cars) and calls `on_shot(damage, shooter)` on the target. It also emits `shot_fired` /
+  `target_hit` and raises a "gunfire" incident (severity 4; at most one per shooter per 2 s).
+- **Health:** `Health` (pure) handles knock-downs; never lethal.
+- **Brain:** FIGHTING (schedule paused) and DOWN states. `Resident.start_fight(target)` /
+  `end_fight()`. Fighters are roles crew, police and player_crew, armed in `Resident._arm()`.
+- **Police:** `PoliceDispatch` (GameSession child) owns `Heat` and decides who fights whom. It also
+  runs the bakkie lights (`VehicleLibrary.set_lights`) and sirens, and the player's knock-out.
+  - Officers come from `data/npcs/police.json`; their home is a post's `<id>:door` anchor, which
+    the police_post landmark registers.
+- **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
+
 ## Windows build and gamepad
 
 ```bash

@@ -376,30 +376,33 @@ def make_body_accessories():
 
 
 def make_police_gear():
-    """SAPS-inspired kit: peaked cap (head), body-armour vest with a yellow band, duty belt with a
-    holster on the right hip. Uniform colours are material slots, so Godot can tint them."""
-    crown = prim("cyl", "crown", HEAD_C + Vector((0, 0.005, 0.085)), (0.118, 0.124, 0.045), "uniform", seg=20)
-    for v in crown.data.vertices:   # flare the top a little
-        if v.co.z > HEAD_C.z + 0.09:
-            v.co.x *= 1.08
-            v.co.y = (v.co.y - HEAD_C.y) * 1.08 + HEAD_C.y
-    cband = prim("cyl", "cap_band", HEAD_C + Vector((0, 0.005, 0.055)), (0.116, 0.122, 0.014), "badge", seg=20)
-    peak = prim("cyl", "peak", HEAD_C + Vector((0, -0.105, 0.048)), (0.08, 0.06, 0.006), "belt", seg=16, rot=(-0.2, 0, 0))
-    badge = prim("sphere", "cap_badge", HEAD_C + Vector((0, -0.122, 0.09)), (0.016, 0.006, 0.018), "badge", seg=8, rings=5)
-    cap = join([crown, cband, peak, badge], "Acc_police_cap")
-    vest = prim("cyl", "vest_shell", (0, 0.0, 1.25), (0.182, 0.13, 0.2), "vest", seg=24)
+    """SAPS-inspired kit, matched to reference photos: navy baseball cap with a gold star badge,
+    blue-grey body armour with shoulder straps and a front flap (POLICE lettering is added in Godot),
+    black duty belt with a gold buckle and a holster on the right hip."""
+    dome = prim("sphere", "pcap_dome", HEAD_C + Vector((0, 0.005, 0.03)), (0.109, 0.119, 0.124), "uniform", seg=20, rings=14)
+    cut_below(dome, HEAD_C.z + 0.035)
+    brim = prim("cyl", "pcap_brim", HEAD_C + Vector((0, -0.1, 0.04)), (0.078, 0.072, 0.006), "uniform", seg=16, rot=(-0.12, 0, 0))
+    star = []
+    for k in range(8):   # generic eight-point gold star badge (not the official emblem)
+        a = k * math.pi / 4
+        star.append(prim("cube", "ray", HEAD_C + Vector((math.cos(a) * 0.012, -0.121, 0.085 + math.sin(a) * 0.012)),
+                         (0.006, 0.003, 0.016), "badge", rot=(0, a + math.pi / 2, 0), smooth=False))
+    star.append(prim("sphere", "boss", HEAD_C + Vector((0, -0.124, 0.085)), (0.011, 0.004, 0.011), "badge", seg=10, rings=5))
+    cap = join([dome, brim] + star, "Acc_police_cap")
+    vest = prim("cyl", "vest_shell", (0, 0.0, 1.24), (0.184, 0.132, 0.21), "vest", seg=24)
     bm = bmesh.new()
     bm.from_mesh(vest.data)
-    caps = [f for f in bm.faces if abs(f.normal.z) > 0.9]
-    bmesh.ops.delete(bm, geom=caps, context="FACES")
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.normal.z) > 0.9], context="FACES")
     bm.to_mesh(vest.data)
     bm.free()
-    vband = prim("cyl", "vest_band", (0, 0.0, 1.31), (0.185, 0.133, 0.03), "badge", seg=24)
-    vest = join([vest, vband], "Acc_police_vest")
+    straps = [prim("cube", "strap", (s * 0.1, 0.0, 1.47), (0.04, 0.13, 0.025), "vest", smooth=False) for s in (1, -1)]
+    flap = prim("cube", "vest_flap", (0, -0.136, 1.1), (0.15, 0.012, 0.07), "vest", smooth=False)
+    vest = join([vest, flap] + straps, "Acc_police_vest")
     belt = prim("cyl", "belt_ring", (0, 0.0, 0.985), (0.158, 0.118, 0.028), "belt", seg=24)
+    buckle = prim("cube", "buckle", (0, -0.12, 0.985), (0.03, 0.006, 0.022), "badge", smooth=False)
     holster = prim("cube", "holster", (-0.17, 0.02, 0.9), (0.03, 0.05, 0.09), "belt", smooth=False)
     pouch = prim("cube", "pouch", (0.165, -0.03, 0.95), (0.025, 0.04, 0.04), "belt", smooth=False)
-    belt = join([belt, holster, pouch], "Acc_dutybelt")
+    belt = join([belt, buckle, holster, pouch], "Acc_dutybelt")
     return [cap], [vest, belt]
 
 

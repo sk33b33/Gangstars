@@ -44,6 +44,7 @@ func _run() -> void:
 	_test_phase7_units()
 	print("== Kalkbos units")
 	_test_kalkbos_units()
+	_test_combat_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -903,6 +904,172 @@ func _pad_axis(axis: JoyAxis, value: float) -> void:
 	Input.parse_input_event(e)
 
 
+func _test_combat_units() -> void:
+	print("== combat units (health, heat, fight states, gunfire reactions)")
+	var h := Health.new()
+	_check(not h.take(40.0) and is_equal_approx(h.hp, 60.0), "a hit takes health off")
+	_check(h.take(70.0) and h.down and h.times_down == 1, "health at zero knocks you down (not dead)")
+	_check(not h.take(10.0), "no more damage while down")
+	for i in 21 * 4:
+		h.tick(0.25)
+	_check(not h.down and is_equal_approx(h.hp, Health.RECOVER_HP), "you get back up after %d s" % int(Health.DOWN_TIME))
+	for i in 40:
+		h.tick(0.5)
+	_check(h.hp > Health.RECOVER_HP, "health regenerates out of a fight (%.0f)" % h.hp)
+	var heat := Heat.new()
+	heat.add(1.0)
+	heat.add(0.25)
+	_check(heat.level() == 2, "heat rounds up to stars (%d)" % heat.level())
+	heat.tick(10.0, false)
+	_check(heat.level() == 2, "heat holds for a while")
+	for i in 60:
+		heat.tick(1.0, false)
+	_check(heat.level() < 2, "heat cools when the police can't see you (%d)" % heat.level())
+	heat.add(9.0)
+	_check(heat.level() == 5, "heat caps at five stars")
+	var b := NpcBrain.new([{"activity": "socializing", "destination": "poi_corner", "duration": 30.0}], 0.0)
+	b.state = NpcBrain.State.AT_DESTINATION
+	_check(b.on_fight() and b.state == NpcBrain.State.FIGHTING, "brain enters FIGHTING")
+	_check(b.on_incident("flee", "evt_x").is_empty(), "fighters ignore incidents")
+	var cmds := b.end_fight()
+	_check(not cmds.is_empty() and b.state != NpcBrain.State.FIGHTING, "end_fight resumes the routine (%s)" % b.state_name())
+	b.on_knocked_down()
+	_check(b.state == NpcBrain.State.DOWN and not b.on_fight(), "knocked-down NPCs can't fight")
+	_check(b.on_recovered()[0].destination == "home", "after a knock-down they go home")
+	_check(ReactionPolicy.choose("resident", "tough", 4, 10.0, 40.0) == "flee", "gunfire: even tough residents run")
+	_check(ReactionPolicy.choose("police", "steady", 4, 60.0, 40.0) == "investigate", "gunfire: police come from further away")
+	_check(ReactionPolicy.choose("kid", "timid", 4, 30.0, 40.0) == "flee", "gunfire: kids run")
+
+
+func _test_combat_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dispatch := session.police
+	var combat := district.combat
+	district.weather.enabled = false
+	district.director.ambient_incidents = false
+	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
+	_check(cops.size() == 10 and cops.all(func(r): return r.model.weapon in ["pistol", "shotgun"]), "10 armed officers (%d)" % cops.size())
+	_check(cops.all(func(r): return r.model.skeleton().get_node("Acc_police_vest").visible), "officers wear the vest, cap and belt")
+	var bakkies := district.traffic.cars.filter(func(c): return c.model == "police")
+	_check(bakkies.size() == 3, "a police bakkie patrols each district (%d)" % bakkies.size())
+	# Find a rival gangster out on the street in Vleirand (daytime: they hang at the corner).
+	district.director.clock.set_hour(16.0)
+	var thug: Resident = null
+	for i in 60 * 120:
+		for r: Resident in district.residents.values():
+			if r.data.role == "crew" and not r.is_inside and r.can_fight() and district.resident_district(r) == "starter" \
+					and r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING, NpcBrain.State.PATROLLING]:
+				thug = r
+				break
+		if thug:
+			break
+		await physics_frame
+	_check(thug != null, "a rival gangster is out")
+	if thug == null:
+		return
+	dispatch.heat.clear()
+	player.health.revive(Health.MAX_HP)
+	player.global_position = _clear_spot_near(district, thug, 7.0)
+	player.snap_camera()
+	for i in 10:
+		await physics_frame
+	var hp0 := thug.health.hp
+	var tele0 := thug.teleport_violations
+	# Someone may step into the line of fire at a busy corner: close in and try a few times.
+	for attempt in 5:
+		combat.fire(player, "pistol", player.model.muzzle_position(), thug.global_position + Vector3(0, 1.2, 0), 0.0)
+		if thug.health.hp < hp0:
+			break
+		player.global_position = _clear_spot_near(district, thug, 3.5)
+		await physics_frame
+	_check(thug.health.hp < hp0, "a shot hurts the gangster (%.0f -> %.0f)" % [hp0, thug.health.hp])
+	await physics_frame
+	_check(thug.fight_target == player and thug.brain.state == NpcBrain.State.FIGHTING and thug.model.weapon_drawn,
+		"the gangster draws and fights back (%s)" % thug.brain.state_name())
+	_check(dispatch.heat.level() >= 1, "shooting in the street raises heat (%d)" % dispatch.heat.level())
+	var fled := 0
+	for i in 60 * 2:
+		await physics_frame
+	for r: Resident in district.residents.values():
+		fled += 1 if r.brain.state == NpcBrain.State.FLEEING else 0
+	_check(fled > 0 or district.events.recent.any(func(e): return e.kind == "gunfire"), "gunfire is an incident; bystanders run (%d fleeing)" % fled)
+	var player_hp0 := player.health.hp
+	for i in 60 * 12:
+		if player.health.hp < player_hp0 or thug.shots_fired >= 3:
+			break
+		if i % 120 == 0 and _args.has("verbose"):
+			print("    thug %s target=%s los=%s aim=%s drawn=%s tier=%s cd=%.2f d=%.1f" % [thug.state_name(), thug.fight_target, thug._los, thug.model.aiming, thug.model.weapon_drawn, thug.sim_tier, thug._fire_cd, thug.global_position.distance_to(player.global_position)])
+		await physics_frame
+	_check(thug.shots_fired > 0, "the gangster shoots at the player (%d shots, player hp %.0f)" % [thug.shots_fired, player.health.hp])
+	player.health.revive(Health.MAX_HP)
+	for k in 12:
+		if thug.is_down():
+			break
+		combat.fire(player, "pistol", player.model.muzzle_position(), thug.global_position + Vector3(0, 1.2, 0), 0.0)
+		await physics_frame
+	_check(thug.is_down() and thug.brain.state == NpcBrain.State.DOWN and thug.model.base_pose == "down", "enough hits knock the gangster down")
+	_check(thug.collision_layer == 0, "people who are down don't block anyone")
+	for i in 60 * int(Health.DOWN_TIME + 2.0):
+		await physics_frame
+	_check(not thug.is_down() and thug.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.AT_HOME], "...and gets up later and goes home (%s)" % thug.brain.state_name())
+	_check(thug.teleport_violations == tele0, "no teleports while fighting or knocked down")
+	# Heat 2+: police who see the player fight.
+	district.director.clock.set_hour(11.0)
+	var cop: Resident = null
+	for i in 60 * 120:
+		for r: Resident in cops:
+			if not r.is_inside and r.can_fight() and r.sim_tier == "near" and r.fight_target == null:
+				cop = r
+				break
+		if cop:
+			break
+		player.global_position = (cops[0] as Resident).global_position + Vector3(6, 0.1, 0) if not (cops[0] as Resident).is_inside else player.global_position
+		await physics_frame
+	_check(cop != null, "an officer is on the beat")
+	if cop == null:
+		return
+	player.global_position = _clear_spot_near(district, cop, 8.0)
+	player.snap_camera()
+	dispatch.heat.clear()
+	dispatch.heat.add(2.5)
+	for i in 60 * 3:
+		if cop.fight_target == player:
+			break
+		await physics_frame
+	_check(cop.fight_target == player, "at heat %d the police come after you" % dispatch.heat.level())
+	_check(dispatch.responding, "police bakkies respond (lights and siren)")
+	# Knocked out: wake at the safehouse, pay the fine, heat cleared.
+	var cash0 := session.progression.cash
+	while not player.is_down():
+		player.on_shot(30.0, cop)
+	_check(not player.input_enabled and player.model.base_pose == "down", "the player can be knocked out")
+	for i in 60 * int(PoliceDispatch.WAKE_TIME + 1.0):
+		await physics_frame
+	var safe: HousePlot = district.plots[GameSession.SAFEHOUSE_ID]
+	_check(player.input_enabled and not player.is_down() and player.global_position.distance_to(safe.door_position()) < 3.0,
+		"...and wakes up at the safehouse")
+	_check(dispatch.heat.level() == 0 and session.progression.cash == maxi(0, cash0 - PoliceDispatch.FINE), "heat cleared, R%d fine paid" % PoliceDispatch.FINE)
+	for i in 30:
+		await physics_frame
+	_check(cops.all(func(r): return r.fight_target != player), "the police stop chasing you")
+
+
+## A point on the navigation mesh about `dist` from `who` with a clear line of sight to them
+## (so a test doesn't put the player behind a yard wall).
+func _clear_spot_near(district: District, who: Node3D, dist: float) -> Vector3:
+	var map := district.destinations.navigation_map
+	var space := who.get_world_3d().direct_space_state
+	for k in 16:
+		var a := TAU * k / 16.0
+		var p := NavigationServer3D.map_get_closest_point(map, who.global_position + Vector3(cos(a), 0, sin(a)) * dist)
+		if p.distance_to(who.global_position) < dist * 0.6:
+			continue
+		var q := PhysicsRayQueryParameters3D.create(who.global_position + Vector3(0, 1.5, 0), p + Vector3(0, 1.3, 0), 1)
+		if space.intersect_ray(q).is_empty():
+			return Vector3(p.x, 0.1, p.z)
+	return who.global_position + Vector3(dist, 0.1, 0)
+
+
 func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 	district.weather.enabled = false
 	district.weather.set_kind("clear")
@@ -1438,14 +1605,14 @@ func _test_district() -> void:
 		total_arrivals += r.arrivals
 	print("  total arrivals: %d" % total_arrivals)
 	for r: Resident in district.residents.values():
-		if not _args.has("verbose") and r.arrivals >= (2 if r.data.role == "kid" else int(minutes * 0.5)) and r.teleport_violations == 0:
+		if not _args.has("verbose") and r.arrivals >= (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5)) and r.teleport_violations == 0:
 			_passed += 3
 			continue
 		print("    %s arrivals=%d failures=%d max_travel=%.1fs state=%s last=%s" % [
 			r.data.id, r.arrivals, r.travel_failures, r.max_travel_time, r.state_name(), r.brain.last_transition])
 		_check(r.teleport_violations == 0, "%s never teleports" % r.data.id)
 		# Kids play for 6 minutes at a stretch, so they make fewer (longer) trips.
-		var need := 2 if r.data.role == "kid" else int(minutes * 0.5)
+		var need := 2 if r.data.role in ["kid", "police"] else int(minutes * 0.5)
 		_check(r.arrivals >= need, "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
 		_check(r.max_travel_time < 150.0, "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
 	print("  daytime states seen: %s" % seen)
@@ -1515,6 +1682,8 @@ func _test_district() -> void:
 	await _test_greetings(main, district, player)
 	print("== ambient life (kids' kick-about, dogs)")
 	await _test_ambient_life(main, district, player)
+	print("== police and combat")
+	await _test_combat_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

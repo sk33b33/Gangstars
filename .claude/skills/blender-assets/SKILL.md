@@ -13,6 +13,8 @@ script, rebuild the .glb, look at it in Godot, fix, repeat. Never hand-edit a .g
 | `tools/blender/build_character.py` | `assets/models/characters/person.glb` | `CharacterModel` (every resident, crew, player) |
 | `tools/blender/build_props.py` | `assets/models/props/props.glb` | `PropLibrary.place()` (plots, parks, courtyards) |
 | `tools/blender/build_dog.py` | `assets/models/animals/dog.glb` | `DogModel` (street and yard dogs) |
+| `tools/blender/build_vehicles.py` | `assets/models/vehicles/vehicles.glb` | `VehicleLibrary` (parked, traffic, drivable, police) |
+| `tools/blender/build_weapons.py` | `assets/models/weapons/weapons.glb` | `WeaponLibrary` + `CharacterModel.set_weapon` |
 
 ## Setup (once per machine)
 Blender 4.5 LTS: download `blender-4.5.x-linux-x64.tar.xz` from download.blender.org/release/Blender4.5/,
@@ -26,7 +28,7 @@ untar to `~/opt`, link `~/bin/blender`. For Forward+ screenshots without a GPU: 
 4. Look at it:
    - Characters: `xvfb-run -a godot --path . -s tools/godot/lineup.gd -- --out=res://tests/output/lineup.png [--close]`
      (6 looks: idle/talk/guard/walk/run, skirts, hair styles, body shapes). Then read the PNG.
-   - Dogs: `lineup.gd -- --dogs`. Named characters: `lineup.gd -- --named`.
+   - Dogs: `lineup.gd -- --dogs`. Vehicles: `--cars`. Police and weapons: `--armed`. Named characters: `lineup.gd -- --named`.
    - Props/in game: the normal `--shot=...` flags (see docs/TECH_NOTES.md), e.g. `--cam=x,y,z,lx,ly,lz`.
 5. Run `tests/run_tests.gd`; it checks bones, body-shape variety and prop placement.
 

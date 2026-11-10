@@ -4,6 +4,36 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Police, weapons and arcade combat; new vehicles (2026-11-10)
+- **Vehicles:** Blender-built (`tools/blender/build_vehicles.py`): hatch, sedan, bakkie, minibus
+  taxi and a police double cab, replacing the box cars everywhere (`VehicleLibrary`).
+- **SAPS-inspired police, matched to reference photos:**
+  - Uniform: light-blue shirts, blue-grey body armour with white POLICE lettering, navy caps
+    with a gold star badge, black duty belts with holsters.
+  - Bakkies: white with a yellow-edged blue band, POLICE lettering, a chrome bull bar and a blue
+    light bar.
+  - The crest is made up; the official emblem is not used.
+- **Police on duty:**
+  - Mobile police posts in each district.
+  - 10 officers on foot beats in pairs: Vleirand has a day and a night shift. Patrols now end
+    when the shift ends.
+  - A bakkie on each district's traffic loop.
+- **Weapons:** a pistol and a pump shotgun (`build_weapons.py`). Gangsters and police carry them
+  holstered or slung, and draw and aim (new aim, hit and down animations).
+- **Arcade combat (no blood, nobody dies):**
+  - **Shooting:** aim with RMB / LT (over-the-shoulder camera, crosshair), shoot with LMB / RT.
+    `CombatSystem` fires hitscan shots with tracers and muzzle flash.
+  - **Health:** `Health` knocks people down at zero; they get up after 20 s and go home.
+  - **Gunfire:** a new incident. Bystanders, kids included, run; police come from up to about
+    70 m.
+  - **Fights:** gangsters shot at fight back (keeping distance, strafing, line of sight). Rival
+    crew-mates join in and your crew backs you up.
+  - **Police response (`PoliceDispatch`):** heat goes from 0 to 5 stars. Heat 1 gets a "Stop!
+    Police!"; at heat 2+ officers who see you fight, and bakkies flash their lights and sound
+    their sirens. Police also take on gangsters shooting nearby. Heat cools while unseen.
+  - **Knocked out:** you wake at the safehouse, pay a R100 fine, and your heat is cleared.
+  - **Sounds:** new gunshot and siren sounds.
+
 ### Ambient life: kids' kick-about and neighbourhood dogs (2026-11-09)
 - **Kids** (`data/npcs/kids.json`, role `kid`):
   - 13 kids live in the three districts as real residents with homes and schedules. They walk to

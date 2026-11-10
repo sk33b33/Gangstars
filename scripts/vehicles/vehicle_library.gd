@@ -87,15 +87,15 @@ static func _police_markings(pivot: Node3D) -> void:
 		door.pixel_size = 0.004
 		door.modulate = Color("#123f8c")
 		door.outline_size = 0
-		door.position = Vector3(0.8, 0.86, z)
+		door.position = Vector3(0.55, 0.42, z)
 		door.rotation.y = 0.0 if side > 0 else PI
 		door.double_sided = false
 		pivot.add_child(door)
 		var back := door.duplicate() as Label3D
-		back.text = "POLISIE"
-		back.position = Vector3(-1.6, 1.2, z)
-		back.font_size = 52
+		back.text = "POLICE"
+		back.position = Vector3(-1.55, 1.72, z)
+		back.font_size = 48
 		pivot.add_child(back)
-		var crest := Geo.quad(pivot, Vector2(0.34, 0.4), Vector3(-0.1, 0.83, z + side * 0.002),
+		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(1.0, 0.82, z + side * 0.002),
 			PixelMaterials.panel("police_crest", Color.WHITE, true), 0.0 if side > 0 else PI)
 		crest.name = "Crest"

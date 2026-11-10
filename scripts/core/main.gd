@@ -152,6 +152,10 @@ func _run_screenshot() -> void:
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
 		district.events.raise(_args.incident, player.global_position + Vector3(0, 0, -6), "you")
 		delay = 3.0
+	if _args.has("firefight") or _args.has("follow"):
+		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
+		await _stage_police_shot(_args.has("firefight"))
+		delay = 2.5 if _args.has("firefight") else 0.2
 	await get_tree().create_timer(delay).timeout
 	if _args.has("interact") and player.current_target:
 		hud.show_message(player.current_target.interact(player))
@@ -162,6 +166,36 @@ func _run_screenshot() -> void:
 	var err := get_viewport().get_texture().get_image().save_png(path)
 	print("screenshot %s -> %s" % [path, error_string(err)])
 	get_tree().quit()
+
+
+## Screenshot staging: frames the officer nearest the player. With firefight, the player stands
+## off against them at heat 3 (both aiming) and the camera looks across the two.
+func _stage_police_shot(firefight: bool) -> void:
+	var cop: Resident = null
+	var best := INF
+	for r: Resident in district.residents.values():
+		if r.data.role == "police" and not r.is_inside and not r.is_down():
+			var d := r.global_position.distance_to(player.global_position)
+			if d < best:
+				best = d
+				cop = r
+	if cop == null:
+		return
+	var side := cop.global_basis.x
+	if firefight:
+		player.global_position = cop.global_position + cop.global_basis.z * 8.0 + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		var to := cop.global_position - player.global_position
+		player.pivot.rotation.y = atan2(-to.x, -to.z)
+		session.police.heat.add(3.0)
+		cop.start_fight(player)
+		player.model.set_weapon("pistol")
+		player.model.draw_weapon(true)
+		player.model.aiming = true
+		var mid := (cop.global_position + player.global_position) * 0.5
+		_add_camera(mid + side * 7.5 + Vector3(0, 2.4, 0), mid + Vector3(0, 1.0, 0))
+	else:
+		_add_camera(cop.global_position + cop.global_basis.z * 5.5 + side * 2.0 + Vector3(0, 1.8, 0), cop.global_position + Vector3(0, 1.1, 0))
 
 
 ## Prints frame/render statistics after the world has settled (windowed run needed for

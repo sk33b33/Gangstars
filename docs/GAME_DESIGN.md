@@ -95,10 +95,10 @@ Out of scope for the initial build. No multiplayer, live service, microtransacti
 
 - Huge open world.
 - Fully enterable interiors for every house.
-- Complex police simulation.
+- Complex police simulation (simple patrols, heat and response exist; no arrests, roadblocks or chases yet).
 - Advanced vehicle physics.
 - Multiplayer.
 - Photorealistic custom assets.
-- Large-scale combat systems.
+- Large-scale combat systems (arcade, non-lethal street fights exist: knock-downs, no gore).
 
 These may be considered later only after the core neighbourhood simulation is stable.
