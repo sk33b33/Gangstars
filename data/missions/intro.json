@@ -201,7 +201,7 @@
         ],
         "crew": 1
       },
-      "intro": "Boeta: \"The Tortel boys say the corner is theirs. Tonight we stand there, together. Don't walk away.\"",
+      "intro": "Boeta: \"The Tortel Laaities say the corner is theirs. Tonight we stand there, together. Don't walk away.\"",
       "description": "Stand your ground at the corner after dark, with your crew.",
       "objectives": [
         {
@@ -227,7 +227,7 @@
         }
       },
       "intro_by_crew": {
-        "tortel_crew": "Boeta: \"You run with the Tortel boys, I know. But the corner belongs to the whole street. Tonight we stand there, together, so everyone can see it.\""
+        "tortel_crew": "Boeta: \"You run with the Tortel Laaities, I know. But the corner belongs to the whole street. Tonight we stand there, together, so everyone can see it.\""
       }
     },
     {

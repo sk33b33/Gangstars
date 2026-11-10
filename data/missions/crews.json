@@ -11,8 +11,8 @@
           "new_face"
         ]
       },
-      "intro": "Marlon: \"So you run with the Tortel Boys now. Walk the lane with me, let the people see your face.\"",
-      "description": "Show your face for the Tortel Boys.",
+      "intro": "Marlon: \"So you run with the Tortel Laaities now. Walk the lane with me, let the people see your face.\"",
+      "description": "Show your face for the Tortel Laaities.",
       "objectives": [
         {
           "id": "corner",
@@ -55,7 +55,7 @@
         "reputation": 40
       },
       "intro": "Marlon: \"Everybody passes the corner. Stand there for us tonight. Nobody pushes us off our own street.\"",
-      "description": "Hold the corner for the Tortel Boys.",
+      "description": "Hold the corner for the Tortel Laaities.",
       "objectives": [
         {
           "id": "hold",
@@ -63,7 +63,7 @@
           "target": "poi_corner",
           "radius": 5,
           "minutes": 20,
-          "text": "Hold the corner for the Tortel Boys"
+          "text": "Hold the corner for the Tortel Laaities"
         }
       ],
       "rewards": {
@@ -76,7 +76,7 @@
     },
     {
       "id": "viper_skin",
-      "title": "Shed Your Skin",
+      "title": "Fresh Threads",
       "giver": "npc_viper_slang",
       "prerequisites": {
         "member_of": "vlakte_vipers",
@@ -84,8 +84,8 @@
           "new_face"
         ]
       },
-      "intro": "Slang: \"New skin, hey? Learn the park, learn the den. A Viper knows every way out.\"",
-      "description": "Learn the Vipers' ground.",
+      "intro": "Slang: \"New threads, hey? Learn the park, learn the den. A Styler always knows the way out.\"",
+      "description": "Learn the Stylers' ground.",
       "objectives": [
         {
           "id": "park",
@@ -129,7 +129,7 @@
         "reputation": 40
       },
       "intro": "Slang: \"Two pickups, no noise. The café, then the Spine Road bus stop. Don't run, don't stare.\"",
-      "description": "Two quiet pickups for the Vipers.",
+      "description": "Two quiet pickups for the Stylers.",
       "time_limit_minutes": 120,
       "fail_text": "Too slow. Slang shakes his head.",
       "objectives": [
@@ -170,8 +170,8 @@
           "new_face"
         ]
       },
-      "intro": "A message from Spider: \"You're a Duin Boy now, even in Westridge. Make them know your name.\"",
-      "description": "Make a name for the Duin Boys in Westridge.",
+      "intro": "A message from Spider: \"You're a Dune Cruiser now, even in Westridge. Make them know your name.\"",
+      "description": "Make a name for the Dune Cruisers in Westridge.",
       "objectives": [
         {
           "id": "chat",
@@ -212,7 +212,7 @@
         ]
       },
       "intro": "Spider: \"Look who finally made it across. The field is ours after dark. Stand there with me.\"",
-      "description": "Stand with the Duin Boys at the field.",
+      "description": "Stand with the Dune Cruisers at the field.",
       "objectives": [
         {
           "id": "talk_spider",
@@ -227,7 +227,7 @@
           "target": "rooi_field",
           "radius": 7,
           "minutes": 20,
-          "text": "Hold the soccer field for the Duin Boys"
+          "text": "Hold the soccer field for the Dune Cruisers"
         }
       ],
       "rewards": {
@@ -248,8 +248,8 @@
           "new_face"
         ]
       },
-      "intro": "A message from Klip: \"Klipspringers don't run and don't rush. Walk Westridge like you own the ground.\"",
-      "description": "Carry the Klipspringers' name in Westridge.",
+      "intro": "A message from Klip: \"Rock Royals don't run and don't rush. Walk Westridge like you own the ground.\"",
+      "description": "Carry the Rock Royals' name in Westridge.",
       "objectives": [
         {
           "id": "park",
@@ -291,7 +291,7 @@
         ]
       },
       "intro": "Klip: \"You came. Good. The lookout is ours at night. Sit with us, say nothing.\"",
-      "description": "Hold the lookout with the Klipspringers.",
+      "description": "Hold the lookout with the Rock Royals.",
       "objectives": [
         {
           "id": "talk_klip",
@@ -306,7 +306,7 @@
           "target": "kalk_lookout",
           "radius": 7,
           "minutes": 20,
-          "text": "Hold the quarry lookout for the Klipspringers"
+          "text": "Hold the quarry lookout for the Rock Royals"
         }
       ],
       "rewards": {

@@ -255,7 +255,7 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
   boss, perk, warning line.
 - `GameSession.choose_crew(id)` joins a crew (it also re-applies perks after a load).
   `open_crew_picker()` shows the choice. `--crew=<id>` skips it; screenshots default to the
-  Vipers, and `--crew-picker` shows the picker.
+  Stylers, and `--crew-picker` shows the picker.
 - `District.set_player_crew` sets `Resident.player_faction`; `Resident.is_ally()` follows from it.
 - PoliceDispatch handles ally back-up and rival turf checks: warn at 12 m, fight after 5 s
   within 6 m, or when aimed at within 15 m.

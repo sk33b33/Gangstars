@@ -221,8 +221,8 @@ sprite("sign_taxi", { w: 16, h: 16 },
 
 // Fictional rival crew tag (Lentegeur).
 sprite("tag_duin", { w: 48, h: 20 },
-  text(24, 2, "DUIN", "Q", { align: "c", scale: 2, gap: 1 }),
-  text(24, 14, "BOYS", "W", { align: "c" }),
+  text(24, 2, "DUNE", "Q", { align: "c", scale: 2, gap: 1 }),
+  text(24, 14, "CRUISERS", "W", { align: "c" }),
   (c) => {
     const keep = []
     for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (c.is(x, y, "QW")) keep.push([x, y])
@@ -268,8 +268,8 @@ sprite("sign_quarry", { w: 48, h: 16 },
   text(24, 3, "DANGER", "Q", { align: "c" }), text(24, 9, "QUARRY", "5", { align: "c" }))
 
 sprite("tag_klip", { w: 48, h: 20 },
-  text(24, 2, "KLIP", "6", { align: "c", scale: 2, gap: 1 }),
-  text(24, 14, "SPRINGERS", "4", { align: "c" }),
+  text(24, 2, "ROCK", "6", { align: "c", scale: 2, gap: 1 }),
+  text(24, 14, "ROYALS", "4", { align: "c" }),
   (c) => {
     const keep = []
     for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (c.is(x, y, "64")) keep.push([x, y])

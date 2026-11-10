@@ -26,7 +26,7 @@ var granted_reward_keys: PackedStringArray = []
 var talk_days := {}
 ## The crew the player joined at the start ("" = not chosen yet; see CrewCatalog).
 var crew_id := ""
-## Perk multiplier on mission cash (Duin Boys' "quick hands").
+## Perk multiplier on mission cash (Dune Cruisers' "quick hands").
 var cash_bonus := 1.0
 
 

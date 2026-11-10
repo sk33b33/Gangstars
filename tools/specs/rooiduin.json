@@ -21,7 +21,7 @@
       "schedule": [ { "activity": "shopping", "destination": "rooi_spaza", "duration": 12, "window": [7, 19] },
         { "activity": "socializing", "destination": "rooi_courtyard", "duration": 18, "window": [10, 21] },
         { "activity": "home", "destination": "home", "duration": 20 } ],
-      "lines": ["Welcome to Lentegeur, my child. Mind the sand.", "The Duin Boys think they own the field."] },
+      "lines": ["Welcome to Lentegeur, my child. Mind the sand.", "The Dune Cruisers think they own the field."] },
     "npc_rooi_solly": { "house": "rooi_h04", "display_name": "Uncle Solly Abrahams", "personality": "steady", "hair_style": "bald", "height": 1.0,
       "shirt_color": "#ecf0f1",
       "schedule": [ { "activity": "working", "destination": "rooi_barber", "duration": 40, "window": [8, 18] },
@@ -43,5 +43,5 @@
   "windows": { "shopping": [7, 19], "waiting": [6, 20], "socializing": [10, 22], "playing": [9, 20], "visiting": [9, 19] },
   "lines": ["Lentegeur sand gets everywhere, hey.", "The taxi to town is always full.", "My laaitie plays on the field every day.",
     "These flats were built before I was born.", "You from Westridge? Nice to meet you, man.", "Shame, the wind today."],
-  "crew_lines": ["Duin Boys run this side.", "You're far from Westridge, bru.", "Keep walking."]
+  "crew_lines": ["Dune Cruisers run this side.", "You're far from Westridge, bru.", "Keep walking."]
 }

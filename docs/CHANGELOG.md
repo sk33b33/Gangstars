@@ -4,6 +4,12 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Crew names (2026-11-10)
+- The fictional crews are renamed in a more Cape Flats style: Tortel Laaities, Spine Road Stylers,
+  Dune Cruisers and Rock Royals (internal ids unchanged).
+- Graffiti tags, mission text, dialogue and turf warnings follow the new names.
+- Real gang names are deliberately not used.
+
 ### Join a crew (2026-11-10)
 - **Choosing a crew:** a new game opens "Who do you run with?". You choose one of four
   **fictional** crews (`data/factions/crews.json`; made-up names, colours and bosses, not real

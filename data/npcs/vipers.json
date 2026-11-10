@@ -1,5 +1,5 @@
 {
-  "_comment": "Vlakte Vipers (fictional crew): based at the den by the Westridge park.",
+  "_comment": "Spine Road Stylers (fictional crew): based at the den by the Westridge park.",
   "residents": [
     {
       "id": "npc_viper_slang",
@@ -29,7 +29,7 @@
         }
       ],
       "lines": [
-        "Patience, bru. The snake doesn't chase.",
+        "Patience, bru. Style takes time.",
         "Keep your head down and your eyes open."
       ],
       "personality": "steady",

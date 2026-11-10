@@ -94,7 +94,7 @@
           "clean_cut"
         ]
       },
-      "intro": "Ma Rachel: \"The Duin Boys chase the kids off the field every night. Talk to Spider, then stand on that field with your crew. Show them it belongs to everyone.\"",
+      "intro": "Ma Rachel: \"The Dune Cruisers chase the kids off the field every night. Talk to Spider, then stand on that field with your crew. Show them it belongs to everyone.\"",
       "description": "Make the field safe again.",
       "objectives": [
         {
@@ -102,7 +102,7 @@
           "type": "talk_to",
           "target": "npc_rooi_spider",
           "allow_knock": true,
-          "text": "Talk to Spider at the Duin Boys' flats (8 Spine Road)"
+          "text": "Talk to Spider at the Dune Cruisers' flats (8 Spine Road)"
         },
         {
           "id": "hold",
@@ -131,7 +131,7 @@
         }
       },
       "intro_by_crew": {
-        "duin_boys": "Ma Rachel: \"I know you run with the Duin Boys, child. Then talk to Spider for me, and let the kids play on that field at night. Stand there with your crew so everyone sees it's agreed.\""
+        "duin_boys": "Ma Rachel: \"I know you run with the Dune Cruisers, child. Then talk to Spider for me, and let the kids play on that field at night. Stand there with your crew so everyone sees it's agreed.\""
       }
     }
   ]

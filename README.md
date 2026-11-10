@@ -6,8 +6,8 @@
 > upgrades, save/load, and a turf map with locked neighbouring districts (Lentegeur, Rocklands) that
 > open through progression. Left-hand traffic and drivable cars, weather, braais and
 > load-shedding, synthesized audio, and a settings menu. Lentegeur, the first expansion district
-> (flats, container shops, a soccer field and the Duin Boys), and Rocklands to the west (limestone
-> cottages, an old quarry and the Klipspringers) are built from the same data pipeline.
+> (flats, container shops, a soccer field and the Dune Cruisers), and Rocklands to the west (limestone
+> cottages, an old quarry and the Rock Royals) are built from the same data pipeline.
 > Runs on Windows/Linux/macOS desktops with keyboard + mouse or a gamepad. Windows build:
 > `tools/export_windows.sh` → `build/windows/Gangstars.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
 > See `docs/TECH_NOTES.md`, `docs/ROADMAP.md`, and `docs/screenshots/`.

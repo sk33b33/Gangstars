@@ -30,7 +30,7 @@
       "schedule": [ { "activity": "relaxing", "destination": "kalk_lookout", "duration": 18, "window": [9, 21] },
         { "activity": "waiting", "destination": "kalk_bus", "duration": 10, "window": [6, 20] },
         { "activity": "home", "destination": "home", "duration": 15 } ],
-      "lines": ["My grandpa cut stone in that quarry.", "The Klipspringers act like they own the lookout."] }
+      "lines": ["My grandpa cut stone in that quarry.", "The Rock Royals act like they own the lookout."] }
   },
   "paint": ["#f4efe4", "#efe9dc", "#f6f2e8", "#e9e4d6", "#dfe8ee", "#f2e6d2"],
   "fences": { "stone": 0.65, "palisade": 0.2, "precast": 0.15 },
@@ -40,5 +40,5 @@
   "windows": { "shopping": [9, 19], "waiting": [6, 20], "socializing": [10, 22], "relaxing": [8, 20], "visiting": [8, 20] },
   "lines": ["The quarry closed before you were born.", "Rocklands dust gets in your shoes, hey.", "Sunday the hall has a bazaar.",
     "My oupa built this wall with his own hands.", "You came all the way from Westridge?", "The wind off the quarry is cold."],
-  "crew_lines": ["Klipspringers run the lookout.", "Long way from home, bru.", "Turn around."]
+  "crew_lines": ["Rock Royals run the lookout.", "Long way from home, bru.", "Turn around."]
 }

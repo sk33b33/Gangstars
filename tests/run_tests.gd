@@ -1025,7 +1025,9 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(thug.is_down() and thug.brain.state == NpcBrain.State.DOWN and thug.model.base_pose == "down", "enough hits knock the gangster down")
 	_check(thug.collision_layer == 0, "people who are down don't block anyone")
-	for i in 60 * int(Health.DOWN_TIME + 2.0):
+	for i in 60 * int(Health.DOWN_TIME * 3.0):   # (police may knock him down again first)
+		if not thug.is_down() and i > 60 * int(Health.DOWN_TIME):
+			break
 		await physics_frame
 	# (He may well pick a fight again straight away: his crew-mates might still be at it.)
 	_check(not thug.is_down() and thug.brain.state != NpcBrain.State.DOWN and thug.collision_layer != 0,
@@ -1088,11 +1090,11 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	var session: GameSession = main.session
 	var prog := session.progression
 	var missions := session.missions
-	_check(prog.crew_id == "vlakte_vipers", "still a Vlakte Viper")
-	_check(district.residents["npc_viper_slang"].model.skeleton().get_node("Body") != null, "the Vipers live at their den")
+	_check(prog.crew_id == "vlakte_vipers", "still a Vlakte Styler")
+	_check(district.residents["npc_viper_slang"].model.skeleton().get_node("Body") != null, "the Stylers live at their den")
 	var viper_m := missions.get_mission("viper_skin")
 	_check(missions.prerequisites_met(viper_m) or missions.is_completed("viper_skin") or missions.active.has("viper_skin"),
-		"Vipers get their crew missions (Shed Your Skin)")
+		"Stylers get their crew missions (Fresh Threads)")
 	_check(not missions.prerequisites_met(missions.get_mission("tortel_business")) and not missions.prerequisites_met(missions.get_mission("duin_word")),
 		"other crews' missions are closed to you")
 	var snap := session.snapshot()
@@ -1102,7 +1104,8 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	var rival: Resident = null
 	for i in 60 * 120:
 		for r: Resident in district.residents.values():
-			if r.data.faction_id == "tortel_crew" and not r.is_inside and r.can_fight() and r.fight_target == null and r.sim_tier != "far":
+			if r.data.faction_id == "tortel_crew" and not r.is_inside and r.can_fight() and r.fight_target == null and r.sim_tier != "far" \
+					and not r.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.PREPARING_TO_LEAVE, NpcBrain.State.FLEEING]:
 				rival = r
 				break
 		if rival:
@@ -1110,6 +1113,10 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 		await physics_frame
 	_check(rival != null, "a Tortel Boy is out on Westridge's streets")
 	if rival:
+		for i in 60 * 6:   # finish any knock-out wake-up first (it disables input)
+			if player.input_enabled and not player.is_down():
+				break
+			await physics_frame
 		player.health.revive(Health.MAX_HP)
 		session.police.heat.clear()
 		player.global_position = _clear_spot_near(district, rival, 9.0)
@@ -1117,10 +1124,13 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 		var to := rival.global_position - player.global_position
 		player.pivot.rotation.y = atan2(-to.x, -to.z)
 		Input.action_press("aim")
-		for i in 60 * 3:
+		for i in 60 * 5:
 			player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
 			if rival.fight_target == player:
 				break
+			if i % 60 == 0 and _args.has("verbose"):
+				var dir := (rival.global_position - player.global_position).normalized()
+				print("    rival %s %s d=%.1f aiming=%s dot=%.2f los=%s tier=%s input=%s state=%s spot=%s" % [rival.data.id, rival.data.faction_id, rival.global_position.distance_to(player.global_position), player.aiming, (-player.pivot.global_basis.z).dot(dir), rival._line_of_sight(player), rival.sim_tier, player.input_enabled, rival.state_name(), rival.spot_phase])
 			await physics_frame
 		Input.action_release("aim")
 		_check(rival.fight_target == player, "a rival you point a gun at fights you")
@@ -1129,18 +1139,18 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	# Perks and home turf (switching crews here only to test each perk).
 	var dm := session.districts
 	session.choose_crew("duin_boys")
-	_check(is_equal_approx(prog.cash_bonus, 1.25), "Duin Boys' perk: +25% mission cash")
+	_check(is_equal_approx(prog.cash_bonus, 1.25), "Dune Cruisers' perk: +25% mission cash")
 	var reqs := dm.get_unlock_requirements("district_east")
 	_check(reqs.any(func(r): return r.text.begins_with("Reputation") and r.text.ends_with("/36")), "your crew's home suburb is cheaper to unlock (%s)" % [reqs.map(func(r): return r.text)])
 	session.choose_crew("klipspringers")
-	_check(player.weapons.has("shotgun"), "Klipspringers' perk: a shotgun")
+	_check(player.weapons.has("shotgun"), "Rock Royals' perk: a shotgun")
 	player.switch_weapon()
 	_check(player.weapon == "shotgun" and player.model.weapon == "shotgun", "Tab / RB switches weapons")
 	player.switch_weapon()
 	var cash0 := prog.cash
 	session.choose_crew("tortel_crew")
 	session.choose_crew("tortel_crew")
-	_check(prog.cash == cash0 + 150, "Tortel Boys' perk pays out once (+R150)")
+	_check(prog.cash == cash0 + 150, "Tortel Laaities' perk pays out once (+R150)")
 	_check(district.residents["npc_h29_1"].is_ally() and not district.residents["npc_viper_slang"].is_ally(), "allies follow your crew")
 	session.choose_crew("vlakte_vipers")
 
@@ -1547,7 +1557,7 @@ func _test_district() -> void:
 		await district.navigation_ready
 	for i in 5:
 		await process_frame
-	# New game: the crew choice comes first. Join the Vlakte Vipers through the picker's button.
+	# New game: the crew choice comes first. Join the Spine Road Stylers through the picker's button.
 	var picker: CrewPicker = main.session.crew_picker
 	_check(picker != null and picker.visible and not player.input_enabled, "a new game opens the crew picker first")
 	_check(picker.button("tortel_crew") != null and picker.button("klipspringers") != null, "four crews to choose from")
@@ -1555,7 +1565,7 @@ func _test_district() -> void:
 	_check(main.session.progression.crew_id == "vlakte_vipers" and not picker.visible and player.input_enabled, "joining a crew closes the picker")
 	_check(district.player_crew_id == "vlakte_vipers" and district.residents["npc_viper_slang"].is_ally() and not district.residents["npc_h29_1"].is_ally(),
 		"crew-mates are allies, other crews aren't")
-	_check(is_equal_approx(main.session.police.heat.gain_mult, 0.6), "Vipers' perk: heat builds slower")
+	_check(is_equal_approx(main.session.police.heat.gain_mult, 0.6), "Stylers' perk: heat builds slower")
 	_check(district.nav_region.navigation_mesh.get_polygon_count() > 0, "navigation mesh baked (%d polys)" % district.nav_region.navigation_mesh.get_polygon_count())
 	_check(district.plots.size() == district.registry.count(), "every house plot is built")
 	_check(district.residents.size() >= 8, "at least 8 residents spawned (%d)" % district.residents.size())

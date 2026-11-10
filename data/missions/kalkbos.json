@@ -103,7 +103,7 @@
           "the_long_haul"
         ]
       },
-      "intro": "Pastor Josephs: \"The Klipspringers chase families off the lookout at night. Talk to Klip, then stand there with your crew. Peacefully.\"",
+      "intro": "Pastor Josephs: \"The Rock Royals chase families off the lookout at night. Talk to Klip, then stand there with your crew. Peacefully.\"",
       "description": "Open the lookout to everyone again.",
       "objectives": [
         {
@@ -111,7 +111,7 @@
           "type": "talk_to",
           "target": "npc_kalk_klip",
           "allow_knock": true,
-          "text": "Talk to Klip at the Klipspringers' house (Spine Road)"
+          "text": "Talk to Klip at the Rock Royals' house (Spine Road)"
         },
         {
           "id": "hold",
