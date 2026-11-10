@@ -19,6 +19,10 @@ const FIRE_HEAT_COOLDOWN := 8.0
 const ASSIST_RANGE := 30.0
 const WAKE_TIME := 4.0
 const FINE := 100
+const TURF_WARN_RANGE := 12.0
+const TURF_FIGHT_RANGE := 6.0
+const TURF_LINGER := 5.0
+const AIM_PROVOKE_RANGE := 15.0
 
 var heat := Heat.new()
 var district: District
@@ -37,6 +41,9 @@ var _warned := {}            # resident id -> time
 var _crew_shooters := {}     # Resident -> time of last shot
 var _siren_timer := 0.0
 var _wake_timer := -1.0
+var _turf_warned := {}      # resident id -> time
+var _linger := {}           # resident id -> seconds the player has stood too close
+var turf_fights := 0
 
 
 func setup(p_district: District, p_player: Player, p_progression: ProgressionState, p_safehouse_id: String) -> void:
@@ -147,7 +154,7 @@ func _update_crews() -> void:
 	for r: Resident in district.residents.values():
 		if r.fight_target != null or not r.can_fight() or r.sim_tier == "far":
 			continue
-		if r.data.role == "player_crew":
+		if r.data.role == "player_crew" or r.is_ally():
 			# Back up the player: take on the nearest attacker (gangster or police).
 			var best: Resident = null
 			var best_d := ASSIST_RANGE
@@ -161,10 +168,50 @@ func _update_crews() -> void:
 				r.start_fight(best)
 		elif r.data.role == "crew":
 			# Rival crews stick together: join a crew-mate already fighting the player.
+			var joined := false
 			for a in attackers:
 				if a.data.faction_id == r.data.faction_id and a.global_position.distance_to(r.global_position) < 20.0:
-					r.start_fight(player)
+					joined = r.start_fight(player)
 					break
+			if not joined:
+				_turf_check(r)
+
+
+## Rival crews on their own turf: a warning first; standing in their face or pointing a gun at
+## them starts a fight.
+func _turf_check(r: Resident) -> void:
+	if district.player_crew_id.is_empty() or player.is_down() or player.is_driving():
+		return
+	var d := r.global_position.distance_to(player.global_position)
+	if d > AIM_PROVOKE_RANGE:
+		_linger.erase(r.data.id)
+		return
+	if player.aiming:
+		var to := (r.global_position - player.global_position).normalized()
+		if (-player.pivot.global_basis.z).dot(to) > 0.92 and r._line_of_sight(player):
+			_provoke(r, "Ja? You pointing that at me?")
+			return
+	var home := district.crews.home(r.data.faction_id)
+	if home.is_empty() or district.area_at(r.global_position) != home:
+		return   # away from their turf they mind their own business
+	if d < TURF_WARN_RANGE and _time - float(_turf_warned.get(r.data.id, -99.0)) > 30.0 and r._line_of_sight(player):
+		_turf_warned[r.data.id] = _time
+		var warning := str(district.crews.get_crew(r.data.faction_id).get("warning", "Not your turf, %s."))
+		r.say(warning % district.crews.display_name(district.player_crew_id).trim_suffix("s"), 3.0)
+		r.face_point(player.global_position)
+	if d < TURF_FIGHT_RANGE:
+		_linger[r.data.id] = float(_linger.get(r.data.id, 0.0)) + TICK
+		if _linger[r.data.id] >= TURF_LINGER:
+			_provoke(r, "I told you. Now you'll learn.")
+	else:
+		_linger.erase(r.data.id)
+
+
+func _provoke(r: Resident, line: String) -> void:
+	_linger.erase(r.data.id)
+	if r.start_fight(player):
+		turf_fights += 1
+		r.say(line, 2.5)
 
 
 # ------------------------------------------------------------------ bakkies

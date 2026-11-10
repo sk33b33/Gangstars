@@ -138,6 +138,9 @@
           "npc_kalk_pastor": 15,
           "npc_kalk_riyaad": 20
         }
+      },
+      "intro_by_crew": {
+        "klipspringers": "Pastor Josephs: \"You're one of Klip's now, I hear. Then ask him to open the lookout to families at night, and stand there with your crew so it's seen to be peaceful.\""
       }
     }
   ]

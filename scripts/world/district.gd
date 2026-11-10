@@ -43,7 +43,11 @@ var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
 ## Residents that don't come from a district's generated data (the neighbourhood kids).
-@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json", "res://data/npcs/police.json"]
+@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json", "res://data/npcs/police.json", "res://data/npcs/vipers.json"]
+## The joinable crews; crew members wear their crew's colour.
+var crews := CrewCatalog.load_default()
+## The crew the player joined ("" until chosen). Its members are allies, the rest rivals.
+var player_crew_id := ""
 ## Kids' kick-about games, one per pitch in the area data ("kickabouts").
 var kickabouts: Array[KickAbout] = []
 ## Shots, hits and gunfire incidents (see CombatSystem).
@@ -318,6 +322,8 @@ func _spawn_residents() -> void:
 		if registry.get_house(npc.home_id) == null and not destinations.has(npc.home_id + ":door"):
 			push_warning("Resident %s has unknown home %s; not spawned." % [npc.id, npc.home_id])
 			continue
+		if npc.role == "crew" and crews.has(npc.faction_id):
+			npc.shirt_color = crews.colour(npc.faction_id)
 		var r: Resident = RESIDENT_SCENE.instantiate()
 		add_child(r)
 		r.setup(npc, destinations, i * 0.11, director.clock, _lookup)
@@ -327,6 +333,13 @@ func _spawn_residents() -> void:
 		r.door_used.connect(_on_door_used)
 		residents[npc.id] = r
 		i += 1
+
+
+## Called when the player joins a crew (new game or load): tells every resident.
+func set_player_crew(crew_id: String) -> void:
+	player_crew_id = crew_id
+	for r: Resident in residents.values():
+		r.player_faction = crew_id
 
 
 func _lookup(id: String) -> Node3D:

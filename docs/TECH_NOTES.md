@@ -249,6 +249,18 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Crews
+
+- `data/factions/crews.json` (`CrewCatalog`) defines the crews: id, name, home district, colour,
+  boss, perk, warning line.
+- `GameSession.choose_crew(id)` joins a crew (it also re-applies perks after a load).
+  `open_crew_picker()` shows the choice. `--crew=<id>` skips it; screenshots default to the
+  Vipers, and `--crew-picker` shows the picker.
+- `District.set_player_crew` sets `Resident.player_faction`; `Resident.is_ally()` follows from it.
+- PoliceDispatch handles ally back-up and rival turf checks: warn at 12 m, fight after 5 s
+  within 6 m, or when aimed at within 15 m.
+- Crew missions use `prerequisites.member_of`; story text varies with `intro_by_crew`.
+
 ## Windows build and gamepad
 
 ```bash

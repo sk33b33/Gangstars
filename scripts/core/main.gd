@@ -57,6 +57,13 @@ func _ready() -> void:
 	apply_settings()
 	hud.show_message("Welcome to Westridge. You've just moved into 13 AZ Berman Drive.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
+	if session.progression.crew_id.is_empty():
+		if _args.has("crew"):
+			session.choose_crew(str(_args.crew))
+		elif (_args.has("shot") or _args.has("profile")) and not _args.has("crew-picker"):
+			session.choose_crew("vlakte_vipers")   # screenshots: skip the choice
+		else:
+			session.open_crew_picker()
 	if _args.has("hour"):
 		district.director.clock.set_hour(float(_args.hour))  # after loading, so it wins over the save
 	if _args.has("shot"):

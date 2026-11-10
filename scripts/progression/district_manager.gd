@@ -109,7 +109,13 @@ func state(id: String) -> String:
 
 ## Each requirement with whether it is met: [{text, met: bool}].
 func get_unlock_requirements(id: String) -> Array:
-	var req: Dictionary = get_district(id).get("unlock_requirements", {})
+	var req: Dictionary = get_district(id).get("unlock_requirements", {}).duplicate(true)
+	if id == crew_home and not id.is_empty():
+		# Your crew's home suburb welcomes you: less reputation and one crew member fewer needed.
+		if req.has("reputation"):
+			req.reputation = int(round(float(req.reputation) * 0.6))
+		if req.has("crew"):
+			req.crew = maxi(1, int(req.crew) - 1)
 	var out: Array = []
 	for m in req.get("missions", []):
 		var done := progression.completed_mission_ids.has(str(m))
@@ -159,6 +165,8 @@ func check_unlockable() -> void:
 
 
 var mission_titles: Dictionary = {}
+## The player's crew's home district (cheaper to unlock); set by the session.
+var crew_home := ""
 
 
 func _mission_title(id: String) -> String:

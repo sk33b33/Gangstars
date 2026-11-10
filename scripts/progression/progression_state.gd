@@ -24,6 +24,10 @@ var met_npc_ids: PackedStringArray = []
 var safehouse_upgrades: PackedStringArray = []
 var granted_reward_keys: PackedStringArray = []
 var talk_days := {}
+## The crew the player joined at the start ("" = not chosen yet; see CrewCatalog).
+var crew_id := ""
+## Perk multiplier on mission cash (Duin Boys' "quick hands").
+var cash_bonus := 1.0
 
 
 func can_afford(amount: int) -> bool:
@@ -103,7 +107,7 @@ func grant(key: String, rewards: Dictionary) -> bool:
 	if granted_reward_keys.has(key):
 		return false
 	granted_reward_keys.append(key)
-	cash = maxi(0, cash + int(rewards.get("cash", 0)))
+	cash = maxi(0, cash + int(round(float(rewards.get("cash", 0)) * cash_bonus)))
 	reputation = clampi(reputation + int(rewards.get("reputation", 0)), 0, MAX_REPUTATION)
 	crew_influence = maxi(0, crew_influence + int(rewards.get("crew_influence", 0)))
 	var rel: Dictionary = rewards.get("relationship", {})
@@ -131,6 +135,7 @@ func to_dict() -> Dictionary:
 		"safehouse_upgrades": Array(safehouse_upgrades),
 		"granted_reward_keys": Array(granted_reward_keys),
 		"talk_days": talk_days.duplicate(),
+		"crew_id": crew_id,
 	}
 
 
@@ -158,6 +163,7 @@ func load_dict(d: Variant) -> String:
 	met_npc_ids = PackedStringArray(d.get("met_npc_ids", []))
 	safehouse_upgrades = PackedStringArray(d.get("safehouse_upgrades", []))
 	granted_reward_keys = PackedStringArray(d.granted_reward_keys)
+	crew_id = str(d.get("crew_id", ""))
 	talk_days = d.get("talk_days", {}) if d.get("talk_days") is Dictionary else {}
 	changed.emit()
 	return ""

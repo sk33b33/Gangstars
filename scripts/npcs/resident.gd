@@ -114,6 +114,8 @@ var _prev_state := -1
 var waves := 0
 ## Combat (see CombatSystem): health, who we're fighting, and counters for tests.
 var health := Health.new()
+## The player's crew (set by District.set_player_crew): our crew-mates treat the player as one of us.
+var player_faction := ""
 var combat: CombatSystem
 var fight_target: Node3D
 var shots_fired := 0
@@ -269,7 +271,7 @@ func _update_pose() -> void:
 func _maybe_wave(s: NpcBrain.State) -> void:
 	var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
 	var near := pl != null and pl.visible and pl.global_position.distance_to(global_position) < 7.0
-	var friendly := data.role in ["resident", "player_crew", "kid"] and not brain.is_reacting() \
+	var friendly := (data.role in ["resident", "player_crew", "kid"] or is_ally()) and not brain.is_reacting() \
 		and not brain.state in [NpcBrain.State.FIGHTING, NpcBrain.State.DOWN]
 	if friendly and _wave_cooldown <= 0.0:
 		if near and not _player_was_near:
@@ -725,8 +727,15 @@ func on_shot(damage: float, shooter: Node3D) -> bool:
 	return false
 
 
+## A member of the player's own crew.
+func is_ally() -> bool:
+	return data.role == "crew" and not player_faction.is_empty() and data.faction_id == player_faction
+
+
 func _hostile_to(other: Node3D) -> bool:
 	if other == self:
+		return false
+	if other is Player and is_ally():
 		return false
 	if data.role == "player_crew" and other is Player:
 		return false

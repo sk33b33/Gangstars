@@ -1,0 +1,53 @@
+{
+  "_comment": "Fictional crews (made-up names, colours and bosses; not real gangs). The player joins one at the start of a new game.",
+  "crews": [
+    {
+      "id": "tortel_crew",
+      "name": "Tortel Boys",
+      "home": "starter",
+      "home_name": "Westridge (Tortel Lane)",
+      "colour": "#8b1e2a",
+      "boss": "npc_h29_1",
+      "perk": "home_turf",
+      "perk_text": "Home turf: +R150 and a head start on Westridge influence.",
+      "pitch": "Born and raised on Tortel Lane. They look after their own street and the corner shop.",
+      "warning": "This is Tortel Lane, %s. Keep walking."
+    },
+    {
+      "id": "vlakte_vipers",
+      "name": "Vlakte Vipers",
+      "home": "starter",
+      "home_name": "Westridge (the den by the park)",
+      "colour": "#1f7a4c",
+      "boss": "npc_viper_slang",
+      "perk": "low_profile",
+      "perk_text": "Low profile: police heat builds 40% slower.",
+      "pitch": "Quiet, clever and patient. They'd rather not be seen than be feared.",
+      "warning": "Vipers' park, %s. Don't get bitten."
+    },
+    {
+      "id": "duin_boys",
+      "name": "Duin Boys",
+      "home": "district_east",
+      "home_name": "Lentegeur",
+      "colour": "#c99a1c",
+      "boss": "npc_rooi_spider",
+      "perk": "quick_hands",
+      "perk_text": "Quick hands: +25% cash from every mission. Lentegeur is cheaper to unlock.",
+      "pitch": "The flats and the field are theirs. Fast with money, faster on their feet.",
+      "warning": "Duin Boys' side, %s. Turn around."
+    },
+    {
+      "id": "klipspringers",
+      "name": "Klipspringers",
+      "home": "district_west",
+      "home_name": "Rocklands",
+      "colour": "#5e6672",
+      "boss": "npc_kalk_klip",
+      "perk": "stone_hard",
+      "perk_text": "Hard as stone: you start with a shotgun as well as the pistol. Rocklands is cheaper to unlock.",
+      "pitch": "Old quarry families. Slow to anger, impossible to move.",
+      "warning": "Klipspringers' rocks, %s. Go back."
+    }
+  ]
+}

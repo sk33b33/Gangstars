@@ -56,6 +56,13 @@ var _hair: Array[MeshInstance3D] = []
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
+	# A rebuild (e.g. the player changing into crew colours) starts from a clean slate.
+	_hair = []
+	_hat = null
+	_hand = null
+	_holster = null
+	_chest = null
+	_gun = null
 	var height: float = clampf(float(opts.get("height", 1.0)), 0.55, 1.12)
 	var child := height < 0.8
 	# Children are slimmer for their height, with a relatively bigger head (below).

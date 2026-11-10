@@ -65,6 +65,8 @@ func prerequisites_met(m: MissionData) -> bool:
 	for d in pre.get("districts", []):
 		if str(d) != "starter" and not progression.unlocked_district_ids.has(str(d)):
 			return false
+	if pre.has("member_of") and progression.crew_id != str(pre.member_of):
+		return false
 	return true
 
 
@@ -85,6 +87,8 @@ func missing_requirements(id: String) -> PackedStringArray:
 	for d in m.prerequisites.get("districts", []):
 		if str(d) != "starter" and not progression.unlocked_district_ids.has(str(d)):
 			out.append("unlock %s" % str(d))
+	if m.prerequisites.has("member_of") and progression.crew_id != str(m.prerequisites.member_of):
+		out.append("be a member of that crew")
 	var rep := int(m.prerequisites.get("reputation", 0))
 	if progression.reputation < rep:
 		out.append("reach %d reputation (now %d)" % [rep, progression.reputation])
@@ -139,6 +143,8 @@ func start(id: String) -> bool:
 	active[id] = {"objective": 0, "count": 0.0, "seen": [], "started": absolute_minutes()}
 	var m: MissionData = catalog[id]
 	mission_started.emit(m)
+	if m.auto_start and not m.intro_for(progression.crew_id).is_empty():
+		message.emit(m.intro_for(progression.crew_id))
 	message.emit("Mission started: %s — %s" % [m.title, objective_text(id)])
 	_check_stat_objectives()
 	return true
@@ -186,7 +192,8 @@ func on_interaction(kind: String, target: String) -> String:
 	for npc in talked:
 		var m := available_from(npc)
 		if m != null and start(m.id):
-			notes.append(m.intro if not m.intro.is_empty() else "New mission: " + m.title)
+			var intro := m.intro_for(progression.crew_id)
+			notes.append(intro if not intro.is_empty() else "New mission: " + m.title)
 	return "\n".join(notes)
 
 

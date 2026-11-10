@@ -52,6 +52,7 @@ var _saved_mask := 0
 var health := Health.new()
 var combat: CombatSystem
 var weapon := "pistol"
+var weapons: PackedStringArray = ["pistol"]
 var aiming := false
 var shots_fired := 0
 var _fire_cd := 0.0
@@ -63,8 +64,7 @@ const AIM_SPEED := 2.0
 
 
 func _ready() -> void:
-	model.build(Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"),
-		{"hair_style": "short", "height": 1.02, "sleeves": "short"})
+	wear_colours(Color("#f1eee8"), Color("#a63a4c"))
 	spring_arm.add_excluded_object(get_rid())
 	_arm_length = spring_arm.spring_length
 	model.set_weapon(weapon)
@@ -191,6 +191,27 @@ func _physics_process(delta: float) -> void:
 		interacted.emit(msg)
 
 
+## Dresses the player (crew colours: shirt and cap). Keeps the weapon.
+func wear_colours(shirt: Color, cap: Color) -> void:
+	model.build(shirt, Color("#29384a"), Color("#8d5a3b"), cap, {"hair_style": "short", "height": 1.02, "sleeves": "short"})
+	if not weapon.is_empty():
+		model.set_weapon(weapon)
+
+
+func add_weapon(w: String) -> void:
+	if not weapons.has(w) and not WeaponLibrary.stats(w).is_empty():
+		weapons.append(w)
+
+
+## Tab / RB: next weapon.
+func switch_weapon() -> void:
+	if weapons.size() < 2:
+		return
+	weapon = weapons[(weapons.find(weapon) + 1) % weapons.size()]
+	model.set_weapon(weapon)
+	model.draw_weapon(aiming or _draw_timer > 0.0)
+
+
 ## Aim with RMB / LT (over-the-shoulder camera, slower walk), fire with LMB / RT.
 func _update_aim(delta: float) -> void:
 	aiming = input_enabled and not weapon.is_empty() and Input.is_action_pressed("aim")
@@ -200,6 +221,8 @@ func _update_aim(delta: float) -> void:
 	var k := clampf(delta * 10.0, 0.0, 1.0)
 	spring_arm.spring_length = lerpf(spring_arm.spring_length, AIM_ARM_LENGTH if aiming else _arm_length, k)
 	spring_arm.position.x = lerpf(spring_arm.position.x, AIM_SHOULDER if aiming else 0.0, k)
+	if _pressed("switch_weapon"):
+		switch_weapon()
 	_fire_cd = maxf(0.0, _fire_cd - delta)
 	if aiming and _fire_cd <= 0.0 and input_enabled and Input.is_action_just_pressed("fire"):
 		shoot()

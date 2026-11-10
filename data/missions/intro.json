@@ -225,6 +225,9 @@
         "influence": {
           "starter": 25
         }
+      },
+      "intro_by_crew": {
+        "tortel_crew": "Boeta: \"You run with the Tortel boys, I know. But the corner belongs to the whole street. Tonight we stand there, together, so everyone can see it.\""
       }
     },
     {

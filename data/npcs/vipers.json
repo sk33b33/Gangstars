@@ -1,0 +1,90 @@
+{
+  "_comment": "Vlakte Vipers (fictional crew): based at the den by the Westridge park.",
+  "residents": [
+    {
+      "id": "npc_viper_slang",
+      "display_name": "Slang",
+      "home_id": "vipers_den",
+      "role": "crew",
+      "faction_id": "vlakte_vipers",
+      "shirt_color": "#1f7a4c",
+      "pants_color": "#1c2833",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.5,
+      "start_delay": 30.0,
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "poi_park",
+          "duration": 40,
+          "window": [
+            10,
+            23
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "vipers_den:door",
+          "duration": 35
+        }
+      ],
+      "lines": [
+        "Patience, bru. The snake doesn't chase.",
+        "Keep your head down and your eyes open."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        10,
+        1
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.04,
+      "sleeves": "short",
+      "accessories": [
+        "sunglasses"
+      ]
+    },
+    {
+      "id": "npc_viper_gifie",
+      "display_name": "Gifie",
+      "home_id": "vipers_den",
+      "role": "crew",
+      "faction_id": "vlakte_vipers",
+      "shirt_color": "#1f7a4c",
+      "pants_color": "#2c3e50",
+      "skin_color": "#6b4430",
+      "walk_speed": 1.6,
+      "start_delay": 36.0,
+      "schedule": [
+        {
+          "activity": "follow",
+          "destination": "@leader:npc_viper_slang",
+          "duration": 60,
+          "window": [
+            10,
+            23
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "vipers_den:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Slang talks, I listen.",
+        "You looking at something?"
+      ],
+      "personality": "tough",
+      "active_hours": [
+        10,
+        1
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#1f7a4c",
+      "height": 0.98,
+      "sleeves": "short"
+    }
+  ]
+}

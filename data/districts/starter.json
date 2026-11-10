@@ -112,6 +112,16 @@
         -40
       ],
       "facing": "south"
+    },
+    {
+      "type": "crew_den",
+      "id": "vipers_den",
+      "position": [
+        -12,
+        -40
+      ],
+      "facing": "south",
+      "tag": "VIPERS"
     }
   ],
   "pois": [

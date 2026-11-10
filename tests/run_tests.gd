@@ -518,7 +518,7 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 16, "16 missions load from the district catalog")
+	_check(GameSession._load_all_missions().size() == 24, "24 missions load from the district and crew catalogs")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
@@ -778,7 +778,12 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	# A car brakes for the player standing in its lane, without shoving them.
 	var car: TrafficCar = traffic.cars[0]
 	for i in 600:
-		if not car.curve_points.has(car.lane_index()) and car.speed > 6.0:
+		# On a straight with no corner coming up within the next few route points.
+		var li := car.lane_index()
+		var straight := true
+		for k in 4:
+			straight = straight and not car.curve_points.has((li + k) % car.route.size())
+		if straight and car.speed > 6.0:
 			break
 		await physics_frame
 	var stand := car.global_position + car.global_basis.z * 9.0
@@ -963,7 +968,7 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	var thug: Resident = null
 	for i in 60 * 120:
 		for r: Resident in district.residents.values():
-			if r.data.role == "crew" and not r.is_inside and r.can_fight() and district.resident_district(r) == "starter" \
+			if r.data.role == "crew" and not r.is_ally() and not r.is_inside and r.can_fight() and district.resident_district(r) == "starter" \
 					and r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING, NpcBrain.State.PATROLLING]:
 				thug = r
 				break
@@ -989,7 +994,10 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 		player.global_position = _clear_spot_near(district, thug, 3.5)
 		await physics_frame
 	_check(thug.health.hp < hp0, "a shot hurts the gangster (%.0f -> %.0f)" % [hp0, thug.health.hp])
-	await physics_frame
+	for i in 120:   # someone sitting down stands up first, then fights
+		if thug.fight_target == player:
+			break
+		await physics_frame
 	_check(thug.fight_target == player and thug.brain.state == NpcBrain.State.FIGHTING and thug.model.weapon_drawn,
 		"the gangster draws and fights back (%s)" % thug.brain.state_name())
 	_check(dispatch.heat.level() >= 1, "shooting in the street raises heat (%d)" % dispatch.heat.level())
@@ -1019,7 +1027,9 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	_check(thug.collision_layer == 0, "people who are down don't block anyone")
 	for i in 60 * int(Health.DOWN_TIME + 2.0):
 		await physics_frame
-	_check(not thug.is_down() and thug.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.AT_HOME], "...and gets up later and goes home (%s)" % thug.brain.state_name())
+	# (He may well pick a fight again straight away: his crew-mates might still be at it.)
+	_check(not thug.is_down() and thug.brain.state != NpcBrain.State.DOWN and thug.collision_layer != 0,
+		"...and gets back on his feet later (%s)" % thug.brain.state_name())
 	_check(thug.teleport_violations == tele0, "no teleports while fighting or knocked down")
 	# If the gangster knocked the player out above, let the wake-up (which clears heat) finish first.
 	for i in 60 * 6:
@@ -1052,6 +1062,7 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 60 * 8:
 		if cop.fight_target == player:
 			break
+		player.health.hp = Health.MAX_HP   # nobody else may knock the player out mid-check (the wake-up clears heat)
 		if i % 120 == 119:   # officers keep walking: step back into their line of sight
 			player.global_position = _clear_spot_near(district, cop, 8.0)
 		await physics_frame
@@ -1071,6 +1082,67 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 30:
 		await physics_frame
 	_check(cops.all(func(r): return r.fight_target != player), "the police stop chasing you")
+
+
+func _test_crews_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var prog := session.progression
+	var missions := session.missions
+	_check(prog.crew_id == "vlakte_vipers", "still a Vlakte Viper")
+	_check(district.residents["npc_viper_slang"].model.skeleton().get_node("Body") != null, "the Vipers live at their den")
+	var viper_m := missions.get_mission("viper_skin")
+	_check(missions.prerequisites_met(viper_m) or missions.is_completed("viper_skin") or missions.active.has("viper_skin"),
+		"Vipers get their crew missions (Shed Your Skin)")
+	_check(not missions.prerequisites_met(missions.get_mission("tortel_business")) and not missions.prerequisites_met(missions.get_mission("duin_word")),
+		"other crews' missions are closed to you")
+	var snap := session.snapshot()
+	_check(snap.progression.crew_id == "vlakte_vipers", "the save remembers your crew")
+	# A rival on their turf: pointing a gun at them starts a fight.
+	district.director.clock.set_hour(16.0)
+	var rival: Resident = null
+	for i in 60 * 120:
+		for r: Resident in district.residents.values():
+			if r.data.faction_id == "tortel_crew" and not r.is_inside and r.can_fight() and r.fight_target == null and r.sim_tier != "far":
+				rival = r
+				break
+		if rival:
+			break
+		await physics_frame
+	_check(rival != null, "a Tortel Boy is out on Westridge's streets")
+	if rival:
+		player.health.revive(Health.MAX_HP)
+		session.police.heat.clear()
+		player.global_position = _clear_spot_near(district, rival, 9.0)
+		player.snap_camera()
+		var to := rival.global_position - player.global_position
+		player.pivot.rotation.y = atan2(-to.x, -to.z)
+		Input.action_press("aim")
+		for i in 60 * 3:
+			player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
+			if rival.fight_target == player:
+				break
+			await physics_frame
+		Input.action_release("aim")
+		_check(rival.fight_target == player, "a rival you point a gun at fights you")
+		_check(not district.residents["npc_viper_slang"].is_ally() or district.residents["npc_viper_slang"]._hostile_to(player) == false, "your own crew never fights you")
+		rival.end_fight()
+	# Perks and home turf (switching crews here only to test each perk).
+	var dm := session.districts
+	session.choose_crew("duin_boys")
+	_check(is_equal_approx(prog.cash_bonus, 1.25), "Duin Boys' perk: +25% mission cash")
+	var reqs := dm.get_unlock_requirements("district_east")
+	_check(reqs.any(func(r): return r.text.begins_with("Reputation") and r.text.ends_with("/36")), "your crew's home suburb is cheaper to unlock (%s)" % [reqs.map(func(r): return r.text)])
+	session.choose_crew("klipspringers")
+	_check(player.weapons.has("shotgun"), "Klipspringers' perk: a shotgun")
+	player.switch_weapon()
+	_check(player.weapon == "shotgun" and player.model.weapon == "shotgun", "Tab / RB switches weapons")
+	player.switch_weapon()
+	var cash0 := prog.cash
+	session.choose_crew("tortel_crew")
+	session.choose_crew("tortel_crew")
+	_check(prog.cash == cash0 + 150, "Tortel Boys' perk pays out once (+R150)")
+	_check(district.residents["npc_h29_1"].is_ally() and not district.residents["npc_viper_slang"].is_ally(), "allies follow your crew")
+	session.choose_crew("vlakte_vipers")
 
 
 ## A point on the navigation mesh about `dist` from `who` with a clear line of sight to them
@@ -1473,6 +1545,17 @@ func _test_district() -> void:
 	var player: Player = main.get_node("Player")
 	if not district.is_navigation_ready:
 		await district.navigation_ready
+	for i in 5:
+		await process_frame
+	# New game: the crew choice comes first. Join the Vlakte Vipers through the picker's button.
+	var picker: CrewPicker = main.session.crew_picker
+	_check(picker != null and picker.visible and not player.input_enabled, "a new game opens the crew picker first")
+	_check(picker.button("tortel_crew") != null and picker.button("klipspringers") != null, "four crews to choose from")
+	picker.button("vlakte_vipers").pressed.emit()
+	_check(main.session.progression.crew_id == "vlakte_vipers" and not picker.visible and player.input_enabled, "joining a crew closes the picker")
+	_check(district.player_crew_id == "vlakte_vipers" and district.residents["npc_viper_slang"].is_ally() and not district.residents["npc_h29_1"].is_ally(),
+		"crew-mates are allies, other crews aren't")
+	_check(is_equal_approx(main.session.police.heat.gain_mult, 0.6), "Vipers' perk: heat builds slower")
 	_check(district.nav_region.navigation_mesh.get_polygon_count() > 0, "navigation mesh baked (%d polys)" % district.nav_region.navigation_mesh.get_polygon_count())
 	_check(district.plots.size() == district.registry.count(), "every house plot is built")
 	_check(district.residents.size() >= 8, "at least 8 residents spawned (%d)" % district.residents.size())
@@ -1703,6 +1786,8 @@ func _test_district() -> void:
 	await _test_ambient_life(main, district, player)
 	print("== police and combat")
 	await _test_combat_in_game(main, district, player)
+	print("== crews (choice, allies and rivals, perks, crew missions)")
+	await _test_crews_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

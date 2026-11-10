@@ -1,0 +1,321 @@
+{
+  "_comment": "Crew missions: only for members of that (fictional) crew (prerequisites.member_of).",
+  "missions": [
+    {
+      "id": "tortel_business",
+      "title": "Tortel Lane Business",
+      "giver": "npc_h29_1",
+      "prerequisites": {
+        "member_of": "tortel_crew",
+        "missions": [
+          "new_face"
+        ]
+      },
+      "intro": "Marlon: \"So you run with the Tortel Boys now. Walk the lane with me, let the people see your face.\"",
+      "description": "Show your face for the Tortel Boys.",
+      "objectives": [
+        {
+          "id": "corner",
+          "type": "visit",
+          "target": "poi_corner",
+          "radius": 3,
+          "text": "Meet at the corner"
+        },
+        {
+          "id": "chat",
+          "type": "talk_distinct",
+          "count": 3,
+          "text": "Chat with 3 neighbours"
+        },
+        {
+          "id": "talk_1",
+          "type": "talk_to",
+          "target": "npc_h29_1",
+          "allow_knock": true,
+          "text": "Report back to Marlon"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 15,
+        "influence": {
+          "starter": 10
+        }
+      }
+    },
+    {
+      "id": "tortel_corner",
+      "title": "Our Corner",
+      "giver": "npc_h29_1",
+      "prerequisites": {
+        "member_of": "tortel_crew",
+        "missions": [
+          "tortel_business"
+        ],
+        "reputation": 40
+      },
+      "intro": "Marlon: \"Everybody passes the corner. Stand there for us tonight. Nobody pushes us off our own street.\"",
+      "description": "Hold the corner for the Tortel Boys.",
+      "objectives": [
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "poi_corner",
+          "radius": 5,
+          "minutes": 20,
+          "text": "Hold the corner for the Tortel Boys"
+        }
+      ],
+      "rewards": {
+        "cash": 200,
+        "reputation": 20,
+        "influence": {
+          "starter": 15
+        }
+      }
+    },
+    {
+      "id": "viper_skin",
+      "title": "Shed Your Skin",
+      "giver": "npc_viper_slang",
+      "prerequisites": {
+        "member_of": "vlakte_vipers",
+        "missions": [
+          "new_face"
+        ]
+      },
+      "intro": "Slang: \"New skin, hey? Learn the park, learn the den. A Viper knows every way out.\"",
+      "description": "Learn the Vipers' ground.",
+      "objectives": [
+        {
+          "id": "park",
+          "type": "visit",
+          "target": "poi_park",
+          "radius": 3,
+          "text": "Walk through the park"
+        },
+        {
+          "id": "den",
+          "type": "visit",
+          "target": "vipers_den:door",
+          "radius": 2.5,
+          "text": "Find the den"
+        },
+        {
+          "id": "talk_slang",
+          "type": "talk_to",
+          "target": "npc_viper_slang",
+          "allow_knock": true,
+          "text": "Talk to Slang"
+        }
+      ],
+      "rewards": {
+        "cash": 100,
+        "reputation": 15,
+        "influence": {
+          "starter": 10
+        }
+      }
+    },
+    {
+      "id": "viper_quiet",
+      "title": "Quiet Money",
+      "giver": "npc_viper_slang",
+      "prerequisites": {
+        "member_of": "vlakte_vipers",
+        "missions": [
+          "viper_skin"
+        ],
+        "reputation": 40
+      },
+      "intro": "Slang: \"Two pickups, no noise. The café, then the Spine Road bus stop. Don't run, don't stare.\"",
+      "description": "Two quiet pickups for the Vipers.",
+      "time_limit_minutes": 120,
+      "fail_text": "Too slow. Slang shakes his head.",
+      "objectives": [
+        {
+          "id": "cafe",
+          "type": "visit",
+          "target": "poi_shop",
+          "radius": 3,
+          "text": "Pick up at the café"
+        },
+        {
+          "id": "bus",
+          "type": "visit",
+          "target": "poi_bus_stop_mossie",
+          "radius": 3,
+          "text": "Pick up at the Spine Road bus stop"
+        },
+        {
+          "id": "talk_slang",
+          "type": "talk_to",
+          "target": "npc_viper_slang",
+          "allow_knock": true,
+          "text": "Bring it to Slang"
+        }
+      ],
+      "rewards": {
+        "cash": 220,
+        "reputation": 15
+      }
+    },
+    {
+      "id": "duin_word",
+      "title": "Word from Lentegeur",
+      "auto_start": true,
+      "prerequisites": {
+        "member_of": "duin_boys",
+        "missions": [
+          "new_face"
+        ]
+      },
+      "intro": "A message from Spider: \"You're a Duin Boy now, even in Westridge. Make them know your name.\"",
+      "description": "Make a name for the Duin Boys in Westridge.",
+      "objectives": [
+        {
+          "id": "chat",
+          "type": "talk_distinct",
+          "count": 3,
+          "text": "Chat with 3 neighbours"
+        },
+        {
+          "id": "corner",
+          "type": "visit",
+          "target": "poi_corner",
+          "radius": 3,
+          "text": "Be seen at the corner"
+        },
+        {
+          "id": "rep",
+          "type": "reputation",
+          "value": 30,
+          "text": "Reach 30 reputation"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 10
+      }
+    },
+    {
+      "id": "duin_home",
+      "title": "Back to the Flats",
+      "giver": "npc_rooi_spider",
+      "prerequisites": {
+        "member_of": "duin_boys",
+        "missions": [
+          "duin_word"
+        ],
+        "districts": [
+          "district_east"
+        ]
+      },
+      "intro": "Spider: \"Look who finally made it across. The field is ours after dark. Stand there with me.\"",
+      "description": "Stand with the Duin Boys at the field.",
+      "objectives": [
+        {
+          "id": "talk_spider",
+          "type": "talk_to",
+          "target": "npc_rooi_spider",
+          "allow_knock": true,
+          "text": "Talk to Spider"
+        },
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "rooi_field",
+          "radius": 7,
+          "minutes": 20,
+          "text": "Hold the soccer field for the Duin Boys"
+        }
+      ],
+      "rewards": {
+        "cash": 250,
+        "reputation": 20,
+        "influence": {
+          "district_east": 20
+        }
+      }
+    },
+    {
+      "id": "klip_word",
+      "title": "Word from Rocklands",
+      "auto_start": true,
+      "prerequisites": {
+        "member_of": "klipspringers",
+        "missions": [
+          "new_face"
+        ]
+      },
+      "intro": "A message from Klip: \"Klipspringers don't run and don't rush. Walk Westridge like you own the ground.\"",
+      "description": "Carry the Klipspringers' name in Westridge.",
+      "objectives": [
+        {
+          "id": "park",
+          "type": "visit",
+          "target": "poi_park",
+          "radius": 3,
+          "text": "Walk through the park"
+        },
+        {
+          "id": "bus",
+          "type": "visit",
+          "target": "poi_bus_stop",
+          "radius": 3,
+          "text": "Wait at the AZ Berman Drive bus stop"
+        },
+        {
+          "id": "rep",
+          "type": "reputation",
+          "value": 30,
+          "text": "Reach 30 reputation"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 10
+      }
+    },
+    {
+      "id": "klip_home",
+      "title": "On the Rocks",
+      "giver": "npc_kalk_klip",
+      "prerequisites": {
+        "member_of": "klipspringers",
+        "missions": [
+          "klip_word"
+        ],
+        "districts": [
+          "district_west"
+        ]
+      },
+      "intro": "Klip: \"You came. Good. The lookout is ours at night. Sit with us, say nothing.\"",
+      "description": "Hold the lookout with the Klipspringers.",
+      "objectives": [
+        {
+          "id": "talk_klip",
+          "type": "talk_to",
+          "target": "npc_kalk_klip",
+          "allow_knock": true,
+          "text": "Talk to Klip"
+        },
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "kalk_lookout",
+          "radius": 7,
+          "minutes": 20,
+          "text": "Hold the quarry lookout for the Klipspringers"
+        }
+      ],
+      "rewards": {
+        "cash": 250,
+        "reputation": 20,
+        "influence": {
+          "district_west": 20
+        }
+      }
+    }
+  ]
+}

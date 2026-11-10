@@ -129,6 +129,9 @@
           "npc_rooi_rachel": 15,
           "npc_rooi_kaylin": 20
         }
+      },
+      "intro_by_crew": {
+        "duin_boys": "Ma Rachel: \"I know you run with the Duin Boys, child. Then talk to Spider for me, and let the kids play on that field at night. Stand there with your crew so everyone sees it's agreed.\""
       }
     }
   ]

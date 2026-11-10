@@ -5,6 +5,7 @@ extends Node
 ## (interactions, position) and the HUD (stats, tracker, menus, markers).
 
 const MISSIONS_FILE := "res://data/missions/intro.json"
+const CREW_MISSIONS_FILE := "res://data/missions/crews.json"
 const UPGRADES_FILE := "res://data/progression/safehouse_upgrades.json"
 const SAFEHOUSE_ID := "starter_h05"
 const TRACK_INTERVAL := 0.25
@@ -21,6 +22,7 @@ var districts: DistrictManager
 var turf_map: TurfMap
 var audio: AudioDirector
 var police: PoliceDispatch
+var crew_picker: CrewPicker
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -33,7 +35,7 @@ var _beacon: MeshInstance3D
 static func _load_all_missions() -> Array[MissionData]:
 	var out: Array[MissionData] = []
 	var catalog: Variant = DataFiles.load_json("res://data/districts/districts.json")
-	var files: PackedStringArray = [MISSIONS_FILE]
+	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE]
 	if catalog is Dictionary:
 		for d in catalog.get("districts", []):
 			var f := str(d.get("missions", ""))
@@ -95,6 +97,60 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	hud.set_stats(progression)
 
 
+## Joins a crew (new game) or re-applies the crew after loading. One-off perk rewards are granted
+## once (ProgressionState.grant); ongoing perks are re-applied every time.
+func choose_crew(crew_id: String) -> bool:
+	var crews := district.crews
+	if not crews.has(crew_id):
+		return false
+	var first := progression.crew_id.is_empty()
+	progression.crew_id = crew_id
+	district.set_player_crew(crew_id)
+	districts.crew_home = crews.home(crew_id)
+	player.wear_colours(crews.colour(crew_id), crews.colour(crew_id).darkened(0.3))
+	# Ongoing perks start from neutral, so only the chosen crew's applies.
+	police.heat.gain_mult = 1.0
+	progression.cash_bonus = 1.0
+	if crews.perk(crew_id) != "stone_hard" and player.weapons.has("shotgun"):
+		player.weapons.remove_at(player.weapons.find("shotgun"))
+		if player.weapon == "shotgun":
+			player.weapon = "pistol"
+			player.model.set_weapon("pistol")
+	match crews.perk(crew_id):
+		"home_turf":
+			progression.grant("crew_perk:home_turf", {"cash": 150, "influence": {"starter": 15}})
+		"low_profile":
+			police.heat.gain_mult = 0.6
+		"quick_hands":
+			progression.cash_bonus = 1.25
+		"stone_hard":
+			player.add_weapon("shotgun")
+	if first:
+		hud.show_banner(crews.display_name(crew_id).to_upper(), 4.0)
+		hud.show_message("You run with the %s now. %s" % [crews.display_name(crew_id), str(crews.get_crew(crew_id).get("perk_text", ""))])
+	progression.changed.emit()
+	missions.check_auto_start()
+	_refresh()
+	return true
+
+
+## Opens the crew choice (new game, or a save from before crews existed).
+func open_crew_picker() -> void:
+	if crew_picker == null:
+		crew_picker = CrewPicker.new()
+		crew_picker.name = "CrewPicker"
+		hud.add_child(crew_picker)
+		crew_picker.chosen.connect(func(id: String):
+			crew_picker.close()
+			player.input_enabled = true
+			if DisplayServer.get_name() != "headless":
+				Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+			choose_crew(id))
+	player.input_enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	crew_picker.open(district.crews, district)
+
+
 ## Call once the district's navigation and residents are ready.
 func begin(load_save: bool) -> void:
 	if load_save and SaveSystem.exists(save_path):
@@ -103,6 +159,8 @@ func begin(load_save: bool) -> void:
 			hud.show_message("Couldn't load your save (%s). Starting a new game." % err)
 	missions.check_auto_start()
 	sync_gates()
+	if not progression.crew_id.is_empty():
+		choose_crew(progression.crew_id)
 	_refresh()
 
 
@@ -393,7 +451,17 @@ func load_game() -> String:
 	var res := SaveSystem.read(save_path)
 	if not res.ok:
 		return res.error
-	return apply_snapshot(res.data)
+	var current_crew := progression.crew_id
+	var err := apply_snapshot(res.data)
+	if err.is_empty():
+		# Saves from before crews existed keep the crew you're in (or ask, if you have none yet).
+		if progression.crew_id.is_empty():
+			progression.crew_id = current_crew
+		if not progression.crew_id.is_empty():
+			choose_crew(progression.crew_id)
+		elif missions != null and police != null and is_inside_tree() and crew_picker == null:
+			open_crew_picker.call_deferred()
+	return err
 
 
 func apply_snapshot(data: Dictionary) -> String:

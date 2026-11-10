@@ -27,6 +27,8 @@ const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_d
 @export var rewards: Dictionary = {}
 @export var time_limit_minutes := 0.0         # game minutes; 0 = no limit
 @export var fail_text := ""
+## Crew-specific intros (crew id -> text) for story missions that read differently per crew.
+@export var intro_by_crew: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> MissionData:
@@ -42,7 +44,12 @@ static func from_dict(d: Dictionary) -> MissionData:
 	m.rewards = d.get("rewards", {}) if d.get("rewards") is Dictionary else {}
 	m.time_limit_minutes = float(d.get("time_limit_minutes", 0.0))
 	m.fail_text = str(d.get("fail_text", ""))
+	m.intro_by_crew = d.get("intro_by_crew", {}) if d.get("intro_by_crew") is Dictionary else {}
 	return m
+
+
+func intro_for(crew_id: String) -> String:
+	return str(intro_by_crew.get(crew_id, intro))
 
 
 func validate() -> PackedStringArray:

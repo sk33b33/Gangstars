@@ -43,6 +43,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"lookout": _build_lookout(root, pos, _facing_rot(lm))
 			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
 			"police_post": _build_police_post(root, pos, _facing_rot(lm), str(lm.get("id", "saps")), destinations)
+			"crew_den": _build_crew_den(root, pos, _facing_rot(lm), str(lm.get("id", "den")), str(lm.get("tag", "")), destinations)
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
 	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
@@ -392,6 +393,32 @@ static func _build_police_post(root: Node3D, c: Vector3, rot_y: float, id: Strin
 	Geo.box(pivot, Vector3(0.08, 4.2, 0.08), Vector3(-2.7, 2.1, 1.6), flag)
 	var door := pivot.global_transform * Vector3(1.9, 0, 2.2) if pivot.is_inside_tree() else c + Vector3(1.9, 0, 2.2).rotated(Vector3.UP, rot_y)
 	destinations.register(id + ":door", door, 0.4, "police_post", "the police post")
+
+
+## A crew's hangout: a painted Wendy house with an old couch and a tag, door facing +Z.
+## Registers "<id>:door" (the crew members' home door).
+static func _build_crew_den(root: Node3D, c: Vector3, rot_y: float, id: String, tag: String, destinations: DestinationRegistry) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	Geo.box(pivot, Vector3(4.0, 2.4, 3.0), Vector3(0, 1.2, 0), PixelMaterials.surface("wendy_wall", Vector2(2, 2), Color("#cfe3d4")))
+	Geo.box(pivot, Vector3(4.4, 0.1, 3.4), Vector3(0, 2.45, 0), PixelMaterials.surface("roof_ibr", Vector2(2, 2)), false)
+	Geo.quad(pivot, Vector2(0.8, 1.8), Vector3(1.1, 0.9, 1.51), PixelMaterials.flat(Color("#3a2a20")))
+	Geo.quad(pivot, Vector2(1.0, 0.7), Vector3(-0.9, 1.5, 1.51), PixelMaterials.panel("window_bars"))
+	if not tag.is_empty():
+		var l := Geo.label(pivot, tag, Vector3(0.0, 2.05, 1.52), 72, Color("#2ecc71"), 0.0)
+		l.outline_modulate = Color("#0b3d22")
+		l.outline_size = 10
+		l.double_sided = false
+	# Old couch out front (visual; people walk round it).
+	var couch := PixelMaterials.flat(Color("#6e4b3a"))
+	Geo.box(pivot, Vector3(1.8, 0.45, 0.8), Vector3(-0.6, 0.23, 2.6), couch, false)
+	Geo.box(pivot, Vector3(1.8, 0.5, 0.2), Vector3(-0.6, 0.65, 2.25), couch, false)
+	SpotRegistry.marker(pivot, "sit", Vector3(-0.6, 0, 2.65))
+	SpotRegistry.marker(pivot, "lean", Vector3(1.9, 0, 1.5 + 0.3))
+	var door := c + Vector3(1.1, 0, 2.1).rotated(Vector3.UP, rot_y)
+	destinations.register(id + ":door", door, 0.4, "crew_den", "the den")
 
 
 ## Empty lot the kids play on: trodden sand, chalk lines and goals made of stacked tyres (visual

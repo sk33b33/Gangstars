@@ -4,6 +4,32 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Join a crew (2026-11-10)
+- **Choosing a crew:** a new game opens "Who do you run with?". You choose one of four
+  **fictional** crews (`data/factions/crews.json`; made-up names, colours and bosses, not real
+  gangs):
+
+  | Crew | Home | Perk |
+  |---|---|---|
+  | Tortel Boys | Westridge | +R150 and +15% Westridge influence, once |
+  | Vlakte Vipers (new: boss Slang, den by the Westridge park) | Westridge | heat builds 40% slower |
+  | Duin Boys | Lentegeur | +25% mission cash |
+  | Klipspringers | Rocklands | a shotgun as a second weapon (Tab / RB to switch) |
+
+- **Effects of your crew:**
+  - You wear its colour, and every crew's members wear their own.
+  - Crew-mates are allies: they wave and back you up in fights.
+  - Rival crews warn you off their own turf, and fight if you stay within 6 m for 5 s or point a
+    gun at them.
+  - Your crew's home suburb is cheaper to unlock (60% of the reputation, one crew member fewer).
+  - You still always start in Westridge.
+- **Crew missions:** 8 in total, two per crew (`data/missions/crews.json`, `prerequisites.member_of`).
+  The main story's intros adapt to your crew (`intro_by_crew`).
+- **Saving:** the save stores your crew. Older saves keep your current crew, or ask if you have
+  none.
+- **New:** CrewCatalog, CrewPicker and a crew_den landmark.
+- **Fix:** CharacterModel rebuilds no longer keep references to freed parts.
+
 ### Set in Mitchells Plain (2026-11-10)
 - **Renamed suburbs:**
   - The starter district is now **Westridge**.

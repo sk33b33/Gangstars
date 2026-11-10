@@ -13,12 +13,14 @@ const COOL_DELAY := 25.0      # seconds unseen before it starts dropping
 const COOL_RATE := 1.0 / 20.0 # stars per second after that
 
 var value := 0.0
+## Perk: heat builds more slowly (Vlakte Vipers' "low profile" sets this to 0.6).
+var gain_mult := 1.0
 var _unseen := 0.0
 var _last_level := 0
 
 
 func add(amount: float) -> void:
-	value = clampf(value + amount, 0.0, MAX)
+	value = clampf(value + amount * gain_mult, 0.0, MAX)
 	_unseen = 0.0
 	_emit()
 
