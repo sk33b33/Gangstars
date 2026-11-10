@@ -84,6 +84,7 @@ MATS = {n: mat(n, c) for n, c in {
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
     "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
     "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
+    "uniform": (0.03, 0.05, 0.12), "vest": (0.02, 0.025, 0.04), "badge": (0.9, 0.7, 0.05), "belt": (0.015, 0.015, 0.018),
 }.items()}
 
 
@@ -374,6 +375,34 @@ def make_body_accessories():
     return [chain, apron]
 
 
+def make_police_gear():
+    """SAPS-inspired kit: peaked cap (head), body-armour vest with a yellow band, duty belt with a
+    holster on the right hip. Uniform colours are material slots, so Godot can tint them."""
+    crown = prim("cyl", "crown", HEAD_C + Vector((0, 0.005, 0.085)), (0.118, 0.124, 0.045), "uniform", seg=20)
+    for v in crown.data.vertices:   # flare the top a little
+        if v.co.z > HEAD_C.z + 0.09:
+            v.co.x *= 1.08
+            v.co.y = (v.co.y - HEAD_C.y) * 1.08 + HEAD_C.y
+    cband = prim("cyl", "cap_band", HEAD_C + Vector((0, 0.005, 0.055)), (0.116, 0.122, 0.014), "badge", seg=20)
+    peak = prim("cyl", "peak", HEAD_C + Vector((0, -0.105, 0.048)), (0.08, 0.06, 0.006), "belt", seg=16, rot=(-0.2, 0, 0))
+    badge = prim("sphere", "cap_badge", HEAD_C + Vector((0, -0.122, 0.09)), (0.016, 0.006, 0.018), "badge", seg=8, rings=5)
+    cap = join([crown, cband, peak, badge], "Acc_police_cap")
+    vest = prim("cyl", "vest_shell", (0, 0.0, 1.25), (0.182, 0.13, 0.2), "vest", seg=24)
+    bm = bmesh.new()
+    bm.from_mesh(vest.data)
+    caps = [f for f in bm.faces if abs(f.normal.z) > 0.9]
+    bmesh.ops.delete(bm, geom=caps, context="FACES")
+    bm.to_mesh(vest.data)
+    bm.free()
+    vband = prim("cyl", "vest_band", (0, 0.0, 1.31), (0.185, 0.133, 0.03), "badge", seg=24)
+    vest = join([vest, vband], "Acc_police_vest")
+    belt = prim("cyl", "belt_ring", (0, 0.0, 0.985), (0.158, 0.118, 0.028), "belt", seg=24)
+    holster = prim("cube", "holster", (-0.17, 0.02, 0.9), (0.03, 0.05, 0.09), "belt", smooth=False)
+    pouch = prim("cube", "pouch", (0.165, -0.03, 0.95), (0.025, 0.04, 0.04), "belt", smooth=False)
+    belt = join([belt, holster, pouch], "Acc_dutybelt")
+    return [cap], [vest, belt]
+
+
 # ----------------------------------------------------------------------------- skinning
 def bind_rigid(obj, rig, bone):
     vg = obj.vertex_groups.new(name=bone)
@@ -585,6 +614,57 @@ def pose_kick(rig, t):
     set_rot(rig, "spine", "X", 0.1 * max(0.0, -swing))
 
 
+def pose_aim_pistol(rig, t):
+    """Two-handed pistol aim straight ahead (upper body)."""
+    pose_idle(rig, t)
+    sway = math.sin(t * 2 * math.pi) * 0.015
+    set_multi(rig, "upper_arm.R", [("X", -1.42 + sway), ("Y", 0.28)])
+    set_multi(rig, "forearm.R", [("X", -0.12)])
+    set_multi(rig, "upper_arm.L", [("X", -1.35 + sway), ("Y", -0.55)])
+    set_multi(rig, "forearm.L", [("X", -0.2), ("Y", -0.35)])
+    set_multi(rig, "chest", [("Z", 0.08)])
+    set_multi(rig, "head", [("X", 0.04)])
+
+
+def pose_aim_long(rig, t):
+    """Shotgun at the shoulder: right hand at the grip, left hand forward on the pump."""
+    pose_idle(rig, t)
+    sway = math.sin(t * 2 * math.pi) * 0.012
+    set_multi(rig, "upper_arm.R", [("X", -0.75 + sway), ("Y", 0.75)])
+    set_multi(rig, "forearm.R", [("X", -0.95)])
+    set_multi(rig, "upper_arm.L", [("X", -1.3 + sway), ("Y", -0.35)])
+    set_multi(rig, "forearm.L", [("X", -0.25), ("Y", -0.5)])
+    set_multi(rig, "chest", [("Z", 0.25)])
+    set_multi(rig, "head", [("Z", -0.12), ("X", 0.06)])
+
+
+def pose_hit(rig, t):
+    """Flinch (one-shot): knocked back, arms up, recover."""
+    k = math.sin(min(1.0, t * 1.6) * math.pi)
+    pose_idle(rig, t)
+    set_rot(rig, "spine", "X", 0.25 * k)
+    set_rot(rig, "chest", "X", 0.2 * k)
+    set_rot(rig, "head", "X", 0.3 * k)
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("Y", 0.6 * k * sign), ("X", -0.4 * k)])
+        set_rot(rig, "forearm." + side, "X", -0.9 * k)
+
+
+def pose_down(rig, t):
+    """Knocked down: on the back on the ground, slow breathing (no blood, no gore)."""
+    breathe = math.sin(t * 2 * math.pi)
+    rig.pose.bones["hips"].location = Vector((0, -0.8, 0.35))
+    set_rot(rig, "hips", "X", -math.pi / 2)
+    set_rot(rig, "chest", "X", -0.02 * breathe)
+    set_multi(rig, "head", [("Z", 0.5)])
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("Y", 0.7 * sign)])
+        set_rot(rig, "forearm." + side, "X", -0.4)
+        set_multi(rig, "thigh." + side, [("Y", -0.12 * sign)])
+    set_rot(rig, "shin.L", "X", 0.5)
+    set_rot(rig, "thigh.L", "X", -0.3)
+
+
 def bake_action(rig, name, frames, fn):
     reset_pose(rig)
     action = bpy.data.actions.new(name)
@@ -623,6 +703,11 @@ for piece in make_hair_pieces() + make_accessories():
         bind_rigid(piece, rig, "head")
 for piece in make_body_accessories():
     bind_by_height(piece, rig)
+police_head, police_body = make_police_gear()
+for piece in police_head:
+    bind_rigid(piece, rig, "head")
+for piece in police_body:
+    bind_by_height(piece, rig)
 
 bake_action(rig, "idle", 72, pose_idle)
 bake_action(rig, "walk", 24, lambda r, t: pose_walk(r, t, False))
@@ -633,6 +718,10 @@ bake_action(rig, "sit", 96, pose_sit)
 bake_action(rig, "lean", 96, pose_lean)
 bake_action(rig, "wave", 24, pose_wave)
 bake_action(rig, "kick", 14, pose_kick)
+bake_action(rig, "aim_pistol", 48, pose_aim_pistol)
+bake_action(rig, "aim_long", 48, pose_aim_long)
+bake_action(rig, "hit", 12, pose_hit)
+bake_action(rig, "down", 72, pose_down)
 reset_pose(rig)
 
 # Every mesh gets a (flat) UV map: Godot's importer needs UVs to build tangents.

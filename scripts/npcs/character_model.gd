@@ -8,7 +8,8 @@ extends Node3D
 
 const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail"]
-const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron"]
+const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
+	"police_cap", "police_vest", "dutybelt"]
 const WAVE_TIME := 1.8
 const BLEND_RATE := 6.0        # how fast the gait blends in/out
 const WALK_REF := 1.5          # m/s the walk animation is authored for
@@ -22,9 +23,19 @@ var mode := "idle"
 ## Whole-body resting pose that replaces standing: "" (stand), "sit" (on a seat), "lean" (on a wall).
 var base_pose := ""
 var _sit := 0.0
+var _down := 0.0
 var _lean := 0.0
 var _wave := 0.0
 var _wave_timer := 0.0
+## Weapon carried ("" none, "pistol", "shotgun"); drawn = in the hand, aiming = raised.
+var weapon := ""
+var weapon_drawn := false
+var aiming := false
+var _aim := 0.0
+var _hand: BoneAttachment3D
+var _holster: BoneAttachment3D
+var _chest: BoneAttachment3D
+var _gun: MeshInstance3D
 var _root: Node3D
 var _skeleton: Skeleton3D
 var _tree: AnimationTree
@@ -64,6 +75,7 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
 		"apron": opts.get("apron_color", Color("#ece8dc")), "acc_frame": Color("#1a1a1e"), "acc_lens": Color("#101018"),
 		"acc_gold": Color("#d4a63a"), "acc_white": Color("#f4f4f0"),
+		"uniform": Color("#1c2740"), "vest": Color("#1a1d24"), "badge": Color("#e8b400"), "belt": Color("#121214"),
 	}
 	var extras: Array = opts.get("accessories", [])
 	var style := str(opts.get("hair_style", "short"))
@@ -112,8 +124,10 @@ func animate(delta: float, speed: float) -> void:
 	_guard = lerpf(_guard, (1.0 if mode == "guard" else 0.0) * idle, k)
 	var k_slow := clampf(delta * 4.0, 0.0, 1.0)
 	_sit = lerpf(_sit, 1.0 if base_pose == "sit" else 0.0, k_slow)
+	_down = lerpf(_down, 1.0 if base_pose == "down" else 0.0, clampf(delta * 6.0, 0.0, 1.0))
 	_lean = lerpf(_lean, 1.0 if base_pose == "lean" else 0.0, k_slow)
 	_wave_timer = maxf(0.0, _wave_timer - delta)
+	_aim = lerpf(_aim, 1.0 if aiming and weapon_drawn else 0.0, clampf(delta * 10.0, 0.0, 1.0))
 	_wave = lerpf(_wave, 1.0 if _wave_timer > 0.3 else 0.0, k)
 	_tree.set("parameters/loco/blend_position", _speed)
 	_tree.set("parameters/pace/scale", _pace(_speed))
@@ -122,6 +136,10 @@ func animate(delta: float, speed: float) -> void:
 	_tree.set("parameters/sit_mix/blend_amount", _sit)
 	_tree.set("parameters/lean_mix/blend_amount", _lean)
 	_tree.set("parameters/wave_mix/blend_amount", _wave)
+	var long_gun := WeaponLibrary.is_long(weapon)
+	_tree.set("parameters/aim_pistol_mix/blend_amount", 0.0 if long_gun else _aim)
+	_tree.set("parameters/aim_long_mix/blend_amount", _aim if long_gun else 0.0)
+	_tree.set("parameters/down_mix/blend_amount", _down)
 	_tree.advance(delta)
 	_apply_look(delta)
 
@@ -134,6 +152,76 @@ func look_at_point(p: Variant) -> void:
 ## A short friendly wave (right arm), layered over whatever the body is doing.
 func wave() -> void:
 	_wave_timer = WAVE_TIME
+
+
+## Gives the character a weapon (holstered / slung). "" removes it.
+func set_weapon(p_weapon: String) -> void:
+	weapon = p_weapon
+	weapon_drawn = false
+	aiming = false
+	if _gun:
+		_gun.queue_free()
+		_gun = null
+	if weapon.is_empty() or _skeleton == null:
+		return
+	if _hand == null:
+		_hand = BoneAttachment3D.new()
+		_hand.bone_name = "hand.R"
+		_skeleton.add_child(_hand)
+		_holster = BoneAttachment3D.new()
+		_holster.bone_name = "hips"
+		_skeleton.add_child(_holster)
+		_chest = BoneAttachment3D.new()
+		_chest.bone_name = "chest"
+		_skeleton.add_child(_chest)
+	_gun = MeshInstance3D.new()
+	_gun.name = "Weapon"
+	_gun.mesh = WeaponLibrary.mesh(weapon)
+	_place_gun()
+
+
+## Draw (true) or put away (false) the weapon.
+func draw_weapon(drawn: bool) -> void:
+	if weapon.is_empty() or drawn == weapon_drawn:
+		return
+	weapon_drawn = drawn
+	if not drawn:
+		aiming = false
+	_place_gun()
+
+
+func flinch() -> void:
+	if _tree:
+		_tree.set("parameters/hit_shot/request", AnimationNodeOneShot.ONE_SHOT_REQUEST_FIRE)
+
+
+## World position of the muzzle (for tracers), or the chest if unarmed.
+func muzzle_position() -> Vector3:
+	if _gun and weapon_drawn:
+		return _gun.global_transform * Vector3(0, 0.05, 0.2 if not WeaponLibrary.is_long(weapon) else 0.75)
+	return global_position + Vector3(0, 1.35 * scale.y, 0)
+
+
+func _place_gun() -> void:
+	if _gun == null:
+		return
+	if _gun.get_parent():
+		_gun.get_parent().remove_child(_gun)
+	var long_gun := WeaponLibrary.is_long(weapon)
+	if weapon_drawn and long_gun:
+		# Long guns sit at the right shoulder, pointing straight ahead (the arms pose around it).
+		_chest.add_child(_gun)
+		_gun.transform = Transform3D(Basis(), Vector3(-0.1, 0.12, 0.2))
+	elif weapon_drawn:
+		_hand.add_child(_gun)
+		# Hand bone +Y runs down the fingers: the barrel (+Z) follows it, the top faces the thumb.
+		_gun.transform = Transform3D(Basis.from_euler(Vector3(-PI * 0.5, 0, 0)), Vector3(0, 0.07, 0.0))
+	else:
+		_holster.add_child(_gun)
+		if long_gun:   # slung across the back, barrel up
+			_gun.transform = Transform3D(Basis.from_euler(Vector3(PI * 0.5, 0, 0.6)), Vector3(0.05, 0.35, -0.17))
+		else:          # pistol in the right-hip holster, barrel down
+			_gun.transform = Transform3D(Basis.from_euler(Vector3(PI * 0.5, 0, 0)), Vector3(-0.17, -0.02, 0.02))
 
 
 func kick() -> void:
@@ -188,7 +276,7 @@ func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
 
 func _build_tree(player: AnimationPlayer) -> void:
 	for anim_name in player.get_animation_list():
-		player.get_animation(anim_name).loop_mode = Animation.LOOP_NONE if anim_name == "kick" else Animation.LOOP_LINEAR
+		player.get_animation(anim_name).loop_mode = Animation.LOOP_NONE if anim_name in ["kick", "hit"] else Animation.LOOP_LINEAR
 	var loco := AnimationNodeBlendSpace1D.new()
 	loco.min_space = 0.0
 	loco.max_space = RUN_REF
@@ -201,7 +289,7 @@ func _build_tree(player: AnimationPlayer) -> void:
 	bt.connect_node("pace", 0, "loco")
 	var previous := "pace"
 	# Whole-body resting poses replace the standing gait.
-	for pose in ["sit", "lean"]:
+	for pose in ["sit", "lean", "down"]:
 		bt.add_node(pose, _anim(pose))
 		bt.add_node(pose + "_mix", AnimationNodeBlend2.new())
 		bt.connect_node(pose + "_mix", 0, previous)
@@ -218,7 +306,7 @@ func _build_tree(player: AnimationPlayer) -> void:
 	previous = "kick_shot"
 	# Upper-body gestures on top (legs keep walking, sitting or leaning).
 	var upper := _upper_paths(player.get_animation("talk"))
-	for pose in ["talk", "guard", "wave"]:
+	for pose in ["talk", "guard", "wave", "aim_pistol", "aim_long"]:
 		bt.add_node(pose, _anim(pose))
 		var mix := AnimationNodeBlend2.new()
 		mix.filter_enabled = true
@@ -228,6 +316,18 @@ func _build_tree(player: AnimationPlayer) -> void:
 		bt.connect_node(pose + "_mix", 0, previous)
 		bt.connect_node(pose + "_mix", 1, pose)
 		previous = pose + "_mix"
+	# Flinch when hit (one-shot over everything, upper body only).
+	var hit := AnimationNodeOneShot.new()
+	hit.fadein_time = 0.03
+	hit.fadeout_time = 0.2
+	hit.filter_enabled = true
+	for path in upper:
+		hit.set_filter_path(path, true)
+	bt.add_node("hit", _anim("hit"))
+	bt.add_node("hit_shot", hit)
+	bt.connect_node("hit_shot", 0, previous)
+	bt.connect_node("hit_shot", 1, "hit")
+	previous = "hit_shot"
 	bt.connect_node("output", 0, previous)
 	_tree = AnimationTree.new()
 	_tree.tree_root = bt
