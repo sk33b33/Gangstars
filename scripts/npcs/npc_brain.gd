@@ -6,12 +6,15 @@ extends RefCounted
 ##   {"cmd": "exit_home"} {"cmd": "enter_home"} {"cmd": "stop"} {"cmd": "face_incident"}
 ##   {"cmd": "go", "destination": id, "speed"?: mult}   ids: "home", "@incident", "@report", anchors
 ##   {"cmd": "follow", "leader": npc_id}                {"cmd": "reported"}
+## Combat: on_fight() pauses the schedule while the body fights (FIGHTING; no commands), then
+## end_fight() resumes it. on_knocked_down() -> DOWN until on_recovered() sends them home.
 ## Time of day gates schedule entries (entry "window", NPC "active_hours"); outside active
 ## hours the NPC goes home and stays there.
 
 enum State {
 	AT_HOME, PREPARING_TO_LEAVE, TRAVELLING, AT_DESTINATION, SOCIALIZING, PATROLLING, FOLLOWING,
 	GUARDING, NOTICING, INVESTIGATING, FLEEING, REPORTING, RETURNING_HOME, UNAVAILABLE,
+	FIGHTING, DOWN,
 }
 
 const HOME := "home"
@@ -130,6 +133,8 @@ func on_arrived() -> Array:
 			var guard: bool = activity == "guard"
 			_set_state(State.GUARDING if guard else State.AT_DESTINATION, "arrived at " + destination_id)
 		State.PATROLLING:
+			if not is_active_hours():
+				return _return_home("end of shift")   # don't finish the beat after hours
 			var route: PackedStringArray = current_entry().get("route", PackedStringArray())
 			_route_i += 1
 			if _route_i >= route.size():
@@ -153,6 +158,39 @@ func on_arrived() -> Array:
 			_set_state(State.AT_HOME, reason)
 			return [{"cmd": "enter_home"}]
 	return []
+
+
+## The body has started fighting someone. False if this NPC can't fight right now.
+func on_fight() -> bool:
+	if state in [State.AT_HOME, State.PREPARING_TO_LEAVE, State.DOWN]:
+		return false
+	if state != State.FIGHTING:
+		if not is_reacting():
+			_resume_state = state
+		_clear_reaction()
+		activity = "fighting"
+		_set_state(State.FIGHTING, "fight")
+	return true
+
+
+## The fight is over: back to whatever the schedule says (or home, out of hours).
+func end_fight() -> Array:
+	if state != State.FIGHTING:
+		return []
+	return _resume()
+
+
+func on_knocked_down() -> void:
+	_clear_reaction()
+	activity = "knocked down"
+	_set_state(State.DOWN, "knocked down")
+
+
+## Back on their feet: shaken, they head home to recover.
+func on_recovered() -> Array:
+	if state != State.DOWN:
+		return []
+	return _return_home("shaken up")
 
 
 func on_travel_failed() -> Array:
@@ -185,7 +223,7 @@ func set_socializing(social: bool) -> void:
 func on_incident(p_reaction: String, event_id: String) -> Array:
 	if p_reaction.is_empty() or not REACTION_RANK.has(p_reaction):
 		return []
-	if state in [State.AT_HOME, State.PREPARING_TO_LEAVE, State.UNAVAILABLE, State.FLEEING]:
+	if state in [State.AT_HOME, State.PREPARING_TO_LEAVE, State.UNAVAILABLE, State.FLEEING, State.FIGHTING, State.DOWN]:
 		return []
 	if event_id == reacting_to:
 		return []

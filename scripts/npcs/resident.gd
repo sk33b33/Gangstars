@@ -35,6 +35,15 @@ const SPOT_RANGE := 7.0
 const SPOT_CHANCE := 0.75
 const SETTLE_SPEED := 0.9     # m/s while stepping into / out of a seat (scripted, no physics)
 const WAVE_COOLDOWN := 120.0
+## Who carries a weapon and fights back.
+const FIGHT_ROLES := ["crew", "police", "player_crew"]
+const FIGHT_RANGE := 40.0
+const FIGHT_LOST_TIME := 12.0
+## Shooting accuracy (spread multiplier): police are trained, gangsters spray.
+const SPREAD := {"police": 1.8, "crew": 2.6, "player_crew": 2.2}
+const FIGHT_LINES := {"police": ["Police! Drop it!", "Stop! Police!", "Get down!"],
+	"crew": ["You picked the wrong street!", "Eish, now you've done it!", "Get him!"],
+	"player_crew": ["I've got your back!", "Leave him alone!"]}
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var model: CharacterModel = $Model
@@ -103,6 +112,18 @@ var _wave_cooldown := 0.0
 var _player_was_near := false
 var _prev_state := -1
 var waves := 0
+## Combat (see CombatSystem): health, who we're fighting, and counters for tests.
+var health := Health.new()
+var combat: CombatSystem
+var fight_target: Node3D
+var shots_fired := 0
+var _fire_cd := 0.0
+var _fight_repath := 0.0
+var _fight_lost := 0.0
+var _strafe := 1.0
+var _strafe_t := 0.0
+var _los_timer := 0.0
+var _los := false
 var times_settled := 0
 var settled_kinds := {}
 
@@ -122,6 +143,8 @@ func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: f
 	agent.velocity_computed.connect(_on_velocity_computed)
 	model.build(data.shirt_color, data.pants_color, data.skin_color,
 		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0), data.appearance())
+	_arm()
+	health.recovered.connect(_on_recovered)
 	name_label.text = data.display_name
 	interactable.prompt = "Talk to %s" % data.display_name
 	interactable.kind = "npc"
@@ -198,6 +221,7 @@ func recruit(schedule: Array) -> void:
 	brain.active_hours = Vector2(8, 2)
 	brain.index = -1
 	interactable.prompt = "Talk to %s (your crew)" % data.display_name
+	_arm()
 
 
 func face_point(p: Vector3) -> void:
@@ -224,6 +248,10 @@ func _update_pose() -> void:
 		return
 	var s := brain.state
 	model.mode = "talk" if s == NpcBrain.State.SOCIALIZING else ("guard" if s == NpcBrain.State.GUARDING else "idle")
+	if s == NpcBrain.State.FIGHTING or s == NpcBrain.State.DOWN:
+		model.mode = "idle"
+		model.look_at_point(fight_target.global_position + Vector3(0, 1.4, 0) if fight_target != null and is_instance_valid(fight_target) else null)
+		return
 	var look: Variant = null
 	if s == NpcBrain.State.NOTICING or s == NpcBrain.State.INVESTIGATING:
 		look = _incident_pos
@@ -241,7 +269,8 @@ func _update_pose() -> void:
 func _maybe_wave(s: NpcBrain.State) -> void:
 	var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
 	var near := pl != null and pl.visible and pl.global_position.distance_to(global_position) < 7.0
-	var friendly := data.role in ["resident", "player_crew", "kid"] and not brain.is_reacting()
+	var friendly := data.role in ["resident", "player_crew", "kid"] and not brain.is_reacting() \
+		and not brain.state in [NpcBrain.State.FIGHTING, NpcBrain.State.DOWN]
 	if friendly and _wave_cooldown <= 0.0:
 		if near and not _player_was_near:
 			_wave_at(pl.global_position)
@@ -276,6 +305,10 @@ func _physics_process(delta: float) -> void:
 		_think_accum = 0.0
 	if is_inside:
 		return
+	health.tick(delta)
+	if health.down:
+		_down_step(delta)
+		return
 	if spot_phase in ["settle", "seated", "rise"]:
 		_spot_step(delta)
 		return
@@ -309,6 +342,8 @@ func _physics_process(delta: float) -> void:
 		step_to.y = 0.0
 		if step_to.length() > 0.05:
 			desired = step_to.normalized() * data.walk_speed * 0.8 * clampf(to_spot.length() / SLOW_RADIUS, 0.45, 1.0)
+	elif fight_target != null:
+		desired = _fight_desired(delta)
 	elif play_target != null and not _travelling:
 		var to_play: Vector3 = play_target - global_position
 		to_play.y = 0.0
@@ -328,7 +363,7 @@ func _physics_process(delta: float) -> void:
 					desired *= clampf(left / SLOW_RADIUS, 0.45, 1.0)
 	var rate := ACCELERATION if desired.length() > _move_vel.length() else DECELERATION
 	_move_vel = _move_vel.move_toward(desired, rate * delta)
-	if agent.avoidance_enabled and play_target == null:
+	if agent.avoidance_enabled and play_target == null and fight_target == null:
 		agent.velocity = _move_vel
 	else:
 		_apply_velocity(_move_vel)
@@ -368,7 +403,7 @@ func _on_path_end() -> void:
 
 func _on_velocity_computed(safe_velocity: Vector3) -> void:
 	# Kids at play bypass avoidance (a tight group of standing kids makes RVO return zero).
-	if not is_inside and spot_phase in ["", "approach"] and play_target == null:
+	if not is_inside and spot_phase in ["", "approach"] and play_target == null and fight_target == null and not health.down:
 		_apply_velocity(safe_velocity)
 
 
@@ -387,7 +422,10 @@ func _apply_velocity(v: Vector3) -> void:
 			_last_wall_normal = n.normalized()
 	var flat := Vector2(velocity.x, velocity.z)
 	var turn := clampf(dt * 8.0, 0.0, 1.0)
-	if flat.length() > 0.1:
+	if fight_target != null and is_instance_valid(fight_target):
+		var tf := fight_target.global_position - global_position
+		rotation.y = lerp_angle(rotation.y, atan2(tf.x, tf.z), clampf(dt * 10.0, 0.0, 1.0))
+	elif flat.length() > 0.1:
 		rotation.y = lerp_angle(rotation.y, atan2(velocity.x, velocity.z), turn)
 	elif _has_face_point:
 		var to := _face_point - global_position
@@ -497,6 +535,9 @@ func _run(cmd: Dictionary) -> void:
 				_rise()
 			return
 	match cmd.cmd:
+		"__fight":
+			if is_instance_valid(cmd.target):
+				start_fight(cmd.target)
 		"exit_home":
 			_set_inside(false)
 		"enter_home":
@@ -648,6 +689,178 @@ func _set_inside(inside: bool) -> void:
 
 func _update_avoidance() -> void:
 	agent.avoidance_enabled = not is_inside and sim_tier == "near"
+
+
+# ------------------------------------------------------------------ combat
+
+func _arm() -> void:
+	if not data.role in FIGHT_ROLES:
+		return
+	var h := absi(data.id.hash())
+	var gun := "shotgun" if (data.role == "crew" and h % 3 == 0) or (data.role == "police" and h % 5 == 0) else "pistol"
+	model.set_weapon(gun)
+
+
+func is_down() -> bool:
+	return health.down
+
+
+func can_fight() -> bool:
+	return not model.weapon.is_empty() and not is_inside and not health.down
+
+
+## Hit by a shot. Returns true if it knocked us down.
+func on_shot(damage: float, shooter: Node3D) -> bool:
+	if is_inside or health.down:
+		return false
+	model.flinch()
+	if health.take(damage):
+		_knock_down()
+		return true
+	if fight_target == null and shooter != null:
+		if can_fight() and _hostile_to(shooter):
+			start_fight(shooter)
+		elif not data.role in FIGHT_ROLES:
+			react({"id": "shot_%d" % Time.get_ticks_msec(), "position": shooter.global_position}, "flee")
+	return false
+
+
+func _hostile_to(other: Node3D) -> bool:
+	if other == self:
+		return false
+	if data.role == "player_crew" and other is Player:
+		return false
+	if other is Resident and (other as Resident).data.role == data.role and data.role != "crew":
+		return false   # police don't fight police; crew rivalries are fine
+	return true
+
+
+## Starts (or redirects) a fight. False if this resident can't fight now.
+func start_fight(target: Node3D) -> bool:
+	if not can_fight() or target == null or target == self:
+		return false
+	if target == fight_target:
+		return true
+	if spot_phase in ["settle", "seated", "rise"]:
+		_spot_queue = [{"cmd": "__fight", "target": target}]
+		if spot_phase != "rise":
+			_rise()
+		return true
+	if spot_phase == "approach":
+		_leave_spot()
+	if not brain.on_fight():
+		return false
+	var first := fight_target == null
+	fight_target = target
+	play_target = null
+	_travelling = false
+	_fight_lost = 0.0
+	_fire_cd = _rng.randf_range(0.6, 1.4)   # a beat to draw before the first shot
+	model.draw_weapon(true)
+	if first and _rng.randf() < 0.7:
+		var lines: Array = FIGHT_LINES.get(data.role, [])
+		if not lines.is_empty():
+			say(lines[_rng.randi() % lines.size()], 2.5)
+	return true
+
+
+func end_fight() -> void:
+	if fight_target == null:
+		return
+	fight_target = null
+	model.aiming = false
+	model.draw_weapon(false)
+	agent.target_position = global_position
+	for cmd in brain.end_fight():
+		_run(cmd)
+
+
+func _fight_desired(dt: float) -> Vector3:
+	var t := fight_target
+	var gone: bool = not is_instance_valid(t) or (t.has_method("is_down") and t.is_down()) \
+		or (t is Resident and (t as Resident).is_inside) or t.global_position.distance_to(global_position) > FIGHT_RANGE
+	if gone:
+		end_fight()
+		return Vector3.ZERO
+	var to := t.global_position - global_position
+	to.y = 0.0
+	var d := to.length()
+	_los_timer -= dt
+	if _los_timer <= 0.0:
+		_los_timer = 0.25
+		_los = _line_of_sight(t)
+	_fight_lost = 0.0 if _los else _fight_lost + dt
+	if _fight_lost > FIGHT_LOST_TIME:
+		end_fight()
+		return Vector3.ZERO
+	model.aiming = _los and d < 28.0
+	var desired := Vector3.ZERO
+	if d > 14.0 or not _los:
+		_fight_repath -= dt
+		if _fight_repath <= 0.0:
+			_fight_repath = 0.6
+			agent.target_position = t.global_position
+		if not agent.is_navigation_finished():
+			var n := agent.get_next_path_position() - global_position
+			n.y = 0.0
+			if n.length() > 0.05:
+				desired = n.normalized() * data.walk_speed * 1.6
+	elif d < 5.0:
+		desired = -to / d * data.walk_speed
+	else:
+		_strafe_t -= dt
+		if _strafe_t <= 0.0:
+			_strafe = -_strafe
+			_strafe_t = _rng.randf_range(1.5, 3.0)
+		desired = to.cross(Vector3.UP).normalized() * _strafe * 0.8
+	_fire_cd -= dt
+	if model.aiming and _fire_cd <= 0.0 and combat:
+		var st := WeaponLibrary.stats(model.weapon)
+		_fire_cd = 1.0 / float(st.rate) * _rng.randf_range(1.4, 2.4)
+		combat.fire(self, model.weapon, model.muzzle_position(), t.global_position + Vector3(0, 1.2, 0), float(SPREAD.get(data.role, 2.5)))
+		shots_fired += 1
+	return desired
+
+
+func _line_of_sight(t: Node3D) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.5, 0), t.global_position + Vector3(0, 1.3, 0), 1)
+	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+
+
+func _knock_down() -> void:
+	if fight_target != null:
+		fight_target = null
+	model.aiming = false
+	model.draw_weapon(false)
+	play_target = null
+	_travelling = false
+	if spot_phase != "":
+		spot_phase = ""
+		if spots and _spot >= 0:
+			spots.release(_spot, data.id)
+		_spot = -1
+		_spot_queue = []
+	brain.on_knocked_down()
+	model.base_pose = "down"
+	collision_layer = 0
+	path_status = "knocked down"
+
+
+func _down_step(dt: float) -> void:
+	_move_vel = Vector3.ZERO
+	velocity = Vector3.ZERO
+	if agent.avoidance_enabled:
+		agent.velocity = Vector3.ZERO
+	model.animate(dt, 0.0)
+	_last_pos = global_position
+
+
+func _on_recovered() -> void:
+	model.base_pose = ""
+	collision_layer = LAYER_NPCS
+	say("Ag, my head...", 2.5)
+	for cmd in brain.on_recovered():
+		_run(cmd)
 
 
 # ------------------------------------------------------------------ benches, chairs, walls

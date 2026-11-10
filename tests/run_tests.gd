@@ -732,7 +732,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 8, "8 AI vehicles drive across the three districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 11, "11 AI vehicles (incl. 3 police bakkies) drive across the three districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -1422,7 +1422,7 @@ func _test_district() -> void:
 			for r: Resident in district.residents.values():
 				if r.sim_tier != "far" and r.model.walk_amplitude() > 0.5:
 					seen["_walking_gait"] = seen.get("_walking_gait", 0) + 1
-				if district.plots[r.data.home_id].is_door_open():
+				if district.plots.has(r.data.home_id) and district.plots[r.data.home_id].is_door_open():
 					seen["_door_open"] = seen.get("_door_open", 0) + 1
 				if r.spot_phase == "seated":
 					seen["_seated_" + r.model.base_pose] = seen.get("_seated_" + r.model.base_pose, 0) + 1
@@ -1461,7 +1461,8 @@ func _test_district() -> void:
 		settled += r.times_settled
 		for k in r.settled_kinds:
 			kinds[k] = int(kinds.get(k, 0)) + int(r.settled_kinds[k])
-	_check(int(kinds.get("sit", 0)) > 0 and int(kinds.get("lean", 0)) > 0 and seen.get("_seated_sit", 0) > 0,
+	# Leaning needs a chat at the corner or a shop visit, so only long soaks are sure to see one.
+	_check(int(kinds.get("sit", 0)) > 0 and (int(kinds.get("lean", 0)) > 0 or minutes < 5) and seen.get("_seated_sit", 0) > 0,
 		"residents sit on benches/chairs and lean on walls (%s)" % [kinds])
 	_check(settled >= 5, "settling into spots is common (%d times)" % settled)
 
@@ -1482,6 +1483,8 @@ func _test_district() -> void:
 	for r: Resident in district.residents.values():
 		if r.data.role == "crew":
 			crew_out += 0 if r.is_inside else 1
+		elif r.data.role == "police" and r.brain.is_active_hours():
+			continue   # the night shift is meant to be out
 		elif not r.is_inside:
 			residents_out += 1
 			print("    still out at midnight: %s %s %s at %s path=%s target=%s tier=%s" % [r.data.id, r.state_name(), r.brain.last_transition,

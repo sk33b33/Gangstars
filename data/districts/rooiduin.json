@@ -113,6 +113,15 @@
         204,
         -30
       ]
+    },
+    {
+      "type": "police_post",
+      "id": "saps_rooi",
+      "position": [
+        212,
+        -42
+      ],
+      "facing": "south"
     }
   ],
   "pois": [
@@ -197,6 +206,32 @@
       [
         118,
         -5.4
+      ]
+    ],
+    "saps_rooi_beat": [
+      [
+        125,
+        -5.4
+      ],
+      [
+        160,
+        -5.4
+      ],
+      [
+        173,
+        -12
+      ],
+      [
+        173,
+        -46
+      ],
+      [
+        150,
+        -50.8
+      ],
+      [
+        125,
+        -50.8
       ]
     ]
   },
@@ -292,6 +327,12 @@
             "color": "#f1eee8",
             "start": 0.2,
             "taxi": true
+          },
+          {
+            "id": "saps_bakkie_rooi",
+            "model": "police",
+            "color": "#ffffff",
+            "start": 0.7
           }
         ]
       },

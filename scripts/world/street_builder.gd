@@ -42,6 +42,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
 			"lookout": _build_lookout(root, pos, _facing_rot(lm))
 			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
+			"police_post": _build_police_post(root, pos, _facing_rot(lm), str(lm.get("id", "saps")), destinations)
 			var other: push_warning("Unknown landmark type '%s'" % other)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
 	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
@@ -371,6 +372,26 @@ static func _build_courtyard(root: Node3D, c: Vector3) -> void:
 	PropLibrary.place(root, "tree_b", c, 0.4).scale = Vector3.ONE * 1.5
 	for a in [0.0, PI * 0.5, PI, PI * 1.5]:
 		Geo.bench(root, c + Vector3(cos(a), 0, sin(a)) * 3.5, -a - PI * 0.5)
+
+
+## Mobile police post: a white container office with a blue band, sign, barred window and door
+## facing +Z. Registers "<id>:door" (officers' home door) in front of it.
+static func _build_police_post(root: Node3D, c: Vector3, rot_y: float, id: String, destinations: DestinationRegistry) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	Geo.box(pivot, Vector3(6.0, 2.6, 2.4), Vector3(0, 1.3, 0), PixelMaterials.surface("container_wall", Vector2(2, 2), Color("#eef0f2")))
+	Geo.box(pivot, Vector3(6.04, 0.35, 2.44), Vector3(0, 0.75, 0), PixelMaterials.flat(Color("#123f8c")), false)
+	Geo.box(pivot, Vector3(6.04, 0.06, 2.44), Vector3(0, 0.96, 0), PixelMaterials.flat(Color("#f5c400")), false)
+	Geo.quad(pivot, Vector2(3.6, 0.9), Vector3(-0.6, 2.95, 1.22), PixelMaterials.panel("sign_police"))
+	Geo.quad(pivot, Vector2(1.4, 1.0), Vector3(-1.4, 1.65, 1.22), PixelMaterials.panel("window_bars"))
+	Geo.quad(pivot, Vector2(0.9, 2.0), Vector3(1.9, 1.0, 1.22), PixelMaterials.panel("door_gate"))
+	Geo.box(pivot, Vector3(2.0, 0.12, 1.0), Vector3(1.6, 0.06, 1.75), PixelMaterials.flat(Color("#9a968e")), false)
+	var flag := PixelMaterials.flat(Color("#565a64"))
+	Geo.box(pivot, Vector3(0.08, 4.2, 0.08), Vector3(-2.7, 2.1, 1.6), flag)
+	var door := pivot.global_transform * Vector3(1.9, 0, 2.2) if pivot.is_inside_tree() else c + Vector3(1.9, 0, 2.2).rotated(Vector3.UP, rot_y)
+	destinations.register(id + ":door", door, 0.4, "police_post", "the police post")
 
 
 ## Empty lot the kids play on: trodden sand, chalk lines and goals made of stacked tyres (visual

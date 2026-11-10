@@ -10,6 +10,8 @@ signal shouted(position: Vector3)
 signal interacted_with(target: Interactable, message: String)
 signal vehicle_changed(car: DrivableCar)   # null when stepping out
 signal honked(position: Vector3)
+signal fired(weapon: String)
+signal knocked_out
 
 const GRAVITY := 9.8
 const CAMERA_HEIGHT := 1.6
@@ -46,12 +48,26 @@ var vehicle: DrivableCar
 var invert_y := false
 var _saved_layer := 0
 var _saved_mask := 0
+## Combat: a pistol from the start; aim (RMB / LT) then fire (LMB / RT). See CombatSystem.
+var health := Health.new()
+var combat: CombatSystem
+var weapon := "pistol"
+var aiming := false
+var shots_fired := 0
+var _fire_cd := 0.0
+var _draw_timer := 0.0
+var _arm_length := 0.0
+const AIM_ARM_LENGTH := 1.7
+const AIM_SHOULDER := 0.55
+const AIM_SPEED := 2.0
 
 
 func _ready() -> void:
 	model.build(Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"),
 		{"hair_style": "short", "height": 1.02, "sleeves": "short"})
 	spring_arm.add_excluded_object(get_rid())
+	_arm_length = spring_arm.spring_length
+	model.set_weapon(weapon)
 	snap_camera()
 
 
@@ -134,12 +150,19 @@ func _physics_process(delta: float) -> void:
 	var look := Input.get_vector("look_left", "look_right", "look_up", "look_down")
 	if look != Vector2.ZERO:
 		_look(look * stick_sensitivity * delta)
+	health.tick(delta)
+	if health.down:
+		velocity = Vector3(0, velocity.y - GRAVITY * delta if not is_on_floor() else 0.0, 0)
+		move_and_slide()
+		model.animate(delta, 0.0)
+		return
+	_update_aim(delta)
 
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_backward") if input_enabled else Vector2.ZERO
 	var dir := pivot.global_basis * Vector3(input.x, 0, input.y)
 	dir.y = 0.0
 	dir = dir.normalized() * minf(input.length(), 1.0)
-	var speed := sprint_speed if Input.is_action_pressed("sprint") else walk_speed
+	var speed := AIM_SPEED if aiming else (sprint_speed if Input.is_action_pressed("sprint") else walk_speed)
 	var target := dir * speed
 	velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 	velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
@@ -152,7 +175,10 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 	var flat := Vector2(velocity.x, velocity.z)
-	if flat.length() > 0.2:
+	if aiming:
+		var fwd := -pivot.global_basis.z
+		model.rotation.y = lerp_angle(model.rotation.y, atan2(fwd.x, fwd.z), clampf(delta * 18.0, 0.0, 1.0))
+	elif flat.length() > 0.2:
 		model.rotation.y = lerp_angle(model.rotation.y, atan2(velocity.x, velocity.z), clampf(delta * 12.0, 0.0, 1.0))
 	model.animate(delta, flat.length())
 
@@ -163,6 +189,68 @@ func _physics_process(delta: float) -> void:
 		var msg := current_target.interact(self)
 		interacted_with.emit(current_target, msg)
 		interacted.emit(msg)
+
+
+## Aim with RMB / LT (over-the-shoulder camera, slower walk), fire with LMB / RT.
+func _update_aim(delta: float) -> void:
+	aiming = input_enabled and not weapon.is_empty() and Input.is_action_pressed("aim")
+	_draw_timer = 3.0 if aiming else maxf(0.0, _draw_timer - delta)
+	model.draw_weapon(_draw_timer > 0.0)
+	model.aiming = aiming
+	var k := clampf(delta * 10.0, 0.0, 1.0)
+	spring_arm.spring_length = lerpf(spring_arm.spring_length, AIM_ARM_LENGTH if aiming else _arm_length, k)
+	spring_arm.position.x = lerpf(spring_arm.position.x, AIM_SHOULDER if aiming else 0.0, k)
+	_fire_cd = maxf(0.0, _fire_cd - delta)
+	if aiming and _fire_cd <= 0.0 and input_enabled and Input.is_action_just_pressed("fire"):
+		shoot()
+
+
+## Fires the weapon at whatever is under the screen centre.
+func shoot() -> bool:
+	if combat == null or weapon.is_empty() or health.down:
+		return false
+	var st := WeaponLibrary.stats(weapon)
+	_fire_cd = 1.0 / float(st.rate)
+	var from := camera.global_position
+	var dir := -camera.global_basis.z
+	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, CombatSystem.SHOT_MASK)
+	q.exclude = [get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	var aim_point: Vector3 = hit.position if not hit.is_empty() else from + dir * 80.0
+	combat.fire(self, weapon, model.muzzle_position(), aim_point, 0.5)
+	shots_fired += 1
+	rumble(0.2, 0.5, 0.12)
+	fired.emit(weapon)
+	return true
+
+
+## Hit by a shot. Returns true if it knocked the player out.
+func on_shot(damage: float, _shooter: Node3D) -> bool:
+	if health.down:
+		return false
+	model.flinch()
+	rumble(0.6, 0.6, 0.2)
+	if health.take(damage * (0.5 if vehicle else 1.0)):
+		if vehicle:
+			exit_vehicle()
+		model.base_pose = "down"
+		aiming = false
+		model.aiming = false
+		knocked_out.emit()
+		return true
+	return false
+
+
+func is_down() -> bool:
+	return health.down
+
+
+## Wakes up (at the safehouse): back on your feet with full health.
+func revive_at(pos: Vector3) -> void:
+	global_position = pos + Vector3(0, 0.05, 0)
+	health.revive(Health.MAX_HP)
+	model.base_pose = ""
+	snap_camera()
 
 
 ## Direction the character faces (used by crew members following the player).

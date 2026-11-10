@@ -11,6 +11,8 @@ var _message: Label
 var _debug: Label
 var _clock: Label
 var _stats: Label
+var _combat: Label
+var _crosshair: Label
 var _tracker: Label
 var _menu: PanelContainer
 var _menu_list: VBoxContainer
@@ -30,6 +32,22 @@ func _ready() -> void:
 	_clock = _label(Vector2(16, 70), 26)
 	_stats = _label(Vector2(16, 104), 22)
 	_tracker = _label(Vector2(16, 140), 20)
+	_combat = _label(Vector2.ZERO, 24)
+	_combat.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_combat.offset_left = -260
+	_combat.offset_right = -16
+	_combat.offset_top = 12
+	_combat.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_crosshair = _label(Vector2.ZERO, 30)
+	_crosshair.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	_crosshair.offset_left = -20
+	_crosshair.offset_right = 20
+	_crosshair.offset_top = -22
+	_crosshair.offset_bottom = 22
+	_crosshair.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_crosshair.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	_crosshair.text = "+"
+	_crosshair.visible = false
 	_tracker.add_theme_color_override("font_color", Color("#ffd75e"))
 	_build_menu()
 	_fps = _label(Vector2.ZERO, 16)
@@ -76,6 +94,19 @@ func set_district_name(text: String) -> void:
 
 func set_clock(clock: SimClock) -> void:
 	_clock.text = "%s  ·  Day %d%s" % [clock.label(), clock.day, "  ·  night" if clock.is_night() else ""]
+
+
+## Health, police heat stars and the aiming crosshair (top right / centre).
+func set_combat(health_fraction: float, heat_level: int, aiming: bool) -> void:
+	var hp := int(round(health_fraction * 100.0))
+	var stars := ("★".repeat(heat_level) + "☆".repeat(5 - heat_level)) if heat_level > 0 else ""
+	_combat.text = "♥ %d%s" % [hp, ("\n" + stars) if not stars.is_empty() else ""]
+	_combat.add_theme_color_override("font_color", Color("#ff6b6b") if hp < 35 else Color.WHITE)
+	_crosshair.visible = aiming
+
+
+func combat_text() -> String:
+	return _combat.text
 
 
 func set_stats(p: ProgressionState) -> void:

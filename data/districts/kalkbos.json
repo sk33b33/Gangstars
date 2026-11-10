@@ -134,6 +134,15 @@
         9,
         9
       ]
+    },
+    {
+      "type": "police_post",
+      "id": "saps_kalk",
+      "position": [
+        -114,
+        -42
+      ],
+      "facing": "south"
     }
   ],
   "pois": [
@@ -230,6 +239,32 @@
         -118,
         -5.4
       ]
+    ],
+    "saps_kalk_beat": [
+      [
+        -120,
+        -5.4
+      ],
+      [
+        -155,
+        -5.4
+      ],
+      [
+        -163,
+        -12
+      ],
+      [
+        -163,
+        -46
+      ],
+      [
+        -150,
+        -50.8
+      ],
+      [
+        -122,
+        -50.8
+      ]
     ]
   },
   "parked_cars": [
@@ -311,6 +346,12 @@
             "color": "#f1eee8",
             "start": 0.3,
             "taxi": true
+          },
+          {
+            "id": "saps_bakkie_kalk",
+            "model": "police",
+            "color": "#ffffff",
+            "start": 0.6
           }
         ]
       },

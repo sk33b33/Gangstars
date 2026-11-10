@@ -8,11 +8,11 @@ static var gamepad := false
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
-	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc",
+	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB",
 }
 const PAD := {
 	"interact": "A", "shout": "Y", "turf_map": "View", "sprint": "L3", "jump": "B",
-	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B",
+	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B", "aim": "LT", "fire": "RT",
 }
 ## Stick movement below this doesn't count as switching to the gamepad (drift, resting thumbs).
 const STICK_SWITCH := 0.5
@@ -42,5 +42,5 @@ static func key(action: String) -> String:
 
 static func help_line() -> String:
 	if gamepad:
-		return "Left stick move · L3 sprint · A interact · B jump · Y whistle · View turf map · Menu pause · RT/LT drive"
-	return "WASD move · Shift sprint · E interact · Q whistle · M turf map · F3 debug · F5/F6 incidents · F7 +1h · Esc mouse"
+		return "Left stick move · L3 sprint · A interact · LT aim · RT shoot · Y whistle · View turf map · Menu pause"
+	return "WASD move · Shift sprint · E interact · RMB aim · LMB shoot · Q whistle · M turf map · F3 debug · F7 +1h · Esc mouse"

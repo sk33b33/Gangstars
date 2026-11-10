@@ -15,6 +15,7 @@ const KINDS := {
 	"scuffle": {"severity": 3, "radius": 22.0, "text": "A scuffle starts near %s!"},
 	"car_horn": {"severity": 1, "radius": 16.0, "text": ""},
 	"reckless_driving": {"severity": 2, "radius": 12.0, "text": "People jump out of the way of your car!"},
+	"gunfire": {"severity": 4, "radius": 40.0, "text": "Gunshots ring out near %s!"},
 }
 
 var _next_id := 1

@@ -25,13 +25,15 @@ static func get_stream(stream_name: String) -> AudioStreamWAV:
 		"rain": s = _rain()
 		"crickets": s = _crickets()
 		"bark": s = _bark()
+		"gunshot": s = _gunshot()
+		"siren": s = _siren()
 		_: push_warning("AudioBank: unknown sound " + stream_name)
 	_cache[stream_name] = s
 	return s
 
 
 static func names() -> PackedStringArray:
-	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets", "bark"]
+	return ["horn", "door", "whistle", "alarm", "jingle", "click", "bird", "engine", "wind", "rain", "crickets", "bark", "gunshot", "siren"]
 
 
 static func _wav(samples: PackedFloat32Array, loop := false) -> AudioStreamWAV:
@@ -74,6 +76,38 @@ static func _bark() -> AudioStreamWAV:
 				var tone := tanh(sin(phase) * 2.5) * 0.7 + sin(phase * 2.0) * 0.2 + sin(phase * 3.0) * 0.1
 				v += (tone + rng.randf_range(-0.35, 0.35)) * _env(bt, 0.2, 0.008, 0.09)
 		out[i] = v * 0.4
+	return _wav(out)
+
+
+## A sharp crack: a noise burst with a fast decay and a low thump underneath.
+static func _gunshot() -> AudioStreamWAV:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 31
+	var n := int(RATE * 0.45)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var lp := 0.0
+	for i in n:
+		var t := float(i) / RATE
+		lp = lerpf(lp, rng.randf_range(-1.0, 1.0), 0.35)
+		var crack := rng.randf_range(-1.0, 1.0) * exp(-t * 60.0)
+		var body := lp * exp(-t * 9.0)
+		var thump := sin(TAU * 70.0 * t) * exp(-t * 22.0)
+		out[i] = clampf(crack * 0.9 + body * 0.6 + thump * 0.5, -1.0, 1.0) * 0.7
+	return _wav(out)
+
+
+## One cycle of a two-tone police siren (hi-lo), about 1.6 s.
+static func _siren() -> AudioStreamWAV:
+	var n := int(RATE * 1.6)
+	var out := PackedFloat32Array()
+	out.resize(n)
+	var phase := 0.0
+	for i in n:
+		var t := float(i) / RATE
+		var f := 960.0 if fmod(t, 0.8) < 0.4 else 720.0
+		phase += TAU * f / RATE
+		out[i] = (sin(phase) * 0.6 + sin(phase * 2.0) * 0.15) * 0.3 * _env(t, 1.6, 0.03, 0.1)
 	return _wav(out)
 
 

@@ -43,9 +43,11 @@ var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
 ## Residents that don't come from a district's generated data (the neighbourhood kids).
-@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json"]
+@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json", "res://data/npcs/police.json"]
 ## Kids' kick-about games, one per pitch in the area data ("kickabouts").
 var kickabouts: Array[KickAbout] = []
+## Shots, hits and gunfire incidents (see CombatSystem).
+var combat: CombatSystem
 ## Street and yard dogs (cosmetic; see DogPack).
 var dogs: DogPack
 ## Benches, chairs and walls residents settle into while dwelling (cosmetic).
@@ -65,6 +67,10 @@ func _ready() -> void:
 	events = NeighbourhoodEvents.new()
 	events.name = "Events"
 	add_child(events)
+	combat = CombatSystem.new()
+	combat.name = "Combat"
+	add_child(combat)
+	combat.events = events
 	director = SimulationDirector.new()
 	director.name = "SimulationDirector"
 	add_child(director)
@@ -139,7 +145,9 @@ func area_by_id(id: String) -> Dictionary:
 ## District a resident lives in (via their home's district_id).
 func resident_district(r: Resident) -> String:
 	var h := registry.get_house(r.data.home_id)
-	return h.district_id if h else ""
+	if h:
+		return h.district_id
+	return area_at(destinations.anchor_position(r.data.home_id + ":door")) if destinations.has(r.data.home_id + ":door") else ""
 
 
 func display_name() -> String:
@@ -306,13 +314,15 @@ func _spawn_residents() -> void:
 	for f in extra_residents_files:
 		all_npcs.append_array(NpcData.load_file(f))
 	for npc in all_npcs:
-		if registry.get_house(npc.home_id) == null:
+		# Homes are houses, or (police) a post that registered its own door anchor.
+		if registry.get_house(npc.home_id) == null and not destinations.has(npc.home_id + ":door"):
 			push_warning("Resident %s has unknown home %s; not spawned." % [npc.id, npc.home_id])
 			continue
 		var r: Resident = RESIDENT_SCENE.instantiate()
 		add_child(r)
 		r.setup(npc, destinations, i * 0.11, director.clock, _lookup)
 		r.spots = spots
+		r.combat = combat
 		r.reported.connect(func(who: Resident, event_id: String): events.report(event_id, who.data.display_name))
 		r.door_used.connect(_on_door_used)
 		residents[npc.id] = r

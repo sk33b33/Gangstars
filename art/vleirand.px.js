@@ -284,3 +284,10 @@ sprite("police_crest", { w: 17, h: 20 },
   poly([1, 1, 15, 1, 15, 11, 8, 17, 1, 11], "#123f8c"),
   poly([2, 9, 8, 13, 14, 9, 14, 11, 8, 15, 2, 11], "#f5c400"),
   text(8, 2, "P", "#ffffff", { align: "c" }))
+
+// Mobile police post sign (SAPS-inspired, made-up crest).
+sprite("sign_police", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "#123f8c"), rect(0, 13, 64, 1, "#f5c400"),
+  poly([2, 2, 12, 2, 12, 9, 7, 13, 2, 9], "#f5c400"), poly([3, 3, 11, 3, 11, 8, 7, 12, 3, 8], "#123f8c"),
+  text(7, 3, "P", "#ffffff", { align: "c" }),
+  text(38, 2, "POLICE", "#ffffff", { align: "c" }), text(38, 8, "POLISIE", "#f5c400", { align: "c" }))

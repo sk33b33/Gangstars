@@ -67,6 +67,8 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	hud.set_clock(district.director.clock)
+	if session.police:
+		hud.set_combat(player.health.fraction(), session.police.heat.level(), player.aiming)
 
 
 ## Pushes settings into the engine and game objects (called at start and on every change).

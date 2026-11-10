@@ -111,6 +111,14 @@ ui_cancel={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"device":-1,"keycode":4194305), Object(InputEventJoypadButton,"device":-1,"button_index":1,"pressed":true)]
 }
+aim={
+"deadzone": 0.3,
+"events": [Object(InputEventMouseButton,"device":-1,"button_index":2,"pressed":true), Object(InputEventJoypadMotion,"device":-1,"axis":4,"axis_value":1.0)]
+}
+fire={
+"deadzone": 0.3,
+"events": [Object(InputEventMouseButton,"device":-1,"button_index":1,"pressed":true), Object(InputEventJoypadMotion,"device":-1,"axis":5,"axis_value":1.0)]
+}
 turf_map={
 "deadzone": 0.2,
 "events": [Object(InputEventKey,"device":-1,"physical_keycode":77),Object(InputEventJoypadButton,"device":-1,"button_index":4)]

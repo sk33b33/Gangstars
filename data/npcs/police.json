@@ -1,0 +1,587 @@
+{
+  "_comment": "SAPS-inspired police (role 'police'): foot patrols in pairs from each district's police post. Fictional names.",
+  "residents": [
+    {
+      "id": "npc_saps_vlei_1",
+      "display_name": "Constable Mokoena",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#4a2f22",
+      "walk_speed": 1.45,
+      "start_delay": 5.0,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:0",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:7"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.0,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.1,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_vlei_2",
+      "display_name": "Sergeant Pillay",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.45,
+      "start_delay": 7.5,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:0",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:7"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "bald",
+      "hair_color": "#1d1b24",
+      "height": 1.02,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.4,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_vlei_3",
+      "display_name": "Constable van Wyk",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#c58c62",
+      "walk_speed": 1.45,
+      "start_delay": 10.0,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:7",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:0"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.04,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.0,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_vlei_4",
+      "display_name": "Constable Daniels",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.45,
+      "start_delay": 12.5,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:7",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:0"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "ponytail",
+      "hair_color": "#1d1b24",
+      "height": 1.0,
+      "sleeves": "short",
+      "figure": 0.9,
+      "heavy": 0.0,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_vlei_5",
+      "display_name": "Sergeant Booysen",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#6b4430",
+      "walk_speed": 1.45,
+      "start_delay": 15.0,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:0",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:7"
+          ],
+          "duration": 1,
+          "window": [
+            20,
+            8
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        20,
+        8
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.02,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.3,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_vlei_6",
+      "display_name": "Constable Ndlovu",
+      "home_id": "saps_vlei",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#3b2a20",
+      "walk_speed": 1.45,
+      "start_delay": 17.5,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_vlei_beat:0",
+            "patrol:saps_vlei_beat:1",
+            "patrol:saps_vlei_beat:2",
+            "patrol:saps_vlei_beat:3",
+            "patrol:saps_vlei_beat:4",
+            "patrol:saps_vlei_beat:5",
+            "patrol:saps_vlei_beat:6",
+            "patrol:saps_vlei_beat:7"
+          ],
+          "duration": 1,
+          "window": [
+            20,
+            8
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_vlei:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        20,
+        8
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.04,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.2,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_rooi_1",
+      "display_name": "Constable Arendse",
+      "home_id": "saps_rooi",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#4a2f22",
+      "walk_speed": 1.45,
+      "start_delay": 5.0,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_rooi_beat:0",
+            "patrol:saps_rooi_beat:1",
+            "patrol:saps_rooi_beat:2",
+            "patrol:saps_rooi_beat:3",
+            "patrol:saps_rooi_beat:4",
+            "patrol:saps_rooi_beat:5"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_rooi:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.0,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.1,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_rooi_2",
+      "display_name": "Sergeant Fortuin",
+      "home_id": "saps_rooi",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.45,
+      "start_delay": 7.5,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_rooi_beat:0",
+            "patrol:saps_rooi_beat:1",
+            "patrol:saps_rooi_beat:2",
+            "patrol:saps_rooi_beat:3",
+            "patrol:saps_rooi_beat:4",
+            "patrol:saps_rooi_beat:5"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_rooi:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "bald",
+      "hair_color": "#1d1b24",
+      "height": 1.02,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.4,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_kalk_1",
+      "display_name": "Constable Jacobs",
+      "home_id": "saps_kalk",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#c58c62",
+      "walk_speed": 1.45,
+      "start_delay": 5.0,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_kalk_beat:0",
+            "patrol:saps_kalk_beat:1",
+            "patrol:saps_kalk_beat:2",
+            "patrol:saps_kalk_beat:3",
+            "patrol:saps_kalk_beat:4",
+            "patrol:saps_kalk_beat:5"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_kalk:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.0,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.1,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    },
+    {
+      "id": "npc_saps_kalk_2",
+      "display_name": "Sergeant Mthembu",
+      "home_id": "saps_kalk",
+      "role": "police",
+      "faction_id": "saps",
+      "shirt_color": "#1c2740",
+      "pants_color": "#1c2740",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.45,
+      "start_delay": 7.5,
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:saps_kalk_beat:0",
+            "patrol:saps_kalk_beat:1",
+            "patrol:saps_kalk_beat:2",
+            "patrol:saps_kalk_beat:3",
+            "patrol:saps_kalk_beat:4",
+            "patrol:saps_kalk_beat:5"
+          ],
+          "duration": 1,
+          "window": [
+            6,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "saps_kalk:door",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Morning. Everything alright here?",
+        "Move along, nothing to see.",
+        "Stay out of trouble, hey."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "hair_style": "bald",
+      "hair_color": "#1d1b24",
+      "height": 1.02,
+      "sleeves": "short",
+      "figure": 0.0,
+      "heavy": 0.4,
+      "skirt": 0,
+      "accessories": [
+        "police_cap",
+        "police_vest",
+        "dutybelt"
+      ]
+    }
+  ]
+}
