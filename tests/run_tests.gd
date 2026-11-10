@@ -1193,11 +1193,11 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 		var to := rival.global_position - player.global_position
 		player.pivot.rotation.y = atan2(-to.x, -to.z)
 		Input.action_press("aim")
-		for i in 60 * 5:
+		for i in 60 * 8:
 			player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
 			if rival.fight_target == player:
 				break
-			if i % 60 == 59 and not rival._line_of_sight(player):   # they walked behind a wall: step back into view
+			if i % 60 == 59 and (not rival._line_of_sight(player) or rival.global_position.distance_to(player.global_position) > 12.0):   # walked behind a wall or away: step back into view
 				player.global_position = _clear_spot_near(district, rival, 9.0)
 			if i % 60 == 0 and _args.has("verbose"):
 				var dir := (rival.global_position - player.global_position).normalized()

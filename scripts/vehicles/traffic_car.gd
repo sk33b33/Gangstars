@@ -126,6 +126,8 @@ func _physics_process(delta: float) -> void:
 ## Anything inside the lane box ahead (car-local +Z is forward).
 func is_blocked() -> bool:
 	var reach := LOOK_AHEAD + speed * 0.6
+	if _was_blocked:
+		reach += 2.0   # hysteresis: braking shortens the reach, so don't let go and creep forward
 	for n: Node3D in candidates:
 		if n == self:
 			continue
