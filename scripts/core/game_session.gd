@@ -249,7 +249,7 @@ func _check_area() -> void:
 	if a.is_empty() or a == current_area:
 		return
 	current_area = a
-	var name_text := districts.display_name(a) if a != "starter" else "Vleirand"
+	var name_text := districts.display_name(a) if a != "starter" else "Westridge"
 	hud.show_banner(name_text.to_upper(), 3.0)
 	hud.set_district_name("%s · %s" % [name_text, districts.state(a)])
 
@@ -313,7 +313,7 @@ func open_safehouse_menu() -> void:
 	items.append({"text": "Leave", "action": _close_menu})
 	player.input_enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	hud.open_menu("SAFEHOUSE — 13 Duif Street   (R%d)" % progression.cash, items)
+	hud.open_menu("SAFEHOUSE — 13 AZ Berman Drive   (R%d)" % progression.cash, items)
 
 
 func buy_upgrade(id: String) -> bool:

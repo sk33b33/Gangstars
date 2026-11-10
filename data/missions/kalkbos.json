@@ -12,8 +12,8 @@
           "district_west"
         ]
       },
-      "intro": "Pastor Josephs: \"Welcome to Kalkbos. Before you go making friends, see our quarry from the lookout, and greet Auntie Gail at the fish shop. She knows everyone.\"",
-      "description": "Get to know Kalkbos.",
+      "intro": "Pastor Josephs: \"Welcome to Rocklands. Before you go making friends, see our quarry from the lookout, and greet Auntie Gail at the fish shop. She knows everyone.\"",
+      "description": "Get to know Rocklands.",
       "objectives": [
         {
           "id": "lookout",
@@ -61,7 +61,7 @@
           "district_west"
         ]
       },
-      "intro": "Auntie Gail: \"Uncle Solly in Rooiduin ordered snoek for his birthday braai. It's three districts away and it won't stay fresh. Take a car if you have one!\"",
+      "intro": "Auntie Gail: \"Uncle Solly in Lentegeur ordered snoek for his birthday braai. It's three districts away and it won't stay fresh. Take a car if you have one!\"",
       "description": "Deliver fresh fish across all three districts.",
       "time_limit_minutes": 240,
       "fail_text": "The snoek turned. Auntie Gail sends a sorry message to Solly.",
@@ -71,14 +71,14 @@
           "type": "talk_to",
           "target": "npc_rooi_solly",
           "allow_knock": true,
-          "text": "Deliver the snoek to Uncle Solly (Rooiduin)"
+          "text": "Deliver the snoek to Uncle Solly (Lentegeur)"
         },
         {
           "id": "back",
           "type": "talk_to",
           "target": "npc_kalk_gail",
           "allow_knock": true,
-          "text": "Tell Auntie Gail it arrived fresh (Kalkbos)"
+          "text": "Tell Auntie Gail it arrived fresh (Rocklands)"
         }
       ],
       "rewards": {
@@ -111,7 +111,7 @@
           "type": "talk_to",
           "target": "npc_kalk_klip",
           "allow_knock": true,
-          "text": "Talk to Klip at the Klipspringers' house (Mossie Street)"
+          "text": "Talk to Klip at the Klipspringers' house (Spine Road)"
         },
         {
           "id": "hold",

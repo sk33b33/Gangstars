@@ -19,12 +19,12 @@ const KITS := {
 		"windows": [[-3.6, 1.0], [-3.6, 3.7], [-1.2, 3.7]]},
 	"double_garage": {"w": 6.0, "d": 7.0, "x": -2.5, "storeys": 2, "door_x": -1.0, "roof": "gable", "roof_h": 1.0,
 		"windows": [[-4.0, 1.0], [-4.0, 3.7], [-1.6, 3.7]], "garage": {"x": 2.6, "w": 3.8, "d": 6.5}},
-	# Rooiduin: 3-storey walk-up flats (external stair tower, balconies) and narrow row houses.
+	# Lentegeur: 3-storey walk-up flats (external stair tower, balconies) and narrow row houses.
 	"flats": {"w": 16.0, "d": 8.0, "x": -1.2, "storeys": 3, "door_x": 8.0, "roof": "flat", "roof_h": 0.0,
 		"windows": [[-7.0, 1.0], [-3.5, 1.0], [0.0, 1.0], [3.5, 1.0], [-7.0, 3.8], [-3.5, 3.8], [0.0, 3.8], [3.5, 3.8],
 			[-7.0, 6.6], [-3.5, 6.6], [0.0, 6.6], [3.5, 6.6]],
 		"stair": {"x": 8.0, "w": 2.6}, "balconies": true},
-	# Kalkbos: whitewashed limestone cottage, steep gable, chimney, low dry-stone wall.
+	# Rocklands: whitewashed limestone cottage, steep gable, chimney, low dry-stone wall.
 	"cottage": {"w": 7.0, "d": 6.0, "x": -0.5, "storeys": 1, "door_x": -1.2, "roof": "gable", "roof_h": 1.9,
 		"windows": [[-3.0, 1.1], [1.6, 1.1]], "wall_texture": "limestone_wall", "chimney": {"x": 2.7}},
 	"row_house": {"w": 7.4, "d": 7.0, "x": 0.0, "storeys": 1, "door_x": -2.0, "roof": "gable_side", "roof_h": 1.1,
@@ -275,7 +275,7 @@ func _build_garage(g: Dictionary, front_z: float) -> void:
 		PixelMaterials.surface("paving_brick", Vector2(2, 2)))
 
 
-## Low dry-stone walls (Kalkbos) are shorter but still solid (above the nav obstacle height).
+## Low dry-stone walls (Rocklands) are shorter but still solid (above the nav obstacle height).
 func _fence_height() -> float:
 	return 1.0 if data.fence == "stone" else FENCE_HEIGHT
 

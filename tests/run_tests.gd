@@ -40,9 +40,9 @@ func _run() -> void:
 	_test_phase5_units()
 	print("== phase 6 units (traffic routes, audio, settings, calendar, rain, new objectives)")
 	_test_phase6_units()
-	print("== phase 7 units (Rooiduin data pipeline)")
+	print("== phase 7 units (Lentegeur data pipeline)")
 	_test_phase7_units()
-	print("== Kalkbos units")
+	print("== Rocklands units")
 	_test_kalkbos_units()
 	_test_combat_units()
 	print("== district (integration)")
@@ -336,12 +336,18 @@ func _test_phase5_units() -> void:
 	var houses := HouseRegistry.load_file("res://data/houses/starter_houses.json")
 	var p := ProgressionState.new()
 	var dm := DistrictManager.load_file("res://data/districts/districts.json", p, houses)
+	# Mitchells Plain: three built suburbs, the rest listed as future turf that can't be unlocked yet.
+	_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
+		"the districts are Westridge, Lentegeur and Rocklands")
+	var future := dm.planned()
+	_check(future.size() == 6 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
+		"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
 	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
 	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
 		"only the starter district is open at the start")
-	_check(dm.state("district_east") == "locked" and not dm.unlock_district("district_east"), "Rooiduin cannot be unlocked early")
+	_check(dm.state("district_east") == "locked" and not dm.unlock_district("district_east"), "Lentegeur cannot be unlocked early")
 	var reqs := dm.get_unlock_requirements("district_east")
-	_check(reqs.size() == 4 and reqs.all(func(r): return not r.met), "Rooiduin lists 4 unmet requirements")
+	_check(reqs.size() == 4 and reqs.all(func(r): return not r.met), "Lentegeur lists 4 unmet requirements")
 	p.completed_mission_ids.append("hold_the_corner")
 	p.reputation = 60
 	p.recruit("npc_boeta")
@@ -351,12 +357,12 @@ func _test_phase5_units() -> void:
 	var announced := [""]
 	dm.became_unlockable.connect(func(id): announced[0] = id)
 	dm.check_unlockable()
-	_check(announced[0] == "district_east" and dm.state("district_east") == "unlockable", "Rooiduin becomes unlockable and is announced")
+	_check(announced[0] == "district_east" and dm.state("district_east") == "unlockable", "Lentegeur becomes unlockable and is announced")
 	var unlocked := [""]
 	dm.district_unlocked.connect(func(id): unlocked[0] = id)
-	_check(dm.unlock_district("district_east") and unlocked[0] == "district_east" and dm.state("district_east") == "contested", "Rooiduin unlocks (and starts contested)")
+	_check(dm.unlock_district("district_east") and unlocked[0] == "district_east" and dm.state("district_east") == "contested", "Lentegeur unlocks (and starts contested)")
 	_check(not dm.unlock_district("district_east"), "unlocking twice does nothing")
-	_check(dm.state("district_west") == "locked", "Kalkbos stays locked")
+	_check(dm.state("district_west") == "locked", "Rocklands stays locked")
 	var p2 := ProgressionState.new()
 	p2.load_dict(p.to_dict())
 	var dm2 := DistrictManager.load_file("res://data/districts/districts.json", p2, houses)
@@ -490,15 +496,15 @@ func _test_phase6_units() -> void:
 func _test_phase7_units() -> void:
 	var rooi := HouseRegistry.load_file("res://data/houses/rooiduin_houses.json")
 	var starter := HouseRegistry.load_file("res://data/houses/starter_houses.json")
-	_check(rooi.errors.is_empty() and rooi.count() == 20, "Rooiduin: 20 valid houses (%d) %s" % [rooi.count(), rooi.errors])
+	_check(rooi.errors.is_empty() and rooi.count() == 20, "Lentegeur: 20 valid houses (%d) %s" % [rooi.count(), rooi.errors])
 	_check(Array(rooi.order).all(func(id): return not starter.houses.has(id) and rooi.get_house(id).district_id == "district_east"),
-		"Rooiduin house ids are unique across districts and tagged district_east")
+		"Lentegeur house ids are unique across districts and tagged district_east")
 	var kits := {}
 	for id in rooi.order:
 		kits[rooi.get_house(id).kit] = true
-	_check(kits.has("flats") and kits.has("row_house"), "Rooiduin uses its own building types (flats, row houses)")
+	_check(kits.has("flats") and kits.has("row_house"), "Lentegeur uses its own building types (flats, row houses)")
 	var npcs := NpcData.load_file("res://data/npcs/rooiduin_residents.json")
-	_check(npcs.size() >= 20, "Rooiduin residents (%d)" % npcs.size())
+	_check(npcs.size() >= 20, "Lentegeur residents (%d)" % npcs.size())
 	for id in rooi.order:
 		var h := rooi.get_house(id)
 		if h.occupancy == "occupied":
@@ -511,7 +517,7 @@ func _test_phase7_units() -> void:
 				if d.is_empty() or d == "home" or d.begins_with("rooi_") or d.begins_with("@leader:npc_rooi_") or d.begins_with("patrol:rooi_"):
 					continue
 				bad.append("%s->%s" % [n.id, d])
-	_check(bad.is_empty(), "Rooiduin schedules stay in Rooiduin %s" % [bad])
+	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
 	_check(GameSession._load_all_missions().size() == 16, "16 missions load from the district catalog")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
@@ -523,12 +529,12 @@ func _test_kalkbos_units() -> void:
 	var kalk := HouseRegistry.load_file("res://data/houses/kalkbos_houses.json")
 	var others := HouseRegistry.load_file("res://data/houses/starter_houses.json")
 	var rooi := HouseRegistry.load_file("res://data/houses/rooiduin_houses.json")
-	_check(kalk.errors.is_empty() and kalk.count() == 22, "Kalkbos: 22 valid houses (%d) %s" % [kalk.count(), kalk.errors])
+	_check(kalk.errors.is_empty() and kalk.count() == 22, "Rocklands: 22 valid houses (%d) %s" % [kalk.count(), kalk.errors])
 	_check(Array(kalk.order).all(func(id): return not others.houses.has(id) and not rooi.houses.has(id) and kalk.get_house(id).district_id == "district_west"),
-		"Kalkbos ids are unique across all districts and tagged district_west")
+		"Rocklands ids are unique across all districts and tagged district_west")
 	var cottages := Array(kalk.order).filter(func(id): return kalk.get_house(id).kit == "cottage").size()
 	var stone := Array(kalk.order).filter(func(id): return kalk.get_house(id).fence == "stone").size()
-	_check(cottages >= 10 and stone >= 10, "Kalkbos identity: limestone cottages (%d) behind stone walls (%d)" % [cottages, stone])
+	_check(cottages >= 10 and stone >= 10, "Rocklands identity: limestone cottages (%d) behind stone walls (%d)" % [cottages, stone])
 	var bad: PackedStringArray = []
 	for n in NpcData.load_file("res://data/npcs/kalkbos_residents.json"):
 		for e in n.schedule:
@@ -536,15 +542,15 @@ func _test_kalkbos_units() -> void:
 				var d := str(dest)
 				if not (d.is_empty() or d == "home" or d.begins_with("kalk_") or d.begins_with("@leader:npc_kalk_") or d.begins_with("patrol:kalk_")):
 					bad.append("%s->%s" % [n.id, d])
-	_check(bad.is_empty(), "Kalkbos schedules stay in Kalkbos %s" % [bad])
+	_check(bad.is_empty(), "Rocklands schedules stay in Rocklands %s" % [bad])
 	var mm := MissionManager.new()
 	var p := ProgressionState.new()
 	p.completed_mission_ids.append("beyond_the_block")
 	mm.setup(GameSession._load_all_missions(), p, SimClock.new())
 	_check(not mm.is_available("stone_and_salt") and mm.missing_requirements("stone_and_salt").has("unlock district_west"),
-		"Kalkbos missions wait for Kalkbos to be unlocked")
+		"Rocklands missions wait for Rocklands to be unlocked")
 	p.unlocked_district_ids.append("district_west")
-	_check(mm.is_available("stone_and_salt"), "unlocking Kalkbos opens its first mission")
+	_check(mm.is_available("stone_and_salt"), "unlocking Rocklands opens its first mission")
 	mm.free()
 
 
@@ -556,7 +562,7 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
 	var west_x: float = district.info.bounds[0]
-	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Kalkbos starts locked")
+	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Rocklands starts locked")
 	# Meet the requirements (the earlier tests reloaded an older save, so top up what's missing).
 	for id in ["beyond_the_block"]:
 		if not prog.completed_mission_ids.has(id):
@@ -565,11 +571,11 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	for npc in ["npc_boeta", "npc_rooi_kaylin"]:
 		prog.recruit(npc)
 	prog.add_district_influence("starter", maxi(0, 80 - dm.influence("starter")))
-	_check(dm.can_unlock("district_west"), "Kalkbos' requirements are met: %s" % [dm.get_unlock_requirements("district_west")])
+	_check(dm.can_unlock("district_west"), "Rocklands' requirements are met: %s" % [dm.get_unlock_requirements("district_west")])
 	session.open_turf_map()
 	session.turf_map.unlock_button("district_west").pressed.emit()
 	session.turf_map.close()
-	_check(district.is_district_open("district_west") and session.hud.banner_text().contains("KALKBOS UNLOCKED"), "Kalkbos unlocks from the turf map")
+	_check(district.is_district_open("district_west") and session.hud.banner_text().contains("ROCKLANDS UNLOCKED"), "Rocklands unlocks from the turf map")
 	var rebakes := district.rebake_count
 	while district.rebake_count == rebakes:
 		await district.navigation_rebaked
@@ -586,9 +592,9 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	await _press_toward(player, "move_left", 5.0)
 	for i in 20:
 		await physics_frame
-	_check(session.current_area == "district_west" and session.hud.banner_text() == "KALKBOS", "walking west enters Kalkbos (x %.1f)" % player.global_position.x)
+	_check(session.current_area == "district_west" and session.hud.banner_text() == "ROCKLANDS", "walking west enters Rocklands (x %.1f)" % player.global_position.x)
 	var kalk_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_west")
-	_check(kalk_res.size() >= 20, "Kalkbos is populated (%d)" % kalk_res.size())
+	_check(kalk_res.size() >= 20, "Rocklands is populated (%d)" % kalk_res.size())
 
 	var pastor: Resident = district.residents["npc_kalk_pastor"]
 	var gail: Resident = district.residents["npc_kalk_gail"]
@@ -600,13 +606,13 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 		for i in 30:
 			await physics_frame
 	_talk(player, gail.interactable)
-	_check(missions.is_completed("stone_and_salt") and dm.influence("district_west") >= 10, "Stone & Salt completes (+Kalkbos influence)")
+	_check(missions.is_completed("stone_and_salt") and dm.influence("district_west") >= 10, "Stone & Salt completes (+Rocklands influence)")
 
 	_talk(player, gail.interactable)
 	_check(missions.active.has("the_long_haul"), "Auntie Gail offers The Long Haul")
 	_talk(player, district.residents["npc_rooi_solly"].interactable)
 	_talk(player, gail.interactable)
-	_check(missions.is_completed("the_long_haul"), "The Long Haul: Kalkbos -> Rooiduin -> Kalkbos")
+	_check(missions.is_completed("the_long_haul"), "The Long Haul: Rocklands -> Lentegeur -> Rocklands")
 
 	_talk(player, pastor.interactable)
 	_check(missions.active.has("quarry_night"), "Pastor Josephs offers Quarry Night")
@@ -639,7 +645,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 3 and district.area_by_id("district_east").display_name == "Rooiduin", "three areas are built (Vleirand, Rooiduin, Kalkbos)")
+	_check(district.areas.size() == 3 and district.area_by_id("district_east").display_name == "Lentegeur", "three areas are built (Westridge, Lentegeur, Rocklands)")
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
 	var map := district.nav_region.get_navigation_map()
@@ -648,7 +654,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var path := NavigationServer3D.map_get_path(map, from, to, true)
 	_check(path.size() > 2 and path[path.size() - 1].distance_to(to) < 1.0, "after the unlock the districts' walkable areas connect (rebakes: %d)" % district.rebake_count)
 
-	# Travel on foot from the approach street into Rooiduin.
+	# Travel on foot from the approach street into Lentegeur.
 	district.director.clock.set_hour(12.0)
 	player.pivot.rotation.y = 0.0
 	player.global_position = Vector3(98, 0.1, 5.2)
@@ -657,13 +663,13 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 20:
 		await physics_frame
 	_check(district.area_at(player.global_position) == "district_east" and session.current_area == "district_east",
-		"walking east enters Rooiduin (x %.1f)" % player.global_position.x)
-	_check(session.hud.banner_text() == "ROOIDUIN", "a district banner greets the player (%s)" % session.hud.banner_text())
+		"walking east enters Lentegeur (x %.1f)" % player.global_position.x)
+	_check(session.hud.banner_text() == "LENTEGEUR", "a district banner greets the player (%s)" % session.hud.banner_text())
 	var rooi_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_east")
 	var rooi_trips := 0
 	for r: Resident in rooi_res:
 		rooi_trips += r.arrivals
-	_check(rooi_res.size() >= 20 and rooi_trips > 30, "Rooiduin is populated and living (%d residents, %d trips so far)" % [rooi_res.size(), rooi_trips])
+	_check(rooi_res.size() >= 20 and rooi_trips > 30, "Lentegeur is populated and living (%d residents, %d trips so far)" % [rooi_res.size(), rooi_trips])
 
 	# New Turf.
 	var rachel: Resident = district.residents["npc_rooi_rachel"]
@@ -676,7 +682,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 		for i in 30:
 			await physics_frame
 	_talk(player, solly.interactable)
-	_check(missions.is_completed("new_turf") and dm.influence("district_east") >= 10, "New Turf completes (+Rooiduin influence %d)" % dm.influence("district_east"))
+	_check(missions.is_completed("new_turf") and dm.influence("district_east") >= 10, "New Turf completes (+Lentegeur influence %d)" % dm.influence("district_east"))
 
 	# Clean Cut: a cross-district errand.
 	_talk(player, solly.interactable)
@@ -685,11 +691,11 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	player.snap_camera()
 	for i in 30:
 		await physics_frame
-	_check(missions.current_objective("clean_cut").get("id") == "return", "the blades are collected in Vleirand")
+	_check(missions.current_objective("clean_cut").get("id") == "return", "the blades are collected in Westridge")
 	_talk(player, solly.interactable)
-	_check(missions.is_completed("clean_cut"), "Clean Cut completes back in Rooiduin")
+	_check(missions.is_completed("clean_cut"), "Clean Cut completes back in Lentegeur")
 
-	# Dune Truce: Boeta walks over from Vleirand to stand on the field.
+	# Dune Truce: Boeta walks over from Westridge to stand on the field.
 	_talk(player, rachel.interactable)
 	_check(missions.active.has("dune_truce"), "Ma Rachel offers Dune Truce")
 	_talk(player, district.residents["npc_rooi_spider"].interactable)
@@ -709,17 +715,17 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 			print("    boeta %s inside=%s pos=%s target=%s path=%s tier=%s last=%s" % [boeta.state_name(), boeta.is_inside,
 				boeta.global_position.snapped(Vector3.ONE * 0.1), boeta.target_id, boeta.path_status, boeta.sim_tier, boeta.brain.last_transition])
 		await physics_frame
-	_check(arrived, "Boeta follows the player from Vleirand to the Rooiduin field")
+	_check(arrived, "Boeta follows the player from Westridge to the Lentegeur field")
 	_check(missions.is_completed("dune_truce") and prog.recruited_crew_ids.has("npc_rooi_kaylin"), "Dune Truce completes and Kaylin joins the crew")
 	var crew_req: Array = dm.get_unlock_requirements("district_west").filter(func(r): return r.text.begins_with("Crew"))
-	_check(not crew_req.is_empty() and crew_req[0].met, "Kalkbos' crew requirement is now met (%s)" % [crew_req])
+	_check(not crew_req.is_empty() and crew_req[0].met, "Rocklands' crew requirement is now met (%s)" % [crew_req])
 
 	session.open_turf_map()
 	var panel := session.turf_map.panel_text()
-	_check(panel.contains("Rooiduin (east) — CONTEST") or panel.contains("Rooiduin (east) — CONTROLLED"), "the turf map shows Rooiduin's control state")
+	_check(panel.contains("Lentegeur (east) — CONTEST") or panel.contains("Lentegeur (east) — CONTROLLED"), "the turf map shows Lentegeur's control state")
 	session.turf_map.close()
 
-	# Save compatibility: a save written before Rooiduin existed still loads.
+	# Save compatibility: a save written before Lentegeur existed still loads.
 	var keep_path := session.save_path
 	session.save_path = "res://tests/fixtures/save_v1_phase5.json"
 	var err := session.load_game()
@@ -952,7 +958,7 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	_check(cops.all(func(r): return r.model.skeleton().get_node("Acc_police_vest").visible), "officers wear the vest, cap and belt")
 	var bakkies := district.traffic.cars.filter(func(c): return c.model == "police")
 	_check(bakkies.size() == 3, "a police bakkie patrols each district (%d)" % bakkies.size())
-	# Find a rival gangster out on the street in Vleirand (daytime: they hang at the corner).
+	# Find a rival gangster out on the street in Westridge (daytime: they hang at the corner).
 	district.director.clock.set_hour(16.0)
 	var thug: Resident = null
 	for i in 60 * 120:
@@ -1002,9 +1008,11 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(thug.shots_fired > 0, "the gangster shoots at the player (%d shots, player hp %.0f)" % [thug.shots_fired, player.health.hp])
 	player.health.revive(Health.MAX_HP)
-	for k in 12:
+	for k in 40:
 		if thug.is_down():
 			break
+		if k % 4 == 3:   # bystanders step into the line of fire at a busy corner: find a clear spot
+			player.global_position = _clear_spot_near(district, thug, 3.5)
 		combat.fire(player, "pistol", player.model.muzzle_position(), thug.global_position + Vector3(0, 1.2, 0), 0.0)
 		await physics_frame
 	_check(thug.is_down() and thug.brain.state == NpcBrain.State.DOWN and thug.model.base_pose == "down", "enough hits knock the gangster down")
@@ -1013,6 +1021,15 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(not thug.is_down() and thug.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.AT_HOME], "...and gets up later and goes home (%s)" % thug.brain.state_name())
 	_check(thug.teleport_violations == tele0, "no teleports while fighting or knocked down")
+	# If the gangster knocked the player out above, let the wake-up (which clears heat) finish first.
+	for i in 60 * 6:
+		if player.input_enabled and not player.is_down():
+			break
+		await physics_frame
+	player.health.revive(Health.MAX_HP)
+	for r: Resident in district.residents.values():
+		if r.fight_target == player:
+			r.end_fight()
 	# Heat 2+: police who see the player fight.
 	district.director.clock.set_hour(11.0)
 	var cop: Resident = null
@@ -1032,9 +1049,11 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	player.snap_camera()
 	dispatch.heat.clear()
 	dispatch.heat.add(2.5)
-	for i in 60 * 3:
+	for i in 60 * 8:
 		if cop.fight_target == player:
 			break
+		if i % 120 == 119:   # officers keep walking: step back into their line of sight
+			player.global_position = _clear_spot_near(district, cop, 8.0)
 		await physics_frame
 	_check(cop.fight_target == player, "at heat %d the police come after you" % dispatch.heat.level())
 	_check(dispatch.responding, "police bakkies respond (lights and siren)")
@@ -1077,7 +1096,7 @@ func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 	var kids := district.residents.values().filter(func(r): return r.data.role == "kid")
 	_check(kids.size() >= 12, "kids live in the neighbourhood (%d)" % kids.size())
 	_check((kids[0] as Resident).model.scale.y < 0.75, "kids are child-sized")
-	# Kick-about at the Vleirand court: send the kids out and watch.
+	# Kick-about at the Westridge court: send the kids out and watch.
 	var court: KickAbout = district.kickabouts[0]
 	district.director.clock.set_hour(10.0)
 	player.global_position = court.center + Vector3(0, 0.1, 9.0)
@@ -1252,7 +1271,7 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	district.director.ambient_incidents = false
 	var east_x: float = district.info.bounds[2]
 	_check(district.gates.has("district_east") and district.gates.has("district_west"), "both neighbours have boom gates")
-	_check(not district.is_district_open("district_east"), "Rooiduin gate starts closed")
+	_check(not district.is_district_open("district_east"), "Lentegeur gate starts closed")
 
 	# The gate physically blocks the player.
 	player.pivot.rotation.y = 0.0
@@ -1264,7 +1283,7 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 
 	# Turf map shows requirements.
 	session.open_turf_map()
-	_check(session.turf_map.visible and session.turf_map.panel_text().contains("✗ Complete \"Hold the Corner\""), "turf map lists Rooiduin's missing requirements")
+	_check(session.turf_map.visible and session.turf_map.panel_text().contains("✗ Complete \"Hold the Corner\""), "turf map lists Lentegeur's missing requirements")
 	_check(session.turf_map.unlock_button("district_east").disabled, "the Unlock button is disabled while locked")
 	session.turf_map.close()
 	_check(player.input_enabled, "closing the map returns control")
@@ -1304,19 +1323,19 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 		# Top up anything still short so the unlock flow itself is tested.
 		prog.add_reputation(maxi(0, 60 - prog.reputation))
 		prog.add_district_influence("starter", 50)
-	_check(dm.can_unlock("district_east"), "Rooiduin is unlockable after Hold the Corner")
+	_check(dm.can_unlock("district_east"), "Lentegeur is unlockable after Hold the Corner")
 
 	# Unlock through the map button.
 	session.open_turf_map()
 	var btn := session.turf_map.unlock_button("district_east")
 	_check(btn != null and not btn.disabled, "the Unlock button is enabled")
 	btn.pressed.emit()
-	_check(prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"), "pressing Unlock opens Rooiduin's gates")
-	_check(session.hud.banner_text().contains("ROOIDUIN UNLOCKED"), "unlock banner is shown")
+	_check(prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"), "pressing Unlock opens Lentegeur's gates")
+	_check(session.hud.banner_text().contains("LENTEGEUR UNLOCKED"), "unlock banner is shown")
 	session.turf_map.close()
-	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Kalkbos stays locked")
+	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Rocklands stays locked")
 
-	# Beyond the Block: walk through the open gate into Rooiduin.
+	# Beyond the Block: walk through the open gate into Lentegeur.
 	_talk(player, district.residents["npc_lionel"].interactable)
 	_check(missions.active.has("beyond_the_block"), "Lionel offers Beyond the Block")
 	_check(missions.current_objective("beyond_the_block").get("id") == "enter", "the unlock objective is already done")
@@ -1328,19 +1347,19 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	_check(player.global_position.x > east_x + 12.0, "the open gate lets the player through (x %.1f)" % player.global_position.x)
 	for i in 20:
 		await physics_frame
-	_check(missions.is_completed("beyond_the_block"), "walking into Rooiduin completes Beyond the Block")
+	_check(missions.is_completed("beyond_the_block"), "walking into Lentegeur completes Beyond the Block")
 	var west_x: float = district.info.bounds[0]
 	player.global_position = Vector3(west_x + 6.0, 0.1, 0.0)
 	player.snap_camera()
 	await _press_toward(player, "move_left", 3.0)
-	_check(player.global_position.x > west_x, "Kalkbos' gate still blocks the player")
+	_check(player.global_position.x > west_x, "Rocklands' gate still blocks the player")
 
 	# Persistence: save, lock everything again, load.
 	_check(session.save_game() == "", "save after unlocking")
 	prog.unlocked_district_ids = PackedStringArray(["starter"])
 	district.set_district_open("district_east", false, false)
 	_check(session.load_game() == "" and prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"),
-		"after loading, Rooiduin is unlocked and its gates are open")
+		"after loading, Lentegeur is unlocked and its gates are open")
 	_check(district.residents.size() >= 28 and district.residents.values().any(func(r): return not r.is_inside),
 		"the starter district is still populated")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
@@ -1450,7 +1469,7 @@ func _test_district() -> void:
 	main.auto_load = false
 	main.save_path = "user://test_game_save.json"
 	root.add_child(main)
-	var district: District = main.get_node("Vleirand")
+	var district: District = main.get_node("Westridge")
 	var player: Player = main.get_node("Player")
 	if not district.is_navigation_ready:
 		await district.navigation_ready
@@ -1672,9 +1691,9 @@ func _test_district() -> void:
 	await _test_turf_in_game(main, district, player)
 	print("== phase 6 in game (traffic, driving, weather, events, lighting, settings)")
 	await _test_phase6_in_game(main, district, player)
-	print("== phase 7 in game (Rooiduin: travel, missions, crew, save compatibility)")
+	print("== phase 7 in game (Lentegeur: travel, missions, crew, save compatibility)")
 	await _test_phase7_in_game(main, district, player)
-	print("== Kalkbos in game (unlock, travel, missions, third recruit, saves)")
+	print("== Rocklands in game (unlock, travel, missions, third recruit, saves)")
 	await _test_kalkbos_in_game(main, district, player)
 	print("== gamepad (prompts, triggers, menus with A/B)")
 	await _test_gamepad_in_game(main, district, player)

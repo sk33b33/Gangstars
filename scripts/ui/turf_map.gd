@@ -95,7 +95,7 @@ func refresh() -> void:
 		c.queue_free()
 	_add_label("TURF", 28, Color("#ffd75e"))
 	var starter_state := manager.state("starter")
-	_add_label("Vleirand — %s" % starter_state.to_upper(), 20, Color("#5fbf6a") if starter_state == "controlled" else Color("#f1c40f"))
+	_add_label("Westridge — %s" % starter_state.to_upper(), 20, Color("#5fbf6a") if starter_state == "controlled" else Color("#f1c40f"))
 	var bar := ProgressBar.new()
 	bar.min_value = 0
 	bar.max_value = 100
@@ -127,6 +127,15 @@ func refresh() -> void:
 				focused = true
 		else:
 			_add_label("Open: walk through the gate on the %s side." % d.side, 16, Color("#9fd8b8"))
+	var future := manager.planned()
+	if not future.is_empty():
+		_side.add_child(HSeparator.new())
+		_add_label("The rest of Mitchells Plain", 20, Color("#c9c6bf"))
+		for d in future:
+			var reqs: Array = manager.get_unlock_requirements(str(d.id))
+			var need := " · ".join(reqs.map(func(r): return r.text))
+			_add_label("%s — coming later" % d.display_name, 16, Color("#8a8f99"))
+			_add_label("%s\nWill need: %s" % [str(d.get("description", "")), need], 13, Color("#8a8f99"))
 	var close_btn := Button.new()
 	close_btn.text = "Close (M / Esc · B on a pad)"
 	close_btn.pressed.connect(close)
@@ -194,7 +203,7 @@ func _draw_map() -> void:
 		var ab: Array = area.get("bounds", b)
 		var ar := Rect2(_to_map(Vector3(ab[0], 0, ab[1])), Vector2(ab[2] - ab[0], ab[3] - ab[1]) * _map_scale)
 		_canvas.draw_rect(ar, AREA_GROUND.get(str(area.id), Color("#d8a07a")))
-	# Neighbouring districts: their real area if built, otherwise a strip beside Vleirand.
+	# Neighbouring districts: their real area if built, otherwise a strip beside Westridge.
 	var overlays: Array = []
 	var labels: Array = []
 	for d in manager.neighbours():

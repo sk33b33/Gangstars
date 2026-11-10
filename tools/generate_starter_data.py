@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate the Vleirand starter district data (30 houses + residents).
+"""Generate the Westridge starter district data (30 houses + residents).
 
 Deterministic: every house/resident draws from its own RNG seeded by its stable id, so
 editing one row never reshuffles the others. Hand-authored entries in KEEP_* are copied
@@ -20,11 +20,11 @@ RESIDENTS_OUT = ROOT / "data/npcs/starter_residents.json"
 # Each row: street id, street name, facing, fixed coordinate of the fence line, and the
 # positions along the street. Plot front-centres sit 0.5 m behind the sidewalk edge.
 ROWS = [
-    # Duif Street (z = 0, edge 6.5): south side, doors face north.
-    ("duif", "Duif Street", "north", ("z", 7.0), [-48, -36, -24, -12, 0, 12, 24, 36]),
-    # Mossie Street (z = -56, edge 6.5): north side faces south, south side faces north.
-    ("mossie", "Mossie Street", "south", ("z", -63.0), [-42, -30, -18, -6, 6, 18, 30, 42]),
-    ("mossie", "Mossie Street", "north", ("z", -49.0), [-6, 6]),
+    # AZ Berman Drive (z = 0, edge 6.5): south side, doors face north.
+    ("duif", "AZ Berman Drive", "north", ("z", 7.0), [-48, -36, -24, -12, 0, 12, 24, 36]),
+    # Spine Road (z = -56, edge 6.5): north side faces south, south side faces north.
+    ("mossie", "Spine Road", "south", ("z", -63.0), [-42, -30, -18, -6, 6, 18, 30, 42]),
+    ("mossie", "Spine Road", "north", ("z", -49.0), [-6, 6]),
     # Kwikkie Street (x = -50, edge 6.5): west side faces east, east side faces west.
     ("kwikkie", "Kwikkie Street", "east", ("x", -57.0), [-16, -28, -40]),
     ("kwikkie", "Kwikkie Street", "west", ("x", -43.0), [-16, -28, -40]),
@@ -33,7 +33,7 @@ ROWS = [
     ("tortel", "Tortel Lane", "west", ("x", 55.5), [-16, -28, -40]),
 ]
 
-# Existing Phase 1 houses keep their ids and positions (h01-h05 on Duif Street).
+# Existing Phase 1 houses keep their ids and positions (h01-h05 on AZ Berman Drive).
 ID_ORDER_DUIF = {-24: 1, -12: 2, 0: 3, 12: 4, 24: 5, 36: 6, -36: 7, -48: 8}
 
 VACANT = {"starter_h14", "starter_h20", "starter_h27"}
@@ -61,7 +61,7 @@ ACTIVITY = {"poi_shop": "shopping", "poi_bus_stop": "waiting", "poi_bus_stop_mos
 LINES = [
     "Môre! Lovely day, hey?", "The café ran out of bread again.", "Ag shame, you look lost.",
     "Everybody knows everybody here.", "My laaitie is at the court, have you seen him?",
-    "Don't park in front of my gate, ne.", "The bus is always late on Mossie Street.",
+    "Don't park in front of my gate, ne.", "The bus is always late on Spine Road.",
     "Who are you looking for?", "My ouma has lived here forty years.", "Shame, this wind."]
 WINDOWS = {"shopping": [7, 19], "waiting": [6, 20], "socializing": [10, 22], "playing": [9, 20],
            "relaxing": [8, 20], "visiting": [9, 21]}

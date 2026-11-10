@@ -4,6 +4,25 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Set in Mitchells Plain (2026-11-10)
+- **Renamed suburbs:**
+  - The starter district is now **Westridge**.
+  - The east district (flats, container shops, soccer field) is **Lentegeur**.
+  - The west district (stone cottages, old quarry) is **Rocklands**.
+- **Renamed roads:** the two through-roads are **AZ Berman Drive** and **Spine Road**. Residential
+  streets keep made-up names.
+- **Scope of the rename:** everything player-facing (addresses, missions, dialogue, signs, turf
+  map, banners, generator specs) uses the new names.
+- **Unchanged:** internal ids (`starter`, `district_east`, `district_west`) and file names, so
+  existing saves still load.
+- **Future turf:** the rest of Mitchells Plain (Tafelsig, Beacon Valley, Portlands, Eastridge,
+  Strandfontein, Town Centre) is on the turf map as planned turf, with requirements. It is a new
+  "planned" state that can't be unlocked until the area is built.
+- **Lentegeur's ground** is pale Cape Flats sand instead of red dunes. The Rocklands hall sign
+  reads "ROCKLANDS / CHURCH HALL".
+- **Real places, fictional crews:** gangs and characters stay fictional, and suburb descriptions
+  are neutral.
+
 ### Police, weapons and arcade combat; new vehicles (2026-11-10)
 - **Vehicles:** Blender-built (`tools/blender/build_vehicles.py`): hatch, sedan, bakkie, minibus
   taxi and a police double cab, replacing the box cars everywhere (`VehicleLibrary`).

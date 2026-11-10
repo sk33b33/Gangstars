@@ -58,11 +58,11 @@ The starter district should have a visible boundary: road barrier, gate, bridge,
 
 | Street | Axis | Houses | Notes |
 |---|---|---|---|
-| Duif Street | east-west, z = 0 | 8 (south side, h01–h08) | Main road; café, Duif bus stop and the corner on the north side |
-| Mossie Street | east-west, z = −56 | 10 (8 north side h09–h16, 2 south side h17–h18) | Mossie bus stop |
+| AZ Berman Drive | east-west, z = 0 | 8 (south side, h01–h08) | Main road; café, Duif bus stop and the corner on the north side |
+| Spine Road | east-west, z = −56 | 10 (8 north side h09–h16, 2 south side h17–h18) | Mossie bus stop |
 | Kwikkie Street | north-south, x = −50 | 6 (h19–h24) | Western connector |
 | Tortel Lane | north-south, x = 50 | 6 (h25–h30) | Narrower lane; h29 is the hostile crew house |
 
 The central block (between the four streets) holds the café, the sand court and the park.
-Both east-west streets leave the district through "LOCKED TURF" barriers (Kalkbos west, Rooiduin east).
+Both east-west streets leave the district through "LOCKED TURF" barriers (Rocklands west, Lentegeur east).
 Edit the generator rows in `tools/generate_starter_data.py`, rerun it, then run the tests.

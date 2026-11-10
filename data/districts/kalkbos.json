@@ -4,8 +4,8 @@
     "yard": 4
   },
   "id": "district_west",
-  "display_name": "Kalkbos",
-  "street_name": "Kalkbos",
+  "display_name": "Rocklands",
+  "street_name": "Rocklands",
   "bounds": [
     -228,
     -78,
@@ -28,7 +28,7 @@
   "streets": [
     {
       "id": "duif_k",
-      "name": "Duif Street",
+      "name": "AZ Berman Drive",
       "axis": "x",
       "at": 0,
       "from": -240,
@@ -38,7 +38,7 @@
     },
     {
       "id": "mossie_k",
-      "name": "Mossie Street",
+      "name": "Spine Road",
       "axis": "x",
       "at": -56,
       "from": -240,
@@ -159,7 +159,7 @@
     },
     {
       "id": "kalk_hall",
-      "name": "Kalkbos Hall",
+      "name": "Rocklands Hall",
       "kind": "gathering",
       "position": [
         -136,
@@ -181,7 +181,7 @@
     },
     {
       "id": "kalk_bus",
-      "name": "the Kalkbos bus stop",
+      "name": "the Rocklands bus stop",
       "kind": "transit",
       "position": [
         -196,

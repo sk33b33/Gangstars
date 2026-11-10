@@ -31,13 +31,13 @@
       "join_chance": 0.4,
       "duration": 30,
       "power_off": true,
-      "start_text": "Load-shedding! Stage 2 until 21:00. The lights go out across Vleirand.",
+      "start_text": "Load-shedding! Stage 2 until 21:00. The lights go out across Westridge.",
       "end_text": "The power is back. Somebody cheers down the street.",
       "district": "*"
     },
     {
       "id": "soccer_match",
-      "name": "Soccer on the Rooiduin field",
+      "name": "Soccer on the Lentegeur field",
       "every_days": 1,
       "offset": 0,
       "hours": [
@@ -54,7 +54,7 @@
     },
     {
       "id": "church_bazaar",
-      "name": "Bazaar at Kalkbos Hall",
+      "name": "Bazaar at Rocklands Hall",
       "every_days": 3,
       "offset": 0,
       "hours": [

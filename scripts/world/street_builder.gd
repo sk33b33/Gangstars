@@ -414,7 +414,7 @@ static func _build_kickabout(root: Node3D, c: Vector3, size: Vector2) -> void:
 				root.add_child(mi)
 
 
-## Kalkbos Hall: limestone church hall with a bell gable, sign and double doors facing +Z.
+## Rocklands Hall: limestone church hall with a bell gable, sign and double doors facing +Z.
 static func _build_church_hall(root: Node3D, c: Vector3, rot_y: float) -> void:
 	var pivot := Node3D.new()
 	pivot.position = c

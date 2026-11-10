@@ -4,7 +4,7 @@
     {
       "id": "kalk_h01",
       "number": 19,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Willemse family",
       "kit": "cottage",
@@ -39,7 +39,7 @@
     {
       "id": "kalk_h02",
       "number": 17,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Esau family",
       "kit": "cottage",
@@ -74,7 +74,7 @@
     {
       "id": "kalk_h03",
       "number": 15,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "September family",
       "kit": "cottage",
@@ -109,7 +109,7 @@
     {
       "id": "kalk_h04",
       "number": 13,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Plaatjies family",
       "kit": "cottage",
@@ -144,7 +144,7 @@
     {
       "id": "kalk_h05",
       "number": 11,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Bailey family",
       "kit": "cottage",
@@ -179,7 +179,7 @@
     {
       "id": "kalk_h06",
       "number": 9,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Kleinsmidt family",
       "kit": "cottage",
@@ -214,7 +214,7 @@
     {
       "id": "kalk_h07",
       "number": 7,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Empty house",
       "kit": "cottage",
@@ -247,7 +247,7 @@
     {
       "id": "kalk_h08",
       "number": 5,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Hendricks family",
       "kit": "cottage",
@@ -282,7 +282,7 @@
     {
       "id": "kalk_h09",
       "number": 3,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Ontong family",
       "kit": "cottage",
@@ -317,7 +317,7 @@
     {
       "id": "kalk_h10",
       "number": 1,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_west",
       "display_name": "Plaatjies family",
       "kit": "cottage",
@@ -352,7 +352,7 @@
     {
       "id": "kalk_h11",
       "number": 16,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Rossouw family",
       "kit": "double_semi",
@@ -387,7 +387,7 @@
     {
       "id": "kalk_h12",
       "number": 14,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Bailey family",
       "kit": "single_gable",
@@ -422,7 +422,7 @@
     {
       "id": "kalk_h13",
       "number": 12,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Domingo family",
       "kit": "single_gable",
@@ -457,7 +457,7 @@
     {
       "id": "kalk_h14",
       "number": 10,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Kleinsmidt family",
       "kit": "cottage",
@@ -492,7 +492,7 @@
     {
       "id": "kalk_h15",
       "number": 8,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Hendricks family",
       "kit": "double_semi",
@@ -527,7 +527,7 @@
     {
       "id": "kalk_h16",
       "number": 6,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Esau family",
       "kit": "single_gable",
@@ -562,7 +562,7 @@
     {
       "id": "kalk_h17",
       "number": 4,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "September family",
       "kit": "single_gable",
@@ -597,7 +597,7 @@
     {
       "id": "kalk_h18",
       "number": 2,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_west",
       "display_name": "Plaatjies family",
       "kit": "cottage",

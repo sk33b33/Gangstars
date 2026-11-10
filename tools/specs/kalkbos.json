@@ -6,8 +6,8 @@
   "houses_out": "data/houses/kalkbos_houses.json",
   "residents_out": "data/npcs/kalkbos_residents.json",
   "rows": [
-    { "street": "Duif Street", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [-116, -126, -136, -146, -156, -176, -186, -196, -206, -216], "kit": "cottage", "plot_size": [10, 14], "residents": 1 },
-    { "street": "Mossie Street", "facing": "south", "axis": "z", "fixed": -63.0, "positions": [-120, -132, -144, -156, -168, -180, -192, -204], "kits": ["single_gable", "double_semi", "cottage"], "plot_size": [12, 14], "residents": 1 },
+    { "street": "AZ Berman Drive", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [-116, -126, -136, -146, -156, -176, -186, -196, -206, -216], "kit": "cottage", "plot_size": [10, 14], "residents": 1 },
+    { "street": "Spine Road", "facing": "south", "axis": "z", "fixed": -63.0, "positions": [-120, -132, -144, -156, -168, -180, -192, -204], "kits": ["single_gable", "double_semi", "cottage"], "plot_size": [12, 14], "residents": 1 },
     { "street": "Klip Street", "facing": "west", "axis": "x", "fixed": -161.0, "positions": [-14, -22, -30, -38], "kit": "row_house", "plot_size": [8, 14], "residents": 1 }
   ],
   "vacant": ["kalk_h07", "kalk_h20"],
@@ -24,7 +24,7 @@
       "schedule": [ { "activity": "working", "destination": "kalk_hall", "duration": 30, "window": [8, 20] },
         { "activity": "socializing", "destination": "kalk_square", "duration": 15, "window": [10, 20] },
         { "activity": "home", "destination": "home", "duration": 15 } ],
-      "lines": ["Kalkbos was built from this stone. So were we.", "The hall is open to everyone, son."] },
+      "lines": ["Rocklands was built from this stone. So were we.", "The hall is open to everyone, son."] },
     "npc_kalk_riyaad": { "house": "kalk_h12", "display_name": "Riyaad Hendricks", "personality": "curious", "hair_style": "beanie", "hair_color": "#27ae60",
       "height": 1.02, "shirt_color": "#e67e22",
       "schedule": [ { "activity": "relaxing", "destination": "kalk_lookout", "duration": 18, "window": [9, 21] },
@@ -38,7 +38,7 @@
   "first_names": ["Aletta", "Basil", "Charmaine", "Delano", "Ebrahim", "Francina", "Gavin", "Hester", "Imraan", "Jolene", "Kurt", "Leonie", "Mervyn", "Nolan", "Petronella", "Rashied", "Sharon", "Tyrone"],
   "pois": { "kalk_fish": "shopping", "kalk_hall": "visiting", "kalk_lookout": "relaxing", "kalk_bus": "waiting", "kalk_square": "socializing" },
   "windows": { "shopping": [9, 19], "waiting": [6, 20], "socializing": [10, 22], "relaxing": [8, 20], "visiting": [8, 20] },
-  "lines": ["The quarry closed before you were born.", "Kalkbos dust gets in your shoes, hey.", "Sunday the hall has a bazaar.",
-    "My oupa built this wall with his own hands.", "You came all the way from Vleirand?", "The wind off the quarry is cold."],
+  "lines": ["The quarry closed before you were born.", "Rocklands dust gets in your shoes, hey.", "Sunday the hall has a bazaar.",
+    "My oupa built this wall with his own hands.", "You came all the way from Westridge?", "The wind off the quarry is cold."],
   "crew_lines": ["Klipspringers run the lookout.", "Long way from home, bru.", "Turn around."]
 }

@@ -5,7 +5,7 @@
 
 A spec lists street rows (kit, plot size, residents per house), palettes, name pools, the
 district's points of interest, named characters and a rival crew. Output: houses + residents
-JSON in the same formats Vleirand uses, so the game builds the district with the same code.
+JSON in the same formats Westridge uses, so the game builds the district with the same code.
 Deterministic: every house/resident uses its own RNG seeded by spec seed + stable id.
 """
 import json

@@ -6,9 +6,9 @@
   "houses_out": "data/houses/rooiduin_houses.json",
   "residents_out": "data/npcs/rooiduin_residents.json",
   "rows": [
-    { "street": "Duif Street", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [122, 146], "kit": "flats", "plot_size": [22, 16], "residents": 2 },
-    { "street": "Duif Street", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [164, 172, 180, 188, 196, 204, 212, 220], "kit": "row_house", "plot_size": [8, 14], "residents": 1 },
-    { "street": "Mossie Street", "facing": "south", "axis": "z", "fixed": -63.0, "positions": [122, 146, 170, 194], "kit": "flats", "plot_size": [22, 16], "residents": 2 },
+    { "street": "AZ Berman Drive", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [122, 146], "kit": "flats", "plot_size": [22, 16], "residents": 2 },
+    { "street": "AZ Berman Drive", "facing": "north", "axis": "z", "fixed": 7.0, "positions": [164, 172, 180, 188, 196, 204, 212, 220], "kit": "row_house", "plot_size": [8, 14], "residents": 1 },
+    { "street": "Spine Road", "facing": "south", "axis": "z", "fixed": -63.0, "positions": [122, 146, 170, 194], "kit": "flats", "plot_size": [22, 16], "residents": 2 },
     { "street": "Duin Road", "facing": "west", "axis": "x", "fixed": 175.0, "positions": [-14, -22, -30, -38], "kit": "row_house", "plot_size": [8, 14], "residents": 1 },
     { "street": "Duin Road", "facing": "east", "axis": "x", "fixed": 161.0, "positions": [-14, -22], "kit": "row_house", "plot_size": [8, 14], "residents": 1 }
   ],
@@ -21,18 +21,18 @@
       "schedule": [ { "activity": "shopping", "destination": "rooi_spaza", "duration": 12, "window": [7, 19] },
         { "activity": "socializing", "destination": "rooi_courtyard", "duration": 18, "window": [10, 21] },
         { "activity": "home", "destination": "home", "duration": 20 } ],
-      "lines": ["Welcome to Rooiduin, my child. Mind the sand.", "The Duin Boys think they own the field."] },
+      "lines": ["Welcome to Lentegeur, my child. Mind the sand.", "The Duin Boys think they own the field."] },
     "npc_rooi_solly": { "house": "rooi_h04", "display_name": "Uncle Solly Abrahams", "personality": "steady", "hair_style": "bald", "height": 1.0,
       "shirt_color": "#ecf0f1",
       "schedule": [ { "activity": "working", "destination": "rooi_barber", "duration": 40, "window": [8, 18] },
         { "activity": "home", "destination": "home", "duration": 15 } ],
-      "lines": ["Kings Cuts: best fade in Rooiduin.", "Sit, sit. Who's next?"] },
+      "lines": ["Kings Cuts: best fade in Lentegeur.", "Sit, sit. Who's next?"] },
     "npc_rooi_kaylin": { "house": "rooi_h09", "display_name": "Kaylin Booysen", "personality": "curious", "hair_style": "short", "height": 1.0,
       "shirt_color": "#16a085",
       "schedule": [ { "activity": "playing", "destination": "rooi_field", "duration": 20, "window": [9, 20] },
         { "activity": "waiting", "destination": "rooi_taxi", "duration": 10, "window": [6, 20] },
         { "activity": "home", "destination": "home", "duration": 15 } ],
-      "lines": ["I'm the best striker in Rooiduin. Ask anyone.", "One day I'm getting out of here. Or running it."] }
+      "lines": ["I'm the best striker in Lentegeur. Ask anyone.", "One day I'm getting out of here. Or running it."] }
   },
   "kits": { "flats": 1 },
   "paint": ["#e8b4a0", "#d9c8a0", "#b8d4c8", "#c8b8d8", "#e0d0b0", "#f0c8a8", "#a8c8e0", "#d8d8d0"],
@@ -41,7 +41,7 @@
   "first_names": ["Abigail", "Brandon", "Candice", "Dillon", "Esmé", "Faheem", "Glenda", "Igshaan", "Jodene", "Keenan", "Lucinda", "Mogamat", "Nadine", "Quinton", "Raeesa", "Shaun", "Uzair", "Wendy"],
   "pois": { "rooi_spaza": "shopping", "rooi_barber": "visiting", "rooi_field": "playing", "rooi_taxi": "waiting", "rooi_courtyard": "socializing" },
   "windows": { "shopping": [7, 19], "waiting": [6, 20], "socializing": [10, 22], "playing": [9, 20], "visiting": [9, 19] },
-  "lines": ["Rooiduin sand gets everywhere, hey.", "The taxi to town is always full.", "My laaitie plays on the field every day.",
-    "These flats were built before I was born.", "You from Vleirand? Nice to meet you, man.", "Shame, the wind today."],
-  "crew_lines": ["Duin Boys run this side.", "You're far from Vleirand, bru.", "Keep walking."]
+  "lines": ["Lentegeur sand gets everywhere, hey.", "The taxi to town is always full.", "My laaitie plays on the field every day.",
+    "These flats were built before I was born.", "You from Westridge? Nice to meet you, man.", "Shame, the wind today."],
+  "crew_lines": ["Duin Boys run this side.", "You're far from Westridge, bru.", "Keep walking."]
 }

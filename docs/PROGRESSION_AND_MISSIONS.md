@@ -66,9 +66,9 @@ Display all requirements to the player. Persist the unlocked district ID in the 
 
 | District | Side | Unlock requirements |
 |---|---|---|
-| Vleirand (`starter`) | — | always unlocked; contested below 50% influence, controlled at 50%+ |
-| Rooiduin (`district_east`) | east | Hold the Corner, reputation 60, 1 crew, Vleirand influence 50% |
-| Kalkbos (`district_west`) | west | Beyond the Block, reputation 100, 2 crew, Vleirand influence 80% |
+| Westridge (`starter`) | — | always unlocked; contested below 50% influence, controlled at 50%+ |
+| Lentegeur (`district_east`) | east | Hold the Corner, reputation 60, 1 crew, Westridge influence 50% |
+| Rocklands (`district_west`) | west | Beyond the Block, reputation 100, 2 crew, Westridge influence 80% |
 
 Mission chain: New Face → A Favour → Know the Block → First Crew → Local Respect →
-Hold the Corner → (unlock Rooiduin) → Beyond the Block.
+Hold the Corner → (unlock Lentegeur) → Beyond the Block.

@@ -10,7 +10,7 @@ extends Node
 ##   --day=N  --weather=clear|cloudy|windy|rain  --drive=<vehicle id>  --pause-menu
 ##   --cam=x,y,z,tx,ty,tz (fixed camera at x,y,z looking at tx,ty,tz)
 
-@onready var district: District = $Vleirand
+@onready var district: District = $Westridge
 @onready var player: Player = $Player
 @onready var hud: Hud = $Hud
 @onready var debug_overlay: DebugOverlay = $DebugOverlay
@@ -55,7 +55,7 @@ func _ready() -> void:
 		await district.navigation_ready
 	session.setup(district, player, hud)
 	apply_settings()
-	hud.show_message("Welcome to Vleirand. You've just moved into 13 Duif Street.")
+	hud.show_message("Welcome to Westridge. You've just moved into 13 AZ Berman Drive.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if _args.has("hour"):
 		district.director.clock.set_hour(float(_args.hour))  # after loading, so it wins over the save

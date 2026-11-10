@@ -4,7 +4,7 @@
     {
       "id": "starter_h01",
       "number": 5,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Daniels family",
       "kit": "single_hip",
       "position": [
@@ -35,7 +35,7 @@
     {
       "id": "starter_h02",
       "number": 7,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Jacobs family",
       "kit": "single_gable",
       "position": [
@@ -65,7 +65,7 @@
     {
       "id": "starter_h03",
       "number": 9,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Petersen family",
       "kit": "double_semi",
       "position": [
@@ -95,7 +95,7 @@
     {
       "id": "starter_h04",
       "number": 11,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Adams family",
       "kit": "double_garage",
       "position": [
@@ -125,7 +125,7 @@
     {
       "id": "starter_h05",
       "number": 13,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Your safehouse",
       "kit": "single_hip",
       "position": [
@@ -153,7 +153,7 @@
     {
       "id": "starter_h06",
       "number": 15,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Solomons family",
       "kit": "single_gable",
       "position": [
@@ -183,7 +183,7 @@
     {
       "id": "starter_h07",
       "number": 3,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Meyer family",
       "kit": "double_garage",
       "position": [
@@ -213,7 +213,7 @@
     {
       "id": "starter_h08",
       "number": 1,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "display_name": "Davids family",
       "kit": "single_hip",
       "position": [
@@ -243,7 +243,7 @@
     {
       "id": "starter_h09",
       "number": 2,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Wyngaard family",
       "kit": "single_gable",
       "position": [
@@ -273,7 +273,7 @@
     {
       "id": "starter_h10",
       "number": 4,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Isaacs family",
       "kit": "single_gable",
       "position": [
@@ -303,7 +303,7 @@
     {
       "id": "starter_h11",
       "number": 6,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Cupido family",
       "kit": "single_gable",
       "position": [
@@ -333,7 +333,7 @@
     {
       "id": "starter_h12",
       "number": 8,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Cupido family",
       "kit": "double_semi",
       "position": [
@@ -363,7 +363,7 @@
     {
       "id": "starter_h13",
       "number": 10,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Solomons family",
       "kit": "single_hip",
       "position": [
@@ -393,7 +393,7 @@
     {
       "id": "starter_h14",
       "number": 12,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Empty house",
       "kit": "single_hip",
       "position": [
@@ -421,7 +421,7 @@
     {
       "id": "starter_h15",
       "number": 14,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Cupido family",
       "kit": "single_hip",
       "position": [
@@ -451,7 +451,7 @@
     {
       "id": "starter_h16",
       "number": 16,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Fortuin family",
       "kit": "single_hip",
       "position": [
@@ -481,7 +481,7 @@
     {
       "id": "starter_h17",
       "number": 1,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Abrahams family",
       "kit": "double_garage",
       "position": [
@@ -511,7 +511,7 @@
     {
       "id": "starter_h18",
       "number": 3,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "display_name": "Samuels family",
       "kit": "single_gable",
       "position": [

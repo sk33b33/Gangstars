@@ -4,7 +4,7 @@
     "yard": 7
   },
   "id": "starter",
-  "display_name": "Vleirand",
+  "display_name": "Westridge",
   "street_name": "Starter district",
   "is_initially_unlocked": true,
   "bounds": [
@@ -16,7 +16,7 @@
   "streets": [
     {
       "id": "duif",
-      "name": "Duif Street",
+      "name": "AZ Berman Drive",
       "axis": "x",
       "at": 0,
       "from": -90,
@@ -26,7 +26,7 @@
     },
     {
       "id": "mossie",
-      "name": "Mossie Street",
+      "name": "Spine Road",
       "axis": "x",
       "at": -56,
       "from": -90,
@@ -117,7 +117,7 @@
   "pois": [
     {
       "id": "poi_shop",
-      "name": "Vleirand Cafe",
+      "name": "Westridge Cafe",
       "kind": "shop",
       "position": [
         -18,
@@ -128,7 +128,7 @@
     },
     {
       "id": "poi_bus_stop",
-      "name": "the Duif Street bus stop",
+      "name": "the AZ Berman Drive bus stop",
       "kind": "transit",
       "position": [
         8,
@@ -139,7 +139,7 @@
     },
     {
       "id": "poi_bus_stop_mossie",
-      "name": "the Mossie Street bus stop",
+      "name": "the Spine Road bus stop",
       "kind": "transit",
       "position": [
         -20,

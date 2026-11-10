@@ -4,8 +4,8 @@
     "yard": 3
   },
   "id": "district_east",
-  "display_name": "Rooiduin",
-  "street_name": "Rooiduin",
+  "display_name": "Lentegeur",
+  "street_name": "Lentegeur",
   "bounds": [
     108,
     -78,
@@ -14,8 +14,8 @@
   ],
   "houses_file": "res://data/houses/rooiduin_houses.json",
   "residents_file": "res://data/npcs/rooiduin_residents.json",
-  "ground_texture": "sand_red",
-  "ground_tint": "#f2e2d6",
+  "ground_texture": "yard_sand",
+  "ground_tint": "#efe4cf",
   "ground_margin": {
     "west": 0
   },
@@ -28,7 +28,7 @@
   "streets": [
     {
       "id": "duif_r",
-      "name": "Duif Street",
+      "name": "AZ Berman Drive",
       "axis": "x",
       "at": 0,
       "from": 88,
@@ -38,7 +38,7 @@
     },
     {
       "id": "mossie_r",
-      "name": "Mossie Street",
+      "name": "Spine Road",
       "axis": "x",
       "at": -56,
       "from": 88,

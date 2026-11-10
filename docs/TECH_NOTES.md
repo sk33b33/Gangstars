@@ -198,7 +198,7 @@ church_hall, quarry_face, lookout. Missions can require unlocked districts (`pre
 Navigation rebakes (`District.rebake_navigation`) run on a thread, then wait for two fresh
 navigation-map iterations before emitting `navigation_rebaked`: Godot 4.5 syncs maps
 asynchronously, and reading the map a fixed few frames after `bake_finished` can still see the
-old mesh. Kalkbos is the worked example of a second district (`tools/specs/kalkbos.json`).
+old mesh. Rocklands is the worked example of a second district (`tools/specs/kalkbos.json`).
 
 ## Models and rendering
 

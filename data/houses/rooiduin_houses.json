@@ -4,7 +4,7 @@
     {
       "id": "rooi_h01",
       "number": 1,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Lottering block",
       "kit": "flats",
@@ -40,7 +40,7 @@
     {
       "id": "rooi_h02",
       "number": 3,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Titus block",
       "kit": "flats",
@@ -76,7 +76,7 @@
     {
       "id": "rooi_h03",
       "number": 5,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Hartnick family",
       "kit": "row_house",
@@ -111,7 +111,7 @@
     {
       "id": "rooi_h04",
       "number": 7,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Maans family",
       "kit": "row_house",
@@ -146,7 +146,7 @@
     {
       "id": "rooi_h05",
       "number": 9,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Jacobs family",
       "kit": "row_house",
@@ -181,7 +181,7 @@
     {
       "id": "rooi_h06",
       "number": 11,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Empty house",
       "kit": "row_house",
@@ -214,7 +214,7 @@
     {
       "id": "rooi_h07",
       "number": 13,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Booysen family",
       "kit": "row_house",
@@ -249,7 +249,7 @@
     {
       "id": "rooi_h08",
       "number": 15,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Witbooi family",
       "kit": "row_house",
@@ -284,7 +284,7 @@
     {
       "id": "rooi_h09",
       "number": 17,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Booysen family",
       "kit": "row_house",
@@ -319,7 +319,7 @@
     {
       "id": "rooi_h10",
       "number": 19,
-      "street": "Duif Street",
+      "street": "AZ Berman Drive",
       "district_id": "district_east",
       "display_name": "Lottering family",
       "kit": "row_house",
@@ -354,7 +354,7 @@
     {
       "id": "rooi_h11",
       "number": 2,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_east",
       "display_name": "Booysen block",
       "kit": "flats",
@@ -390,7 +390,7 @@
     {
       "id": "rooi_h12",
       "number": 4,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_east",
       "display_name": "Van Wyk block",
       "kit": "flats",
@@ -426,7 +426,7 @@
     {
       "id": "rooi_h13",
       "number": 6,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_east",
       "display_name": "Hartnick block",
       "kit": "flats",
@@ -462,7 +462,7 @@
     {
       "id": "rooi_h14",
       "number": 8,
-      "street": "Mossie Street",
+      "street": "Spine Road",
       "district_id": "district_east",
       "display_name": "Fortuin block",
       "kit": "flats",

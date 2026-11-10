@@ -1,4 +1,4 @@
-// Vleirand starter district — pixel textures for 3D surfaces.
+// Westridge starter district — pixel textures for 3D surfaces.
 // Density: 16 px per metre. Tinted textures (plaster, precast) are kept near-white so the
 // Godot material albedo colour gives each house its paint colour.
 // Build: tools/build_textures.sh
@@ -133,7 +133,7 @@ sprite("paving_brick", { w: 32, h: 32 },
 // ------------------------------------------------------------------ signs
 sprite("sign_shop", { w: 80, h: 16 },
   rect(0, 0, 80, 16, "f"), box(0, 0, 80, 16, "F"), hline(1, 1, 78, "l"),
-  text(40, 4, "VLEIRAND CAFE", "W", { align: "c" }), text(40, 10, "BREAD  AIRTIME", "l", { align: "c" }))
+  text(40, 4, "WESTRIDGE CAFE", "W", { align: "c" }), text(40, 10, "BREAD  AIRTIME", "l", { align: "c" }))
 
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
@@ -189,7 +189,7 @@ sprite("poster_cafe", { w: 22, h: 24 },
   text(11, 10, "BREAD", "k", { align: "c" }),
   text(11, 17, "R12", "f", { align: "c" }))
 
-// ------------------------------------------------------------------ Phase 7: Rooiduin
+// ------------------------------------------------------------------ Phase 7: Lentegeur
 pal({ J: "#c8714a", K: "#a85a3a", O: "#dd8a5e", U: "#8e4a30", Q: "#d64541", Y: "#2b6fb5" })
 
 // Red dune sand: granular (sparse speckle is the material itself), with a few wind ripples.
@@ -219,7 +219,7 @@ sprite("sign_taxi", { w: 16, h: 16 },
   rect(2, 9, 12, 4, "W"), box(2, 9, 12, 4, "k"), rect(4, 10, 2, 2, "C"), rect(7, 10, 2, 2, "C"), rect(10, 10, 2, 2, "C"),
   px(4, 13, "k"), px(11, 13, "k"))
 
-// Fictional rival crew tag (Rooiduin).
+// Fictional rival crew tag (Lentegeur).
 sprite("tag_duin", { w: 48, h: 20 },
   text(24, 2, "DUIN", "Q", { align: "c", scale: 2, gap: 1 }),
   text(24, 14, "BOYS", "W", { align: "c" }),
@@ -231,7 +231,7 @@ sprite("tag_duin", { w: 48, h: 20 },
     for (const x of [12, 25, 35]) c.vline(x, 12, 2, "Q")
   })
 
-// ------------------------------------------------------------------ Kalkbos (limestone quarry)
+// ------------------------------------------------------------------ Rocklands (limestone quarry)
 pal({ "0": "#e9e4d6", "1": "#d6cfbd", "2": "#bdb5a1", "3": "#a39b88", "4": "#f6f2e8", "5": "#2a2a30", "6": "#3d6e8f" })
 
 // Chalky ground: granular limestone grit (speckle is the material), a few stone chips.
@@ -256,7 +256,7 @@ sprite("limestone_wall", { w: 32, h: 32 },
 
 sprite("sign_hall", { w: 64, h: 16 },
   rect(0, 0, 64, 16, "5"), box(0, 0, 64, 16, "3"),
-  text(32, 3, "KALKBOS HALL", "4", { align: "c" }), text(32, 9, "ALL WELCOME", "S", { align: "c" }))
+  text(32, 3, "ROCKLANDS", "4", { align: "c" }), text(32, 9, "CHURCH HALL", "S", { align: "c" }))
 
 sprite("sign_fish", { w: 64, h: 16 },
   rect(0, 0, 64, 16, "6"), box(0, 0, 64, 16, "B"),

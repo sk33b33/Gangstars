@@ -54,6 +54,15 @@ func neighbours() -> Array:
 	return out
 
 
+## The rest of Mitchells Plain: listed on the turf map as future turf, not built yet.
+func planned() -> Array:
+	var out: Array = []
+	for id in order:
+		if bool(districts[id].get("planned", false)):
+			out.append(districts[id])
+	return out
+
+
 ## Turf state of a house for the map: player / hostile / friendly / vacant / neutral.
 func house_state(house: HouseData) -> String:
 	if house.ownership == "player":
@@ -86,12 +95,14 @@ func influence(district_id: String) -> int:
 	return clampi(total, 0, 100)
 
 
-## "locked", "unlockable", "unlocked"; the starter district is "contested" or "controlled".
+## "locked", "unlockable", "contested"/"controlled" once unlocked, or "planned" (not built yet).
 func state(id: String) -> String:
+	if bool(get_district(id).get("planned", false)):
+		return "planned"
 	if bool(get_district(id).get("is_initially_unlocked", false)):
 		return "controlled" if influence(id) >= CONTROLLED_INFLUENCE else "contested"
 	if is_unlocked(id):
-		# Unlocked districts are turf like Vleirand: contested until you build influence there.
+		# Unlocked districts are turf like Westridge: contested until you build influence there.
 		return "controlled" if influence(id) >= CONTROLLED_INFLUENCE else "contested"
 	return "unlockable" if can_unlock(id) else "locked"
 
@@ -119,7 +130,7 @@ func get_unlock_requirements(id: String) -> Array:
 
 
 func can_unlock(id: String) -> bool:
-	if districts.is_empty() or not districts.has(id) or is_unlocked(id):
+	if districts.is_empty() or not districts.has(id) or is_unlocked(id) or bool(districts[id].get("planned", false)):
 		return false
 	for r in get_unlock_requirements(id):
 		if not r.met:

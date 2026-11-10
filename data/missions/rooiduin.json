@@ -9,8 +9,8 @@
           "beyond_the_block"
         ]
       },
-      "intro": "Ma Rachel: \"So you're the one from Vleirand everyone's talking about. Walk with me: see the field, the spaza, and greet Uncle Solly at Kings Cuts.\"",
-      "description": "Get to know Rooiduin.",
+      "intro": "Ma Rachel: \"So you're the one from Westridge everyone's talking about. Walk with me: see the field, the spaza, and greet Uncle Solly at Kings Cuts.\"",
+      "description": "Get to know Lentegeur.",
       "objectives": [
         {
           "id": "field",
@@ -54,7 +54,7 @@
           "new_turf"
         ]
       },
-      "intro": "Uncle Solly: \"My clipper blades are at the café in Vleirand, the auntie there keeps them for me. Fetch them before closing? No blades, no fades.\"",
+      "intro": "Uncle Solly: \"My clipper blades are at the café in Westridge, the auntie there keeps them for me. Fetch them before closing? No blades, no fades.\"",
       "description": "A cross-district errand for the barber.",
       "time_limit_minutes": 300,
       "fail_text": "The café closed. Solly cuts with scissors today and he is not happy.",
@@ -64,14 +64,14 @@
           "type": "visit",
           "target": "poi_shop",
           "radius": 3,
-          "text": "Fetch the blades from Vleirand Cafe (Vleirand)"
+          "text": "Fetch the blades from Westridge Cafe (Westridge)"
         },
         {
           "id": "return",
           "type": "talk_to",
           "target": "npc_rooi_solly",
           "allow_knock": true,
-          "text": "Bring them to Uncle Solly in Rooiduin"
+          "text": "Bring them to Uncle Solly in Lentegeur"
         }
       ],
       "rewards": {
@@ -102,7 +102,7 @@
           "type": "talk_to",
           "target": "npc_rooi_spider",
           "allow_knock": true,
-          "text": "Talk to Spider at the Duin Boys' flats (8 Mossie Street)"
+          "text": "Talk to Spider at the Duin Boys' flats (8 Spine Road)"
         },
         {
           "id": "hold",

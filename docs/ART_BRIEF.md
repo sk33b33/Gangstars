@@ -1,4 +1,4 @@
-# Art Brief — Vleirand (starter district)
+# Art Brief — Westridge (starter district)
 
 Produced with the `design-brief-from-conversation` skill from the four reference photos supplied by
 the project owner. Anything inferred rather than stated is marked **[to confirm]**. This brief is a
@@ -7,7 +7,7 @@ reviewable draft; the owner confirms or corrects it.
 ## 1. What the owner is trying to achieve
 
 A starter neighbourhood that looks like a real Cape Flats community (Mitchells Plain / Lentegeur
-style housing), not a generic American suburb. It is a **fictional suburb** called **Vleirand**;
+style housing), not a generic American suburb. It is a **fictional suburb** called **Westridge**;
 no real street names, gangs, or people.
 
 Look: **low-poly 3D with crisp pixel-art textures** generated as code by `pxl`

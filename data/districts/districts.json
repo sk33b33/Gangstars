@@ -2,18 +2,18 @@
   "districts": [
     {
       "id": "starter",
-      "display_name": "Vleirand",
+      "display_name": "Westridge",
       "is_initially_unlocked": true,
-      "description": "Your starter neighbourhood: 30 houses on four streets.",
+      "description": "Your home turf in Mitchells Plain: 30 houses between AZ Berman Drive and Spine Road.",
       "data": "res://data/districts/starter.json",
       "missions": "res://data/missions/intro.json"
     },
     {
       "id": "district_east",
-      "display_name": "Rooiduin",
+      "display_name": "Lentegeur",
       "side": "east",
       "is_initially_unlocked": false,
-      "description": "Red dunes and flats east of Duif Street. Rival territory.",
+      "description": "Flats, container shops and the soccer field, east along AZ Berman Drive.",
       "unlock_requirements": {
         "missions": [
           "hold_the_corner"
@@ -29,10 +29,10 @@
     },
     {
       "id": "district_west",
-      "display_name": "Kalkbos",
+      "display_name": "Rocklands",
       "side": "west",
       "is_initially_unlocked": false,
-      "description": "The old limestone quarry streets to the west.",
+      "description": "Stone cottages and the old quarry streets to the west.",
       "unlock_requirements": {
         "missions": [
           "beyond_the_block"
@@ -45,6 +45,92 @@
       },
       "data": "res://data/districts/kalkbos.json",
       "missions": "res://data/missions/kalkbos.json"
+    },
+    {
+      "id": "district_tafelsig",
+      "display_name": "Tafelsig",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "Courts and flats on the far side, out towards the dunes.",
+      "unlock_requirements": {
+        "reputation": 200,
+        "crew": 4,
+        "influence": {
+          "district_east": 60
+        }
+      }
+    },
+    {
+      "id": "district_beacon_valley",
+      "display_name": "Beacon Valley",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "Rows of courts and family homes north of the centre.",
+      "unlock_requirements": {
+        "reputation": 220,
+        "crew": 4,
+        "influence": {
+          "starter": 90
+        }
+      }
+    },
+    {
+      "id": "district_portlands",
+      "display_name": "Portlands",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "Family homes and busy main roads.",
+      "unlock_requirements": {
+        "reputation": 240,
+        "crew": 5,
+        "influence": {
+          "district_west": 60
+        }
+      }
+    },
+    {
+      "id": "district_eastridge",
+      "display_name": "Eastridge",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "The eastern streets and the bus routes.",
+      "unlock_requirements": {
+        "reputation": 260,
+        "crew": 5,
+        "influence": {
+          "district_east": 80
+        }
+      }
+    },
+    {
+      "id": "district_strandfontein",
+      "display_name": "Strandfontein",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "By the sea: the beach road and holiday crowds.",
+      "unlock_requirements": {
+        "reputation": 280,
+        "crew": 6,
+        "influence": {
+          "district_west": 80
+        }
+      }
+    },
+    {
+      "id": "district_town_centre",
+      "display_name": "Town Centre",
+      "planned": true,
+      "is_initially_unlocked": false,
+      "description": "The Promenade, the market stalls and the big taxi rank — the heart of Mitchells Plain.",
+      "unlock_requirements": {
+        "reputation": 350,
+        "crew": 6,
+        "influence": {
+          "starter": 90,
+          "district_east": 80,
+          "district_west": 80
+        }
+      }
     }
   ]
 }

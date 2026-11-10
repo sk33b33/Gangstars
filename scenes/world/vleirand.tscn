@@ -26,7 +26,7 @@ fog_depth_begin = 80.0
 fog_depth_end = 320.0
 fog_sky_affect = 0.0
 
-[node name="Vleirand" type="Node3D"]
+[node name="Westridge" type="Node3D"]
 script = ExtResource("1")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]

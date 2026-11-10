@@ -1,12 +1,12 @@
 # Gangstars — Claude Code Development Kit
 
-> **Current state:** Phase 3 playable. Vleirand, a fictional Cape Flats neighbourhood, has 30 houses
+> **Current state:** playable. Set in Mitchells Plain on the Cape Flats: the starter suburb, Westridge, has 30 houses
 > on 4 streets, 28 residents with day/night routines, social groups, reactions to incidents, and a
 > rival crew that patrols at night. Five intro missions, a recruitable crew member, safehouse
-> upgrades, save/load, and a turf map with locked neighbouring districts (Rooiduin, Kalkbos) that
+> upgrades, save/load, and a turf map with locked neighbouring districts (Lentegeur, Rocklands) that
 > open through progression. Left-hand traffic and drivable cars, weather, braais and
-> load-shedding, synthesized audio, and a settings menu. Rooiduin, the first expansion district
-> (flats, container shops, a soccer field and the Duin Boys), and Kalkbos to the west (limestone
+> load-shedding, synthesized audio, and a settings menu. Lentegeur, the first expansion district
+> (flats, container shops, a soccer field and the Duin Boys), and Rocklands to the west (limestone
 > cottages, an old quarry and the Klipspringers) are built from the same data pipeline.
 > Runs on Windows/Linux/macOS desktops with keyboard + mouse or a gamepad. Windows build:
 > `tools/export_windows.sh` → `build/windows/Gangstars.exe`. From source: `godot --path .` (Godot 4.5.1). Tests: `godot --headless --path . --fixed-fps 60 -s tests/run_tests.gd`.
@@ -14,13 +14,13 @@
 >
 > ![Street by day](docs/screenshots/v2_street_day.png)
 > ![Characters](docs/screenshots/v2_named_characters.png)
-> ![Vleirand](docs/screenshots/district_overview.png)
-> ![Duif Street](docs/screenshots/polish_duif.png)
+> ![Westridge](docs/screenshots/district_overview.png)
+> ![AZ Berman Drive](docs/screenshots/polish_duif.png)
 > ![Tortel Lane at dusk](docs/screenshots/dusk_tortel.png)
 > ![Braai night](docs/screenshots/p6_braai.png)
-> ![Rooiduin flats](docs/screenshots/p7_flats.png)
-> ![Kalkbos cottages](docs/screenshots/kalk_cottages.png)
-> ![Kalkbos quarry](docs/screenshots/kalk_quarry.png)
+> ![Lentegeur flats](docs/screenshots/p7_flats.png)
+> ![Rocklands cottages](docs/screenshots/kalk_cottages.png)
+> ![Rocklands quarry](docs/screenshots/kalk_quarry.png)
 
 A production-minded starter kit for building a **3D open-neighbourhood gangster / street-crime game** in **Godot 4.x + GDScript** with Claude Code.
 
