@@ -37,6 +37,9 @@ var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
 var _full_radius := 2.2
 var blocker: Node3D
+## Model override (e.g. "police"); "" = taxi or a civilian model from the id.
+var model := ""
+var body: Node3D
 
 
 func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stops: Dictionary,
@@ -58,9 +61,8 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 0
 	var length := 5.2 if taxi else 4.0
-	var look := StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length)
-	if taxi:
-		Geo.box(look, Vector3(0.6, 0.12, 0.25), Vector3(-0.2, 1.52, 0), PixelMaterials.flat(Color("#f1c40f")), false)
+	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length,
+		model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.75, 1.5, length)

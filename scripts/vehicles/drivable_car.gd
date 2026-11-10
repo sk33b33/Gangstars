@@ -28,7 +28,7 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	name = id
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | TrafficCar.LAYER_VEHICLES
-	StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false)
+	StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, VehicleLibrary.civilian_for(id))
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.85, 1.4, 4.0)

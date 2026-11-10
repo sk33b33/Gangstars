@@ -267,45 +267,21 @@ static func _build_wires(root: Node3D, tops: Array) -> void:
 	root.add_child(mi)
 
 
-## Low-poly parked hatchback: body, glass cabin with roof, wheels, lights. One solid collider.
-## Car model (long axis = local X, front at +X). solid=false for moving vehicles, which
-## carry their own collision. Returns the pivot.
-static func build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0) -> Node3D:
-	return _build_car(root, c, rot_y, color, solid, length)
+## A car from VehicleLibrary (Blender-built: hatch, sedan, bakkie, taxi, police). Long axis =
+## local X, front at +X. model "" picks a civilian model from the position (or "taxi" for the
+## 5.2 m minibus length). solid=false for moving vehicles, which carry their own collision.
+## Returns the pivot.
+static func build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0, model := "") -> Node3D:
+	return _build_car(root, c, rot_y, color, solid, length, model)
 
 
-static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0) -> Node3D:
-	var pivot := Node3D.new()
-	pivot.position = c
-	pivot.rotation.y = rot_y
-	root.add_child(pivot)
-	var paint := PixelMaterials.flat(color)
-	var glass := PixelMaterials.flat(Color("#29384a"))
-	var tyre := PixelMaterials.flat(Color("#1d1b24"))
-	Geo.box(pivot, Vector3(4.0, 0.62, 1.75), Vector3(0, 0.6, 0), paint, false)
-	Geo.box(pivot, Vector3(2.3, 0.5, 1.6), Vector3(-0.25, 1.15, 0), glass, false)
-	Geo.box(pivot, Vector3(2.2, 0.07, 1.62), Vector3(-0.25, 1.42, 0), paint, false)
-	Geo.box(pivot, Vector3(0.05, 0.14, 0.4), Vector3(2.0, 0.72, 0.6), PixelMaterials.lamp(), false)
-	Geo.box(pivot, Vector3(0.05, 0.14, 0.4), Vector3(2.0, 0.72, -0.6), PixelMaterials.lamp(), false)
-	Geo.box(pivot, Vector3(0.05, 0.12, 0.35), Vector3(-2.0, 0.72, 0.6), PixelMaterials.flat(Color("#a63a4c")), false)
-	Geo.box(pivot, Vector3(0.05, 0.12, 0.35), Vector3(-2.0, 0.72, -0.6), PixelMaterials.flat(Color("#a63a4c")), false)
-	var wheel := CylinderMesh.new()
-	wheel.top_radius = 0.32
-	wheel.bottom_radius = 0.32
-	wheel.height = 0.22
-	wheel.radial_segments = 12
-	for wx in [-1.3, 1.3]:
-		for wz in [-0.82, 0.82]:
-			var w := MeshInstance3D.new()
-			w.mesh = wheel
-			w.material_override = tyre
-			w.position = Vector3(wx, 0.32, wz)
-			w.rotation.x = PI * 0.5
-			pivot.add_child(w)
-	if not is_equal_approx(length, 4.0):
-		pivot.scale = Vector3(length / 4.0, 1.25, 1.12)  # minibus taxi: longer, taller
+static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, solid := true, length := 4.0, model := "") -> Node3D:
+	if model.is_empty():
+		model = "taxi" if length > 5.0 else VehicleLibrary.civilian_for("%.1f,%.1f" % [c.x, c.z])
+	var pivot := VehicleLibrary.build(root, model, color, c, rot_y)
 	if solid:
-		Geo.collider(pivot, Vector3(4.0, 1.4, 1.8), Vector3(0, 0.7, 0))
+		var l: float = VehicleLibrary.LENGTH.get(model, 4.0)
+		Geo.collider(pivot, Vector3(l, 1.4, 1.8), Vector3(0, 0.7, 0))
 	return pivot
 
 
