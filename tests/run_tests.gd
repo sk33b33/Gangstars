@@ -1752,7 +1752,12 @@ func _test_story_in_game(main: Node, district: District, player: Player) -> void
 		prog.completed_mission_ids.append("first_crew")
 	prog.flags.erase("path_peace")
 	prog.flags.erase("path_war")
-	_check(missions.start("word_on_the_street"), "Word on the Street starts (Boeta)")
+	if missions.is_completed("word_on_the_street"):
+		missions.active.erase("word_on_the_street")
+		prog.completed_mission_ids.remove_at(prog.completed_mission_ids.find("word_on_the_street"))
+	if missions.active.has("word_on_the_street"):   # Boeta may already have offered it
+		missions.active["word_on_the_street"].objective = 0
+	_check(missions.active.has("word_on_the_street") or missions.start("word_on_the_street"), "Word on the Street starts (Boeta)")
 	var boeta: Resident = district.residents["npc_boeta"]
 	_talk(player, boeta.interactable)
 	_check(session.hud.is_menu_open() and session.hud._menu_title.text.begins_with("Boeta:"), "talking to Boeta opens the story scene with choices")
