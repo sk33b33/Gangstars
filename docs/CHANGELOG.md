@@ -4,6 +4,29 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Town Centre (2026-11-11)
+- **Town Centre is built:** the fourth area, east past Lentegeur (x 264–384), through the same
+  data pipeline (`tools/specs/town_centre.json` → houses and residents;
+  `data/districts/town_centre.json`).
+  - **The Promenade mall:** a big shopfront with coloured fascias, a canopy, columns and the
+    PROMENADE sign, plus a car park.
+  - **The market:** two rows of stalls with striped canopies and crates of produce.
+  - **The big taxi rank, a spaza,** and Promenade Road and Market Lane between AZ Berman Drive and
+    Spine Road.
+  - Ten blocks of flats with 21 residents. Named locals: Uncle Faried (market stall), Shanaaz
+    (mall), Bra Gary (taxi marshal). A Spine Road Stylers house sits on the Promenade.
+  - Its own traffic (a taxi and two cars) and dogs.
+- **Unlocking:** two gates on Lentegeur's east side (areas can now name their own neighbours).
+  Requirements: Dune Truce, 150 reputation, 3 crew members, 60% Lentegeur influence. It's no
+  longer listed as "planned".
+- **Missions:**
+  - *The Promenade* (Uncle Faried): walk the mall and the rank.
+  - *Market Day* (Shanaaz): hold the market with your crew.
+- **Turf:** two new corners, the market (Stylers) and the big taxi rank (nobody's).
+- **Tests:** the area, houses, residents, landmarks, gates, locked state, missions, corners, and
+  a walking path from Lentegeur to the market once open. Counts updated (4 areas, 14 cars, 28
+  missions).
+
 ### Varied interiors: bedrooms, house styles, dens to raid, police posts (2026-11-11)
 - **Every home has a bedroom** (bed, wardrobe, rug, lamp) through a doorway next to the lounge
   and kitchen. The safehouse bed is in there now.

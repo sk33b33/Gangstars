@@ -119,18 +119,21 @@
     {
       "id": "district_town_centre",
       "display_name": "Town Centre",
-      "planned": true,
       "is_initially_unlocked": false,
-      "description": "The Promenade, the market stalls and the big taxi rank — the heart of Mitchells Plain.",
+      "description": "The Promenade mall, the market stalls and the big taxi rank \u2014 the heart of Mitchells Plain, east past Lentegeur.",
       "unlock_requirements": {
-        "reputation": 350,
-        "crew": 6,
+        "missions": [
+          "dune_truce"
+        ],
+        "reputation": 150,
+        "crew": 3,
         "influence": {
-          "starter": 90,
-          "district_east": 80,
-          "district_west": 80
+          "district_east": 60
         }
-      }
+      },
+      "side": "far east",
+      "data": "res://data/districts/town_centre.json",
+      "missions": "res://data/missions/town_centre.json"
     }
   ]
 }

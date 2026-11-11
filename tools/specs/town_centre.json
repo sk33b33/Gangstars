@@ -1,0 +1,238 @@
+{
+ "district_id": "district_town_centre",
+ "seed": "town_centre",
+ "house_prefix": "tc_h",
+ "npc_prefix": "npc_tc_",
+ "houses_out": "data/houses/town_centre_houses.json",
+ "residents_out": "data/npcs/town_centre_residents.json",
+ "rows": [
+  {
+   "street": "AZ Berman Drive",
+   "facing": "north",
+   "axis": "z",
+   "fixed": 7.0,
+   "positions": [
+    274,
+    298,
+    322,
+    346,
+    370
+   ],
+   "kit": "flats",
+   "plot_size": [
+    22,
+    14
+   ],
+   "residents": 2
+  },
+  {
+   "street": "Spine Road",
+   "facing": "south",
+   "axis": "z",
+   "fixed": -63.0,
+   "positions": [
+    274,
+    298,
+    322,
+    346,
+    370
+   ],
+   "kit": "flats",
+   "plot_size": [
+    22,
+    14
+   ],
+   "residents": 2
+  }
+ ],
+ "vacant": [],
+ "hostile": {
+  "house": "tc_h03",
+  "faction_id": "vlakte_vipers",
+  "members": [
+   "npc_tc_slick",
+   "npc_tc_viper_2",
+   "npc_tc_viper_3"
+  ],
+  "route": "tc_loop",
+  "route_len": 4,
+  "hangout": "tc_market",
+  "names": [
+   "Slick",
+   "Boogie",
+   "Nugget"
+  ]
+ },
+ "named": {
+  "npc_tc_faried": {
+   "house": "tc_h01",
+   "display_name": "Uncle Faried",
+   "personality": "gossip",
+   "hair_style": "short",
+   "hair_color": "#9a9a9a",
+   "height": 1.0,
+   "shirt_color": "#f4f1ea",
+   "schedule": [
+    {
+     "activity": "working",
+     "destination": "tc_market",
+     "duration": 45,
+     "window": [
+      7,
+      18
+     ]
+    },
+    {
+     "activity": "home",
+     "destination": "home",
+     "duration": 15
+    }
+   ],
+   "lines": [
+    "Naartjies, three for ten! Come, come.",
+    "Forty years I've had this stall. The Promenade grew up around me.",
+    "The Stylers think the market is theirs. It's mine."
+   ]
+  },
+  "npc_tc_shanaaz": {
+   "house": "tc_h06",
+   "display_name": "Shanaaz",
+   "personality": "curious",
+   "hair_style": "long",
+   "hair_color": "#1d1b24",
+   "height": 0.95,
+   "shirt_color": "#e84393",
+   "schedule": [
+    {
+     "activity": "working",
+     "destination": "tc_mall",
+     "duration": 45,
+     "window": [
+      8,
+      19
+     ]
+    },
+    {
+     "activity": "home",
+     "destination": "home",
+     "duration": 15
+    }
+   ],
+   "lines": [
+    "Till three, then home. Every day.",
+    "Everybody comes through the Promenade sooner or later."
+   ]
+  },
+  "npc_tc_gary": {
+   "house": "tc_h08",
+   "display_name": "Bra Gary",
+   "personality": "steady",
+   "hair_style": "beanie",
+   "hair_color": "#f1d36b",
+   "height": 1.06,
+   "shirt_color": "#f1d36b",
+   "schedule": [
+    {
+     "activity": "working",
+     "destination": "tc_taxi",
+     "duration": 45,
+     "window": [
+      5,
+      20
+     ]
+    },
+    {
+     "activity": "home",
+     "destination": "home",
+     "duration": 15
+    }
+   ],
+   "lines": [
+    "Cape Town, Cape Town! One more seat!",
+    "I marshal this rank. Nobody jumps the queue."
+   ]
+  }
+ },
+ "paint": [
+  "#e6e1d6",
+  "#d8dde3",
+  "#efe6d2",
+  "#dcd3c4",
+  "#cfd8dc"
+ ],
+ "fences": {
+  "palisade": 0.6,
+  "precast": 0.4
+ },
+ "surnames": [
+  "Abrahams",
+  "Brown",
+  "Carelse",
+  "Daniels",
+  "Ebrahim",
+  "Fortuin",
+  "Gamieldien",
+  "Isaacs",
+  "Jacobs",
+  "Kamaldien",
+  "Lakay",
+  "Moos",
+  "Ndlovu",
+  "Petersen",
+  "Samuels",
+  "Williams"
+ ],
+ "first_names": [
+  "Ashley",
+  "Bianca",
+  "Clint",
+  "Desiree",
+  "Ezra",
+  "Fatima",
+  "Garth",
+  "Hayley",
+  "Ismail",
+  "Janine",
+  "Kyle",
+  "Lameez",
+  "Marlon",
+  "Natasha",
+  "Ridwaan",
+  "Shannon",
+  "Taufiq",
+  "Wesley"
+ ],
+ "pois": {
+  "tc_mall": "shopping",
+  "tc_market": "shopping",
+  "tc_taxi": "waiting",
+  "tc_spaza": "shopping",
+  "tc_square": "socializing"
+ },
+ "windows": {
+  "shopping": [
+   8,
+   19
+  ],
+  "waiting": [
+   5,
+   20
+  ],
+  "socializing": [
+   9,
+   22
+  ]
+ },
+ "lines": [
+  "Month-end, the Promenade is packed.",
+  "The taxi rank never sleeps, hey.",
+  "I came for bread, I'm leaving with a whole new outfit.",
+  "Watch your pockets by the market.",
+  "Everything in Mitchells Plain comes through here."
+ ],
+ "crew_lines": [
+  "The Stylers run the Promenade.",
+  "Shopping? Not here, bru.",
+  "Move along."
+ ]
+}

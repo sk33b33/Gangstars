@@ -456,7 +456,7 @@ func _test_phase5_units() -> void:
 	_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
 		"the districts are Westridge, Lentegeur and Rocklands")
 	var future := dm.planned()
-	_check(future.size() == 6 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
+	_check(future.size() == 5 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
 		"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
 	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
 	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
@@ -634,7 +634,7 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 26, "26 missions load (story, districts, crews, the hustle)")
+	_check(GameSession._load_all_missions().size() == 28, "28 missions load (story, districts, crews, the hustle, Town Centre)")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
@@ -761,7 +761,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 3 and district.area_by_id("district_east").display_name == "Lentegeur", "three areas are built (Westridge, Lentegeur, Rocklands)")
+	_check(district.areas.size() == 4 and district.area_by_id("district_east").display_name == "Lentegeur", "four areas are built (Westridge, Lentegeur, Rocklands, Town Centre)")
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
 	var map := district.nav_region.get_navigation_map()
@@ -855,7 +855,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 11, "11 AI vehicles (incl. 3 police bakkies) drive across the three districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 14, "14 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -1706,12 +1706,44 @@ func _test_hustle_in_game(main: Node, district: District, player: Player) -> voi
 	session.phone.close()
 
 
+func _test_town_centre_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dm := session.districts
+	_check(not district.area_by_id("district_town_centre").is_empty(), "Town Centre is built (east past Lentegeur)")
+	var tc_houses := Array(district.registry.order).filter(func(id): return id.begins_with("tc_h"))
+	var tc_people := district.residents.values().filter(func(r): return r.data.id.begins_with("npc_tc_"))
+	_check(tc_houses.size() == 10 and tc_people.size() >= 20, "Town Centre: 10 blocks of flats, %d residents" % tc_people.size())
+	_check(district.destinations.has("tc_mall") and district.destinations.has("tc_market") and district.destinations.has("tc_taxi"),
+		"the Promenade mall, the market and the big taxi rank")
+	_check(district.gates.has("district_town_centre") and district.gates.district_town_centre.size() == 2, "two gates from Lentegeur into Town Centre")
+	_check(dm.state("district_town_centre") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_town_centre").is_empty(),
+		"Town Centre starts locked, with requirements")
+	_check(session.missions.get_mission("the_promenade") != null and session.missions.get_mission("market_day") != null, "Town Centre missions load")
+	_check(session.turf.state.corners.has("corner_tc_market") and session.turf.state.corners.has("corner_tc_rank"), "Town Centre has corners to fight over")
+	# Open it up: a path from Lentegeur's taxi rank to the market.
+	district.set_district_open("district_east", true, false)
+	district.set_district_open("district_town_centre", true, false)
+	district.rebake_navigation()
+	await district.navigation_rebaked
+	for i in 5:
+		await physics_frame
+	var map := district.nav_region.get_navigation_map()
+	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_taxi"))
+	var to := district.destinations.anchor_position("tc_market")
+	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	_check(path.size() > 1 and path[path.size() - 1].distance_to(to) < 3.0, "once open, you can walk from Lentegeur to the market")
+	district.set_district_open("district_town_centre", false, false)
+	district.set_district_open("district_east", session.districts.is_unlocked("district_east"), false)
+	district.rebake_navigation()
+	await district.navigation_rebaked
+
+
 func _test_turf_units() -> void:
 	print("== turf war units")
 	var t := TurfState.load_default()
-	_check(t.order.size() == 10 and t.owner("corner_westridge") == "tortel_crew" and t.owner("corner_court") == "", "10 corners, some held, some nobody's")
+	_check(t.order.size() == 12 and t.owner("corner_westridge") == "tortel_crew" and t.owner("corner_court") == "", "12 corners, some held, some nobody's")
 	t.player_crew = "vlakte_vipers"
-	_check(t.is_players("corner_park") and t.players_corners().size() == 1, "your crew starts with its own corner")
+	_check(t.is_players("corner_park") and t.players_corners().size() == 2, "your crew starts with its own corners (the park, the market)")
 	var p := {"player": false, "crew": 0, "owners": 0, "pushers": 0}
 	var stand := func(id_on: String, extra: Dictionary) -> Callable:
 		return func(id): return p.merged(extra, true) if id == id_on else p
@@ -1749,7 +1781,7 @@ func _test_turf_war_in_game(main: Node, district: District, player: Player) -> v
 	var prog := session.progression
 	session.interiors.discard()
 	district.director.clock.set_hour(12.0)
-	_check(turf.state.order.size() == 10, "all 10 corners are in the world")
+	_check(turf.state.order.size() == 12, "all 12 corners are in the world")
 	for i in 5:
 		await physics_frame
 	turf._refresh_tags()
@@ -2452,6 +2484,7 @@ func _test_district() -> void:
 	await _test_interiors_in_game(main, district, player)
 	await _test_turf_war_in_game(main, district, player)
 	await _test_hustle_in_game(main, district, player)
+	await _test_town_centre_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

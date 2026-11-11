@@ -1,0 +1,306 @@
+{
+  "id": "district_town_centre",
+  "display_name": "Town Centre",
+  "street_name": "Town Centre",
+  "bounds": [
+    264,
+    -78,
+    384,
+    22
+  ],
+  "houses_file": "res://data/houses/town_centre_houses.json",
+  "residents_file": "res://data/npcs/town_centre_residents.json",
+  "ground_texture": "paving_brick",
+  "ground_tint": "#dcd6cc",
+  "ground_margin": {
+    "west": 0
+  },
+  "open_sides": [
+    "west"
+  ],
+  "backdrop_skip": [
+    "west"
+  ],
+  "dogs": {
+    "street": 2,
+    "yard": 2
+  },
+  "streets": [
+    {
+      "id": "duif_t",
+      "name": "AZ Berman Drive",
+      "axis": "x",
+      "at": 0,
+      "from": 252,
+      "to": 396,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "mossie_t",
+      "name": "Spine Road",
+      "axis": "x",
+      "at": -56,
+      "from": 252,
+      "to": 396,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "prom",
+      "name": "Promenade Road",
+      "axis": "z",
+      "at": 312,
+      "from": -4,
+      "to": -52,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    },
+    {
+      "id": "market_lane",
+      "name": "Market Lane",
+      "axis": "z",
+      "at": 360,
+      "from": -4,
+      "to": -52,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -6.0,
+      "sidewalk_to": -50.0
+    }
+  ],
+  "landmarks": [
+    {
+      "type": "mall",
+      "position": [
+        287,
+        -29
+      ],
+      "facing": "south"
+    },
+    {
+      "type": "market",
+      "position": [
+        336,
+        -28
+      ]
+    },
+    {
+      "type": "taxi_rank",
+      "position": [
+        372,
+        -48.8
+      ],
+      "facing": "north"
+    },
+    {
+      "type": "container_shop",
+      "position": [
+        372,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_spaza",
+      "color": "#8e44ad"
+    }
+  ],
+  "pois": [
+    {
+      "id": "tc_mall",
+      "name": "the Promenade",
+      "kind": "shop",
+      "position": [
+        287,
+        -13
+      ],
+      "radius": 2.0,
+      "map_label": "mall"
+    },
+    {
+      "id": "tc_market",
+      "name": "the market",
+      "kind": "shop",
+      "position": [
+        336,
+        -28
+      ],
+      "radius": 2.0,
+      "map_label": "market"
+    },
+    {
+      "id": "tc_taxi",
+      "name": "the big taxi rank",
+      "kind": "bus_stop",
+      "position": [
+        372,
+        -50.7
+      ],
+      "radius": 1.2,
+      "map_label": "rank"
+    },
+    {
+      "id": "tc_spaza",
+      "name": "Promenade Spaza",
+      "kind": "shop",
+      "position": [
+        372,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "spaza"
+    },
+    {
+      "id": "tc_square",
+      "name": "the Promenade square",
+      "kind": "square",
+      "position": [
+        336,
+        -12
+      ],
+      "radius": 2.0,
+      "map_label": "square"
+    }
+  ],
+  "patrol_routes": {
+    "tc_loop": [
+      [
+        316,
+        -5.4
+      ],
+      [
+        316,
+        -50.8
+      ],
+      [
+        356,
+        -50.8
+      ],
+      [
+        356,
+        -5.4
+      ]
+    ]
+  },
+  "parked_cars": [
+    {
+      "position": [
+        272,
+        -9.5
+      ],
+      "rot": 90,
+      "color": "#bdc3c7"
+    },
+    {
+      "position": [
+        280,
+        -9.5
+      ],
+      "rot": 90,
+      "color": "#c0392b"
+    },
+    {
+      "position": [
+        296,
+        -9.5
+      ],
+      "rot": 90,
+      "color": "#2e86c1"
+    },
+    {
+      "position": [
+        302,
+        -9.5
+      ],
+      "rot": 90,
+      "color": "#f4f1ea"
+    }
+  ],
+  "decals": [
+    {
+      "texture": "tag_vlakte",
+      "position": [
+        301.06,
+        1.6,
+        -30
+      ],
+      "size": [
+        2.4,
+        1.0
+      ],
+      "rot": 90
+    }
+  ],
+  "traffic": {
+    "lane_offset": 1.3,
+    "corner_radius": 6.0,
+    "taxi_stops": [
+      "tc_taxi"
+    ],
+    "taxi_wait": 6.0,
+    "loops": [
+      {
+        "points": [
+          [
+            312,
+            -56
+          ],
+          [
+            360,
+            -56
+          ],
+          [
+            360,
+            0
+          ],
+          [
+            312,
+            0
+          ]
+        ],
+        "cars": [
+          {
+            "id": "tc_taxi_1",
+            "color": "#f1eee8",
+            "start": 0.2,
+            "taxi": true
+          },
+          {
+            "id": "tc_traffic_1",
+            "color": "#f1c40f",
+            "start": 0.6
+          }
+        ]
+      },
+      {
+        "points": [
+          [
+            312,
+            0
+          ],
+          [
+            360,
+            0
+          ],
+          [
+            360,
+            -56
+          ],
+          [
+            312,
+            -56
+          ]
+        ],
+        "cars": [
+          {
+            "id": "tc_traffic_2",
+            "color": "#2c3e50",
+            "start": 0.5
+          }
+        ]
+      }
+    ]
+  },
+  "kickabouts": []
+}

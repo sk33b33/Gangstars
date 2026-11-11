@@ -1,0 +1,366 @@
+{
+  "district_id": "district_town_centre",
+  "houses": [
+    {
+      "id": "tc_h01",
+      "number": 1,
+      "street": "AZ Berman Drive",
+      "district_id": "district_town_centre",
+      "display_name": "Carelse block",
+      "kit": "flats",
+      "position": [
+        274,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#efe6d2",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_faried",
+        "npc_tc_h01_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "tc_h02",
+      "number": 3,
+      "street": "AZ Berman Drive",
+      "district_id": "district_town_centre",
+      "display_name": "Lakay block",
+      "kit": "flats",
+      "position": [
+        298,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#dcd3c4",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h02_1",
+        "npc_tc_h02_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "tc_h03",
+      "number": 5,
+      "street": "AZ Berman Drive",
+      "district_id": "district_town_centre",
+      "display_name": "Gamieldien block",
+      "kit": "flats",
+      "position": [
+        322,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#dcd3c4",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "hostile",
+      "occupant_ids": [
+        "npc_tc_slick",
+        "npc_tc_viper_2",
+        "npc_tc_viper_3"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "tc_h04",
+      "number": 7,
+      "street": "AZ Berman Drive",
+      "district_id": "district_town_centre",
+      "display_name": "Fortuin block",
+      "kit": "flats",
+      "position": [
+        346,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#e6e1d6",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h04_1",
+        "npc_tc_h04_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "tc_h05",
+      "number": 9,
+      "street": "AZ Berman Drive",
+      "district_id": "district_town_centre",
+      "display_name": "Fortuin block",
+      "kit": "flats",
+      "position": [
+        370,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#d8dde3",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d8dde3",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h05_1",
+        "npc_tc_h05_2"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "tc_h06",
+      "number": 2,
+      "street": "Spine Road",
+      "district_id": "district_town_centre",
+      "display_name": "Jacobs block",
+      "kit": "flats",
+      "position": [
+        274,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#cfd8dc",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#cfd8dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_shanaaz",
+        "npc_tc_h06_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "tc_h07",
+      "number": 4,
+      "street": "Spine Road",
+      "district_id": "district_town_centre",
+      "display_name": "Kamaldien block",
+      "kit": "flats",
+      "position": [
+        298,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#e6e1d6",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e6e1d6",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h07_1",
+        "npc_tc_h07_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "tc_h08",
+      "number": 6,
+      "street": "Spine Road",
+      "district_id": "district_town_centre",
+      "display_name": "Lakay block",
+      "kit": "flats",
+      "position": [
+        322,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#d8dde3",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d8dde3",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_gary",
+        "npc_tc_h08_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "tc_h09",
+      "number": 8,
+      "street": "Spine Road",
+      "district_id": "district_town_centre",
+      "display_name": "Carelse block",
+      "kit": "flats",
+      "position": [
+        346,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#cfd8dc",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#cfd8dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h09_1",
+        "npc_tc_h09_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "tc_h10",
+      "number": 10,
+      "street": "Spine Road",
+      "district_id": "district_town_centre",
+      "display_name": "Ndlovu block",
+      "kit": "flats",
+      "position": [
+        370,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        14
+      ],
+      "wall_color": "#cfd8dc",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#cfd8dc",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_tc_h10_1",
+        "npc_tc_h10_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    }
+  ]
+}

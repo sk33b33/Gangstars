@@ -37,6 +37,8 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"container_shop": _build_container_shop(root, pos, _facing_rot(lm), str(lm.get("sign", "sign_spaza")), DataFiles.to_color(lm.get("color"), Color("#2b6fb5")))
 			"soccer_field": _build_soccer_field(root, pos)
 			"taxi_rank": _build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
+			"mall": _build_mall(root, pos, _facing_rot(lm))
+			"market": _build_market(root, pos)
 			"courtyard": _build_courtyard(root, pos)
 			"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
 			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
@@ -664,3 +666,50 @@ static func _build_approach(root: Node3D, s: Dictionary, edge: float, dir: float
 static func _wall_z(root: Node3D, x: float, z0: float, z1: float, mat: Material) -> void:
 	if z1 - z0 > 0.05:
 		Geo.box(root, Vector3(0.2, WALL_H, z1 - z0), Vector3(x, WALL_H * 0.5, (z0 + z1) * 0.5), mat)
+
+
+## Town Centre's shopping mall: a big block with a glass shopfront, the PROMENADE sign over the
+## entrance, a parapet and columns. Door faces +Z (rot_y turns it).
+static func _build_mall(root: Node3D, c: Vector3, rot_y: float) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	var w := 30.0
+	var d := 26.0
+	var h := 7.5
+	Geo.box(pivot, Vector3(w, h, d), Vector3(0, h / 2, 0), PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color("#e8e2d6")))
+	Geo.box(pivot, Vector3(w + 0.4, 0.8, d + 0.4), Vector3(0, h + 0.4, 0), PixelMaterials.flat(Color("#2e5c8a")), false)   # parapet
+	var front := d / 2 + 0.01
+	for k in 8:   # shopfront glass bays
+		var x := -w / 2 + 2.0 + k * 3.7
+		if absf(x) < 3.0:
+			continue
+		Geo.quad(pivot, Vector2(3.2, 2.6), Vector3(x, 1.6, front), VehicleLibrary.tint())
+		Geo.box(pivot, Vector3(3.4, 0.5, 0.06), Vector3(x, 3.2, front + 0.03), PixelMaterials.flat([Color("#e2585e"), Color("#f2b632"), Color("#159a8c"), Color("#9a6cc4")][k % 4]), false)
+	Geo.quad(pivot, Vector2(5.0, 3.0), Vector3(0, 1.5, front), PixelMaterials.flat(Color("#141218")))   # entrance
+	Geo.quad(pivot, Vector2(8.0, 1.4), Vector3(0, 5.2, front + 0.02), PixelMaterials.panel("sign_promenade"))
+	Geo.box(pivot, Vector3(9.0, 0.25, 3.0), Vector3(0, 3.6, front + 1.5), PixelMaterials.flat(Color("#c9c9c4")), false)   # canopy
+	for s in [-1.0, 1.0]:
+		Geo.box(pivot, Vector3(0.35, 3.6, 0.35), Vector3(s * 4.2, 1.8, front + 2.8), PixelMaterials.flat(Color("#c9c9c4")))
+	for k in 3:
+		Geo.bench(pivot, Vector3(-9.0 + k * 9.0 if k != 1 else 9.0, 0, front + 4.0), 0.0, 2.0)
+
+
+## The market: two rows of stalls with striped canopies and crates of produce.
+static func _build_market(root: Node3D, c: Vector3) -> void:
+	var canopy := [Color("#e2585e"), Color("#f2b632"), Color("#2f6db8"), Color("#159a8c"), Color("#f4f1ea")]
+	var produce := [Color("#f39c12"), Color("#27ae60"), Color("#c0392b"), Color("#f1c40f")]
+	var pole := PixelMaterials.flat(Color("#7d828c"))
+	for row in [-1.0, 1.0]:
+		for k in 5:
+			var p := c + Vector3(-12.0 + k * 6.0, 0, row * 7.0)
+			var face: float = -row   # stalls face the aisle between the rows
+			Geo.box(root, Vector3(2.6, 0.95, 1.0), p + Vector3(0, 0.475, 0), PixelMaterials.flat(Color("#8c6044")))
+			for j in 3:
+				Geo.box(root, Vector3(0.6, 0.18, 0.5), p + Vector3(-0.8 + j * 0.8, 1.04, 0.1 * face), PixelMaterials.flat(produce[(k + j) % produce.size()]), false)
+			Geo.box(root, Vector3(3.2, 0.08, 2.4), p + Vector3(0, 2.4, 0.4 * face), PixelMaterials.flat(canopy[(k + int(row > 0) * 2) % canopy.size()]), false)
+			for sx in [-1.5, 1.5]:
+				for sz in [-0.7, 1.4]:
+					Geo.box(root, Vector3(0.06, 2.4, 0.06), p + Vector3(sx, 1.2, sz * face), pole, false)
+			SpotRegistry.marker(root, "lean", p + Vector3(0, 0, 0.9 * face), 0.0 if face > 0 else PI)

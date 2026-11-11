@@ -377,5 +377,8 @@
         7.6
       ]
     }
-  ]
+  ],
+  "neighbours": {
+    "east": "district_town_centre"
+  }
 }

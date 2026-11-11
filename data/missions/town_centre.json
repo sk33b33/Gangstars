@@ -1,0 +1,90 @@
+{
+  "missions": [
+    {
+      "id": "the_promenade",
+      "title": "The Promenade",
+      "giver": "npc_tc_faried",
+      "prerequisites": {
+        "missions": [
+          "dune_truce"
+        ],
+        "districts": [
+          "district_town_centre"
+        ]
+      },
+      "intro": "Uncle Faried: \"New face at the market! Before you do business here, learn the place: walk through the Promenade, see the big rank, and come back to me.\"",
+      "description": "Get to know Town Centre.",
+      "objectives": [
+        {
+          "id": "mall",
+          "type": "visit",
+          "target": "tc_mall",
+          "radius": 4,
+          "text": "Walk through the Promenade"
+        },
+        {
+          "id": "rank",
+          "type": "visit",
+          "target": "tc_taxi",
+          "radius": 4,
+          "text": "See the big taxi rank"
+        },
+        {
+          "id": "faried",
+          "type": "talk_to",
+          "target": "npc_tc_faried",
+          "text": "Report back to Uncle Faried"
+        }
+      ],
+      "rewards": {
+        "cash": 150,
+        "reputation": 12,
+        "influence": {
+          "district_town_centre": 10
+        },
+        "relationship": {
+          "npc_tc_faried": 10
+        }
+      }
+    },
+    {
+      "id": "market_day",
+      "title": "Market Day",
+      "giver": "npc_tc_shanaaz",
+      "prerequisites": {
+        "missions": [
+          "the_promenade"
+        ]
+      },
+      "intro": "Shanaaz: \"The Stylers lean on the stallholders every month-end. Stand with Uncle Faried at the market for a while, with your people, and they'll think twice.\"",
+      "description": "Hold the market with your crew.",
+      "objectives": [
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "tc_market",
+          "radius": 9,
+          "minutes": 30,
+          "with_crew": true,
+          "window": [
+            8,
+            19
+          ],
+          "text": "Hold the market with your crew (08:00\u201319:00)"
+        }
+      ],
+      "rewards": {
+        "cash": 300,
+        "reputation": 20,
+        "crew_influence": 5,
+        "influence": {
+          "district_town_centre": 20
+        },
+        "relationship": {
+          "npc_tc_shanaaz": 10,
+          "npc_tc_faried": 10
+        }
+      }
+    }
+  ]
+}

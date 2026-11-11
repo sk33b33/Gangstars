@@ -119,6 +119,18 @@ func _load_areas() -> void:
 				if a is Dictionary:
 					a["id"] = str(d.id)
 					extra.append(a)
+	# An area can name a locked neighbour on one of its own sides (Lentegeur's east side leads to
+	# Town Centre): it gets that neighbour's gates, as Westridge does for its neighbours.
+	for a in extra:
+		var nb: Dictionary = a.get("neighbours", {}) if a.get("neighbours") is Dictionary else {}
+		var list: Array = []
+		for side in nb:
+			for d in catalog.get("districts", []):
+				if d is Dictionary and str(d.id) == str(nb[side]):
+					var copy: Dictionary = d.duplicate()
+					copy["side"] = side
+					list.append(copy)
+		a["locked_neighbours"] = list
 	info["locked_neighbours"] = neighbours
 	if not info.has("houses_file"):
 		info["houses_file"] = houses_file

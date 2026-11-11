@@ -478,3 +478,8 @@ sprite("sign_doreen", { w: 64, h: 16 },
 sprite("sign_lena", { w: 64, h: 16 },
   rect(0, 0, 64, 16, "#3f2a4a"), rect(0, 14, 64, 2, "#d9442e"),
   text(32, 2, "MA LENA'S", "#f4f1ea", { align: "c" }), text(32, 8, "TAVERN", "#f2c43a", { align: "c" }))
+
+// Town Centre: the mall sign.
+sprite("sign_promenade", { w: 96, h: 16 },
+  rect(0, 0, 96, 16, "#2e5c8a"), rect(0, 14, 96, 2, "#f2b632"),
+  text(48, 4, "THE PROMENADE", "#f4f1ea", { align: "c" }))

@@ -249,6 +249,15 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Chained districts
+
+- An area's data can name a locked neighbour on its own side, e.g.
+  `"neighbours": {"east": "district_town_centre"}` in rooiduin.json.
+  `District._load_areas` turns that into `locked_neighbours`, so that edge gets gates and an
+  approach street.
+- The catalog entry carries a non-compass `side` ("far east"), so it lists as a neighbour on the
+  turf map without Westridge also gating it.
+
 ## Turf wars
 
 - **TurfState** (pure, unit-tested): corners {owner, control, push_crew, push_until}.
