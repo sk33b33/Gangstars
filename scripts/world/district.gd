@@ -38,6 +38,10 @@ var rebake_count := 0
 var _rebaking := false
 var _braai: Node3D
 var residents: Dictionary = {}   # npc id -> Resident
+## Set by the GameSession: lets residents who answer the door invite the player in.
+var interiors: InteriorSystem
+## A door interaction that should take the player inside (read and cleared by the GameSession).
+var enter_request := ""
 var is_navigation_ready := false
 var events: NeighbourhoodEvents
 var director: SimulationDirector
@@ -496,10 +500,16 @@ func _on_door(house_id: String) -> String:
 			return "Nobody answers at %s. Someone has sprayed TORTEL on the gate." % where
 		return "A voice behind the gate at %s: \"Wrong house, bru. Walk.\"" % where
 	if not home.is_empty():
+		if interiors and interiors.is_welcome(house_id):
+			enter_request = house_id
+			return ""
 		var who := " and ".join(home)
 		var verb := "opens" if home.size() == 1 else "open"
 		plots[house_id].open_door(3.0)
 		door_opened.emit(plots[house_id].door_position())
+		if interiors:
+			interiors.welcome(house_id)
+			return "%s %s the security gate at %s: \"Ja? Come in, come in.\"  (%s to go inside)" % [who, verb, where, InputHints.key("interact")]
 		return "%s %s the security gate at %s: \"Ja? Can I help you?\"" % [who, verb, where]
 	return "No answer at %s. Out: %s." % [where, ", ".join(out)]
 

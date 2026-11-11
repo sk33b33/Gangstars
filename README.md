@@ -8,6 +8,7 @@
 > load-shedding, synthesized audio, and a settings menu. Lentegeur, the first expansion district
 > (flats, container shops, a soccer field and the Dune Cruisers), and Rocklands to the west (limestone
 > cottages, an old quarry and the Rock Royals) are built from the same data pipeline.
+> Walk into your safehouse, the smokkie and neighbours' homes (knock first).
 > Start the hustle at Aunty Mavis' smokkie: serve drinks, save clients on your phone, and make
 > street deals without SAPS seeing (clients who wait too long go to rival crews).
 > Runs on Windows/Linux/macOS desktops with keyboard + mouse or a gamepad. Windows build:

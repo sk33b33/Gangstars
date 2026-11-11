@@ -163,6 +163,18 @@ func _run_screenshot() -> void:
 		await get_tree().create_timer(maxf(delay - 2.0, 0.1)).timeout
 		_stage_hustle()
 		delay = 1.5
+	if _args.has("interior"):
+		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
+		var id := str(_args.interior)
+		if id != GameSession.SAFEHOUSE_ID and id != InteriorSystem.SHEBEEN:
+			session.interiors.welcome(id)
+		var why := session.interiors.enter(id)
+		if not why.is_empty():
+			print("interior: ", why)
+		if _args.has("yaw"):
+			player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
+			player.snap_camera()
+		delay = 0.6
 	if _args.has("aunty"):
 		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
 		_stage_aunty_shot()

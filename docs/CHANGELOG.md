@@ -4,6 +4,46 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### House interiors (2026-11-11)
+- **Going inside:**
+  - **Your safehouse:** the door takes you straight in. Inside are a couch and TV, a kitchen, a
+    bed, a wardrobe, a map of the area, and the **stash** (the safehouse menu: upgrades,
+    restocking, rest).
+  - **Aunty Mavis' smokkie (10:00–23:00):**
+    - a bar counter you can serve at, shelves of bottles and beer crates;
+    - a pool table, a jukebox, posters and coloured lights;
+    - Mavis behind her bar, and regulars at the tables on smokkie nights.
+  - **Neighbours' houses:** knock, and if someone's home (and it isn't hostile) they say
+    "Come in, come in". The door then says *Go inside* for 20 game minutes, so press E again.
+    Whoever is home sits on the couch or stands in the kitchen, and you can talk to them as
+    outside (missions, relationships and contacts all work).
+- **The rooms:**
+  - Built from code only when you go in, under their own plot, and freed when you come out.
+    Each has lino or wooden floors, painted walls, skirting, windows with burglar bars and print
+    curtains that follow the daylight, and a hanging lamp.
+  - A home is a lounge (TV, couch, coffee table, rug, family photo, "Home Sweet Home") plus a
+    kitchen (counter, sink, stove, fridge with magnets, calendar) and a dining table or
+    armchair.
+  - Walls and furniture are solid.
+- **Gameplay:**
+  - Police can't see you indoors, so heat cools off.
+  - Saving indoors puts you at the front door when you load.
+  - The room is dropped if you're moved out some other way (knocked out, load).
+- **New:**
+  - InteriorBuilder (layouts) and InteriorSystem (enter/leave, fade, people inside, welcomes).
+  - 17 Blender furniture props: couch, armchair, coffee table, TV unit, kitchen counter, stove,
+    fridge, bed, wardrobe, dining table, bar counter, bottle shelf, jukebox, pool table, crates,
+    stash crate, ceiling lamp.
+  - 13 pxl textures: lino, floorboards, rug, family photo, mountain picture, Home Sweet Home,
+    clock, calendar, COLD ONES and VLEI FC posters, area map, inside window.
+  - `--interior=<id>` screenshot flag.
+- **Tests:**
+  - Safehouse in and out, furnished, floor and walls, saving indoors, the stash menu.
+  - Knock, then come in, people inside, talking to them.
+  - Smokkie hours, Mavis, police can't see you, the room dropped, no way into hostile houses.
+  - Flaky checks made robust: the car-push check only counts while a car is close, the rival
+    aim test tries up to three rivals, and the gangster shot gets more tries.
+
 ### Modeling pass: heads, hands, hair, life; vehicle interiors and the skorokoro (2026-11-11)
 - **Heads:** sculpted in code from one skull mesh:
   - a jaw tapering to the chin, cheekbones, eye sockets, a brow ridge and a fuller back;

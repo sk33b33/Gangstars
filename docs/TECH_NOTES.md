@@ -249,6 +249,26 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Interiors
+
+- `InteriorSystem` (child of the GameSession) owns entering and leaving:
+  - `why_not(id)`: the safehouse is always open; the smokkie opens 10–23; houses need a
+    welcome.
+  - `welcome(id)` is called by `District._on_door` when someone home answers. While welcomed,
+    the next door press sets `district.enter_request`, which the GameSession turns into
+    `enter()`.
+  - `enter()` builds the room with `InteriorBuilder.build(root, kind, seed)` at DEPTH (−40 m)
+    under the door, adds stand-ins and fittings, and teleports the player.
+  - `leave()` puts the player outside the door and frees the room. `discard()` drops it
+    without moving the player.
+- **Stand-ins:** CharacterModels dressed from the resident's data. Their Interactable reuses
+  the resident's `kind`/`target`/`on_interact`, so missions, dealing contacts and
+  relationships behave as outside. They vanish when the resident heads out.
+- **Room shell:** the room's solid ceiling blocks police line of sight. A save stores
+  `outside_position()`.
+- **Layouts:** `home`, `safehouse` and `shebeen` in `interior_builder.gd`. Furniture props
+  come from `build_props.py`, with collision sizes in `InteriorBuilder.SOLID`.
+
 ## Modeling pass
 
 - **Heads:** `sculpt_skull()` deforms one sphere with gaussian bumps in coordinates normalised

@@ -26,6 +26,7 @@ var police: PoliceDispatch
 var crew_picker: CrewPicker
 var dealing: DealingController
 var phone: Phone
+var interiors: InteriorSystem
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -98,6 +99,12 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	dealing.name = "Dealing"
 	add_child(dealing)
 	dealing.setup(district, player, progression, missions, police)
+	interiors = InteriorSystem.new()
+	interiors.name = "Interiors"
+	add_child(interiors)
+	interiors.setup(self, district, player, self)
+	district.interiors = interiors
+	interiors.entered.connect(func(_id): if audio: audio.play_ui("click"))
 	dealing.message.connect(hud.show_message)
 	phone = Phone.new()
 	phone.name = "Phone"
@@ -291,8 +298,12 @@ func _on_interacted(target: Interactable, base_message: String) -> void:
 	hud.show_message(text)
 	if target.kind == "vehicle" and district.vehicles.has(target.target):
 		player.enter_vehicle(district.vehicles[target.target])
-	if target.kind == "door" and target.target == SAFEHOUSE_ID:
-		open_safehouse_menu()
+	if target.kind == "door" and (target.target == SAFEHOUSE_ID or target.target == InteriorSystem.SHEBEEN \
+			or district.enter_request == target.target):
+		district.enter_request = ""
+		var why := interiors.enter(target.target)
+		if not why.is_empty():
+			hud.show_message(why)
 
 
 func _setup_audio() -> void:
@@ -474,11 +485,17 @@ func _show_upgrade(id: String) -> void:
 
 # ---------------------------------------------------------------- save / load
 
+## Indoors, the save puts you back outside the door.
+func _saved_player_position() -> Array:
+	var p := interiors.outside_position() if interiors and interiors.is_inside() else player.global_position
+	return [p.x, p.y, p.z]
+
+
 func snapshot() -> Dictionary:
 	var clock := district.director.clock
 	return {
 		"clock": {"minutes": clock.minutes, "day": clock.day},
-		"player": {"position": [player.global_position.x, player.global_position.y, player.global_position.z],
+		"player": {"position": _saved_player_position(),
 			"yaw": player.pivot.rotation.y},
 		"progression": progression.to_dict(),
 		"missions": missions.to_dict(),
@@ -521,6 +538,8 @@ func load_game() -> String:
 
 
 func apply_snapshot(data: Dictionary) -> String:
+	if interiors:
+		interiors.discard()
 	var c: Variant = data.get("clock")
 	var pl: Variant = data.get("player")
 	if not c is Dictionary or not (c.get("minutes") is float or c.get("minutes") is int):

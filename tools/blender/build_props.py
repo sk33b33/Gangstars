@@ -57,6 +57,16 @@ M = {
     "soil": mat("soil", srgb("#6b5a45")),
     "gas": mat("gas", srgb("#c0392b"), 0.5, 0.2),
     "wood": mat("wood", srgb("#a8794e")),
+    "wood_dark": mat("wood_dark", srgb("#5a3a26"), 0.6),
+    "screen": mat("screen", srgb("#101318"), 0.15, 0.3),
+    "mattress": mat("mattress", srgb("#ece6da")),
+    "felt": mat("felt", srgb("#1f6b45"), 0.95),
+    "glass_brown": mat("glass_brown", srgb("#6b3a12"), 0.2),
+    "glass_green": mat("glass_green", srgb("#2f6a2a"), 0.2),
+    "glass_clear": mat("glass_clear", srgb("#d8e2e0"), 0.15),
+    "chrome": mat("chrome", srgb("#d8dadf"), 0.2, 0.9),
+    "counter_top": mat("counter_top", srgb("#d9d2c2"), 0.5),
+    "glow": mat("glow", srgb("#ffcf7a"), 0.4),
 }
 
 
@@ -230,9 +240,189 @@ def crate(x):
     return join(p, "crate", (x, 0, 0))
 
 
+# ----------------------------------------------------------------------------- indoors
+# Furniture for house interiors (front = -Y in Blender = +Z in Godot). "paint" is the
+# recolourable upholstery / blanket / crate colour.
+def couch(x, name="couch", width=2.0):
+    p = [add("cube", (0, 0, 0.24), (width / 2, 0.42, 0.14), "paint", smooth=False)]
+    for k in range(int(round(width / 0.65))):
+        n = int(round(width / 0.65))
+        cx = -width / 2 + (k + 0.5) * width / n
+        p.append(add("cube", (cx, -0.04, 0.43), (width / n / 2 - 0.02, 0.36, 0.07), "paint", jitter=0.004))
+    p.append(add("cube", (0, 0.34, 0.62), (width / 2, 0.1, 0.3), "paint", rot=(-0.12, 0, 0)))
+    for s in (1, -1):
+        p.append(add("cube", (s * (width / 2 - 0.08), 0, 0.5), (0.1, 0.42, 0.14), "paint"))
+    for sx in (1, -1):
+        for sy in (1, -1):
+            p.append(add("cyl", (sx * (width / 2 - 0.1), sy * 0.33, 0.05), (0.03, 0.03, 0.05), "wood_dark", seg=8))
+    return join(p, name, (x, 0, 0))
+
+
+def coffee_table(x):
+    p = [add("cube", (0, 0, 0.4), (0.5, 0.28, 0.025), "wood", smooth=False)]
+    p.append(add("cube", (0, 0, 0.14), (0.45, 0.24, 0.012), "wood_dark", smooth=False))
+    for sx in (1, -1):
+        for sy in (1, -1):
+            p.append(add("cube", (sx * 0.45, sy * 0.23, 0.2), (0.025, 0.025, 0.2), "wood_dark", smooth=False))
+    p.append(add("cyl", (0.2, -0.05, 0.47), (0.04, 0.04, 0.045), "white_plastic", seg=10))   # mug
+    p.append(add("cube", (-0.2, 0.05, 0.43), (0.12, 0.09, 0.008), "cloth_c", smooth=False))   # magazine
+    return join(p, "coffee_table", (x, 0, 0))
+
+
+def tv_unit(x):
+    p = [add("cube", (0, 0, 0.25), (0.7, 0.22, 0.25), "wood_dark", smooth=False)]
+    for s in (1, -1):
+        p.append(add("cube", (s * 0.35, -0.225, 0.25), (0.32, 0.005, 0.2), "wood", smooth=False))
+    p.append(add("cube", (0, 0, 0.85), (0.52, 0.03, 0.31), "plastic_dark", smooth=False))
+    p.append(add("cube", (0, -0.032, 0.85), (0.49, 0.003, 0.28), "screen", smooth=False))
+    p.append(add("cube", (0, 0.02, 0.52), (0.12, 0.06, 0.02), "plastic_dark", smooth=False))
+    p.append(add("cube", (0.45, 0, 0.53), (0.12, 0.1, 0.03), "plastic_dark", smooth=False))   # decoder
+    return join(p, "tv_unit", (x, 0, 0))
+
+
+def kitchen_counter(x):
+    p = [add("cube", (0, 0, 0.43), (1.2, 0.3, 0.43), "white_plastic", smooth=False)]
+    p.append(add("cube", (0, -0.01, 0.885), (1.22, 0.32, 0.025), "counter_top", smooth=False))
+    for k in range(4):
+        cx = -0.9 + k * 0.6
+        p.append(add("cube", (cx, -0.302, 0.45), (0.28, 0.004, 0.36), "white_plastic", smooth=False))
+        p.append(add("cube", (cx + 0.2, -0.31, 0.7), (0.05, 0.008, 0.01), "chrome", smooth=False))
+    p.append(add("cube", (0.5, -0.02, 0.9), (0.3, 0.2, 0.03), "metal", smooth=False))       # sink
+    p.append(add("cyl", (0.5, 0.15, 1.0), (0.015, 0.015, 0.1), "chrome", seg=8))             # tap
+    p.append(add("cube", (0.5, 0.08, 1.09), (0.012, 0.08, 0.012), "chrome", smooth=False))
+    p.append(add("cube", (-0.6, 0.05, 0.98), (0.12, 0.08, 0.07), "cloth_d", smooth=False))   # tin
+    p.append(add("cyl", (-0.85, 0.08, 1.0), (0.07, 0.07, 0.09), "metal", seg=12))           # kettle
+    return join(p, "kitchen_counter", (x, 0, 0))
+
+
+def stove(x):
+    p = [add("cube", (0, 0, 0.45), (0.3, 0.3, 0.45), "white_plastic", smooth=False)]
+    p.append(add("cube", (0, -0.302, 0.4), (0.25, 0.004, 0.22), "plastic_dark", smooth=False))
+    for sx in (1, -1):
+        for sy in (1, -1):
+            p.append(add("cyl", (sx * 0.13, sy * 0.13, 0.905), (0.08, 0.08, 0.008), "plastic_dark", seg=12))
+    p.append(add("cyl", (0.13, 0.13, 0.97), (0.11, 0.11, 0.06), "metal", seg=12))   # a pot on
+    return join(p, "stove", (x, 0, 0))
+
+
+def fridge(x):
+    p = [add("cube", (0, 0, 0.88), (0.33, 0.32, 0.88), "white_plastic", smooth=False)]
+    p.append(add("cube", (0, -0.325, 1.2), (0.32, 0.006, 0.006), "plastic_dark", smooth=False))
+    for z in (0.75, 1.45):
+        p.append(add("cube", (0.26, -0.34, z), (0.012, 0.012, 0.12), "chrome", smooth=False))
+    p.append(add("cube", (-0.1, -0.327, 1.5), (0.05, 0.003, 0.06), "cloth_a", smooth=False))   # fridge magnets
+    p.append(add("cube", (0.05, -0.327, 1.35), (0.04, 0.003, 0.05), "cloth_d", smooth=False))
+    return join(p, "fridge", (x, 0, 0))
+
+
+def bed(x):
+    p = [add("cube", (0, 0, 0.2), (0.72, 1.02, 0.12), "wood_dark", smooth=False)]
+    p.append(add("cube", (0, 0, 0.4), (0.68, 0.98, 0.1), "mattress"))
+    p.append(add("cube", (0, -0.15, 0.52), (0.7, 0.82, 0.04), "paint", jitter=0.01))     # blanket
+    for s in (1, -1):
+        p.append(add("cube", (s * 0.3, 0.82, 0.55), (0.26, 0.12, 0.07), "cloth_b"))
+    p.append(add("cube", (0, 1.04, 0.55), (0.72, 0.04, 0.45), "wood_dark", smooth=False))   # headboard
+    return join(p, "bed", (x, 0, 0))
+
+
+def wardrobe(x):
+    p = [add("cube", (0, 0, 1.0), (0.6, 0.3, 1.0), "wood_dark", smooth=False)]
+    p.append(add("cube", (0, -0.302, 1.0), (0.004, 0.003, 0.95), "plastic_dark", smooth=False))
+    for s in (1, -1):
+        p.append(add("cube", (s * 0.06, -0.31, 1.05), (0.01, 0.01, 0.08), "chrome", smooth=False))
+    p.append(add("cube", (0.3, -0.305, 1.0), (0.18, 0.002, 0.5), "glass_clear", smooth=False))   # mirror
+    return join(p, "wardrobe", (x, 0, 0))
+
+
+def dining_table(x):
+    p = [add("cube", (0, 0, 0.73), (0.6, 0.4, 0.025), "wood", smooth=False)]
+    for sx in (1, -1):
+        for sy in (1, -1):
+            p.append(add("cube", (sx * 0.54, sy * 0.34, 0.36), (0.03, 0.03, 0.36), "wood_dark", smooth=False))
+    p.append(add("cube", (0, 0, 0.757), (0.42, 0.3, 0.003), "cloth_a", smooth=False))   # table cloth
+    p.append(add("cyl", (0.1, 0.05, 0.8), (0.1, 0.1, 0.04), "white_plastic", seg=14))   # bowl
+    return join(p, "dining_table", (x, 0, 0))
+
+
+def bar_counter(x):
+    p = [add("cube", (0, 0, 0.52), (1.5, 0.28, 0.52), "wood_dark", smooth=False)]
+    p.append(add("cube", (0, -0.03, 1.06), (1.55, 0.34, 0.03), "wood", smooth=False))
+    for k in range(6):
+        p.append(add("cube", (-1.25 + k * 0.5, -0.285, 0.52), (0.008, 0.005, 0.48), "wood", smooth=False))
+    for k, mat_name in enumerate(("glass_brown", "glass_green", "glass_brown", "glass_clear")):
+        p.append(add("cyl", (-0.9 + k * 0.25, -0.1, 1.17), (0.03, 0.03, 0.09), mat_name, seg=8))
+    p.append(add("cube", (1.1, -0.05, 1.12), (0.18, 0.14, 0.03), "plastic_dark", smooth=False))   # till
+    return join(p, "bar_counter", (x, 0, 0))
+
+
+def bottle_shelf(x):
+    p = [add("cube", (0, 0.12, 0.9), (1.0, 0.03, 0.9), "wood_dark", smooth=False)]
+    for z in (0.5, 1.0, 1.5):
+        p.append(add("cube", (0, 0, z), (1.0, 0.15, 0.015), "wood", smooth=False))
+        for k in range(10):
+            m = ("glass_brown", "glass_green", "glass_clear", "glass_brown", "paint")[(k * 3 + int(z * 7)) % 5]
+            h = 0.12 + 0.03 * ((k + int(z * 3)) % 3)
+            p.append(add("cyl", (-0.85 + k * 0.19, 0, z + 0.015 + h), (0.032, 0.032, h), m, seg=8))
+    return join(p, "bottle_shelf", (x, 0, 0))
+
+
+def jukebox(x):
+    p = [add("cube", (0, 0, 0.6), (0.35, 0.25, 0.6), "paint")]
+    p.append(add("cyl", (0, 0, 1.2), (0.35, 0.35, 0.25), "paint", seg=20, rot=(math.pi / 2, 0, 0)))
+    p.append(add("cube", (0, -0.255, 0.85), (0.26, 0.006, 0.18), "glow", smooth=False))
+    p.append(add("cube", (0, -0.255, 0.45), (0.22, 0.006, 0.12), "plastic_dark", smooth=False))
+    for k in range(5):
+        p.append(add("cube", (-0.2 + k * 0.1, -0.26, 1.15), (0.02, 0.004, 0.15), "chrome", smooth=False))
+    return join(p, "jukebox", (x, 0, 0))
+
+
+def pool_table(x):
+    p = [add("cube", (0, 0, 0.74), (1.1, 0.6, 0.06), "felt", smooth=False)]
+    for s in (1, -1):
+        p.append(add("cube", (0, s * 0.63, 0.79), (1.17, 0.05, 0.05), "wood_dark", smooth=False))
+        p.append(add("cube", (s * 1.13, 0, 0.79), (0.05, 0.6, 0.05), "wood_dark", smooth=False))
+    p.append(add("cube", (0, 0, 0.5), (1.0, 0.5, 0.18), "wood_dark", smooth=False))
+    for sx in (1, -1):
+        for sy in (1, -1):
+            p.append(add("cube", (sx * 0.95, sy * 0.45, 0.22), (0.07, 0.07, 0.22), "wood_dark", smooth=False))
+    for k, m in enumerate(("white_plastic", "cloth_a", "cloth_d", "cloth_c", "plastic_dark", "cloth_a")):
+        p.append(add("uvsphere", (-0.3 + (k % 3) * 0.12, -0.1 + (k // 3) * 0.12, 0.83), (0.028, 0.028, 0.028), m, seg=8, rings=6))
+    p.append(add("cyl", (0.3, 0.3, 0.83), (0.01, 0.01, 0.7), "wood", seg=6, rot=(0, math.pi / 2, 0.3)))   # cue
+    return join(p, "pool_table", (x, 0, 0))
+
+
+def crate_stack(x):
+    p = []
+    for k, (cx, cy, cz) in enumerate(((0, 0, 0.15), (0, 0, 0.45), (0.55, 0, 0.15))):
+        p.append(add("cube", (cx, cy, cz), (0.25, 0.18, 0.15), "paint", smooth=False))
+        for j in range(3):
+            p.append(add("cyl", (cx - 0.12 + j * 0.12, cy, cz + 0.17), (0.03, 0.03, 0.05), "glass_brown", seg=6))
+    return join(p, "crate_stack", (x, 0, 0))
+
+
+def stash_crate(x):
+    p = [add("cube", (0, 0, 0.25), (0.45, 0.3, 0.25), "wood", smooth=False)]
+    p.append(add("cube", (0, 0.05, 0.52), (0.47, 0.32, 0.025), "wood_dark", smooth=False, rot=(-0.08, 0, 0)))
+    for s in (1, -1):
+        p.append(add("cube", (s * 0.3, -0.305, 0.25), (0.04, 0.005, 0.23), "metal_dark", smooth=False))
+    p.append(add("cube", (0, -0.31, 0.4), (0.05, 0.01, 0.04), "metal", smooth=False))   # padlock
+    return join(p, "stash_crate", (x, 0, 0))
+
+
+def ceiling_lamp(x):
+    p = [add("cyl", (0, 0, -0.15), (0.008, 0.008, 0.15), "plastic_dark", seg=6)]
+    p.append(add("cone", (0, 0, -0.34), (0.16, 0.16, 0.08), "white_plastic", r2=0.3, seg=16))
+    p.append(add("uvsphere", (0, 0, -0.4), (0.05, 0.05, 0.05), "glow", seg=10, rings=6))
+    return join(p, "ceiling_lamp", (x, 0, 0))
+
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
-              satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate):
+              satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
+              couch, lambda x: couch(x, "armchair", 0.95), coffee_table, tv_unit, kitchen_counter, stove, fridge,
+              bed, wardrobe, dining_table, bar_counter, bottle_shelf, jukebox, pool_table, crate_stack, stash_crate,
+              ceiling_lamp):
     build(x)
     x += 6.0
 

@@ -919,7 +919,10 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 180:
 		await physics_frame
 	var slowest := car.speed
+	var pushed := 0.0
 	for i in 900:   # the car may still be some way off: give it time to arrive and brake
+		if car.global_position.distance_to(player.global_position) < 6.0:
+			pushed = maxf(pushed, Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length())
 		slowest = minf(slowest, car.speed)
 		if car.speed < 0.2:
 			break
@@ -928,7 +931,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	# (Or it is held back further up the lane, queued behind another car that stopped first.)
 	var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 3.0
 	_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
-	_check(Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length() < 0.3, "the player is not pushed by the car")
+	_check(pushed < 0.3, "the player is not pushed by the car (%.2f m)" % pushed)
 	var gap := car.global_position.distance_to(player.global_position)
 	_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
 
@@ -1171,11 +1174,13 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	var hp0 := thug.health.hp
 	var tele0 := thug.teleport_violations
 	# Someone may step into the line of fire at a busy corner: close in and try a few times.
-	for attempt in 5:
+	for attempt in 10:
 		combat.fire(player, "pistol", player.model.muzzle_position(), thug.global_position + Vector3(0, 1.2, 0), 0.0)
 		if thug.health.hp < hp0:
 			break
-		player.global_position = _clear_spot_near(district, thug, 3.5)
+		player.global_position = _clear_spot_near(district, thug, 3.5 if attempt < 5 else 2.2)
+		player.snap_camera()
+		await physics_frame
 		await physics_frame
 	_check(thug.health.hp < hp0, "a shot hurts the gangster (%.0f -> %.0f)" % [hp0, thug.health.hp])
 	for i in 120:   # someone sitting down stands up first, then fights
@@ -1286,40 +1291,49 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	# A rival on their turf: pointing a gun at them starts a fight.
 	district.director.clock.set_hour(16.0)
 	var rival: Resident = null
-	for i in 60 * 120:
-		for r: Resident in district.residents.values():
-			if r.data.faction_id == "tortel_crew" and not r.is_inside and r.can_fight() and r.fight_target == null and r.sim_tier != "far" \
-					and not r.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.PREPARING_TO_LEAVE, NpcBrain.State.FLEEING]:
-				rival = r
+	var tried: Array = []
+	for attempt in 3:   # a rival may head indoors mid-check: try another
+		rival = null
+		for i in 60 * 120:
+			for r: Resident in district.residents.values():
+				if r.data.faction_id == "tortel_crew" and not tried.has(r) and not r.is_inside and r.can_fight() and r.fight_target == null and r.sim_tier != "far" \
+						and not r.brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.PREPARING_TO_LEAVE, NpcBrain.State.FLEEING]:
+					rival = r
+					break
+			if rival:
 				break
-		if rival:
+			await physics_frame
+		if rival == null:
 			break
-		await physics_frame
+		tried.append(rival)
+		if rival:
+			for i in 60 * 6:   # finish any knock-out wake-up first (it disables input)
+				if player.input_enabled and not player.is_down():
+					break
+				await physics_frame
+			player.health.revive(Health.MAX_HP)
+			session.police.heat.clear()
+			player.global_position = _clear_spot_near(district, rival, 9.0)
+			player.snap_camera()
+			var to := rival.global_position - player.global_position
+			player.pivot.rotation.y = atan2(-to.x, -to.z)
+			Input.action_press("aim")
+			for i in 60 * 8:
+				player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
+				if rival.fight_target == player:
+					break
+				if i % 60 == 59 and (not rival._line_of_sight(player) or rival.global_position.distance_to(player.global_position) > 12.0):   # walked behind a wall or away: step back into view
+					player.global_position = _clear_spot_near(district, rival, 9.0)
+				if i % 60 == 0 and _args.has("verbose"):
+					var dir := (rival.global_position - player.global_position).normalized()
+					print("    rival %s %s d=%.1f aiming=%s dot=%.2f los=%s tier=%s input=%s state=%s spot=%s" % [rival.data.id, rival.data.faction_id, rival.global_position.distance_to(player.global_position), player.aiming, (-player.pivot.global_basis.z).dot(dir), rival._line_of_sight(player), rival.sim_tier, player.input_enabled, rival.state_name(), rival.spot_phase])
+				await physics_frame
+			Input.action_release("aim")
+		if rival.fight_target == player:
+			break
 	_check(rival != null, "a Tortel Boy is out on Westridge's streets")
 	if rival:
-		for i in 60 * 6:   # finish any knock-out wake-up first (it disables input)
-			if player.input_enabled and not player.is_down():
-				break
-			await physics_frame
-		player.health.revive(Health.MAX_HP)
-		session.police.heat.clear()
-		player.global_position = _clear_spot_near(district, rival, 9.0)
-		player.snap_camera()
-		var to := rival.global_position - player.global_position
-		player.pivot.rotation.y = atan2(-to.x, -to.z)
-		Input.action_press("aim")
-		for i in 60 * 8:
-			player.pivot.rotation.y = atan2(-(rival.global_position - player.global_position).x, -(rival.global_position - player.global_position).z)
-			if rival.fight_target == player:
-				break
-			if i % 60 == 59 and (not rival._line_of_sight(player) or rival.global_position.distance_to(player.global_position) > 12.0):   # walked behind a wall or away: step back into view
-				player.global_position = _clear_spot_near(district, rival, 9.0)
-			if i % 60 == 0 and _args.has("verbose"):
-				var dir := (rival.global_position - player.global_position).normalized()
-				print("    rival %s %s d=%.1f aiming=%s dot=%.2f los=%s tier=%s input=%s state=%s spot=%s" % [rival.data.id, rival.data.faction_id, rival.global_position.distance_to(player.global_position), player.aiming, (-player.pivot.global_basis.z).dot(dir), rival._line_of_sight(player), rival.sim_tier, player.input_enabled, rival.state_name(), rival.spot_phase])
-			await physics_frame
-		Input.action_release("aim")
-		_check(rival.fight_target == player, "a rival you point a gun at fights you")
+		_check(rival.fight_target == player, "a rival you point a gun at fights you (%d tries)" % tried.size())
 		_check(not district.residents["npc_viper_slang"].is_ally() or district.residents["npc_viper_slang"]._hostile_to(player) == false, "your own crew never fights you")
 		rival.end_fight()
 	# Perks and home turf (switching crews here only to test each perk).
@@ -1470,6 +1484,94 @@ func _clear_spot_near(district: District, who: Node3D, dist: float) -> Vector3:
 		if space.intersect_ray(q).is_empty():
 			return Vector3(p.x, 0.1, p.z)
 	return who.global_position + Vector3(dist, 0.1, 0)
+
+
+func _test_interiors_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var interiors := session.interiors
+	interiors.discard()
+	if session.hud.is_menu_open():
+		session._close_menu()
+	district.director.clock.set_hour(12.0)
+	session.police.heat.clear()
+	# The safehouse: in through the door, a furnished room, the stash, and back out.
+	var safe: HousePlot = district.plots[GameSession.SAFEHOUSE_ID]
+	player.global_position = safe.door_position() + safe.global_basis.z * 1.0 + Vector3(0, 0.1, 0)
+	await physics_frame
+	_talk(player, safe.door_interactable)
+	_check(interiors.current == GameSession.SAFEHOUSE_ID and player.global_position.y < InteriorSystem.DEPTH + 1.0, "the safehouse door takes you inside")
+	var room := interiors.room
+	_check(room.find_children("*", "MeshInstance3D", true, false).size() > 30 and room.has_node("Stash") and room.has_node("Bed"),
+		"the safehouse is furnished (bed, stash, couch, kitchen)")
+	for i in 30:
+		await physics_frame
+	_check(absf(player.global_position.y - (InteriorSystem.DEPTH + 0.0)) < 0.3 and player.is_on_floor(), "you stand on the floor inside")
+	var start := player.global_position
+	player.velocity = Vector3.ZERO
+	for i in 90:   # walk straight at the side wall: it holds
+		player.velocity = Vector3(6, 0, 0)
+		player.move_and_slide()
+		await physics_frame
+	_check(player.global_position.x - room.global_position.x < 4.6, "walls hold you in")
+	player.global_position = start
+	var snap := session.snapshot()
+	var saved := Vector3(snap.player.position[0], snap.player.position[1], snap.player.position[2])
+	_check(saved.distance_to(safe.door_position()) < 2.5, "saving indoors saves you at the front door")
+	_talk(player, room.get_node("Stash"))
+	_check(session.hud.is_menu_open(), "the stash opens the safehouse menu")
+	session._close_menu()
+	_talk(player, room.get_node("Exit"))
+	for i in 3:
+		await physics_frame
+	_check(not interiors.is_inside() and player.global_position.distance_to(safe.door_position()) < 2.5 and not is_instance_valid(room),
+		"going out puts you at the door and clears the room")
+	# A neighbour's house: knock, they invite you in, and whoever's home is inside.
+	var host: Resident = null
+	for r: Resident in district.residents.values():
+		var h := district.registry.get_house(r.data.home_id)
+		if r.is_inside and h and h.ownership in ["neutral", "friendly", "mission"] and h.id != GameSession.SAFEHOUSE_ID and district.plots.has(h.id):
+			host = r
+			break
+	_check(host != null, "someone is at home")
+	if host:
+		var plot: HousePlot = district.plots[host.data.home_id]
+		player.global_position = plot.door_position() + plot.global_basis.z * 1.0 + Vector3(0, 0.1, 0)
+		await physics_frame
+		var msg := plot.door_interactable.interact(player)
+		player.interacted_with.emit(plot.door_interactable, msg)
+		_check(msg.contains("Come in") and not interiors.is_inside() and plot.door_interactable.prompt.begins_with("Go inside"),
+			"knocking: \"Come in\" (the door now says Go inside)")
+		_talk(player, plot.door_interactable)
+		_check(interiors.current == plot.data.id, "a second press takes you inside")
+		_check(interiors.stand_in_count() >= 1, "the people at home are inside (%d)" % interiors.stand_in_count())
+		var talk: Interactable = interiors.room.find_child("Talk", true, false)
+		_check(talk != null and talk.target != "" and not talk.interact(player).is_empty(), "you can talk to them inside")
+		for i in 20:
+			await physics_frame
+		_check(interiors.room.find_children("StandIn_*", "", true, false).all(func(m): return (m as CharacterModel).base_pose in ["sit", ""]),
+			"they sit on the couch or stand about")
+		interiors.leave()
+		await physics_frame
+	# The smokkie: open from 10:00 to 23:00, Mavis behind the bar, a counter to serve at.
+	district.director.clock.set_hour(3.0)
+	_check(not interiors.why_not(InteriorSystem.SHEBEEN).is_empty(), "the smokkie is closed at 03:00")
+	district.director.clock.set_hour(12.0)
+	player.global_position = district.destinations.anchor_position("shebeen:door") + Vector3(0, 0.1, 1.0)
+	_talk(player, interiors.shebeen_door)
+	_check(interiors.current == InteriorSystem.SHEBEEN and interiors.room.has_node("Counter"), "the smokkie has a bar inside")
+	_check(interiors.room.has_node("StandIn_npc_mavis"), "Aunty Mavis is behind her bar")
+	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
+	_check(not cops.is_empty() and cops.all(func(c): return not c._line_of_sight(player)), "police can't see you indoors (heat cools off)")
+	# Moved out some other way (e.g. knocked out, a test): the room is dropped.
+	player.global_position = district.destinations.anchor_position("poi_shebeen") + Vector3(0, 0.1, 0)
+	for i in 40:
+		await physics_frame
+	_check(not interiors.is_inside(), "the room is dropped when you're moved out")
+	# Knocking on a hostile house never lets you in.
+	for id in district.plots:
+		if district.registry.get_house(id).ownership == "hostile":
+			_check(not interiors.why_not(id).is_empty(), "no way into a hostile house")
+			break
 
 
 func _test_ambient_life(main: Node, district: District, player: Player) -> void:
@@ -1805,7 +1907,9 @@ func _test_missions_in_game(main: Node, district: District, player: Player) -> v
 	_talk(player, district.plots["starter_h05"].door_interactable)
 	_check(missions.is_completed("first_crew") and prog.recruited_crew_ids.has("npc_boeta"), "First Crew recruits Boeta")
 	_check(boeta.data.role == "player_crew", "Boeta is now player crew")
-	_check(session.hud.is_menu_open(), "knocking on the safehouse opens its menu")
+	_check(session.interiors.current == GameSession.SAFEHOUSE_ID, "the safehouse door takes you inside")
+	_talk(player, session.interiors.room.get_node("Stash"))
+	_check(session.hud.is_menu_open(), "the stash inside opens the safehouse menu")
 	_check(session.buy_upgrade("security_light") and district.plots["starter_h05"].has_node("upgrade_security_light"),
 		"buying an upgrade adds its prop to the safehouse")
 	session._close_menu()
@@ -2104,6 +2208,7 @@ func _test_district() -> void:
 	await _test_crews_in_game(main, district, player)
 	print("== the hustle (smokkie, phone, street deals, client moods)")
 	await _test_dealing_in_game(main, district, player)
+	await _test_interiors_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

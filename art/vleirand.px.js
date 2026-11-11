@@ -415,3 +415,48 @@ sprite("logo_duin_boys", { w: 12, h: 12 },
 sprite("logo_klipspringers", { w: 12, h: 12 },
   rect(0, 0, 12, 12, "#1d1b24"), rect(2, 5, 8, 4, "#f2c43a"), px(2, 3, "#f2c43a"), px(2, 4, "#f2c43a"), px(5, 2, "#f2c43a"),
   rect(5, 3, 2, 2, "#f2c43a"), px(9, 3, "#f2c43a"), px(9, 4, "#f2c43a"))
+
+// ------------------------------------------------------------------ interiors
+// Floor lino (the classic speckled-tile vinyl), a lounge rug, pictures, posters, a clock and
+// the window as seen from inside (frame, burglar bars, daylight).
+sprite("floor_lino", { w: 16, h: 16 },
+  rect(0, 0, 16, 16, "#e8dcc4"), rect(0, 0, 8, 8, "#c9a27a"), rect(8, 8, 8, 8, "#c9a27a"),
+  hline(0, 0, 16, "#b8946c"), vline(0, 0, 16, "#b8946c"), hline(0, 8, 16, "#b8946c"), vline(8, 0, 16, "#b8946c"),
+  px(3, 3, "#a8845c"), px(5, 6, "#a8845c"), px(11, 12, "#a8845c"), px(13, 10, "#a8845c"),
+  px(11, 3, "#d4c4a6"), px(3, 12, "#d4c4a6"))
+sprite("floor_boards", { w: 16, h: 16 },
+  rect(0, 0, 16, 16, "#8c6044"), hline(0, 3, 16, "#6b4630"), hline(0, 7, 16, "#6b4630"), hline(0, 11, 16, "#6b4630"),
+  hline(0, 15, 16, "#6b4630"), vline(5, 0, 3, "#6b4630"), vline(12, 4, 3, "#6b4630"), vline(3, 8, 3, "#6b4630"), vline(9, 12, 3, "#6b4630"))
+sprite("rug", { w: 32, h: 20 },
+  rect(0, 0, 32, 20, "#a63a4c"), rect(2, 2, 28, 16, "#e8d8b2"), rect(4, 4, 24, 12, "#a63a4c"),
+  rect(8, 7, 16, 6, "#2f4a6e"), rect(14, 8, 4, 4, "#e8d8b2"),
+  (c) => { for (let x = 0; x < 32; x += 2) { c.px(x, 0, "#e8d8b2"); c.px(x + 1, 19, "#e8d8b2") } })
+sprite("frame_family", { w: 24, h: 18 },
+  rect(0, 0, 24, 18, "#6b4630"), rect(2, 2, 20, 14, "#c9d8e0"), rect(2, 11, 20, 5, "#9cb48a"),
+  circ(7, 7, 2, "#4a2f22"), rect(5, 9, 5, 5, "#a63a4c"), circ(12, 6, 2, "#6b4430"), rect(10, 8, 5, 6, "#2f6db8"),
+  circ(17, 8, 2, "#8d5a3b"), rect(15, 10, 4, 4, "#f2b632"))
+sprite("frame_mountain", { w: 24, h: 16 },
+  rect(0, 0, 24, 16, "#d4a63a"), rect(2, 2, 20, 12, "#8fc0e0"), rect(2, 10, 20, 4, "#2f6db8"),
+  poly([2, 10, 6, 6, 9, 5, 15, 5, 18, 7, 22, 10], "#6d7f8f"), rect(2, 12, 20, 2, "#3f7fc4"))
+sprite("sign_home", { w: 52, h: 16 },
+  rect(0, 0, 52, 16, "#f4f1ea"), rect(0, 0, 52, 1, "#a63a4c"), rect(0, 15, 52, 1, "#a63a4c"),
+  text(2, 2, "HOME SWEET", "#2f4a6e"), text(18, 9, "HOME", "#a63a4c"))
+sprite("wall_clock", { w: 12, h: 12 },
+  circ(5, 5, 5, "#1d1b24"), circ(5, 5, 4, "#f4f1ea"), vline(5, 2, 4, "#1d1b24"), hline(5, 5, 3, "#1d1b24"))
+sprite("calendar", { w: 12, h: 16 },
+  rect(0, 0, 12, 16, "#f4f1ea"), rect(0, 0, 12, 6, "#2f6e3a"), rect(2, 1, 8, 4, "#9cb48a"),
+  (c) => { for (let y = 8; y < 15; y += 2) for (let x = 1; x < 11; x += 2) c.px(x, y, "#8a8f99") })
+sprite("poster_cold", { w: 20, h: 28 },
+  rect(0, 0, 20, 28, "#1f6b45"), rect(1, 1, 18, 26, "#2f8a5a"), text(2, 2, "COLD", "#f4f1ea"), text(2, 8, "ONES", "#f2c43a"),
+  rect(8, 14, 4, 11, "#6b3a12"), rect(9, 12, 2, 3, "#6b3a12"), rect(8, 18, 4, 3, "#f1e2b4"))
+sprite("poster_soccer", { w: 20, h: 28 },
+  rect(0, 0, 20, 28, "#f4f1ea"), rect(0, 0, 20, 8, "#e2585e"), text(2, 1, "VLEI", "#f4f1ea"),
+  circ(9, 16, 5, "#1d1b24"), circ(9, 16, 4, "#f4f1ea"), rect(8, 15, 3, 3, "#1d1b24"), text(5, 22, "FC", "#e2585e"))
+sprite("poster_map", { w: 28, h: 20 },
+  rect(0, 0, 28, 20, "#e8d8b2"), hline(0, 7, 28, "#8a8f99"), hline(0, 14, 28, "#8a8f99"), vline(9, 0, 20, "#8a8f99"), vline(19, 0, 20, "#8a8f99"),
+  rect(2, 2, 5, 3, "#a63a4c"), rect(11, 9, 6, 4, "#2f6e3a"), rect(21, 16, 5, 3, "#2f6db8"),
+  line(4, 4, 14, 11, "#1d1b24"), line(14, 11, 23, 17, "#1d1b24"), px(4, 4, "#e2585e"), px(23, 17, "#e2585e"))
+sprite("window_inside", { w: 24, h: 20 },
+  rect(0, 0, 24, 20, "#e8e2d6"), rect(2, 2, 20, 16, "#a7cde8"), rect(2, 12, 20, 6, "#c8dcc0"),
+  vline(12, 2, 16, "#e8e2d6"), hline(2, 10, 20, "#e8e2d6"),
+  (c) => { for (let x = 4; x < 22; x += 3) c.vline(x, 2, 16, "#3a3d46") })
