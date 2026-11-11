@@ -72,6 +72,7 @@ func apply() -> void:
 		environment.fog_depth_begin = lerpf(80.0, 35.0, overcast)
 	var power := 1.0 if power_on else 0.0
 	PixelMaterials.lamp().emission_energy_multiplier = lerpf(0.3, 4.0, night) * power
+	VehicleLibrary.night = night
 	var win := PixelMaterials.panel("window_bars")
 	if not win.emission_enabled:
 		win.emission_enabled = true

@@ -218,7 +218,7 @@ func set_marker(text: String) -> void:
 ## Joins the player's crew: new role, cap in the player's colour, and a crew schedule.
 func recruit(schedule: Array) -> void:
 	data.role = "player_crew"
-	model.set_hat(Color("#a63a4c"))
+	model.set_hat(Color("#a63a4c"), player_faction)
 	brain.schedule = schedule
 	brain.active_hours = Vector2(8, 2)
 	brain.index = -1

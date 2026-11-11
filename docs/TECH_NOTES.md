@@ -249,6 +249,26 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Detail pass (faces, clothes, vehicles)
+
+- **Faces:** `Face_paint` is a copy of the head's front, pushed out 1.5 mm, with front-projected
+  UVs (0.2 m square, chin to brow). `PixelMaterials.face(tex, skin)` uses an alpha-scissor pxl
+  overlay multiplied by the skin colour. The textures are `face_m`, `face_f`, `face_old_m`,
+  `face_old_f` and `face_stubble` in `art/vleirand.px.js`.
+- **Clothes:**
+  - `NpcData._everyday_look()` picks the face, `pants_style` (denim / tracksuit / plain), the
+    hood, `sole_color` and `cap_logo` (crew members).
+  - Body cloth UVs: the torso wraps 6× around, arms 4× round their slanted axis, and each leg
+    once (mirrored, seam inside, u = 0.5 outside). Denim scales it ×4. Tracksuit stripes are a
+    detail mask.
+- **Vehicles:**
+  - `VehicleLibrary.build()` gives pivot > Tilt > Mesh and pivot > Wheels > Wheel0..3. The front
+    pair comes first; wheels on the −X side are turned round (meta `flip`).
+  - `animate(pivot, speed, steer, accel, indicate, delta, time)` is called every physics frame
+    by TrafficCar (steer from yaw rate, indicators from the next curve) and DrivableCar.
+  - `add_headlights()` gives moving cars two unshadowed spotlights, visible when
+    `VehicleLibrary.night` (set by DayNight) is above 0.4.
+
 ## The aunty look
 
 - `NpcData.appearance()` gives grown women residents the Mitchells Plain aunty look by hash

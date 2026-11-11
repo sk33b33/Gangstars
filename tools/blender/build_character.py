@@ -86,6 +86,7 @@ MATS = {n: mat(n, c) for n, c in {
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
     "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
     "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
+    "face_paint": (1.0, 1.0, 1.0), "soles": (0.92, 0.9, 0.86), "cap_logo": (1.0, 1.0, 1.0),
     "dress": (0.9, 0.4, 0.55), "cardigan": (0.85, 0.8, 0.7), "bag": (0.5, 0.2, 0.15), "acc_pink": (0.95, 0.55, 0.7),
     "uniform": (0.03, 0.05, 0.12), "vest": (0.02, 0.025, 0.04), "badge": (0.9, 0.7, 0.05), "belt": (0.015, 0.015, 0.018),
 }.items()}
@@ -165,7 +166,7 @@ def add_hem_loops(obj):
     """Edge loops at the colour boundaries, so hems are straight instead of per-face jagged."""
     bm = bmesh.new()
     bm.from_mesh(obj.data)
-    for z in (0.13, 0.955, 1.0, 1.49):
+    for z in (0.045, 0.13, 0.955, 1.0, 1.49):
         geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
         bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(0, 0, z), plane_no=(0, 0, 1))
     bm.to_mesh(obj.data)
@@ -173,9 +174,9 @@ def add_hem_loops(obj):
 
 
 def paint_body(obj):
-    for n in ("skin", "shirt", "forearm", "pants", "shoes"):
+    for n in ("skin", "shirt", "forearm", "pants", "shoes", "soles"):
         obj.data.materials.append(MATS[n])
-    slot = {n: i for i, n in enumerate(("skin", "shirt", "forearm", "pants", "shoes"))}
+    slot = {n: i for i, n in enumerate(("skin", "shirt", "forearm", "pants", "shoes", "soles"))}
     P = {n: Vector(v[0]) for n, v in BODY_PTS.items()}
     for poly in obj.data.polygons:
         c = obj.matrix_world @ poly.center
@@ -199,9 +200,9 @@ def paint_body(obj):
         elif region == "hand":
             name = "skin"
         elif region == "foot":
-            name = "shoes"
+            name = "soles" if c.z < 0.045 else "shoes"
         else:
-            name = "shoes" if c.z < 0.13 else ("shirt" if c.z > 1.0 else "pants")
+            name = ("soles" if c.z < 0.045 else "shoes") if c.z < 0.13 else ("shirt" if c.z > 1.0 else "pants")
         poly.material_index = slot[name]
 
 
@@ -302,8 +303,37 @@ def make_head():
         face.append(prim("sphere", "eye", HEAD_C + Vector((0.036 * s, -0.087, 0.018)), (0.017, 0.012, 0.014), "eye_white", seg=10, rings=6))
         face.append(prim("sphere", "pupil", HEAD_C + Vector((0.036 * s, -0.097, 0.017)), (0.009, 0.006, 0.01), "pupil", seg=8, rings=5))
         face.append(prim("cube", "brow", HEAD_C + Vector((0.038 * s, -0.094, 0.044)), (0.022, 0.006, 0.005), "hair", rot=(0, 0.12 * s, 0), smooth=False))
-    face.append(prim("cube", "mouth", HEAD_C + Vector((0, -0.094, -0.056)), (0.026, 0.006, 0.006), "lips", smooth=False))
+    # (The mouth and lips are painted on the face shell, see make_face_paint.)
     return head, join(face, "Face")
+
+
+def make_face_paint(head):
+    """A thin shell 1.5 mm in front of the face, front-projected UVs (0.2 m wide, chin to brow),
+    for the painted face texture (eyelids, lips, wrinkles...). Mostly transparent in Godot."""
+    paint = head.copy()
+    paint.data = head.data.copy()
+    paint.name = paint.data.name = "Face_paint"
+    scene.collection.objects.link(paint)
+    bm = bmesh.new()
+    bm.from_mesh(paint.data)
+    lo, hi = HEAD_C.z - 0.11, HEAD_C.z + 0.09
+    drop = [f for f in bm.faces if f.normal.y > -0.2 or not (lo < f.calc_center_median().z < hi)
+            or abs(f.calc_center_median().x) > 0.09]
+    bmesh.ops.delete(bm, geom=drop, context="FACES")
+    for v in bm.verts:
+        v.co += v.normal * 0.0015
+    bm.to_mesh(paint.data)
+    bm.free()
+    paint.data.materials.clear()
+    paint.data.materials.append(MATS["face_paint"])
+    while paint.data.uv_layers:
+        paint.data.uv_layers.remove(paint.data.uv_layers[0])
+    uv = paint.data.uv_layers.new(name="UVMap")
+    for poly in paint.data.polygons:
+        for li in poly.loop_indices:
+            co = paint.data.vertices[paint.data.loops[li].vertex_index].co
+            uv.data[li].uv = (0.5 + co.x / 0.2, (co.z - lo) / 0.2)
+    return paint
 
 
 def make_hair_pieces():
@@ -327,6 +357,14 @@ def make_hair_pieces():
     cut_below(dome, HEAD_C.z + 0.035)
     brim = prim("cyl", "cap_brim", HEAD_C + Vector((0, -0.1, 0.04)), (0.075, 0.07, 0.006), "hat", seg=16, rot=(-0.12, 0, 0))
     out.append(join([dome, brim], "Hat_cap"))
+    # Crew logo patch on the cap front (a small square with full 0..1 UVs; shown with the cap).
+    bpy.ops.mesh.primitive_plane_add(size=1, location=HEAD_C + Vector((0, -0.1135, 0.07)), rotation=(math.pi / 2 + 0.38, 0, 0))
+    logo = bpy.context.active_object
+    logo.name = logo.data.name = "Acc_cap_logo"
+    logo.scale = (0.05, 0.05, 0.05)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    logo.data.materials.append(MATS["cap_logo"])
+    out.append(logo)
     skirt = prim("cone", "Skirt", (0, 0, 0.75), (0.25, 0.22, 0.26), "skirt", seg=24, r2=0.76)
     out.append(skirt)
     afro = prim("sphere", "Hair_afro", HEAD_C + Vector((0, 0.025, 0.05)), (0.14, 0.15, 0.135), "hair", seg=20, rings=14)
@@ -371,6 +409,19 @@ def make_accessories():
     return out
 
 
+def make_hoodie():
+    """Hoodie extras in the shirt colour: the hood bunched behind the neck, a kangaroo pocket and
+    two drawstrings (the body's shirt slot is the hoodie itself)."""
+    hood = prim("sphere", "hood", (0, 0.085, 1.5), (0.13, 0.075, 0.085), "shirt", seg=16, rings=10)
+    cut_below(hood, 1.43)
+    rim = prim("torus_thick", "hood_rim", (0, 0.03, 1.5), (0.1, 0.08, 0.06), "shirt", rot=(0.3, 0, 0))
+    pocket = prim("cube", "pocket", (0, -0.118, 1.06), (0.11, 0.018, 0.065), "shirt", smooth=False)
+    for v in pocket.data.vertices:   # trapezoid, a little proud of the belly
+        v.co.x *= 1.0 - (v.co.z - 1.0) * 1.2
+    strings = [prim("cyl", "string", (s * 0.03, -0.105, 1.41), (0.004, 0.004, 0.06), "acc_white", seg=6) for s in (1, -1)]
+    return [join([hood, rim, pocket] + strings, "Acc_hood")]
+
+
 def make_body_accessories():
     """Chain and apron sit on the torso and bend with it."""
     chain = prim("torus_ring", "Acc_chain", (0, -0.015, 1.455), (0.088, 0.08, 0.088), "acc_gold", rot=(0.4, 0, 0))
@@ -392,14 +443,25 @@ def cloth_uvs(obj, around=8, height=0.2):
         coords = []
         for li in poly.loop_indices:
             co = obj.data.vertices[obj.data.loops[li].vertex_index].co
-            if abs(co.x) > 0.17 and 0.85 < co.z < 1.45 and obj.name == "Body":
-                cx = 0.22 if co.x > 0 else -0.22
-                u = (math.atan2(co.x - cx, co.y) / (2 * math.pi)) * 4
+            pc = poly.center
+            if abs(pc.x) > 0.17 and 0.85 < pc.z < 1.45 and obj.name == "Body":
+                # Wrap round the arm's own (slanted) axis: shoulder > elbow > wrist.
+                t = max(0.0, min(1.0, (1.425 - co.z) / (1.425 - 0.94)))
+                ax = 0.185 + (0.288 - 0.185) * t
+                ay = -0.018 * t
+                cx = ax if co.x > 0 else -ax
+                u = (math.atan2(co.x - cx, co.y - ay) / (2 * math.pi)) * 4
+            elif pc.z < 0.975 and obj.name == "Body":
+                # Legs: once round each leg, mirrored, so u = 0.5 is the outer side of both
+                # (tracksuit stripes) and the seam runs down the inside; denim scales it up.
+                side = 1.0 if poly.center.x > 0 else -1.0
+                u = ((math.atan2((co.x - side * 0.1) * side, co.y) + math.pi / 2) / (2 * math.pi)) % 1.0
             else:
                 u = (math.atan2(co.x, co.y) / (2 * math.pi)) * around
             coords.append([u, co.z / height])
         us = [c[0] for c in coords]
-        span = around if max(us) - min(us) > around / 2 else (4 if max(us) - min(us) > 2 else 0)
+        d = max(us) - min(us)
+        span = around if d > around / 2 else (4 if d > 2 else (1 if d > 0.5 else 0))
         for c, li in zip(coords, poly.loop_indices):
             if span and c[0] < (max(us) + min(us)) / 2:
                 c[0] += span
@@ -800,14 +862,14 @@ paint_body(body)
 bind_auto(body, rig)
 add_shape_keys(body)
 head, face = make_head()
-for o in (head, face):
+for o in (head, face, make_face_paint(head)):
     bind_rigid(o, rig, "head")
 for piece in make_hair_pieces() + make_accessories():
     if piece.name == "Skirt":
         bind_skirt(piece, rig)
     else:
         bind_rigid(piece, rig, "head")
-for piece in make_body_accessories():
+for piece in make_body_accessories() + make_hoodie():
     bind_by_height(piece, rig)
 aunty_head, aunty_other = make_aunty_pieces()
 for piece in aunty_head:

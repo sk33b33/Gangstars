@@ -128,6 +128,48 @@ func _test_npc_data() -> void:
 			shown[str(mi.name)] = true
 	_check(shown.has("Dress") and shown.has("Acc_hoops") and shown.has("Acc_handbag") and not shown.has("Skirt"), "the model shows the dress, hoops and handbag (%s)" % [shown.keys()])
 	m.queue_free()
+	# Detail pass: painted faces, trouser styles, hoodies, crew cap logos.
+	_check(shown.has("Face_paint"), "faces are painted (eyelids, lips)")
+	var faces := {}
+	var styles := {}
+	var hoods := 0
+	for n in everyone:
+		var a: Dictionary = n.appearance()
+		faces[a.get("face", "")] = true
+		styles[a.get("pants_style", "")] = true
+		if a.accessories.has("hood"):
+			hoods += 1
+	_check(faces.has("face_m") and faces.has("face_f") and faces.has("face_old_m") and faces.has("face_stubble"), "faces vary by figure and age (%s)" % [faces.keys()])
+	_check(styles.has("denim") and styles.has("tracksuit"), "trousers vary: denim, tracksuits, plain (%s)" % [styles.keys()])
+	_check(hoods >= 3, "some guys wear hoodies (%d)" % hoods)
+	var crewman: NpcData = everyone.filter(func(n): return n.role == "crew")[0]
+	var cm := CharacterModel.new()
+	root.add_child(cm)
+	cm.build(crewman.shirt_color, crewman.pants_color, crewman.skin_color, Color("#1d1b24"), crewman.appearance())
+	var logo: MeshInstance3D = cm.find_child("Acc_cap_logo", true, false)
+	_check(logo != null and logo.visible, "crew caps carry their crew's logo (%s)" % crewman.faction_id)
+	cm.queue_free()
+	# Vehicles: separate wheels that spin and steer, plates, brake lights, indicators.
+	var garage := Node3D.new()
+	root.add_child(garage)
+	var car := VehicleLibrary.build(garage, "sedan", Color.RED)
+	var wheels: Array = car.get_meta("wheels", [])
+	_check(wheels.size() == 4, "cars have four separate wheels (%d)" % wheels.size())
+	var before: Basis = wheels[2].basis
+	VehicleLibrary.animate(car, 8.0, 0.6, -4.0, -1, 0.1, 0.1)
+	_check(not wheels[2].basis.is_equal_approx(before), "wheels spin as the car drives")
+	var steered: float = wheels[0].basis.x.angle_to(Basis(Vector3.UP, float(wheels[0].get_meta("flip"))).x)
+	var rear_steer: float = wheels[2].basis.x.angle_to(Basis(Vector3.UP, float(wheels[2].get_meta("flip"))).x)
+	_check(steered > 0.1 and rear_steer < 0.01, "front wheels steer, rear wheels don't (%.2f, %.2f)" % [steered, rear_steer])
+	_check((car.get_meta("taillight") as StandardMaterial3D).emission_energy_multiplier > 1.0, "brake lights come on when braking")
+	_check((car.get_meta("indicator_L") as StandardMaterial3D).emission_energy_multiplier > 1.0 and (car.get_meta("indicator_R") as StandardMaterial3D).emission_energy_multiplier == 0.0, "the left indicator blinks for a left turn")
+	_check(car.find_children("*", "Label3D", true, false).any(func(l): return l.text.begins_with("CA ")), "cars carry a (made-up) Cape number plate")
+	VehicleLibrary.add_headlights(car, "sedan")
+	VehicleLibrary.night = 1.0
+	VehicleLibrary.animate(car, 8.0, 0.0, 0.0, 0, 0.1, 0.5)
+	_check(car.get_meta("beams").all(func(b): return b.visible), "headlight beams switch on at night")
+	VehicleLibrary.night = 0.0
+	garage.queue_free()
 
 
 func _test_brain_cycle() -> void:
@@ -836,7 +878,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 180:
 		await physics_frame
 	var slowest := car.speed
-	for i in 360:
+	for i in 900:   # the car may still be some way off: give it time to arrive and brake
 		slowest = minf(slowest, car.speed)
 		if car.speed < 0.2:
 			break
@@ -874,12 +916,13 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var dist := golf.global_position.distance_to(p0)
 	_check(top_speed > 6.0 and dist > 5.0, "W drives the car (%.1f m, top %.1f m/s, bumped into %s)" % [dist, top_speed, hits])
 	_check(player.global_position.distance_to(golf.global_position) < 0.1, "the player rides along with the car")
-	var before := district.events.recent.size()
+	var before: Array = district.events.recent.duplicate()
 	Input.action_press("shout")
 	await physics_frame
 	await physics_frame
 	Input.action_release("shout")
-	_check(district.events.recent.size() > before and district.events.recent[-1].kind == "car_horn", "Q hoots the horn")
+	# (The list keeps the last 8 events, and a traffic car may hoot right after: look for a new horn.)
+	_check(district.events.recent.any(func(e): return e.kind == "car_horn" and not before.has(e)), "Q hoots the horn")
 	var saved_pos := golf.global_position
 	_check(session.save_game() == "", "save while driving")
 	player.exit_vehicle()

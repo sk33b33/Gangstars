@@ -6,7 +6,11 @@ One object per vehicle (origin on the ground at the centre, front = -Y in Blende
   police (double-cab bakkie with canopy and light bar, 5.0 m; SAPS-inspired livery, no real crest).
 Material slots are roles Godot recolours or swaps: paint (body colour), glass, trim (black
 plastic), tyre, rim, chrome, headlight (shared night-glow lamp), taillight, plate_front (white),
-plate_rear (yellow), police_blue, police_yellow, lightbar (flashes when responding).
+plate_rear (yellow), police_blue, police_yellow, lightbar (flashes when responding),
+indicator_L / indicator_R (blink when turning).
+Wheels are separate meshes "<model>_tyre" (axle X, outer face +X) so Godot can spin and steer
+them; empties "<model>_axle_0..3" (front pair first) and "<model>_plate_front/rear" are
+children of each body and mark where they go.
 """
 import math
 import os
@@ -45,7 +49,11 @@ M = {
     "plate_front": mat("plate_front", "#f2f2ee", 0.6), "plate_rear": mat("plate_rear", "#f2c618", 0.6),
     "police_blue": mat("police_blue", "#123f8c", 0.4), "police_yellow": mat("police_yellow", "#f5c400", 0.4),
     "lightbar": mat("lightbar", "#2a6cff", 0.2),
+    "indicator_L": mat("indicator_L", "#e8901c", 0.3), "indicator_R": mat("indicator_R", "#e8901c", 0.3),
 }
+# Filled while a vehicle is built, turned into marker empties by finish():
+# wheels (x, y, radius, width) and plates (name, (x, y, z)).
+PENDING = {"wheels": [], "plates": []}
 
 
 def assign(o, name):
@@ -127,13 +135,12 @@ def band(o, z_lo, z_hi, material):
 
 
 def wheels(parts, wheelbase, track, radius=0.32, width=0.22):
+    """Records the four wheels (separate spinning meshes, see wheel_mesh) and adds the dark
+    wheel-arch lips to the body."""
     for y in (-wheelbase / 2, wheelbase / 2):
         for s in (1, -1):
             x = s * track / 2
-            parts.append(cyl((x, y, radius), radius, width, "tyre", seg=20))
-            parts.append(cyl((x + s * (width / 2 + 0.005), y, radius), radius * 0.62, 0.02, "rim", seg=16))
-            parts.append(cyl((x + s * (width / 2 + 0.012), y, radius), radius * 0.16, 0.02, "chrome", seg=8))
-            # Dark wheel-arch lip on the body side.
+            PENDING["wheels"].append((x, y, radius, width))
             bpy.ops.mesh.primitive_torus_add(major_segments=20, minor_segments=4, major_radius=radius + 0.05,
                                              minor_radius=0.035, location=(x + s * 0.02, y, radius), rotation=(0, math.pi / 2, 0))
             arch = bpy.context.active_object
@@ -145,14 +152,58 @@ def wheels(parts, wheelbase, track, radius=0.32, width=0.22):
             bm.to_mesh(arch.data)
             bm.free()
             parts.append(assign(arch, "trim"))
+            # Dark arch liner so you don't see daylight through the body above the wheel.
+            parts.append(box((x - s * 0.05, y, radius + 0.08), (0.08, radius * 2.1, 0.04), "trim"))
+
+
+def wheel_mesh(name, radius, width):
+    """One wheel at the origin, axle along X, outer face +X: tyre with a sidewall bulge, a
+    five-spoke rim and a chrome hub (the spokes make the spin readable)."""
+    parts = [cyl((0, 0, 0), radius, width, "tyre", seg=24)]
+    parts.append(cyl((0, 0, 0), radius * 0.93, width + 0.02, "tyre", seg=24))   # sidewall bulge
+    parts.append(cyl((width / 2 + 0.008, 0, 0), radius * 0.64, 0.012, "trim", seg=20))   # dark well behind the spokes
+    ring = cyl((width / 2 + 0.014, 0, 0), radius * 0.64, 0.016, "rim", seg=20)
+    inner = cyl((width / 2 + 0.014, 0, 0), radius * 0.54, 0.03, "rim", seg=20)
+    diff = ring.modifiers.new("cut", "BOOLEAN")
+    diff.operation = "DIFFERENCE"
+    diff.object = inner
+    bpy.context.view_layer.objects.active = ring
+    bpy.ops.object.modifier_apply(modifier=diff.name)
+    bpy.data.objects.remove(inner)
+    parts.append(ring)
+    for k in range(5):
+        a = k * 2 * math.pi / 5
+        spoke = box((0, 0, 0), (0.02, 0.05, radius * 0.56), "rim")
+        spoke.location = (width / 2 + 0.016, math.sin(a) * radius * 0.3, math.cos(a) * radius * 0.3)
+        spoke.rotation_euler = (-a, 0, 0)
+        bpy.context.view_layer.objects.active = spoke
+        bpy.ops.object.transform_apply(location=True, rotation=True)
+        parts.append(spoke)
+    parts.append(cyl((width / 2 + 0.024, 0, 0), radius * 0.16, 0.02, "chrome", seg=10))
+    for k in range(4):   # wheel nuts
+        a = k * math.pi / 2 + math.pi / 4
+        parts.append(cyl((width / 2 + 0.03, math.sin(a) * radius * 0.1, math.cos(a) * radius * 0.1), 0.012, 0.012, "chrome", seg=6))
+    bpy.ops.object.select_all(action="DESELECT")
+    for o in parts:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = parts[0]
+    bpy.ops.object.join()
+    o = bpy.context.active_object
+    o.name = o.data.name = name
+    return o
 
 
 def lights_and_plates(parts, front_y, rear_y, width, light_z, plate_z):
     for s in (1, -1):
         parts.append(box((s * (width / 2 - 0.22), front_y + 0.01, light_z), (0.34, 0.06, 0.13), "headlight", 0.015))
         parts.append(box((s * (width / 2 - 0.16), rear_y - 0.01, light_z), (0.22, 0.06, 0.16), "taillight", 0.015))
+        # Amber indicators: beside the headlights, inboard of the tail lights.
+        ind = "indicator_L" if s > 0 else "indicator_R"
+        parts.append(box((s * (width / 2 - 0.02), front_y + 0.03, light_z), (0.07, 0.06, 0.11), ind, 0.01))
+        parts.append(box((s * (width / 2 - 0.32), rear_y - 0.012, light_z), (0.07, 0.05, 0.13), ind, 0.01))
     parts.append(box((0, front_y - 0.005, plate_z), (0.52, 0.03, 0.12), "plate_front"))
     parts.append(box((0, rear_y + 0.005, plate_z), (0.52, 0.03, 0.12), "plate_rear"))
+    PENDING["plates"] += [("plate_front", (0, front_y - 0.022, plate_z)), ("plate_rear", (0, rear_y + 0.022, plate_z))]
     parts.append(box((0, front_y + 0.005, light_z), (width - 0.85, 0.05, 0.12), "trim", 0.01))   # grille
 
 
@@ -197,6 +248,25 @@ def finish(parts, name, offset_x):
     o.name = o.data.name = name
     bpy.ops.object.shade_smooth_by_angle(angle=math.radians(35))
     o.location.x = offset_x
+    # Marker empties (children of the body, so Godot reads their local positions): axle_0..3
+    # (never "wheel" in a name: Godot's importer turns those into VehicleWheel3D nodes)
+    # (front pair first) and the plate centres. The wheel itself is one shared mesh per model.
+    ws = sorted(PENDING["wheels"], key=lambda w: (w[1], -w[0]))
+    for i, (x, y, r, wd) in enumerate(ws):
+        e = bpy.data.objects.new("%s_axle_%d" % (name, i), None)
+        scene.collection.objects.link(e)
+        e.parent = o
+        e.location = (x, y, r)
+    for pname, at in PENDING["plates"]:
+        e = bpy.data.objects.new("%s_%s" % (name, pname), None)
+        scene.collection.objects.link(e)
+        e.parent = o
+        e.location = at
+    if ws:
+        w = wheel_mesh(name + "_tyre", ws[0][2], ws[0][3])
+        w.location = (offset_x, -8, ws[0][2])
+    PENDING["wheels"] = []
+    PENDING["plates"] = []
     return o
 
 

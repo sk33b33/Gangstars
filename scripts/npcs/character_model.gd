@@ -9,7 +9,11 @@ extends Node3D
 const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail"]
 const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
-	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan"]
+	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood"]
+## Painted face overlays (pxl textures); "none" hides the face paint.
+const FACES: PackedStringArray = ["face_m", "face_f", "face_old_m", "face_old_f", "face_stubble"]
+## Cloth slots: matte with a sheen (CharacterModel._recolour).
+const CLOTH_SLOTS: PackedStringArray = ["shirt", "forearm", "pants", "skirt", "dress", "cardigan", "apron", "hat"]
 ## House-dress prints (pxl textures in assets/textures/pxl).
 const PRINTS: PackedStringArray = ["print_rose", "print_blue", "print_sun", "print_teal", "print_lilac"]
 const WAVE_TIME := 1.8
@@ -50,19 +54,23 @@ var _look_target: Variant = null
 var _head_yaw := 0.0
 var _head_scale := 1.0
 var _hat: MeshInstance3D
+var _logo_mesh: MeshInstance3D
+var _logo := ""
 var _hair: Array[MeshInstance3D] = []
 
 
 ## opts: {hair_style, hair_color: Color, height (1.0 = 1.75 m), sleeves: "long"/"short",
 ##        figure: 0..1, heavy: 0..1, skirt: bool, accessories: Array[String], apron_color: Color,
 ##        dress: bool (long house dress; the shirt colour is its colour), print: one of PRINTS or "",
-##        cardigan_color, bag_color, shoe_color: Color}
+##        cardigan_color, bag_color, shoe_color, sole_color: Color, face: one of FACES,
+##        pants_style: ""/"denim"/"tracksuit", cap_logo: crew id (logo on the cap)}
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
 	# A rebuild (e.g. the player changing into crew colours) starts from a clean slate.
 	_hair = []
 	_hat = null
+	_logo_mesh = null
 	_hand = null
 	_holster = null
 	_chest = null
@@ -86,9 +94,21 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	var fabric: Variant = shirt
 	if dress and PRINTS.has(str(opts.get("print", ""))):
 		fabric = PixelMaterials.fabric(str(opts.print))
+	var legs: Variant = pants
+	match str(opts.get("pants_style", "")):
+		"denim":
+			legs = PixelMaterials.denim(pants)
+		"tracksuit":
+			legs = PixelMaterials.tracksuit(pants)
+	if skirt or dress:
+		legs = PixelMaterials.skin(skin.darkened(0.08))
+	var face := str(opts.get("face", "face_f" if float(opts.get("figure", 0.0)) > 0.5 else "face_m"))
+	_logo = str(opts.get("cap_logo", ""))
 	var colours := {
-		"skin": skin, "shirt": fabric, "pants": skin.darkened(0.08) if skirt or dress else pants,
-		"forearm": cardigan if extras.has("cardigan") else (fabric if opts.get("sleeves", "long") == "long" else skin),
+		"skin": skin, "shirt": fabric, "pants": legs,
+		"forearm": cardigan if extras.has("cardigan") else (fabric if opts.get("sleeves", "long") == "long" else PixelMaterials.skin(skin)),
+		"face_paint": PixelMaterials.face(face, skin) if FACES.has(face) else null,
+		"soles": opts.get("sole_color", Color("#ece8dc")),
 		"dress": fabric, "cardigan": cardigan, "bag": opts.get("bag_color", Color("#7a2e2a")), "acc_pink": Color("#f29bbd"),
 		"shoes": opts.get("shoe_color", Color("#1d1b24")), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
@@ -112,6 +132,11 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.visible = skirt
 		elif n == "Dress":
 			mi.visible = dress
+		elif n == "Face_paint":
+			mi.visible = FACES.has(face)
+		elif n == "Acc_cap_logo":
+			_logo_mesh = mi
+			mi.visible = false
 		elif n.begins_with("Acc_"):
 			var key := n.trim_prefix("Acc_")
 			if key.begins_with("cardigan"):
@@ -146,11 +171,18 @@ func _vest_lettering() -> void:
 
 
 ## Adds (or recolours) a cap, e.g. when someone joins the player's crew. Hides the hair.
-func set_hat(color: Color) -> void:
+func set_hat(color: Color, logo := "") -> void:
 	if _hat == null:
 		return
 	_hat.visible = true
-	_hat.set_surface_override_material(0, PixelMaterials.flat(color))
+	_hat.set_surface_override_material(0, PixelMaterials.cloth(color))
+	if not logo.is_empty():
+		_logo = logo
+	if _logo_mesh:
+		var tex := "logo_" + _logo
+		_logo_mesh.visible = not _logo.is_empty() and ResourceLoader.exists(PixelMaterials.TEX_DIR + tex + ".png")
+		if _logo_mesh.visible:
+			_logo_mesh.set_surface_override_material(0, PixelMaterials.panel(tex))
 	for h in _hair:
 		h.visible = false
 
@@ -315,7 +347,11 @@ func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
 		var key := m.resource_name if m else ""
 		if colours.has(key):
 			var c: Variant = colours[key]
-			mi.set_surface_override_material(i, c if c is Material else PixelMaterials.flat(c))
+			if c == null:
+				continue
+			if c is Color:
+				c = PixelMaterials.skin(c) if key == "skin" else (PixelMaterials.cloth(c) if CLOTH_SLOTS.has(key) else PixelMaterials.flat(c))
+			mi.set_surface_override_material(i, c)
 
 
 func _build_tree(player: AnimationPlayer) -> void:

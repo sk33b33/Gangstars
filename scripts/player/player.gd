@@ -192,8 +192,9 @@ func _physics_process(delta: float) -> void:
 
 
 ## Dresses the player (crew colours: shirt and cap). Keeps the weapon.
-func wear_colours(shirt: Color, cap: Color) -> void:
-	model.build(shirt, Color("#29384a"), Color("#8d5a3b"), cap, {"hair_style": "short", "height": 1.02, "sleeves": "short"})
+func wear_colours(shirt: Color, cap: Color, crew := "") -> void:
+	model.build(shirt, Color("#29384a"), Color("#8d5a3b"), cap, {"hair_style": "short", "height": 1.02, "sleeves": "short",
+		"pants_style": "denim", "face": "face_m", "cap_logo": crew})
 	if not weapon.is_empty():
 		model.set_weapon(weapon)
 

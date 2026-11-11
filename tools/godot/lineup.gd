@@ -19,6 +19,18 @@ func _run() -> void:
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = Color(0.62, 0.68, 0.78)
 	env.ambient_light_energy = 0.55
+	if args.has("cars") or args.has("sky"):
+		# A sky to reflect in the car paint and glass.
+		var sky := Sky.new()
+		var sm := ProceduralSkyMaterial.new()
+		sm.sky_top_color = Color("#3f7fc4")
+		sm.sky_horizon_color = Color("#bcd3e6")
+		sm.ground_horizon_color = Color("#bcd3e6")
+		sm.ground_bottom_color = Color("#6d675c")
+		sky.sky_material = sm
+		env.sky = sky
+		env.background_mode = Environment.BG_SKY
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
 	var we := WorldEnvironment.new()
 	we.environment = env
 	world.add_child(we)
@@ -35,12 +47,12 @@ func _run() -> void:
 	world.add_child(ground)
 	var dogs: Array = []
 	var looks := [
-		[Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"), {"hair_style": "short", "sleeves": "short"}, "wave", 0.0],
+		[Color("#f1eee8"), Color("#29384a"), Color("#8d5a3b"), Color("#a63a4c"), {"hair_style": "short", "sleeves": "short", "pants_style": "denim", "cap_logo": "vlakte_vipers", "face": "face_stubble"}, "wave", 0.0],
 		[Color("#d9534f"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "doek", "hair_color": Color("#2e8b57"), "figure": 1.0, "heavy": 0.5, "skirt": true, "accessories": ["apron", "glasses"], "apron_color": Color("#f4f1ea")}, "sit", 0.0],
 		[Color("#1d1b24"), Color("#2c2c34"), Color("#c58c62"), Color(0, 0, 0, 0), {"hair_style": "short", "hair_color": Color("#b8b4ac"), "accessories": ["collar", "glasses", "beard"]}, "talk", 0.0],
 		[Color("#5dade2"), Color("#1d1b24"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "ponytail", "figure": 0.9, "height": 0.95}, "lean", 0.0],
-		[Color("#7d3c98"), Color("#566573"), Color("#4a2f22"), Color(0, 0, 0, 0), {"hair_style": "beanie", "accessories": ["sunglasses", "chain"], "heavy": 0.4}, "guard", 0.0],
-		[Color("#27ae60"), Color("#784212"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "afro", "hair_color": Color("#1d1b24")}, "idle", 1.5],
+		[Color("#7d3c98"), Color("#566573"), Color("#4a2f22"), Color(0, 0, 0, 0), {"hair_style": "beanie", "accessories": ["chain", "hood"], "heavy": 0.4, "pants_style": "tracksuit"}, "guard", 0.0],
+		[Color("#27ae60"), Color("#784212"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "afro", "hair_color": Color("#1d1b24"), "pants_style": "tracksuit", "accessories": ["hood"]}, "idle", 1.5],
 	]
 	if args.has("named"):
 		# The named characters, exactly as the game dresses them (resident data + looks.json).
@@ -137,6 +149,11 @@ func _run() -> void:
 	elif args.has("dogs"):
 		cam.position = Vector3(0.2, 1.1, 3.6)
 		cam.look_at(Vector3(-0.3, 0.45, 1.2))
+	elif args.has("face"):
+		var who: Node3D = models[clampi(int(args.face), 0, models.size() - 1)][0]
+		var head := who.global_position + Vector3(0, 1.64 * who.scale.y, 0)
+		cam.position = head + Vector3(0.12, 0.02, 0.62)
+		cam.look_at(head)
 	elif args.has("close"):
 		cam.position = Vector3(-1.0, 1.55, 1.6)
 		cam.look_at(Vector3(-1.5, 1.45, 0))
@@ -146,7 +163,7 @@ func _run() -> void:
 	else:
 		cam.position = Vector3(0, 1.4, 5.2)
 		cam.look_at(Vector3(0, 0.95, 0))
-	cam.fov = 45 if args.has("close") else 60
+	cam.fov = 30 if args.has("face") else (45 if args.has("close") else 60)
 	cam.current = true
 	var frames := int(args.get("frames", "40"))
 	for f in frames:

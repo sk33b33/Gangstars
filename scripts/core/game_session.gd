@@ -129,7 +129,7 @@ func choose_crew(crew_id: String) -> bool:
 	progression.crew_id = crew_id
 	district.set_player_crew(crew_id)
 	districts.crew_home = crews.home(crew_id)
-	player.wear_colours(crews.colour(crew_id), crews.colour(crew_id).darkened(0.3))
+	player.wear_colours(crews.colour(crew_id), crews.colour(crew_id).darkened(0.3), crew_id)
 	# Ongoing perks start from neutral, so only the chosen crew's applies.
 	police.heat.gain_mult = 1.0
 	progression.cash_bonus = 1.0

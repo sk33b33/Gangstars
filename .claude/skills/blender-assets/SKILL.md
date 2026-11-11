@@ -63,6 +63,14 @@ untar to `~/opt`, link `~/bin/blender`. For Forward+ screenshots without a GPU: 
   - The sit pose assumes the character's origin is the middle of a 0.45 m seat. The lean pose assumes
     the origin is 0.3 m in front of a wall. `SpotRegistry` markers follow those conventions.
 
+## Gotchas found the hard way
+- Never put "wheel" (or other import hints like "-col", "-rigid") in an object name: Godot's glTF
+  importer turns it into a VehicleWheel3D and can rename meshes. Vehicles use `<model>_tyre` and
+  `<model>_axle_N` empties.
+- Empties parented to a mesh object come through as child Node3Ds: a cheap way to export marker
+  positions (axles, plates).
+- Primitives already have a UV layer; remove it before adding your own, or Godot uses the first.
+
 ## Adding a prop
 Write a `def my_prop(x): ...; return join(parts, "my_prop", (x, 0, 0))` in `build_props.py`, then add it
 to the build list. In game, use `PropLibrary.place(parent, "my_prop", pos, rot_y, paint_colour)`.

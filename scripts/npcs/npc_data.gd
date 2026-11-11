@@ -40,6 +40,9 @@ extends Resource
 @export var cardigan_color: Color = Color(0, 0, 0, 0)
 @export var bag_color: Color = Color(0, 0, 0, 0)
 @export var shoe_color: Color = Color(0, 0, 0, 0)
+@export var face_override: String = ""     # a CharacterModel.FACES name; "" = by figure and age
+@export var pants_style: String = ""       # "denim", "tracksuit", "plain" or "" (pick)
+@export var sole_color: Color = Color(0, 0, 0, 0)
 
 ## Hand-made looks for named characters, merged over generated data (see data/npcs/looks.json).
 const LOOKS_FILE := "res://data/npcs/looks.json"
@@ -53,9 +56,40 @@ func appearance() -> Dictionary:
 	var sk := skirt == 1 or (skirt == -1 and fig > 0.5 and h / 11 % 2 == 0)
 	var look := {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves,
 		"figure": fig, "heavy": hv, "skirt": sk, "accessories": Array(accessories), "apron_color": apron_color}
+	_everyday_look(look, h)
 	if dress == 1 or (dress == -1 and skirt == -1 and accessories.is_empty() and role == "resident" and fig > 0.5 and height >= 0.85 and h / 13 % 4 != 0):
 		_aunty_look(look, h)
 	return look
+
+
+## Faces, trousers, hoodies, soles and crew cap logos for everyone (hand-made looks can set
+## face, pants_style, sole_color; "hood" goes in accessories).
+func _everyday_look(look: Dictionary, h: int) -> void:
+	var grey := hair_color.s < 0.15 and hair_color.v > 0.5
+	var woman := float(look.figure) > 0.5
+	var kid := role == "kid" or height < 0.85
+	var face := face_override
+	if face.is_empty():
+		face = ("face_old_f" if woman else "face_old_m") if grey else ("face_f" if woman else "face_m")
+		if not woman and not grey and not kid and h / 61 % 3 == 0 and not accessories.has("beard"):
+			face = "face_stubble"
+	look.face = face
+	if role == "police":
+		look.sole_color = Color("#1d1b24")
+		return
+	var style := pants_style
+	if style.is_empty():
+		var pick := h / 67 % 3 if not grey else 2
+		if role == "crew":
+			pick = h / 67 % 2
+		style = ["denim", "tracksuit", ""][pick]
+	look.pants_style = style
+	look.sole_color = sole_color if sole_color.a > 0.0 else (Color("#2a2622") if grey else Color("#ece8dc"))
+	if not woman and not grey and not kid and accessories.is_empty() and h / 71 % (2 if role == "crew" else 4) == 0:
+		var acc: Array = look.accessories
+		acc.append("hood")
+	if role == "crew" and not faction_id.is_empty():
+		look.cap_logo = faction_id
 
 
 const SLIPPERS := ["#f29bbd", "#7fc3e8", "#1d1b24", "#f4f4f0", "#c8a27a", "#e2585e"]
@@ -138,6 +172,9 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.cardigan_color = DataFiles.to_color(d.get("cardigan_color"), Color(0, 0, 0, 0))
 	n.bag_color = DataFiles.to_color(d.get("bag_color"), Color(0, 0, 0, 0))
 	n.shoe_color = DataFiles.to_color(d.get("shoe_color"), Color(0, 0, 0, 0))
+	n.face_override = str(d.get("face", ""))
+	n.pants_style = str(d.get("pants_style", ""))
+	n.sole_color = DataFiles.to_color(d.get("sole_color"), Color(0, 0, 0, 0))
 	return n
 
 

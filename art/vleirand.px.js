@@ -350,3 +350,68 @@ for (const [name, [base, petal, centre, leaf, bud]] of Object.entries(PRINTS)) {
     stamp("_leaf", 6, 5, { swap: sw }), stamp("_leaf", 13, 13, { swap: sw, flip: "x" }),
     stamp("_leaf", 6, 13, { swap: sw }), stamp("_leaf", 13, 6, { swap: sw, flip: "x" }))
 }
+
+// ------------------------------------------------------------------ painted faces
+// 40x40 overlays on the face shell (front projection, 5 mm per pixel; eyes at (12.8, 14.4) and
+// (27.2, 14.4), mouth at (20, 29)). Godot multiplies them by the skin colour, so greys darken
+// and pinks warm any skin tone. Transparent elsewhere (the modelled eyes, nose and brows show).
+function face(name, o) {
+  sprite(name, { w: 40, h: 40 }, (c) => {
+    const both = (x, y, col) => { c.px(x, y, col); c.px(39 - x, y, col) }
+    const row = (y, x0, x1, col) => { for (let x = x0; x <= x1; x++) both(x, y, col) }
+    const lid = "#3a302c", soft = "#9a8a84", line = "#7d6c66"
+    // upper lids (outer corner at the image edge side), lower lash line
+    row(11, 10, 15, lid); both(9, 12, lid); both(16, 12, lid)
+    if (o.lashes) { row(10, 10, 14, lid); both(8, 11, lid); both(7, 10, lid) }
+    if (o.old) {
+      row(19, 11, 14, soft)                                   // bags under the eyes
+      both(7, 13, line); both(7, 15, line); both(6, 14, line)  // crow's feet
+      row(5, 14, 19, soft); row(7, 15, 19, soft)              // forehead lines
+      both(15, 25, line); both(14, 26, line); both(14, 27, line)  // smile lines
+    }
+    // nostrils, philtrum, lips, chin
+    both(18, 25, "#4a3a36"); c.px(19, 26, "#a89088"); c.px(20, 26, "#a89088")
+    const up = o.lips ? "#a8605c" : "#ae7c74", low = o.lips ? "#c27a74" : "#bf8e86"
+    if (o.lips) { row(28, 15, 19, up); both(17, 27, up); both(18, 27, up) }
+    row(29, 16, 19, "#5a3a36")
+    row(30, 16, 19, low); if (o.lips) row(31, 17, 19, low)
+    row(34, 18, 19, "#b8a098")
+    if (o.blush) { for (const y of [21, 22]) row(y, 9, 10, "#f0c8c0") }
+    if (o.stubble) {
+      for (let y = 25; y <= 37; y++) for (let x = 8; x <= 19; x++) {
+        const lips = y >= 27 && y <= 31 && x >= 15
+        const jaw = y >= 32 || x <= 12 || x >= 14
+        if (!lips && jaw && (x * x * 7 + y * 31 + x * y * 3) % 7 === 0 && !(y < 27 && x > 13)) both(x, y, "#9a908a")
+      }
+    }
+  })
+}
+face("face_m", {})
+face("face_f", { lashes: true, lips: true })
+face("face_old_m", { old: true })
+face("face_old_f", { old: true, lashes: true, lips: true })
+face("face_stubble", { stubble: true })
+
+// Denim twill (tinted by the trouser colour) and tracksuit side stripes (a mask: white = stripe).
+sprite("denim", { w: 16, h: 16 }, (c) => {
+  c.rect(0, 0, 16, 16, "#ffffff")
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    if ((x + y) % 4 === 0) c.px(x, y, "#d4d8de")
+    else if ((x + y) % 4 === 2 && (x * 3 + y) % 5 === 0) c.px(x, y, "#e8ebee")
+  }
+  c.hline(0, 15, 16, "#c8ccd2")
+})
+sprite("tracksuit_stripes", { w: 32, h: 4 },
+  rect(0, 0, 32, 4, "#000000"), rect(13, 0, 2, 4, "#ffffff"), rect(17, 0, 2, 4, "#ffffff"))
+
+// Crew cap logos (12x12, outlined): Tortel (shell), Stylers (S), Dune Cruisers (wave), Rock Royals (crown).
+sprite("logo_tortel_crew", { w: 12, h: 12 },
+  circ(5, 6, 5, "#1d1b24"), circ(5, 6, 4, "#f4f4f0"), rect(3, 4, 2, 2, "#1d1b24"), rect(6, 4, 2, 2, "#1d1b24"), rect(4, 7, 3, 2, "#1d1b24"))
+sprite("logo_vlakte_vipers", { w: 12, h: 12 },
+  rect(0, 0, 12, 12, "#1d1b24"), rect(3, 2, 6, 2, "#f4f4f0"), rect(3, 2, 2, 4, "#f4f4f0"), rect(3, 5, 6, 2, "#f4f4f0"),
+  rect(7, 5, 2, 4, "#f4f4f0"), rect(3, 8, 6, 2, "#f4f4f0"))
+sprite("logo_duin_boys", { w: 12, h: 12 },
+  rect(0, 0, 12, 12, "#1d1b24"), line(1, 8, 4, 4, "#f2c43a"), line(4, 4, 7, 7, "#f2c43a"), line(7, 7, 10, 3, "#f2c43a"), rect(1, 9, 10, 1, "#f4f4f0"))
+sprite("logo_klipspringers", { w: 12, h: 12 },
+  rect(0, 0, 12, 12, "#1d1b24"), rect(2, 5, 8, 4, "#f2c43a"), px(2, 3, "#f2c43a"), px(2, 4, "#f2c43a"), px(5, 2, "#f2c43a"),
+  rect(5, 3, 2, 2, "#f2c43a"), px(9, 3, "#f2c43a"), px(9, 4, "#f2c43a"))

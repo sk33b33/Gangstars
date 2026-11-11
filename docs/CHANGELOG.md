@@ -4,6 +4,36 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Detail pass: faces, clothes and vehicles (2026-11-11)
+- **Painted faces:** a thin face-paint shell with pixel-art overlays tinted by skin tone:
+  - eyelids and lashes;
+  - lips (the old block mouth is gone);
+  - wrinkles, bags and smile lines for older people;
+  - stubble for some men.
+  Picked by figure and age; `face` in looks.json overrides.
+- **Materials:**
+  - Skin: softer highlights, with subsurface scattering on Forward+.
+  - Cloth: matte with a faint sheen.
+  - Caps: cloth too.
+- **Clothes:**
+  - Trousers can be denim twill, tracksuit pants with white side stripes, or plain.
+  - Hoodies have a hood, kangaroo pocket and drawstrings.
+  - Shoes have white soles (dark for older people and police).
+  - Crew caps carry a made-up crew logo, and so does the player's cap once you join.
+- **Vehicles:**
+  - Separate wheels with five-spoke rims spin with speed, and the front pair steers.
+  - The body dips under braking and rolls in turns.
+  - Paint is glossy with a clear coat, windscreens reflect the sky, and arch liners are dark.
+  - Brake lights come on when braking and tail lights glow at night.
+  - Amber indicators blink before turns.
+  - Moving cars get headlight beams at night.
+  - Made-up Cape number plates ("CA 123-456").
+- **Pipeline notes:** Blender empties mark axles and plates. Names avoid "wheel", because Godot's
+  importer turns those into VehicleWheel3D. Leg UVs wrap each leg once, with the seam inside.
+  Arm UVs follow the slanted arm.
+- **Tests:** faces, trouser variety, hoodies, cap logos, wheels spin and steer, brake lights,
+  indicators, plates, night beams.
+
 ### The Mitchells Plain aunty look (2026-11-11)
 - Most grown women residents (16 of 28 across the three suburbs) now dress in the classic
   Mitchells Plain aunty style:

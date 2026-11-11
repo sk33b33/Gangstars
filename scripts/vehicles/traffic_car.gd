@@ -35,6 +35,7 @@ var _stop_timer := 0.0
 var _served_stop := -1
 var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
+var _anim_time := 0.0
 var _full_radius := 2.2
 var blocker: Node3D
 ## Model override (e.g. "police"); "" = taxi or a civilian model from the id.
@@ -63,6 +64,7 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 	var length := 5.2 if taxi else 4.0
 	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length,
 		model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
+	VehicleLibrary.add_headlights(body, model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.75, 1.5, length)
@@ -111,16 +113,36 @@ func _physics_process(delta: float) -> void:
 	else:
 		blocked_time = 0.0
 	_was_blocked = blocked
+	var before := speed
+	var yaw_before := rotation.y
 	speed = move_toward(speed, desired, (ACCEL if desired > speed else BRAKE) * delta)
 	if to.length() > 0.01:
 		var dir := to.normalized()
 		global_position += dir * minf(speed * delta, to.length())
 		rotation.y = lerp_angle(rotation.y, atan2(dir.x, dir.z), clampf(delta * 5.0, 0.0, 1.0))
 		obstacle.velocity = dir * speed
+	_animate_body(delta, before, yaw_before)
 	# Moving cars push walkers aside via avoidance; a waiting car has no avoidance footprint,
 	# so a pedestrian it is waiting for can always walk on (no car <-> pedestrian deadlock).
 	obstacle.radius = lerpf(1.0, _full_radius, clampf(speed / cruise_speed, 0.0, 1.0))
 	obstacle.avoidance_enabled = speed > 0.5 and visible
+
+
+## Wheels, suspension, brake lights and indicators (a turn coming up in the next two points).
+func _animate_body(delta: float, speed_before: float, yaw_before: float) -> void:
+	if body == null or delta <= 0.0 or not visible:
+		return
+	_anim_time += delta
+	var yaw_rate := angle_difference(yaw_before, rotation.y) / delta
+	var steer := clampf(yaw_rate * 2.8 / maxf(speed, 1.0), -1.0, 1.0)
+	var indicate := 0
+	if curve_points.has(_i) or curve_points.has((_i + 1) % route.size()):
+		var ahead := route[(_i + 2) % route.size()] - global_position
+		var f := global_basis.z
+		var side := ahead.dot(Vector3(f.z, 0, -f.x))   # + = to the car's left
+		if absf(side) > 1.5:
+			indicate = -1 if side > 0.0 else 1
+	VehicleLibrary.animate(body, speed, steer, (speed - speed_before) / delta, indicate, delta, _anim_time)
 
 
 ## Anything inside the lane box ahead (car-local +Z is forward).

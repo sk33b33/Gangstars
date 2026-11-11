@@ -54,6 +54,78 @@ static func fabric(tex_name: String) -> StandardMaterial3D:
 	return mat
 
 
+## Skin: softer highlights and (Forward+) a little subsurface scattering.
+static func skin(color: Color) -> StandardMaterial3D:
+	var key := "k|%s" % color.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.55
+	mat.metallic_specular = 0.35
+	mat.subsurf_scatter_enabled = true
+	mat.subsurf_scatter_strength = 0.25
+	_cache[key] = mat
+	return mat
+
+
+## Plain cloth: matte with a faint sheen at grazing angles.
+static func cloth(color: Color) -> StandardMaterial3D:
+	var key := "t|%s" % color.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	mat.roughness = 0.95
+	mat.metallic_specular = 0.3
+	mat.rim_enabled = true
+	mat.rim = 0.2
+	mat.rim_tint = 0.7
+	_cache[key] = mat
+	return mat
+
+
+## Denim twill in the trouser colour (character cloth UVs, four repeats round each leg).
+static func denim(color: Color) -> StandardMaterial3D:
+	var key := "d|%s" % color.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var mat := _base("denim", color, false)
+	mat.uv1_scale = Vector3(4, 1, 1)
+	mat.roughness = 0.95
+	_cache[key] = mat
+	return mat
+
+
+## Tracksuit trousers: the trouser colour with two white stripes down the outside of each leg.
+static func tracksuit(color: Color) -> StandardMaterial3D:
+	var key := "r|%s" % color.to_html()
+	if _cache.has(key):
+		return _cache[key]
+	var mat := cloth(color).duplicate() as StandardMaterial3D
+	var stripes: Texture2D = load(TEX_DIR + "tracksuit_stripes.png")
+	mat.detail_enabled = true
+	mat.detail_mask = stripes
+	mat.detail_albedo = stripes
+	mat.detail_blend_mode = BaseMaterial3D.BLEND_MODE_MIX
+	mat.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+	mat.roughness = 0.6   # shiny polyester
+	_cache[key] = mat
+	return mat
+
+
+## Painted face overlay (eyelids, lips, wrinkles), multiplied by the skin colour.
+static func face(tex_name: String, skin_color: Color) -> StandardMaterial3D:
+	var key := "a|%s|%s" % [tex_name, skin_color.to_html()]
+	if _cache.has(key):
+		return _cache[key]
+	var mat := _base(tex_name, skin_color, true)
+	mat.cull_mode = BaseMaterial3D.CULL_BACK
+	mat.roughness = 0.55
+	_cache[key] = mat
+	return mat
+
+
 ## Shared streetlight/window glow material; DayNight drives its emission energy.
 static func lamp() -> StandardMaterial3D:
 	if _cache.has("lamp"):

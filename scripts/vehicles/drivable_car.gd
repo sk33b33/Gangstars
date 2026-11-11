@@ -20,6 +20,8 @@ var driver: Node3D
 var speed := 0.0
 var interactable: Interactable
 var obstacle: NavigationObstacle3D
+var body: Node3D
+var _anim_time := 0.0
 
 
 func setup(id: String, p_name: String, color: Color) -> void:
@@ -28,7 +30,8 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	name = id
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | TrafficCar.LAYER_VEHICLES
-	StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, VehicleLibrary.civilian_for(id))
+	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, VehicleLibrary.civilian_for(id))
+	VehicleLibrary.add_headlights(body, VehicleLibrary.civilian_for(id))
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.85, 1.4, 4.0)
@@ -74,6 +77,9 @@ func _physics_process(delta: float) -> void:
 	else:
 		speed = move_toward(speed, 0.0, DRAG * delta)
 	speed = clampf(speed, -REVERSE_SPEED, MAX_SPEED)
+	_anim_time += delta
+	var braking := -1.0 if (throttle < 0.0 and speed > 0.2) or (throttle > 0.0 and speed < -0.2) else 0.0
+	VehicleLibrary.animate(body, speed, steer, braking * 4.0 + throttle * 2.0 * (1.0 + braking), 0, delta, _anim_time)
 	rotation.y += steer * STEER_RATE * clampf(speed / 5.0, -1.0, 1.0) * delta
 	var forward := global_basis.z
 	velocity.x = forward.x * speed
