@@ -4,6 +4,24 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Sound and music (2026-11-11)
+- **Music, made in code:** three made-up radio stations, each a seamless 4-bar loop synthesized
+  at runtime (no audio files):
+  - *Plain FM*: a kwaito/house groove.
+  - *Spine Road Jazz*: walking bass and mellow keys.
+  - *Gospel 101*: organ and claps.
+- **Car radio:** it plays while you drive. **R / D-pad down** cycles the stations and off.
+- **A Music bus:** with its own "Music & radio" volume slider in the pause menu.
+- **The smokkies play music** on smokkie nights (17:00–23:00) at Mavis', Doreen's and Ma
+  Lena's, and all around you when you're inside one.
+- **Street life:** minibus taxis hoot at the Lentegeur and Town Centre ranks, stallholders call
+  out at the market, and the Rocklands hall bell rings at 08:00, 12:00 and 18:00.
+- **Voices:** when people greet or chat, you hear a made-up gibberish voice. It's pitched per
+  person, lighter for women, and only heard close by.
+- **Tests:** Music bus, the three station loops, radio on while driving / cycles to off / stops
+  when you get out, smokkie music at night, the sound spots, voices.
+- **Also:** Slang's stays at the park and den are shorter (25 minutes), so he moves about more.
+
 ### The story: choices that shape the Plain (2026-11-11)
 - **Dialogue with choices:** a new `dialogue` mission objective opens a story scene (speaker,
   lines, two choices) when you talk to that person (`data/story/scenes.json`). A choice

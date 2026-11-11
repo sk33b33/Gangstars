@@ -16,7 +16,7 @@
         {
           "activity": "socializing",
           "destination": "poi_park",
-          "duration": 40,
+          "duration": 18,
           "window": [
             10,
             23
@@ -24,8 +24,17 @@
         },
         {
           "activity": "guard",
+          "destination": "poi_court",
+          "duration": 12,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "guard",
           "destination": "vipers_den:door",
-          "duration": 35
+          "duration": 18
         }
       ],
       "lines": [
