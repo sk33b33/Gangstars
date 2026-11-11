@@ -4,6 +4,26 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Varied interiors: bedrooms, house styles, dens to raid, police posts (2026-11-11)
+- **Every home has a bedroom** (bed, wardrobe, rug, lamp) through a doorway next to the lounge
+  and kitchen. The safehouse bed is in there now.
+- **Styles by house type:**
+  - Rocklands cottages: whitewash and floorboards.
+  - Double-storeys: a staircase up the wall (upstairs isn't open).
+  - Lentegeur flats and row houses: their own touches.
+- **Rival crew places:**
+  - A rival crew's house (hostile), or a crew den, opens when nobody's home.
+  - Inside are their couch, TV, crates, their tag on the wall and the **stash**.
+  - Raiding it gives R150–300 and 3 bankies, +3 reputation, and weakens their corners in that
+    suburb. Once a day per place.
+  - Your own crew's den is yours to hang out in.
+- **Police posts:**
+  - Walk in to a charge office counter with a desk officer, benches and a holding cell.
+  - Pay R80 a heat star to clear your heat.
+  - You can't walk in with 2+ stars.
+- **Tests:** bedroom, rival place open when empty, raid (and only once a day), police post
+  refusing you at high heat, paying fines clears heat.
+
 ### A deeper hustle (2026-11-11)
 - **More smokkies:** Doreen's smokkie in Lentegeur (12:00–24:00) and Ma Lena's tavern in
   Rocklands (12:00–23:00). Both are houses that used to be empty, with a sign over the door and

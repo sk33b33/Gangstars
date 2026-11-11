@@ -22,6 +22,10 @@ var current := ""
 var room: Node3D
 var spots := {}
 var shebeen_door: Interactable
+var landmarks: Dictionary = {}      # place id -> "den" | "police" (crew dens, police posts)
+var _raided: Dictionary = {}        # place id -> game day it was raided
+var _entry_pos := Vector3.ZERO
+var _entry_yaw := 0.0
 
 var _exit_pos := Vector3.ZERO
 var _exit_yaw := 0.0
@@ -53,6 +57,45 @@ func setup(p_session: GameSession, p_district: District, p_player: Player, overl
 		shebeen_door.on_interact = func(): return ""
 		district.add_child(shebeen_door)
 		shebeen_door.global_position = district.destinations.anchor_position("shebeen:door") + Vector3(0, 1.0, 0)
+	_add_landmark_doors()
+
+
+## Doors for crew dens and police posts.
+func _add_landmark_doors() -> void:
+	for kind in ["crew_den", "police_post"]:
+		for door_id in district.destinations.ids_of_kind(kind):
+			if not door_id.ends_with(":door"):
+				continue
+			var id := door_id.trim_suffix(":door")
+			landmarks[id] = "den" if kind == "crew_den" else "police"
+			var it := Interactable.new()
+			it.name = "Door_" + id
+			it.kind = "door"
+			it.target = id
+			it.radius = 1.3
+			it.prompt = "Go into the police post" if kind == "police_post" else "Go into the den"
+			it.on_interact = func(): return ""
+			district.add_child(it)
+			it.global_position = district.destinations.anchor_position(door_id) + Vector3(0, 1.0, 0)
+
+
+## The crew a den or a crew house belongs to ("" if none): the faction of whoever lives there.
+func crew_of(place_id: String) -> String:
+	for r: Resident in district.residents.values():
+		if r.data.home_id == place_id and r.data.role == "crew":
+			return r.data.faction_id
+	return ""
+
+
+func _home_occupied(place_id: String) -> bool:
+	for r: Resident in district.residents.values():
+		if r.data.home_id == place_id and r.is_inside and not r.is_down():
+			return true
+	return false
+
+
+func is_landmark(place_id: String) -> bool:
+	return landmarks.has(place_id)
 
 
 func is_inside() -> bool:
@@ -79,9 +122,20 @@ func why_not(place_id: String) -> String:
 			var v: Dictionary = dealing.venues[place_id]
 			return "%s is closed. It opens at %02d:00." % [str(v.name), int(v.hours[0])]
 		return ""
+	if landmarks.get(place_id) == "police":
+		if session.police and session.police.heat.level() >= 2:
+			return "Not with SAPS after you."
+		return ""
+	if landmarks.get(place_id) == "den":
+		var crew := crew_of(place_id)
+		if crew != session.progression.crew_id and _home_occupied(place_id):
+			return "Voices inside the %s den. Not now." % district.crews.display_name(crew)
+		return ""
 	var house := district.registry.get_house(place_id)
 	if house == null:
 		return "There's no way in."
+	if house.ownership == "hostile":
+		return "Someone's home. Not now." if _home_occupied(place_id) else ""
 	if float(_welcomes.get(place_id, -1.0)) < minutes():
 		return "Knock first."
 	return ""
@@ -108,7 +162,15 @@ func enter(place_id: String) -> String:
 		return why
 	var kind := "home"
 	var origin := Vector3.ZERO
-	if place_id == SHEBEEN:
+	var style := ""
+	_entry_pos = player.global_position
+	_entry_yaw = player.pivot.rotation.y
+	if is_landmark(place_id):
+		kind = str(landmarks[place_id])
+		origin = district.destinations.anchor_position(place_id + ":door")
+		_exit_pos = _entry_pos
+		_exit_yaw = _entry_yaw + PI
+	elif place_id == SHEBEEN:
 		kind = "shebeen"
 		var door := district.destinations.anchor_position("shebeen:door")
 		var out := (district.destinations.anchor_position("poi_shebeen") - door)
@@ -124,6 +186,15 @@ func enter(place_id: String) -> String:
 		kind = "safehouse" if place_id == GameSession.SAFEHOUSE_ID else "home"
 		if session.dealing and session.dealing.is_venue(place_id):
 			kind = "shebeen"   # a house smokkie
+		elif plot.data.ownership == "hostile":
+			kind = "den"       # a rival crew's house: their stash
+		match plot.data.kit:
+			"cottage":
+				style = "cottage"
+			"flats", "row_house":
+				style = "flat"
+			"double_semi", "double_garage":
+				style = "double"
 		var out := plot.global_basis.z
 		_exit_pos = plot.door_position() + out * 0.6
 		_exit_yaw = atan2(-out.x, -out.z) + PI
@@ -137,7 +208,9 @@ func enter(place_id: String) -> String:
 	var sign := "sign_shebeen"
 	if session.dealing and session.dealing.is_venue(place_id):
 		sign = str(session.dealing.venues[place_id].get("sign", sign))
-	spots = InteriorBuilder.build(room, kind, absi(place_id.hash()), sign)
+	if kind == "den":
+		sign = str(TurfWar.TAGS.get(crew_of(place_id), ""))
+	spots = InteriorBuilder.build(room, kind, absi(place_id.hash()), sign, style)
 	current = place_id
 	_add_people(place_id, kind)
 	_add_fittings(kind)
@@ -221,12 +294,54 @@ func _add_fittings(kind: String) -> void:
 		_interactable("Bed", "Rest (safehouse)", spots.bed, func():
 			session.open_safehouse_menu()
 			return "")
+	if kind == "den":
+		var crew := crew_of(current)
+		if crew == session.progression.crew_id and not crew.is_empty():
+			_interactable("Stash", "Your crew's stash", spots.stash, func(): return "Your crew's stash. Nothing to take from your own.")
+		else:
+			_interactable("Stash", "Raid the %s stash" % district.crews.display_name(crew) if not crew.is_empty() else "Search the place", spots.stash, raid.bind(current))
+	if kind == "police":
+		_interactable("Desk", "Pay your fines (clears heat)", spots.desk, pay_fines)
 	if kind == "shebeen" and session.dealing:
 		var v: Dictionary = session.dealing.venues.get(current, {"name": "the smokkie"})
 		var counter := _interactable("Counter", "Serve at %s's counter" % str(v.name).trim_suffix("'s smokkie").trim_suffix(" smokkie"), spots.counter,
 			session.dealing.serve_counter.bind(current))
 		counter.kind = "counter"
 		counter.target = current
+
+
+## Raid a rival crew's stash: once a day per place. Cash and bankies; their corners in that
+## suburb weaken; word gets round (reputation).
+func raid(place_id: String) -> String:
+	var day := district.director.clock.day
+	if int(_raided.get(place_id, -1)) == day:
+		return "Already cleaned out. Come back another day."
+	_raided[place_id] = day
+	var crew := crew_of(place_id)
+	var cash := 150 + absi((place_id + str(day)).hash()) % 151
+	session.progression.add_cash(cash)
+	session.progression.add_reputation(3)
+	if session.dealing:
+		session.dealing.state.add_stock("weed", 3)
+	var area := district.area_at(room.global_position) if room else ""
+	if session.turf and not crew.is_empty():
+		for id in session.turf.state.order:
+			if session.turf.state.owner(id) == crew and session.turf.area_of(id) == area:
+				session.turf.state.corners[id].control = maxf(1.0, float(session.turf.state.corners[id].control) - 10.0)
+	return "You clean out the %s stash: R%d and 3 bankies. They'll be furious." % [district.crews.display_name(crew) if not crew.is_empty() else "", cash]
+
+
+## At the police post: pay R80 per heat star to clear it.
+func pay_fines() -> String:
+	var police: PoliceDispatch = session.police
+	var level := police.heat.level()
+	if level == 0:
+		return "\"Nothing on your name today.\""
+	var cost := 80 * level
+	if not session.progression.spend(cost):
+		return "\"R%d. Come back when you have it.\"" % cost
+	police.heat.clear()
+	return "You pay R%d in fines. Heat cleared." % cost
 
 
 func _interactable(n: String, prompt: String, at: Vector3, fn: Callable) -> Interactable:
@@ -258,6 +373,26 @@ func _add_people(place_id: String, kind: String) -> void:
 			for r: Resident in regulars.slice(0, seats.size() + stands.size()):
 				var sitting := not seats.is_empty()
 				_stand_in(r, seats.pop_front() if sitting else stands.pop_front(), sitting)
+		return
+	if kind == "police":
+		for r: Resident in district.residents.values():
+			if r.data.role == "police" and r.data.home_id == place_id and not r.is_down() and r.is_inside:
+				_stand_in(r, spots.host, false)
+				return
+		# Nobody of theirs in: the desk officer.
+		var m := CharacterModel.new()
+		m.name = "DeskOfficer"
+		room.add_child(m)
+		m.build(Color("#9db4d6"), Color("#2b3b63"), Color("#6b4430"), Color(0, 0, 0, 0),
+			{"hair_style": "short", "sleeves": "short", "accessories": ["police_cap", "police_vest", "dutybelt"], "face": "face_m"})
+		m.position = spots.host.pos
+		m.rotation.y = spots.host.yaw
+		_stand_ins.append({"model": m, "resident": null, "interactable": null})
+		return
+	if kind == "den":
+		for r: Resident in district.residents.values():
+			if r.data.home_id == place_id and r.is_inside and not r.is_down() and not seats.is_empty():
+				_stand_in(r, seats.pop_front(), true)
 		return
 	var house := district.registry.get_house(place_id)
 	if house == null:
@@ -313,7 +448,9 @@ func _process(delta: float) -> void:
 	# Someone who heads out leaves the room (only home occupants; Mavis stays at her bar).
 	for s in _stand_ins.duplicate():
 		var r: Resident = s.resident
-		if not (session.dealing and session.dealing.is_venue(current)) and (not r.is_inside or r.is_down()):
+		if r == null:
+			continue
+		if not (session.dealing and session.dealing.is_venue(current)) and landmarks.get(current) != "police" and (not r.is_inside or r.is_down()):
 			s.model.queue_free()
 			_stand_ins.erase(s)
 

@@ -497,6 +497,9 @@ func _on_door(house_id: String) -> String:
 			out.append("%s (%s)" % [r.data.display_name, r.destinations.display_name(r.target_id)])
 	if house.ownership == "hostile":
 		if home.is_empty():
+			if interiors:
+				enter_request = house_id
+				return "Nobody home at %s. You slip in round the back." % where
 			return "Nobody answers at %s. Someone has sprayed TORTEL on the gate." % where
 		return "A voice behind the gate at %s: \"Wrong house, bru. Walk.\"" % where
 	if not home.is_empty():

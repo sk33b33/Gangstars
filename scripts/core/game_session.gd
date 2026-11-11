@@ -309,7 +309,7 @@ func _on_interacted(target: Interactable, base_message: String) -> void:
 	hud.show_message(text)
 	if target.kind == "vehicle" and district.vehicles.has(target.target):
 		player.enter_vehicle(district.vehicles[target.target])
-	if target.kind == "door" and (target.target == SAFEHOUSE_ID or dealing.is_venue(target.target) \
+	if target.kind == "door" and (target.target == SAFEHOUSE_ID or dealing.is_venue(target.target) or interiors.is_landmark(target.target) \
 			or district.enter_request == target.target):
 		district.enter_request = ""
 		var why := interiors.enter(target.target)

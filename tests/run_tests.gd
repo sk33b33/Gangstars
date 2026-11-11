@@ -1594,11 +1594,50 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 	for i in 40:
 		await physics_frame
 	_check(not interiors.is_inside(), "the room is dropped when you're moved out")
-	# Knocking on a hostile house never lets you in.
+	# Homes have a bedroom; dens can be raided; the police post takes your fines.
+	district.director.clock.set_hour(12.0)
+	interiors.discard()
+	player.global_position = safe.door_position() + safe.global_basis.z + Vector3(0, 0.1, 0)
+	interiors.enter(GameSession.SAFEHOUSE_ID)
+	_check(interiors.room.find_children("bed", "", true, false).size() == 1 and interiors.room.find_children("wardrobe", "", true, false).size() == 1,
+		"homes have a bedroom (bed, wardrobe) through a doorway")
+	interiors.leave()
+	var raid_target := ""
 	for id in district.plots:
-		if district.registry.get_house(id).ownership == "hostile":
-			_check(not interiors.why_not(id).is_empty(), "no way into a hostile house")
+		if district.registry.get_house(id).ownership == "hostile" and interiors.why_not(id).is_empty():
+			raid_target = id
 			break
+	for id in interiors.landmarks:
+		if raid_target.is_empty() and interiors.landmarks[id] == "den" and interiors.crew_of(id) != session.progression.crew_id and interiors.why_not(id).is_empty():
+			raid_target = id
+	if not raid_target.is_empty():
+		var cash0 := session.progression.cash
+		interiors.enter(raid_target)
+		_check(interiors.current == raid_target and interiors.room.has_node("Stash"), "you can get into a rival crew's place when nobody's home")
+		var stash: Interactable = interiors.room.get_node("Stash")
+		_check(stash.interact(player).begins_with("You clean out") and session.progression.cash > cash0, "raid their stash for cash and bankies")
+		_check(stash.interact(player).begins_with("Already"), "once a day")
+		interiors.leave()
+	else:
+		_check(true, "(no rival place empty right now to raid)")
+	var post := ""
+	for id in interiors.landmarks:
+		if interiors.landmarks[id] == "police":
+			post = id
+			break
+	_check(not post.is_empty(), "police posts have a door")
+	session.police.heat.clear()
+	session.police.heat.add(2.5)
+	_check(not interiors.why_not(post).is_empty(), "not into the police post with SAPS after you")
+	session.police.heat.clear()
+	session.police.heat.add(1.0)
+	session.progression.add_cash(200)
+	var cash1 := session.progression.cash
+	interiors.enter(post)
+	_check(interiors.current == post and interiors.room.has_node("Desk"), "inside the police post: the charge office")
+	var desk: Interactable = interiors.room.get_node("Desk")
+	_check(desk.interact(player).begins_with("You pay") and session.police.heat.level() == 0 and session.progression.cash == cash1 - 80, "pay R80 a star to clear your heat")
+	interiors.leave()
 
 
 func _test_hustle_units() -> void:
