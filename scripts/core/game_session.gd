@@ -7,6 +7,8 @@ extends Node
 const MISSIONS_FILE := "res://data/missions/intro.json"
 const CREW_MISSIONS_FILE := "res://data/missions/crews.json"
 const DEALING_MISSIONS_FILE := "res://data/missions/dealing.json"
+const STORY_MISSIONS_FILE := "res://data/missions/story.json"
+const STORY_SCENES_FILE := "res://data/story/scenes.json"
 const UPGRADES_FILE := "res://data/progression/safehouse_upgrades.json"
 const SAFEHOUSE_ID := "starter_h05"
 const TRACK_INTERVAL := 0.25
@@ -28,6 +30,7 @@ var dealing: DealingController
 var phone: Phone
 var interiors: InteriorSystem
 var turf: TurfWar
+var story_scenes: Dictionary = {}
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -40,7 +43,7 @@ var _beacon: MeshInstance3D
 static func _load_all_missions() -> Array[MissionData]:
 	var out: Array[MissionData] = []
 	var catalog: Variant = DataFiles.load_json("res://data/districts/districts.json")
-	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE, DEALING_MISSIONS_FILE]
+	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE, DEALING_MISSIONS_FILE, STORY_MISSIONS_FILE]
 	if catalog is Dictionary:
 		for d in catalog.get("districts", []):
 			var f := str(d.get("missions", ""))
@@ -111,6 +114,14 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	add_child(turf)
 	turf.setup(district, player, progression, police, dealing, interiors)
 	turf.message.connect(_on_turf_message)
+	# Story: "corners" counts for stat objectives too; dialogue scenes with choices.
+	missions.stat_value = func(name: String) -> int:
+		return turf.state.players_corners().size() if name == "corners" else dealing.state.stat(name)
+	var raw: Variant = DataFiles.load_json(STORY_SCENES_FILE)
+	story_scenes = raw.get("scenes", {}) if raw is Dictionary else {}
+	missions.dialogue_requested.connect(open_dialogue)
+	_apply_story_state()
+	_setup_street_sound()
 	turf_map.turf = turf
 	dealing.turf = turf
 	dealing.message.connect(hud.show_message)
@@ -230,6 +241,10 @@ func toggle_phone() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed("radio") and player.is_driving():
+		hud.show_message(audio.next_station())
+		get_viewport().set_input_as_handled()
+		return
 	if event.is_action_pressed("phone"):
 		toggle_phone()
 		get_viewport().set_input_as_handled()
@@ -383,8 +398,9 @@ func _check_area() -> void:
 
 
 func _on_vehicle_changed(car: DrivableCar) -> void:
+	audio.set_driving(car != null)
 	if car:
-		hud.show_message("You get into %s. W/S drive, A/D steer, Q hoot, E get out." % car.display_name)
+		hud.show_message("You get into %s. W/S drive, A/D steer, Q hoot, E get out, %s radio." % [car.display_name, InputHints.key("radio")])
 		missions.on_vehicle_entered(car.vehicle_id)
 	else:
 		hud.show_message("You get out.")
@@ -503,6 +519,88 @@ func _show_upgrade(id: String) -> void:
 
 # ---------------------------------------------------------------- save / load
 
+# ---------------------------------------------------------------- story dialogue
+
+## Shows a story scene: who's talking, what they say, and the choices. Picking one applies its
+## effects (cash, reputation, relationships, influence, flags, turf) and finishes the objective.
+func open_dialogue(mission_id: String, scene_id: String, _npc_id := "") -> void:
+	var scene: Dictionary = story_scenes.get(scene_id, {})
+	if scene.is_empty():
+		missions.finish_dialogue(mission_id)
+		return
+	var lines: Array = scene.get("lines", [])
+	var title := "%s:\n%s" % [str(scene.get("speaker", "")), "\n".join(lines.map(func(l): return "\"%s\"" % l))]
+	var items: Array = []
+	for c in scene.get("choices", []):
+		var choice: Dictionary = c
+		items.append({"text": str(choice.text), "action": func(): choose(mission_id, choice)})
+	player.input_enabled = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	hud.open_menu(title, items)
+
+
+func choose(mission_id: String, choice: Dictionary) -> void:
+	_close_menu()
+	apply_effects(choice.get("effects", {}))
+	if choice.has("reply"):
+		hud.show_message(str(choice.reply))
+	missions.finish_dialogue(mission_id)
+
+
+func apply_effects(e: Dictionary) -> void:
+	progression.add_cash(int(e.get("cash", 0)))
+	progression.add_reputation(int(e.get("reputation", 0)))
+	progression.add_crew_influence(int(e.get("crew_influence", 0)))
+	var rel: Dictionary = e.get("relationship", {})
+	for npc in rel:
+		progression.add_relationship(str(npc), int(rel[npc]))
+	var infl: Dictionary = e.get("influence", {})
+	for d in infl:
+		progression.add_district_influence(str(d), int(infl[d]))
+	for f in e.get("flags", []):
+		progression.flags[str(f)] = true
+	var give: Dictionary = e.get("turf_give", {})
+	for corner in give:
+		if turf.state.corners.has(corner):
+			var to := progression.crew_id if str(give[corner]) == "player" else str(give[corner])
+			turf.state.corners[corner].owner = to
+			turf.state.corners[corner].control = 60.0
+	if e.has("turf_ally"):
+		progression.flags["ally:" + str(e.turf_ally)] = true
+	_apply_story_state()
+	turf._refresh_tags()
+	progression.changed.emit()
+	missions.check_auto_start()
+
+
+## Story choices that keep shaping the world: allied crews never push on your corners.
+func _apply_story_state() -> void:
+	turf.allies = []
+	for f in progression.flags:
+		if str(f).begins_with("ally:"):
+			turf.allies.append(str(f).trim_prefix("ally:"))
+
+
+## Where the town makes noise: ranks (hooters), the market (callers), church halls (bells),
+## the smokkies (music on smokkie nights); voices for whoever talks; music inside smokkies.
+func _setup_street_sound() -> void:
+	var dest := district.destinations
+	for id in ["rooi_taxi", "tc_taxi"]:
+		if dest.has(id):
+			audio.ranks.append(dest.anchor_position(id))
+	if dest.has("tc_market"):
+		audio.markets.append(dest.anchor_position("tc_market"))
+	if dest.has("kalk_hall"):
+		audio.churches.append(dest.anchor_position("kalk_hall"))
+	for id in dealing.venues:
+		var crowd := str(dealing.venues[id].get("crowd", ""))
+		if dest.has(crowd):
+			audio.add_venue(dest.anchor_position(crowd), Vector2(17, 23))
+	Resident.on_say = func(pos: Vector3, seed: int, female: bool): audio.voice(pos, seed, female)
+	interiors.entered.connect(func(id): audio.set_inside_music(dealing.is_venue(id)))
+	interiors.left.connect(func(_id): audio.set_inside_music(false))
+
+
 func _on_turf_message(text: String) -> void:
 	if text.begins_with("CORNER TAKEN") or text.begins_with("LOST"):
 		hud.show_banner(text.get_slice(":", 0) if text.begins_with("CORNER") else "CORNER LOST", 3.0)
@@ -608,6 +706,7 @@ func apply_snapshot(data: Dictionary) -> String:
 	if data.get("turf") is Dictionary:
 		turf.state.load_dict(data.turf)
 		turf._refresh_tags()
+	_apply_story_state()
 	var clock := district.director.clock
 	clock.minutes = clampf(float(c.minutes), 0.0, 1439.9)
 	clock.day = maxi(1, int(c.get("day", 1)))

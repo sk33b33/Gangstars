@@ -249,6 +249,14 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Story dialogue
+
+- A `dialogue` objective makes `MissionManager.on_interaction` emit `dialogue_requested`.
+- `GameSession.open_dialogue` shows the scene through the HUD menu.
+- `choose()` → `apply_effects()` → `missions.finish_dialogue()`.
+- Flags live in `ProgressionState.flags` and are saved. "ally:<crew>" flags fill
+  `TurfWar.allies`.
+
 ## Chained districts
 
 - An area's data can name a locked neighbour on its own side, e.g.

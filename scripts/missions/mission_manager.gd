@@ -14,6 +14,8 @@ signal mission_updated(mission: MissionData)
 signal mission_completed(mission: MissionData, rewards_granted: bool)
 signal mission_failed(mission: MissionData, reason: String)
 signal message(text: String)
+## A "dialogue" objective was reached: the session shows the scene, then calls finish_dialogue.
+signal dialogue_requested(mission_id: String, scene_id: String, npc_id: String)
 
 var catalog: Dictionary = {}          # id -> MissionData
 var order: PackedStringArray = []
@@ -68,6 +70,12 @@ func prerequisites_met(m: MissionData) -> bool:
 		if str(d) != "starter" and not progression.unlocked_district_ids.has(str(d)):
 			return false
 	if pre.has("member_of") and progression.crew_id != str(pre.member_of):
+		return false
+	for f in pre.get("flags", []):
+		if not progression.flags.has(str(f)):
+			return false
+	var any: Array = pre.get("any_missions", [])
+	if not any.is_empty() and not any.any(func(dep): return is_completed(str(dep))):
 		return false
 	return true
 
@@ -148,8 +156,8 @@ func start(id: String) -> bool:
 	active[id] = {"objective": 0, "count": 0.0, "seen": [], "started": absolute_minutes()}
 	var m: MissionData = catalog[id]
 	mission_started.emit(m)
-	if m.auto_start and not m.intro_for(progression.crew_id).is_empty():
-		message.emit(m.intro_for(progression.crew_id))
+	if m.auto_start and not m.intro_for(progression.crew_id, progression.flags).is_empty():
+		message.emit(m.intro_for(progression.crew_id, progression.flags))
 	message.emit("Mission started: %s — %s" % [m.title, objective_text(id)])
 	_check_stat_objectives()
 	return true
@@ -182,6 +190,9 @@ func on_interaction(kind: String, target: String) -> String:
 				hit = talked.has(str(o.target)) and (kind == "npc" or bool(o.get("allow_knock", false)))
 			"knock":
 				hit = kind == "door" and target == str(o.target)
+			"dialogue":
+				if kind == "npc" and talked.has(str(o.target)):
+					dialogue_requested.emit(id, str(o.get("scene", "")), str(o.target))
 			"talk_distinct":
 				if not _event_ok(o):
 					continue
@@ -197,9 +208,15 @@ func on_interaction(kind: String, target: String) -> String:
 	for npc in talked:
 		var m := available_from(npc)
 		if m != null and start(m.id):
-			var intro := m.intro_for(progression.crew_id)
+			var intro := m.intro_for(progression.crew_id, progression.flags)
 			notes.append(intro if not intro.is_empty() else "New mission: " + m.title)
 	return "\n".join(notes)
+
+
+## The player picked a choice in a mission's dialogue: the objective is done.
+func finish_dialogue(id: String) -> void:
+	if active.has(id) and str(current_objective(id).get("type", "")) == "dialogue":
+		message.emit(_advance(id))
 
 
 func on_player_position(pos: Vector3) -> void:

@@ -1,0 +1,158 @@
+{
+  "_comment": "Story dialogue: lines, then choices. Effects: cash, reputation, crew_influence, relationship {npc: n}, influence {district: n}, flags [..], turf_ally (crew), turf_give {corner: crew | 'player'}. Fictional and game-like.",
+  "scenes": {
+    "boeta_sitdown": {
+      "speaker": "Boeta",
+      "lines": [
+        "Word is the Tortel Laaities want a sit-down. Marlon Carelse himself.",
+        "He says the block's too small for two crews. He's not wrong.",
+        "Do we talk, or do we show them whose block it is?"
+      ],
+      "choices": [
+        {
+          "text": "Set up the sit-down. Talking's cheaper than fighting.",
+          "effects": {
+            "flags": [
+              "path_peace"
+            ],
+            "reputation": 2,
+            "relationship": {
+              "npc_boeta": 5
+            }
+          },
+          "reply": "Boeta: \"Okay. I'll tell Marlon. Don't make me regret it.\""
+        },
+        {
+          "text": "No talks. We send them a message on their own corner.",
+          "effects": {
+            "flags": [
+              "path_war"
+            ],
+            "reputation": 5,
+            "relationship": {
+              "npc_h29_1": -10
+            }
+          },
+          "reply": "Boeta: \"Then we do it at night, with the whole crew.\""
+        }
+      ]
+    },
+    "marlon_terms": {
+      "speaker": "Marlon Carelse",
+      "lines": [
+        "So you came. Respect.",
+        "Here's how it goes: the cafe corner is ours. The sand court, you can have.",
+        "Shake on it and nobody bleeds this winter."
+      ],
+      "choices": [
+        {
+          "text": "Shake on it. The cafe's yours, the court's ours.",
+          "effects": {
+            "flags": [
+              "deal_split"
+            ],
+            "relationship": {
+              "npc_h29_1": 15
+            },
+            "turf_give": {
+              "corner_cafe": "tortel_crew",
+              "corner_court": "player"
+            },
+            "influence": {
+              "starter": 10
+            }
+          },
+          "reply": "Marlon: \"Good. Keep your people off our side.\""
+        },
+        {
+          "text": "Walk away. Nobody gives us anything; we take it.",
+          "effects": {
+            "flags": [
+              "deal_off"
+            ],
+            "reputation": 5,
+            "relationship": {
+              "npc_h29_1": -10
+            }
+          },
+          "reply": "Marlon: \"Your funeral, laaitie.\""
+        }
+      ]
+    },
+    "spider_offer": {
+      "speaker": "Spider",
+      "lines": [
+        "You held your own in Westridge. People talk out here too.",
+        "The Dune Cruisers could use friends on the other side of the gate.",
+        "Stand with us, and our boys won't move on your corners. What do you say?"
+      ],
+      "choices": [
+        {
+          "text": "We stand with the Dune Cruisers.",
+          "effects": {
+            "flags": [
+              "ally_duin"
+            ],
+            "turf_ally": "duin_boys",
+            "relationship": {
+              "npc_rooi_spider": 15
+            },
+            "influence": {
+              "district_east": 10
+            }
+          },
+          "reply": "Spider: \"Then we're family, east of the gate.\""
+        },
+        {
+          "text": "We stand alone. No offence.",
+          "effects": {
+            "flags": [
+              "ally_none"
+            ],
+            "reputation": 8
+          },
+          "reply": "Spider: \"None taken. Just don't come crying.\""
+        }
+      ]
+    },
+    "faried_cut": {
+      "speaker": "Uncle Faried",
+      "lines": [
+        "The stallholders saw you at the market. They feel safer.",
+        "The Stylers used to take a cut every month-end. Now people ask: will you?"
+      ],
+      "choices": [
+        {
+          "text": "No cut. Keep your money, uncle. Just keep your eyes open for us.",
+          "effects": {
+            "flags": [
+              "market_free"
+            ],
+            "reputation": 15,
+            "relationship": {
+              "npc_tc_faried": 15
+            },
+            "influence": {
+              "district_town_centre": 15
+            }
+          },
+          "reply": "Uncle Faried: \"Then the whole market knows your name, and they'll say it kindly.\""
+        },
+        {
+          "text": "A cut every month-end. Protection isn't free.",
+          "effects": {
+            "flags": [
+              "market_cut"
+            ],
+            "cash": 500,
+            "reputation": -5,
+            "relationship": {
+              "npc_tc_faried": -15
+            }
+          },
+          "reply": "Uncle Faried: \"...Fine. Here. Same as the last ones, then.\""
+        }
+      ]
+    }
+  }
+}

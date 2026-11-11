@@ -14,6 +14,8 @@ const FIRST_MEET_REPUTATION := 1
 var cash := 100
 var reputation := 0
 var crew_influence := 0
+## Story choices made in dialogue ("path_peace", "ally_duin"...): flag -> true.
+var flags: Dictionary = {}
 var district_control := {"starter": 0}
 var completed_mission_ids: PackedStringArray = []
 var failed_mission_counts := {}
@@ -136,6 +138,7 @@ func to_dict() -> Dictionary:
 		"granted_reward_keys": Array(granted_reward_keys),
 		"talk_days": talk_days.duplicate(),
 		"crew_id": crew_id,
+		"flags": flags.duplicate(),
 	}
 
 
@@ -164,6 +167,7 @@ func load_dict(d: Variant) -> String:
 	safehouse_upgrades = PackedStringArray(d.get("safehouse_upgrades", []))
 	granted_reward_keys = PackedStringArray(d.granted_reward_keys)
 	crew_id = str(d.get("crew_id", ""))
+	flags = d.get("flags", {}) if d.get("flags") is Dictionary else {}
 	talk_days = d.get("talk_days", {}) if d.get("talk_days") is Dictionary else {}
 	changed.emit()
 	return ""

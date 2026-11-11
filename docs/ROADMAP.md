@@ -158,3 +158,4 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 | — | Done (2026-11-11) | Deeper hustle: house smokkies in Lentegeur (Doreen's) and Rocklands (Ma Lena's), prices that follow heat and turf, hireable runners for phone orders, restock as a timed pick-up drop. |
 | — | Done (2026-11-11) | Varied interiors: bedrooms in every home, cottage/flat/double-storey styles, rival crew houses and dens to raid when empty, police posts where you pay off heat. Screenshots `docs/screenshots/v11_*.png` |
 | — | Done (2026-11-11) | Town Centre: fourth area east of Lentegeur (the Promenade mall, the market, the big taxi rank, flats, 21 residents, traffic), gated from Lentegeur, 2 missions, 2 corners. Screenshots `docs/screenshots/v12_*.png` |
+| — | Done (2026-11-11) | Main storyline with dialogue choices: six story missions across Westridge, Lentegeur and Town Centre; choices set flags, hand over corners, make allies, change later intros; saved. |

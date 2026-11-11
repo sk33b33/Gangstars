@@ -1,0 +1,185 @@
+{
+  "missions": [
+    {
+      "id": "word_on_the_street",
+      "title": "Word on the Street",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "first_crew"
+        ]
+      },
+      "intro": "Boeta pulls you aside: \"We need to talk about the Tortel Laaities.\"",
+      "description": "The Tortel Laaities want a sit-down.",
+      "objectives": [
+        {
+          "id": "talk",
+          "type": "dialogue",
+          "target": "npc_boeta",
+          "scene": "boeta_sitdown",
+          "text": "Hear Boeta out"
+        },
+        {
+          "id": "look",
+          "type": "visit",
+          "target": "poi_corner",
+          "radius": 6,
+          "text": "Go and look at the Tortel corner"
+        }
+      ],
+      "rewards": {
+        "cash": 80,
+        "reputation": 5
+      }
+    },
+    {
+      "id": "the_sit_down",
+      "title": "The Sit-Down",
+      "giver": "npc_h29_1",
+      "prerequisites": {
+        "missions": [
+          "word_on_the_street"
+        ],
+        "flags": [
+          "path_peace"
+        ]
+      },
+      "intro": "Marlon Carelse: \"You wanted to talk. Talk.\"",
+      "description": "Hear Marlon's terms.",
+      "objectives": [
+        {
+          "id": "terms",
+          "type": "dialogue",
+          "target": "npc_h29_1",
+          "scene": "marlon_terms",
+          "text": "Hear Marlon's terms"
+        }
+      ],
+      "rewards": {
+        "reputation": 10
+      }
+    },
+    {
+      "id": "send_a_message",
+      "title": "Send a Message",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "word_on_the_street"
+        ],
+        "flags": [
+          "path_war"
+        ]
+      },
+      "intro": "Boeta: \"Tonight we stand on their corner. All of us. Let them see.\"",
+      "description": "Hold the Tortel corner at night with your crew.",
+      "objectives": [
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "poi_corner",
+          "radius": 8,
+          "minutes": 20,
+          "with_crew": true,
+          "window": [
+            18,
+            2
+          ],
+          "text": "Hold the Tortel corner with your crew after dark"
+        }
+      ],
+      "rewards": {
+        "reputation": 15,
+        "influence": {
+          "starter": 15
+        },
+        "relationship": {
+          "npc_h29_1": -15
+        }
+      }
+    },
+    {
+      "id": "east_of_the_gate",
+      "title": "East of the Gate",
+      "giver": "npc_rooi_spider",
+      "prerequisites": {
+        "missions": [
+          "beyond_the_block"
+        ],
+        "any_missions": [
+          "the_sit_down",
+          "send_a_message"
+        ]
+      },
+      "intro": "Spider: \"Got a minute? Not here. Walk with me.\"",
+      "description": "The Dune Cruisers make an offer.",
+      "objectives": [
+        {
+          "id": "offer",
+          "type": "dialogue",
+          "target": "npc_rooi_spider",
+          "scene": "spider_offer",
+          "text": "Hear Spider's offer"
+        }
+      ],
+      "rewards": {
+        "reputation": 10
+      }
+    },
+    {
+      "id": "the_market_cut",
+      "title": "The Market Cut",
+      "giver": "npc_tc_faried",
+      "prerequisites": {
+        "missions": [
+          "market_day"
+        ]
+      },
+      "intro": "Uncle Faried: \"Sit, sit. Have a naartjie. We need to talk about money.\"",
+      "description": "Decide what the market pays you.",
+      "objectives": [
+        {
+          "id": "cut",
+          "type": "dialogue",
+          "target": "npc_tc_faried",
+          "scene": "faried_cut",
+          "text": "Talk money with Uncle Faried"
+        }
+      ],
+      "rewards": {
+        "reputation": 5
+      }
+    },
+    {
+      "id": "kings_of_the_plain",
+      "title": "Kings of the Plain",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "the_market_cut",
+          "east_of_the_gate"
+        ]
+      },
+      "intro": "Boeta: \"Westridge, Lentegeur, the Promenade... People say our name now. One more push and the Plain is ours.\"",
+      "intro_by_flag": {
+        "market_cut": "Boeta: \"The market pays us, the block fears us. One more push and the Plain is ours, the hard way.\"",
+        "market_free": "Boeta: \"The aunties at the market wave at us now. One more push and the Plain is ours, and they'll be glad of it.\""
+      },
+      "description": "Hold six corners across Mitchells Plain.",
+      "objectives": [
+        {
+          "id": "corners",
+          "type": "stat",
+          "stat": "corners",
+          "value": 6,
+          "text": "Hold six corners across Mitchells Plain"
+        }
+      ],
+      "rewards": {
+        "cash": 1000,
+        "reputation": 50,
+        "crew_influence": 20
+      }
+    }
+  ]
+}

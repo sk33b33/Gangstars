@@ -23,6 +23,7 @@ var police: PoliceDispatch
 var dealing: DealingController
 var interiors: InteriorSystem
 var pushers: Dictionary = {}     # corner id -> Array[Resident]
+var allies: Array = []           # crews that never push on your corners (story choices)
 var tags: Dictionary = {}        # corner id -> {decal, interactable, crew}
 
 var _rng := RandomNumberGenerator.new()
@@ -135,7 +136,7 @@ func start_push(id: String, crew := "") -> String:
 	var area := area_of(id)
 	var members := {}
 	for r: Resident in district.residents.values():
-		if r.data.role == "crew" and r.data.faction_id != progression.crew_id and not r.data.faction_id.is_empty() \
+		if r.data.role == "crew" and r.data.faction_id != progression.crew_id and not r.data.faction_id.is_empty() and not allies.has(r.data.faction_id) \
 				and not r.is_down() and district.resident_district(r) == area:
 			if not members.has(r.data.faction_id):
 				members[r.data.faction_id] = []

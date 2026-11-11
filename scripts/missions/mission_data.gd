@@ -13,9 +13,13 @@ extends Resource
 ##   district_unlocked {target: district_id}        - a district has been unlocked
 ##   enter_vehicle {target: vehicle_id}             - get into that car
 ##   drive_to {target, radius, vehicle?}            - arrive somewhere while driving
+##   dialogue {target: npc_id, scene}               - talk to them: a story scene with choices
+##                                                    (data/story/scenes.json)
+## Prerequisites may also list "flags" (story choices that must have been made) and
+## "any_missions" (at least one of them completed).
 ## visit / talk_distinct may add "event": id       - only counts while that calendar event runs
 
-const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked", "enter_vehicle", "drive_to", "stat"]
+const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked", "enter_vehicle", "drive_to", "stat", "dialogue"]
 
 @export var id := ""
 @export var title := ""
@@ -30,6 +34,8 @@ const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_d
 @export var fail_text := ""
 ## Crew-specific intros (crew id -> text) for story missions that read differently per crew.
 @export var intro_by_crew: Dictionary = {}
+## Intros that depend on story choices (flag -> text); the first flag that's set wins.
+@export var intro_by_flag: Dictionary = {}
 
 
 static func from_dict(d: Dictionary) -> MissionData:
@@ -46,10 +52,14 @@ static func from_dict(d: Dictionary) -> MissionData:
 	m.time_limit_minutes = float(d.get("time_limit_minutes", 0.0))
 	m.fail_text = str(d.get("fail_text", ""))
 	m.intro_by_crew = d.get("intro_by_crew", {}) if d.get("intro_by_crew") is Dictionary else {}
+	m.intro_by_flag = d.get("intro_by_flag", {}) if d.get("intro_by_flag") is Dictionary else {}
 	return m
 
 
-func intro_for(crew_id: String) -> String:
+func intro_for(crew_id: String, flags: Dictionary = {}) -> String:
+	for f in intro_by_flag:
+		if flags.has(f):
+			return str(intro_by_flag[f])
 	return str(intro_by_crew.get(crew_id, intro))
 
 
@@ -64,7 +74,7 @@ func validate() -> PackedStringArray:
 	for o in objectives:
 		if not o is Dictionary or not OBJECTIVE_TYPES.has(str(o.get("type", ""))):
 			problems.append("%s: bad objective %s" % [id, o])
-		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked", "enter_vehicle", "drive_to"] and str(o.get("target", "")).is_empty():
+		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked", "enter_vehicle", "drive_to", "dialogue"] and str(o.get("target", "")).is_empty():
 			problems.append("%s: objective %s needs a target" % [id, o.get("id", "?")])
 		elif o.type == "stat" and str(o.get("stat", "")).is_empty():
 			problems.append("%s: objective %s needs a stat" % [id, o.get("id", "?")])

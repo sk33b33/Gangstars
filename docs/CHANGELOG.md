@@ -4,6 +4,33 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### The story: choices that shape the Plain (2026-11-11)
+- **Dialogue with choices:** a new `dialogue` mission objective opens a story scene (speaker,
+  lines, two choices) when you talk to that person (`data/story/scenes.json`). A choice
+  applies its effects:
+  - cash, reputation, crew influence, relationships and suburb influence;
+  - story flags;
+  - turf: handing corners over, or making a crew your ally (allies never push on your
+    corners).
+
+  Choices are saved.
+- **The main storyline** (`data/missions/story.json`), six missions:
+  1. *Word on the Street* (Boeta): the Tortel Laaities want a sit-down. Talk, or send a message?
+  2. *The Sit-Down* (Marlon Carelse, Tortel Laaities): split Westridge's corners, or walk away.
+     Or *Send a Message* (Boeta): hold their corner at night with your crew.
+  3. *East of the Gate* (Spider, Lentegeur): ally with the Dune Cruisers, or stand alone.
+  4. *The Market Cut* (Uncle Faried, Town Centre): protect the stalls for free, or take a
+     month-end cut (R500, less respect).
+  5. *Kings of the Plain* (Boeta): hold six corners across Mitchells Plain. The intro
+     remembers how you got there.
+- **Missions:**
+  - New prerequisites: `flags` (choices made) and `any_missions` (either branch done).
+  - Intros can vary by flag (`intro_by_flag`).
+  - A `corners` stat counts the corners you hold.
+- **Tests:** scenes load; Boeta's scene opens with choices; a choice sets the flag and finishes
+  the objective; the branch that opens; turf hand-overs and allies; flag-aware intros; choices
+  saved. Sturdier "officer sees the deal" check. 34 missions.
+
 ### Town Centre (2026-11-11)
 - **Town Centre is built:** the fourth area, east past Lentegeur (x 264–384), through the same
   data pipeline (`tools/specs/town_centre.json` → houses and residents;
