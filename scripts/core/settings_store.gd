@@ -6,7 +6,7 @@ extends RefCounted
 signal changed
 
 const DEFAULTS := {
-	"audio/master": 0.9, "audio/sfx": 0.9, "audio/ambient": 0.7, "audio/ui": 0.8,
+	"audio/master": 0.9, "audio/sfx": 0.9, "audio/ambient": 0.7, "audio/ui": 0.8, "audio/music": 0.7,
 	"controls/mouse_sensitivity": 0.0025, "controls/stick_sensitivity": 2.6, "controls/invert_y": false,
 	"controls/vibration": true,
 	"video/fov": 70.0, "video/shadows": true, "video/effects": true, "video/msaa": 2, "video/fog": true,
@@ -14,7 +14,7 @@ const DEFAULTS := {
 	"gameplay/weather": true, "gameplay/traffic": true,
 }
 const RANGES := {
-	"audio/master": [0.0, 1.0], "audio/sfx": [0.0, 1.0], "audio/ambient": [0.0, 1.0], "audio/ui": [0.0, 1.0],
+	"audio/master": [0.0, 1.0], "audio/sfx": [0.0, 1.0], "audio/ambient": [0.0, 1.0], "audio/ui": [0.0, 1.0], "audio/music": [0.0, 1.0],
 	"controls/mouse_sensitivity": [0.0005, 0.008], "controls/stick_sensitivity": [1.0, 6.0], "video/fov": [55.0, 95.0], "video/render_scale": [0.5, 1.0],
 	"video/msaa": [0, 3],
 }
@@ -67,7 +67,7 @@ func save_settings() -> Error:
 
 ## Applies everything that doesn't need game objects (audio buses, window).
 func apply_engine() -> void:
-	for pair in [["Master", "audio/master"], ["SFX", "audio/sfx"], ["Ambient", "audio/ambient"], ["UI", "audio/ui"]]:
+	for pair in [["Master", "audio/master"], ["SFX", "audio/sfx"], ["Ambient", "audio/ambient"], ["UI", "audio/ui"], ["Music", "audio/music"]]:
 		var idx := AudioServer.get_bus_index(pair[0])
 		if idx >= 0:
 			AudioServer.set_bus_volume_db(idx, linear_to_db(maxf(0.0001, float(get_value(pair[1])))))

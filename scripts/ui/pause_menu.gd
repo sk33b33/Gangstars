@@ -53,6 +53,7 @@ func _build() -> void:
 	_slider("Effects", "audio/sfx", 0.0, 1.0, 0.05)
 	_slider("Ambience", "audio/ambient", 0.0, 1.0, 0.05)
 	_slider("Interface", "audio/ui", 0.0, 1.0, 0.05)
+	_slider("Music & radio", "audio/music", 0.0, 1.0, 0.05)
 	_heading("Controls", 20)
 	_slider("Mouse sensitivity", "controls/mouse_sensitivity", 0.0005, 0.008, 0.0005)
 	_slider("Stick sensitivity", "controls/stick_sensitivity", 1.0, 6.0, 0.2)

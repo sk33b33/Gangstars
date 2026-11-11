@@ -201,9 +201,15 @@ func set_tier(tier: String) -> void:
 
 
 ## Shows a speech bubble for a few seconds (only rendered for nearby NPCs).
+## Set by the GameSession: plays a voice for whoever speaks (pos, seed, female).
+static var on_say: Callable
+
+
 func say(text: String, seconds := 3.0) -> void:
 	if is_inside or sim_tier != "near":
 		return
+	if on_say.is_valid() and not _bubble.visible:
+		on_say.call(global_position, data.id.hash(), data.figure > 0.5 or data.hair_style in ["long", "doek"])
 	_bubble.text = text
 	_bubble.visible = true
 	_bubble_timer = seconds

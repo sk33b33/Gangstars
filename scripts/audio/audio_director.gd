@@ -2,7 +2,10 @@ class_name AudioDirector
 extends Node3D
 ## Plays the neighbourhood's sound: ambient beds (wind, rain, crickets, day birds) driven by
 ## clock + weather, positional one-shots from a small player pool, and engine loops attached
-## to vehicles with pitch following speed. Buses: SFX, Ambient, UI (see default_bus_layout.tres).
+## to vehicles with pitch following speed. Buses: SFX, Ambient, UI, Music (see default_bus_layout.tres).
+## Also: the car radio (three made-up stations), music at the smokkies on smokkie nights and
+## inside them, taxi hooters at the ranks, market callers, church bells, and gibberish voices
+## when people greet or chat.
 
 const POOL_SIZE := 10
 
@@ -20,6 +23,19 @@ var _crickets: AudioStreamPlayer
 var _ui: AudioStreamPlayer
 var _bird_timer := 3.0
 var _engines: Array = []   # [player, node with `speed`]
+const STATIONS := [{"name": "Plain FM", "stream": "music_plain"}, {"name": "Spine Road Jazz", "stream": "music_jazz"},
+	{"name": "Gospel 101", "stream": "music_gospel"}]
+var radio_station := 0      # index into STATIONS; -1 = off
+var radio_on := false
+var _radio: AudioStreamPlayer
+var _inside: AudioStreamPlayer
+var _venues: Array = []     # [AudioStreamPlayer3D, hours Vector2]
+var ranks: Array = []       # positions: taxi ranks (hooters)
+var markets: Array = []     # positions: market stalls (callers)
+var churches: Array = []    # positions: church halls (bells on the hour at 8, 12, 18)
+var _street_timer := 4.0
+var _last_bell_hour := -1
+var voices_played := 0
 var _rng := RandomNumberGenerator.new()
 
 
@@ -38,6 +54,14 @@ func _ready() -> void:
 	_ui = AudioStreamPlayer.new()
 	_ui.bus = &"UI"
 	add_child(_ui)
+	_radio = AudioStreamPlayer.new()
+	_radio.bus = &"Music"
+	_radio.volume_db = -6.0
+	add_child(_radio)
+	_inside = AudioStreamPlayer.new()
+	_inside.bus = &"Music"
+	_inside.volume_db = -9.0
+	add_child(_inside)
 
 
 func _loop_player(stream_name: String, bus: StringName) -> AudioStreamPlayer:
@@ -84,6 +108,92 @@ func attach_engine(vehicle: Node3D, volume_db := -6.0) -> void:
 var weather: Weather
 
 
+# ------------------------------------------------------------------ music
+
+## Car radio: on while you drive; cycle stations (and off) with the radio key.
+func set_driving(on: bool) -> void:
+	radio_on = on
+	_update_radio()
+
+
+func next_station() -> String:
+	radio_station = radio_station + 1 if radio_station + 1 < STATIONS.size() else -1
+	_update_radio()
+	return "Radio off" if radio_station < 0 else "Radio: %s" % STATIONS[radio_station].name
+
+
+func radio_playing() -> bool:
+	return _radio.playing
+
+
+func _update_radio() -> void:
+	if radio_on and radio_station >= 0:
+		var stream := AudioBank.get_stream(STATIONS[radio_station].stream)
+		if _radio.stream != stream or not _radio.playing:
+			_radio.stream = stream
+			_radio.play()
+	else:
+		_radio.stop()
+
+
+## Music from a smokkie's speakers during its evening hours.
+func add_venue(pos: Vector3, hours := Vector2(17, 23), stream_name := "music_plain") -> void:
+	var p := AudioStreamPlayer3D.new()
+	p.bus = &"Music"
+	p.unit_size = 4.0
+	p.max_distance = 40.0
+	p.volume_db = -4.0
+	p.set_meta("stream", stream_name)
+	add_child(p)
+	p.global_position = pos + Vector3(0, 1.5, 0)
+	_venues.append([p, hours])
+
+
+func venues_playing() -> int:
+	return _venues.filter(func(v): return (v[0] as AudioStreamPlayer3D).playing).size()
+
+
+## Indoors at a smokkie: the music's all around you.
+func set_inside_music(on: bool) -> void:
+	if on:
+		_inside.stream = AudioBank.get_stream("music_plain")
+		_inside.play()
+	else:
+		_inside.stop()
+
+
+## Someone talks: a gibberish voice at their head, if you're close enough to hear it.
+func voice(pos: Vector3, seed: int, female: bool) -> void:
+	if listener_node == null or listener_node.global_position.distance_to(pos) > 18.0:
+		return
+	var pitch := (1.35 if female else 0.95) * (0.9 + float(absi(seed) % 20) / 100.0)
+	play_at("mumble%d" % (absi(seed) % 4), pos + Vector3(0, 1.6, 0), -10.0, pitch)
+	voices_played += 1
+
+
+func _street_life(delta: float) -> void:
+	if listener_node == null:
+		return
+	var here := listener_node.global_position
+	_street_timer -= delta
+	if _street_timer <= 0.0:
+		_street_timer = _rng.randf_range(3.0, 8.0)
+		for r: Vector3 in ranks:
+			if here.distance_to(r) < 45.0 and _rng.randf() < 0.6:
+				play_at("hooter", r + Vector3(_rng.randf_range(-6, 6), 1.0, _rng.randf_range(-4, 4)), -4.0, _rng.randf_range(0.9, 1.1))
+		for m: Vector3 in markets:
+			if here.distance_to(m) < 35.0 and clock and clock.hour() >= 7.0 and clock.hour() < 18.0:
+				play_at("mumble%d" % _rng.randi_range(0, 3), m + Vector3(_rng.randf_range(-10, 10), 1.6, _rng.randf_range(-6, 6)), -2.0, _rng.randf_range(1.1, 1.5))
+	if clock:
+		var h := int(clock.hour())
+		if h != _last_bell_hour:
+			_last_bell_hour = h
+			if h in [8, 12, 18]:
+				for c: Vector3 in churches:
+					for k in 3:
+						get_tree().create_timer(k * 1.4).timeout.connect(func(): play_at("bell", c + Vector3(0, 6, 0), 2.0))
+
+
 func _process(delta: float) -> void:
 	if weather:
 		rain_amount = weather.rain if weather.enabled else 0.0
@@ -98,6 +208,18 @@ func _process(delta: float) -> void:
 		var spd := absf(float(v.get("speed")))
 		p.pitch_scale = 0.7 + spd * 0.09
 		p.volume_db = lerpf(-14.0, -4.0, clampf(spd / 10.0, 0.0, 1.0))
+	_street_life(delta)
+	if clock:
+		var hour := clock.hour()
+		for v in _venues:
+			var p: AudioStreamPlayer3D = v[0]
+			var hrs: Vector2 = v[1]
+			var on := hour >= hrs.x and hour < hrs.y and listener_node != null and listener_node.global_position.distance_to(p.global_position) < 60.0
+			if on and not p.playing:
+				p.stream = AudioBank.get_stream(str(p.get_meta("stream")))
+				p.play()
+			elif not on and p.playing:
+				p.stop()
 	if not night and rain_amount < 0.2 and listener_node:
 		_bird_timer -= delta
 		if _bird_timer <= 0.0:

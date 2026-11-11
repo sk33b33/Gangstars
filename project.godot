@@ -123,6 +123,10 @@ switch_weapon={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"device":-1,"physical_keycode":4194306), Object(InputEventJoypadButton,"device":-1,"button_index":10,"pressed":true)]
 }
+radio={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"device":-1,"physical_keycode":82), Object(InputEventJoypadButton,"device":-1,"button_index":12,"pressed":true)]
+}
 phone={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"device":-1,"physical_keycode":80), Object(InputEventJoypadButton,"device":-1,"button_index":11,"pressed":true)]
