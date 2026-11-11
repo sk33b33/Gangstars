@@ -277,6 +277,16 @@ sprite("tag_klip", { w: 48, h: 20 },
       if (!c.is(x + dx, y + dy, "64")) c.px(x + dx, y + dy, "k")
   })
 
+sprite("tag_vlakte", { w: 48, h: 20 },
+  text(24, 2, "SPINE", "#d94f9c", { align: "c", scale: 2, gap: 1 }),
+  text(24, 14, "STYLERS", "#f1d36b", { align: "c" }),
+  (c) => {
+    const keep = []
+    for (let y = 0; y < c.h; y++) for (let x = 0; x < c.w; x++) if (!c.is(x, y, ".")) keep.push([x, y])
+    for (const [x, y] of keep) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]])
+      if (c.is(x + dx, y + dy, ".")) c.px(x + dx, y + dy, "k")
+  })
+
 // Police crest (made up, SAPS-inspired colours; deliberately not the real emblem): blue shield,
 // yellow rim, yellow chevron and a white "P".
 sprite("police_crest", { w: 17, h: 20 },

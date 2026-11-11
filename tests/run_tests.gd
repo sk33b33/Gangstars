@@ -46,6 +46,7 @@ func _run() -> void:
 	_test_kalkbos_units()
 	_test_combat_units()
 	_test_dealing_units()
+	_test_turf_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -1246,18 +1247,27 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	_check(cop != null, "an officer is on the beat")
 	if cop == null:
 		return
-	player.global_position = _clear_spot_near(district, cop, 8.0)
-	player.snap_camera()
-	dispatch.heat.clear()
-	dispatch.heat.add(2.5)
-	for i in 60 * 8:
+	var tried_cops: Array = []
+	for attempt in 3:   # an officer may walk out of sight or go inside: try another
+		tried_cops.append(cop)
+		player.global_position = _clear_spot_near(district, cop, 8.0)
+		player.snap_camera()
+		dispatch.heat.clear()
+		dispatch.heat.add(2.5)
+		for i in 60 * 8:
+			if cop.fight_target == player:
+				break
+			player.health.hp = Health.MAX_HP   # nobody else may knock the player out mid-check (the wake-up clears heat)
+			if i % 120 == 119:   # officers keep walking: step back into their line of sight
+				player.global_position = _clear_spot_near(district, cop, 8.0)
+			await physics_frame
 		if cop.fight_target == player:
 			break
-		player.health.hp = Health.MAX_HP   # nobody else may knock the player out mid-check (the wake-up clears heat)
-		if i % 120 == 119:   # officers keep walking: step back into their line of sight
-			player.global_position = _clear_spot_near(district, cop, 8.0)
-		await physics_frame
-	_check(cop.fight_target == player, "at heat %d the police come after you" % dispatch.heat.level())
+		var other: Array = cops.filter(func(r): return not tried_cops.has(r) and not r.is_inside and r.can_fight() and r.sim_tier == "near")
+		if other.is_empty():
+			break
+		cop = other[0]
+	_check(cop.fight_target == player, "at heat %d the police come after you (%d tries)" % [dispatch.heat.level(), tried_cops.size()])
 	_check(dispatch.responding, "police bakkies respond (lights and siren)")
 	# Knocked out: wake at the safehouse, pay the fine, heat cleared.
 	var cash0 := session.progression.cash
@@ -1292,7 +1302,9 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	district.director.clock.set_hour(16.0)
 	var rival: Resident = null
 	var tried: Array = []
+	var last: Resident = null
 	for attempt in 3:   # a rival may head indoors mid-check: try another
+		last = rival if rival else last
 		rival = null
 		for i in 60 * 120:
 			for r: Resident in district.residents.values():
@@ -1304,6 +1316,7 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 				break
 			await physics_frame
 		if rival == null:
+			rival = last   # nobody else about: judge the last try
 			break
 		tried.append(rival)
 		if rival:
@@ -1572,6 +1585,114 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 		if district.registry.get_house(id).ownership == "hostile":
 			_check(not interiors.why_not(id).is_empty(), "no way into a hostile house")
 			break
+
+
+func _test_turf_units() -> void:
+	print("== turf war units")
+	var t := TurfState.load_default()
+	_check(t.order.size() == 10 and t.owner("corner_westridge") == "tortel_crew" and t.owner("corner_court") == "", "10 corners, some held, some nobody's")
+	t.player_crew = "vlakte_vipers"
+	_check(t.is_players("corner_park") and t.players_corners().size() == 1, "your crew starts with its own corner")
+	var p := {"player": false, "crew": 0, "owners": 0, "pushers": 0}
+	var stand := func(id_on: String, extra: Dictionary) -> Callable:
+		return func(id): return p.merged(extra, true) if id == id_on else p
+	var flips: Array = []
+	t.flipped.connect(func(id, a, b): flips.append([id, a, b]))
+	var ends: Array = []
+	t.push_ended.connect(func(id, held): ends.append([id, held]))
+	t.tick(0.0, 20.0, stand.call("corner_court", {"player": true}))
+	_check(t.is_players("corner_court") and flips.back() == ["corner_court", "", "vlakte_vipers"], "standing on nobody's corner takes it")
+	t.tick(20.0, 60.0, stand.call("corner_westridge", {"player": true, "owners": 2}))
+	_check(t.owner("corner_westridge") == "tortel_crew" and is_equal_approx(t.corners.corner_westridge.control, 100.0), "not while the owners stand there")
+	t.tick(80.0, 25.0, stand.call("corner_westridge", {"player": true, "crew": 1}))
+	_check(t.is_players("corner_westridge"), "with them gone (and a crew-mate along) it falls")
+	t.start_push("corner_park", "tortel_crew", 100.0)
+	_check(t.pushed("corner_park"), "a rival push starts")
+	t.tick(110.0, 30.0, stand.call("corner_park", {"pushers": 2}))
+	_check(t.owner("corner_park") == "tortel_crew" and ends.back() == ["corner_park", false], "unanswered, the push takes your corner")
+	t.start_push("corner_court", "tortel_crew", 200.0)
+	t.tick(201.0, 1.0, stand.call("corner_court", {"player": true}))
+	_check(t.is_players("corner_court") and ends.back() == ["corner_court", true], "showing up when they don't: held")
+	t.start_push("corner_court", "tortel_crew", 300.0)
+	t.tick(500.0, 1.0, stand.call("corner_court", {}))
+	_check(not t.pushed("corner_court") and t.is_players("corner_court"), "a push that runs out is held")
+	var c0: float = t.corners.corner_lookout.control
+	t.paint_over("corner_lookout")
+	_check(t.corners.corner_lookout.control < c0, "painting over a rival tag weakens their hold")
+	var t2 := TurfState.load_default()
+	t2.load_dict(t.to_dict())
+	_check(t2.owner("corner_park") == "tortel_crew" and t2.owner("corner_court") == "vlakte_vipers", "turf saves and loads")
+
+
+func _test_turf_war_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var turf := session.turf
+	var prog := session.progression
+	session.interiors.discard()
+	district.director.clock.set_hour(12.0)
+	_check(turf.state.order.size() == 10, "all 10 corners are in the world")
+	for i in 5:
+		await physics_frame
+	turf._refresh_tags()
+	var rival_held := Array(turf.state.order).filter(func(id): return not turf.state.owner(id).is_empty() and not turf.state.is_players(id))
+	_check(not rival_held.is_empty() and rival_held.all(func(id): return turf.tags.has(id)), "rival tags are sprayed at every rival corner (%d corners, %d tags)" % [rival_held.size(), turf.tag_count()])
+	var tagged := ""
+	for id in turf.tags:
+		if turf.tags[id].interactable != null:
+			tagged = id
+			break
+	if not tagged.is_empty():
+		var c0: float = turf.state.corners[tagged].control
+		var it: Interactable = turf.tags[tagged].interactable
+		_check(not it.interact(player).is_empty() and turf.state.corners[tagged].control < c0 + 0.01 or turf.state.is_players(tagged), "you can paint over a tag")
+	# Take nobody's corner (fast rates for the test).
+	turf.state.cfg.take_rate = 40.0
+	var target := ""
+	for id in turf.state.order:
+		if turf.state.owner(id).is_empty() and turf.area_of(id) == "starter":
+			target = id
+			break
+	_check(not target.is_empty(), "there's a free corner in Westridge")
+	var cash0 := prog.cash
+	player.global_position = turf.anchor(target) + Vector3(0, 0.1, 0)
+	for i in 240:
+		await physics_frame
+		if turf.state.is_players(target):
+			break
+	_check(turf.state.is_players(target) and prog.cash >= cash0 + 100, "standing on a free corner takes it (+R100)")
+	# A rival push while you're away: you lose it.
+	prog.reputation = maxi(prog.reputation, 20)
+	var crew := turf.start_push(target)
+	_check(not crew.is_empty() and turf.state.pushed(target) and not turf.pushers[target].is_empty(), "a rival crew moves on your corner (%s)" % crew)
+	_check(turf.pushers[target].all(func(r): return str(r.brain.pending_event.get("event", "")) == "turf"), "their members head over")
+	player.global_position = district.destinations.anchor_position("poi_bus_stop_mossie") + Vector3(0, 0.1, 0)
+	turf.state.corners[target].control = 3.0
+	for r: Resident in turf.pushers[target]:   # they arrive
+		r.global_position = turf.anchor(target) + Vector3(randf_range(-2, 2), 0.1, randf_range(-2, 2))
+	for i in 240:
+		await physics_frame
+		if not turf.state.is_players(target):
+			break
+	_check(turf.state.owner(target) == crew, "unanswered, the push takes your corner")
+	_check(turf.tags.has(target) and turf.tags[target].decal != null, "and they tag it")
+	# Your own corner, pushed while you stand there with nobody of theirs: held.
+	var mine: Array = turf.state.players_corners()
+	if not mine.is_empty():
+		var id: String = mine[0]
+		player.global_position = turf.anchor(id) + Vector3(0, 0.1, 0)
+		var rep0 := prog.reputation
+		turf.start_push(id)
+		for r: Resident in turf.pushers.get(id, []):
+			r.global_position = r.global_position + Vector3(0, 0, 0)   # still far away
+		for i in 60:
+			await physics_frame
+		_check(not turf.state.pushed(id) and turf.state.is_players(id) and prog.reputation > rep0, "showing up first holds your corner (+rep)")
+	var snap := session.snapshot()
+	_check(snap.has("turf") and snap.turf.corners[target].owner == crew, "the save keeps the turf")
+	turf.state.cfg.take_rate = 3.0
+	session.turf_map.open()
+	_check(session.turf_map.panel_text().contains("Corners"), "the turf map lists the corners")
+	session.turf_map.close()
 
 
 func _test_ambient_life(main: Node, district: District, player: Player) -> void:
@@ -1966,6 +2087,7 @@ func _test_district() -> void:
 	for i in 5:
 		await process_frame
 	# New game: the crew choice comes first. Join the Spine Road Stylers through the picker's button.
+	main.session.turf.state.next_push = 1e9   # no surprise rival pushes during the other tests
 	var picker: CrewPicker = main.session.crew_picker
 	_check(picker != null and picker.visible and not player.input_enabled, "a new game opens the crew picker first")
 	_check(picker.button("tortel_crew") != null and picker.button("klipspringers") != null, "four crews to choose from")
@@ -2209,6 +2331,7 @@ func _test_district() -> void:
 	print("== the hustle (smokkie, phone, street deals, client moods)")
 	await _test_dealing_in_game(main, district, player)
 	await _test_interiors_in_game(main, district, player)
+	await _test_turf_war_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

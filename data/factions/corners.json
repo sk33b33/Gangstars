@@ -1,0 +1,23 @@
+{
+  "_comment": "Street corners crews fight over (turf wars). anchor = a destination anchor id; owner = crew id or '' (nobody's). Rates are per game minute.",
+  "take_rate": 3.0,
+  "crew_bonus": 2.0,
+  "push_rate": 2.0,
+  "regen_rate": 0.4,
+  "push_every_minutes": [360, 600],
+  "push_minutes": 120,
+  "push_after_reputation": 10,
+  "presence_radius": 12.0,
+  "corners": [
+    {"id": "corner_westridge", "name": "the Corner", "anchor": "poi_corner", "owner": "tortel_crew"},
+    {"id": "corner_park", "name": "the park", "anchor": "poi_park", "owner": "vlakte_vipers"},
+    {"id": "corner_court", "name": "the sand court", "anchor": "poi_court", "owner": ""},
+    {"id": "corner_cafe", "name": "the cafe corner", "anchor": "poi_shop", "owner": ""},
+    {"id": "corner_taxi_rank", "name": "the taxi rank", "anchor": "rooi_taxi", "owner": "duin_boys"},
+    {"id": "corner_field", "name": "the soccer field", "anchor": "rooi_field", "owner": "duin_boys"},
+    {"id": "corner_courtyard", "name": "the courtyard", "anchor": "rooi_courtyard", "owner": ""},
+    {"id": "corner_lookout", "name": "the quarry lookout", "anchor": "kalk_lookout", "owner": "klipspringers"},
+    {"id": "corner_square", "name": "the village square", "anchor": "kalk_square", "owner": "klipspringers"},
+    {"id": "corner_kalk_bus", "name": "the Rocklands bus stop", "anchor": "kalk_bus", "owner": ""}
+  ]
+}

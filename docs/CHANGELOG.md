@@ -4,6 +4,36 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Turf wars (2026-11-11)
+- **Corners:** 10 street corners across the three suburbs (`data/factions/corners.json`):
+  - Westridge: the Corner, the park, the sand court, the cafe corner.
+  - Lentegeur: the taxi rank, the soccer field, the courtyard.
+  - Rocklands: the quarry lookout, the village square, the bus stop.
+
+  Each is held by a crew, or by nobody, with a control level from 0 to 100.
+- **Taking a corner:** stand on it with no owner crew standing there (they come at you on their
+  turf, so fight them off first). Crew-mates along make it faster. Nobody's corner builds up;
+  a rival's drains. Taking one pays R100, +4 reputation and +10 influence in that suburb.
+- **Rival pushes:**
+  - Once you have 10 reputation, every 6–10 played hours a rival crew from that suburb moves
+    on one of your corners: three members walk over and post up. You get a banner and a ring
+    tone.
+  - Get there: they square up when you come close. If they aren't standing there when you
+    arrive, or the push runs out (2 hours), you hold it (+3 reputation).
+  - Ignore it and the corner flips to them: −10 influence, and your clients in that suburb
+    get unhappy.
+- **Tags:** rivals spray their tag (a new Spine Road Stylers tag too) on a wall at corners they
+  hold or push on, or on the ground in open spots. Paint over it to weaken their hold, or to
+  firm up your own.
+- **Turf map:** each corner is a ring in the holder's colour, filled to its control level, with a
+  red ring when it's being pushed. The side panel lists every corner.
+- **Saving:** corner owners and control are saved.
+- **Robustness:** time skips and clock jumps count for at most 30 minutes towards the next push.
+- **Tests:** TurfState units (take, blocked by owners, crew bonus, pushes lost/held/timed
+  out, paint over, save) and in game (tags at rival corners, painting over, taking a corner,
+  a push taking it, holding by showing up, save, map). Automatic pushes are off during the
+  other tests.
+
 ### House interiors (2026-11-11)
 - **Going inside:**
   - **Your safehouse:** the door takes you straight in. Inside are a couch and TV, a kitchen, a

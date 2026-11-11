@@ -175,6 +175,16 @@ func _run_screenshot() -> void:
 			player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
 			player.snap_camera()
 		delay = 0.6
+	if _args.has("tag"):
+		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
+		session.turf._refresh_tags()
+		for id in session.turf.tags:
+			var d: Decal = session.turf.tags[id].decal
+			if d and absf(d.global_basis.y.y) < 0.5:
+				var n := d.global_basis.y
+				_add_camera(d.global_position + n * 4.5 + Vector3(0, 0.4, 0) + d.global_basis.x * 1.5, d.global_position)
+				break
+		delay = 0.4
 	if _args.has("aunty"):
 		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
 		_stage_aunty_shot()

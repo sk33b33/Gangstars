@@ -27,6 +27,7 @@ var crew_picker: CrewPicker
 var dealing: DealingController
 var phone: Phone
 var interiors: InteriorSystem
+var turf: TurfWar
 var last_save_error := ""
 
 var _track_accum := 0.0
@@ -105,6 +106,12 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	interiors.setup(self, district, player, self)
 	district.interiors = interiors
 	interiors.entered.connect(func(_id): if audio: audio.play_ui("click"))
+	turf = TurfWar.new()
+	turf.name = "TurfWar"
+	add_child(turf)
+	turf.setup(district, player, progression, police, dealing, interiors)
+	turf.message.connect(_on_turf_message)
+	turf_map.turf = turf
 	dealing.message.connect(hud.show_message)
 	phone = Phone.new()
 	phone.name = "Phone"
@@ -159,6 +166,9 @@ func choose_crew(crew_id: String) -> bool:
 		hud.show_message("You run with the %s now. %s" % [crews.display_name(crew_id), str(crews.get_crew(crew_id).get("perk_text", ""))])
 	progression.changed.emit()
 	missions.check_auto_start()
+	if turf:
+		turf.state.player_crew = crew_id
+		turf._refresh_tags()
 	_refresh()
 	return true
 
@@ -485,6 +495,17 @@ func _show_upgrade(id: String) -> void:
 
 # ---------------------------------------------------------------- save / load
 
+func _on_turf_message(text: String) -> void:
+	if text.begins_with("CORNER TAKEN") or text.begins_with("LOST"):
+		hud.show_banner(text.get_slice(":", 0) if text.begins_with("CORNER") else "CORNER LOST", 3.0)
+	elif text.contains("moving on"):
+		hud.show_banner("TURF UNDER PRESSURE", 3.0)
+		if audio:
+			audio.play_ui("ring")
+	hud.show_message(text)
+	missions._check_stat_objectives()
+
+
 ## Indoors, the save puts you back outside the door.
 func _saved_player_position() -> Array:
 	var p := interiors.outside_position() if interiors and interiors.is_inside() else player.global_position
@@ -501,6 +522,7 @@ func snapshot() -> Dictionary:
 		"missions": missions.to_dict(),
 		"vehicles": _vehicles_snapshot(),
 		"dealing": dealing.state.to_dict(),
+		"turf": turf.state.to_dict(),
 	}
 
 
@@ -575,6 +597,9 @@ func apply_snapshot(data: Dictionary) -> String:
 	missions.load_dict(data.missions)
 	if data.get("dealing") is Dictionary:
 		dealing.state.load_dict(data.dealing)
+	if data.get("turf") is Dictionary:
+		turf.state.load_dict(data.turf)
+		turf._refresh_tags()
 	var clock := district.director.clock
 	clock.minutes = clampf(float(c.minutes), 0.0, 1439.9)
 	clock.day = maxi(1, int(c.get("day", 1)))

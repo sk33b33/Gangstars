@@ -249,6 +249,22 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Turf wars
+
+- **TurfState** (pure, unit-tested): corners {owner, control, push_crew, push_until}.
+  `tick(now, dt, presence)` takes a callable returning {player, crew, owners, pushers} for a
+  corner. Signals: flipped, push_started, push_ended.
+- **TurfWar** (child of the GameSession):
+  - Computes presence within 12 m (on foot, not indoors, not down).
+  - Starts pushes by giving up to 3 rival members a `pending_event` (guard at the corner
+    anchor, event "turf").
+  - Provokes pushers within 9 m through `PoliceDispatch._provoke`.
+  - Sprays Decal tags on the nearest wall found by 12 ray casts (ground as a fallback), each
+    with a "paint over" Interactable.
+  - Applies the flip rewards and penalties.
+- **Push timing:** `next_push` counts down played minutes, at most 30 per tick. Tests set it to
+  1e9.
+
 ## Interiors
 
 - `InteriorSystem` (child of the GameSession) owns entering and leaving:

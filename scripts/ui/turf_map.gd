@@ -20,6 +20,7 @@ const MAP_SIZE := Vector2(640, 520)
 var district: District
 var manager: DistrictManager
 var player: Node3D
+var turf: TurfWar
 
 var _canvas: Control
 var _side: VBoxContainer
@@ -127,6 +128,17 @@ func refresh() -> void:
 				focused = true
 		else:
 			_add_label("Open: walk through the gate on the %s side." % d.side, 16, Color("#9fd8b8"))
+	if turf and not turf.state.order.is_empty():
+		_side.add_child(HSeparator.new())
+		_add_label("Corners (stand on one to take it; crew-mates help)", 20, Color("#ffd75e"))
+		for id in turf.state.order:
+			var c: Dictionary = turf.state.corners[id]
+			var mine := turf.state.is_players(id)
+			var line := "%s — %s %d%%" % [str(c.name).capitalize(), "YOURS" if mine else turf.crew_name(str(c.owner)), int(c.control)]
+			if turf.state.pushed(id):
+				line += "  ·  the %s are pushing!" % turf.crew_name(str(c.push_crew))
+			var col: Color = Color("#9fd8b8") if mine else (district.crews.colour(str(c.owner)) if not str(c.owner).is_empty() else Color("#c9c6bf"))
+			_add_label(line, 15, Color("#e2585e") if turf.state.pushed(id) else col)
 	var future := manager.planned()
 	if not future.is_empty():
 		_side.add_child(HSeparator.new())
@@ -265,6 +277,18 @@ func _draw_map() -> void:
 		var pos := Vector2(zr.position.x, zr.position.y - 8)
 		_canvas.draw_string_outline(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, 4, Color("#1d1b24"))
 		_canvas.draw_string(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, lb[2])
+	# Corners: a ring in the holder's colour (white = nobody's), flashing red while pushed.
+	if turf:
+		for id in turf.state.order:
+			var c: Dictionary = turf.state.corners[id]
+			var m := _to_map(turf.anchor(id))
+			var col: Color = district.crews.colour(str(c.owner)) if not str(c.owner).is_empty() else Color("#f4f1ea")
+			_canvas.draw_circle(m, 9.0, Color(col, 0.35))
+			_canvas.draw_arc(m, 9.0, 0.0, TAU * float(c.control) / 100.0, 24, col, 3.0)
+			if turf.state.is_players(id):
+				_canvas.draw_circle(m, 3.0, Color.WHITE)
+			if turf.state.pushed(id):
+				_canvas.draw_arc(m, 13.0, 0.0, TAU, 24, Color("#e2585e"), 2.0)
 	# Crew and player.
 	for r: Resident in district.residents.values():
 		if r.data.role == "player_crew" and not r.is_inside:
