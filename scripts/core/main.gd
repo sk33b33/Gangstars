@@ -163,6 +163,10 @@ func _run_screenshot() -> void:
 		await get_tree().create_timer(maxf(delay - 2.0, 0.1)).timeout
 		_stage_hustle()
 		delay = 1.5
+	if _args.has("aunty"):
+		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
+		_stage_aunty_shot()
+		delay = 0.3
 	if _args.has("firefight") or _args.has("follow"):
 		await get_tree().create_timer(maxf(delay - 3.0, 0.1)).timeout
 		await _stage_police_shot(_args.has("firefight"))
@@ -207,6 +211,23 @@ func _stage_hustle() -> void:
 		var c0: Vector3 = near[0].global_position
 		player.global_position = c0 + Vector3(2.0, 0.1, 1.5)
 		_add_camera(c0 + Vector3(3.0, 2.4, 4.0), c0 + Vector3(0, 1.8, 0))
+
+
+## Screenshot staging: frames the outdoor resident in a house dress with the most others nearby.
+func _stage_aunty_shot() -> void:
+	var outside := district.residents.values().filter(func(r): return not r.is_inside and not r.is_down() \
+			and r.data.appearance().get("dress", false))
+	var best: Resident = null
+	var best_n := -1
+	for r: Resident in outside:
+		var n := outside.filter(func(o): return o.global_position.distance_to(r.global_position) < 10.0).size()
+		if n > best_n:
+			best_n = n
+			best = r
+	if best == null:
+		return
+	var f := best.global_basis.z
+	_add_camera(best.global_position + f * 4.2 + best.global_basis.x * 1.4 + Vector3(0, 1.6, 0), best.global_position + Vector3(0, 1.0, 0))
 
 
 ## Screenshot staging: frames the officer nearest the player. With firefight, the player stands

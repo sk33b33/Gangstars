@@ -13,6 +13,8 @@ Contents (Blender Z-up, character faces -Y; glTF export turns that into Godot's 
 - Hair_short, Hair_long, Hair_doek, Hair_beanie, Hat_cap, Skirt: optional pieces Godot toggles.
 - Accessories (Acc_glasses, Acc_sunglasses, Acc_beard, Acc_moustache, Acc_collar, Acc_chain,
   Acc_apron) and Hair_afro / Hair_ponytail for named characters.
+- The aunty look: Dress (long house dress), Acc_hoops, Acc_curlers, Acc_handbag, Acc_cardigan
+  (+ Acc_cardigan_armL/R sleeves).
 - Actions: idle, walk, run, talk, guard, sit, lean, wave (loops), kick (one-shot); 24 fps. Walk = 1 s per two steps at
   1.5 m/s; run = 0.6 s at 4.5 m/s (Godot scales playback to the real speed).
 """
@@ -84,6 +86,7 @@ MATS = {n: mat(n, c) for n, c in {
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
     "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
     "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
+    "dress": (0.9, 0.4, 0.55), "cardigan": (0.85, 0.8, 0.7), "bag": (0.5, 0.2, 0.15), "acc_pink": (0.95, 0.55, 0.7),
     "uniform": (0.03, 0.05, 0.12), "vest": (0.02, 0.025, 0.04), "badge": (0.9, 0.7, 0.05), "belt": (0.015, 0.015, 0.018),
 }.items()}
 
@@ -246,6 +249,9 @@ def prim(kind, name, loc, scale=(1, 1, 1), material="skin", rot=(0, 0, 0), **kw)
     elif kind == "torus_ring":  # thin ring, flat in XY; rot=(pi/2,0,0) stands it up facing -Y (glasses rims)
         bpy.ops.mesh.primitive_torus_add(major_segments=16, minor_segments=6, major_radius=1, minor_radius=0.12,
                                          location=loc)
+    elif kind == "torus_thick":  # chunkier ring (hoop earrings, bag handles), flat in XY
+        bpy.ops.mesh.primitive_torus_add(major_segments=16, minor_segments=6, major_radius=1, minor_radius=0.2,
+                                         location=loc)
     o = bpy.context.active_object
     o.name = name
     o.scale = scale
@@ -373,6 +379,103 @@ def make_body_accessories():
         v.co.y -= 0.02 * math.exp(-((v.co.z - 1.15) / 0.15) ** 2)
         v.co.x *= 1.0 + (1.0 - v.co.z) * 0.25
     return [chain, apron]
+
+
+def cloth_uvs(obj, around=8, height=0.2):
+    """Cylindrical UVs for printed cloth (house-dress prints): `around` repeats round the body
+    and one repeat per 0.2 m of height; arms wrap around their own axis. Seams are fixed up
+    per face so the print never smears."""
+    while obj.data.uv_layers:
+        obj.data.uv_layers.remove(obj.data.uv_layers[0])
+    uv = obj.data.uv_layers.new(name="UVMap")
+    for poly in obj.data.polygons:
+        coords = []
+        for li in poly.loop_indices:
+            co = obj.data.vertices[obj.data.loops[li].vertex_index].co
+            if abs(co.x) > 0.17 and 0.85 < co.z < 1.45 and obj.name == "Body":
+                cx = 0.22 if co.x > 0 else -0.22
+                u = (math.atan2(co.x - cx, co.y) / (2 * math.pi)) * 4
+            else:
+                u = (math.atan2(co.x, co.y) / (2 * math.pi)) * around
+            coords.append([u, co.z / height])
+        us = [c[0] for c in coords]
+        span = around if max(us) - min(us) > around / 2 else (4 if max(us) - min(us) > 2 else 0)
+        for c, li in zip(coords, poly.loop_indices):
+            if span and c[0] < (max(us) + min(us)) / 2:
+                c[0] += span
+            uv.data[li].uv = c
+
+
+def make_aunty_pieces():
+    """The Mitchells Plain aunty look: a long house dress / maxi (Dress), bold gold hoops,
+    curlers, a handbag in the left hand and a cardigan (torso + upper-arm sleeves; the forearm
+    slot takes the cardigan colour in Godot). Returns (head pieces, other pieces with their bind)."""
+    head = []
+    hoops = []
+    for s in (1, -1):
+        hoops.append(prim("torus_thick", "hoop", HEAD_C + Vector((0.103 * s, 0.0, -0.058)), (0.026, 0.026, 0.026),
+                          "acc_gold", rot=(0, math.pi / 2, 0)))
+    head.append(join(hoops, "Acc_hoops"))
+    curlers = []
+    for k, a in enumerate((-0.55, -0.15, 0.25, 0.65, 1.05)):
+        y = 0.118 * math.sin(a) + 0.005
+        z = HEAD_C.z + 0.122 * math.cos(a) + 0.012
+        curlers.append(prim("cyl", "curler", (0, y, z), (0.022, 0.022, 0.045), "acc_pink", seg=10, rot=(0, math.pi / 2, 0)))
+        for sx in (1, -1):   # a row down each side
+            if k in (1, 2, 3):
+                curlers.append(prim("cyl", "curler", (0.09 * sx, y + 0.01, z - 0.045), (0.02, 0.02, 0.03), "acc_pink",
+                                    seg=10, rot=(0, math.pi / 2, 0)))
+    head.append(join(curlers, "Acc_curlers"))
+    other = []
+    # Long house dress: waist to just above the ankles, a little A-line.
+    dress = prim("cone", "Dress", (0, 0.005, 0.6), (0.285, 0.255, 0.41), "dress", seg=28, r2=0.7)
+    other.append((dress, "dress"))
+    # Handbag held in the left hand (follows the arm swing).
+    bag_body = prim("cube", "bag_body", (0.315, -0.03, 0.735), (0.032, 0.105, 0.075), "bag", smooth=False)
+    flap = prim("cube", "bag_flap", (0.315, -0.03, 0.795), (0.035, 0.108, 0.02), "bag", smooth=False)
+    clasp = prim("cube", "bag_clasp", (0.352, -0.03, 0.78), (0.004, 0.015, 0.012), "acc_gold", smooth=False)
+    handle = prim("torus_thick", "bag_handle", (0.315, -0.03, 0.83), (0.06, 0.06, 0.045), "bag", rot=(0, math.pi / 2, 0))
+    other.append((join([bag_body, flap, clasp, handle], "Acc_handbag"), "hand.L"))
+    # Cardigan: an open-front knit shell over the torso, plus sleeves on the upper arms.
+    shell = prim("cyl", "cardi_shell", (0, 0.003, 1.225), (0.192, 0.14, 0.235), "cardigan", seg=28)
+    bm = bmesh.new()
+    bm.from_mesh(shell.data)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if abs(f.normal.z) > 0.9 or (f.normal.y < -0.93)], context="FACES")
+    bm.to_mesh(shell.data)
+    bm.free()
+    straps = [prim("cube", "cardi_shoulder", (s * 0.11, 0.0, 1.455), (0.075, 0.12, 0.025), "cardigan", smooth=False) for s in (1, -1)]
+    other.append((join([shell] + straps, "Acc_cardigan"), "torso"))
+    for side, s in (("L", 1), ("R", -1)):
+        a = Vector((0.19 * s, 0.0, 1.43))
+        b = Vector((0.25 * s, 0.01, 1.17))
+        mid = (a + b) / 2
+        d = (a - b).normalized()
+        rot = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+        sleeve = prim("cyl", "Acc_cardigan_arm" + side, mid, (0.07, 0.07, (a - b).length / 2 + 0.01), "cardigan", seg=14,
+                      rot=tuple(rot))
+        other.append((sleeve, "upper_arm." + side))
+    return head, other
+
+
+def bind_dress(obj, rig):
+    """Long dress: the top follows the hips; lower down each side follows its thigh, and below
+    the knee its shin too, so the hem swings with the stride."""
+    groups = {n: obj.vertex_groups.new(name=n) for n in ("hips", "thigh.L", "thigh.R", "shin.L", "shin.R")}
+    for v in obj.data.vertices:
+        low = max(0.0, min(1.0, (0.97 - v.co.z) / 0.3))
+        lateral = min(1.0, abs(v.co.x) / 0.12)
+        front = max(0.0, min(1.0, -v.co.y / 0.12))   # the front drapes over the knees when sitting
+        leg = low * min(1.0, 0.3 + 0.4 * lateral + 0.7 * front)
+        knee = max(0.0, min(1.0, (0.5 - v.co.z) / 0.3)) * 0.5
+        share = {"L": max(0.0, min(1.0, 0.5 + v.co.x / 0.12 * 0.5))}
+        share["R"] = 1.0 - share["L"]
+        groups["hips"].add([v.index], 1.0 - leg, "REPLACE")
+        for side in ("L", "R"):
+            w = leg * share[side]
+            groups["thigh." + side].add([v.index], w * (1.0 - knee), "REPLACE")
+            groups["shin." + side].add([v.index], w * knee, "REPLACE")
+    obj.parent = rig
+    obj.modifiers.new("Armature", "ARMATURE").object = rig
 
 
 def make_police_gear():
@@ -706,6 +809,16 @@ for piece in make_hair_pieces() + make_accessories():
         bind_rigid(piece, rig, "head")
 for piece in make_body_accessories():
     bind_by_height(piece, rig)
+aunty_head, aunty_other = make_aunty_pieces()
+for piece in aunty_head:
+    bind_rigid(piece, rig, "head")
+for piece, how in aunty_other:
+    if how == "dress":
+        bind_dress(piece, rig)
+    elif how == "torso":
+        bind_by_height(piece, rig)
+    else:
+        bind_rigid(piece, rig, how)
 police_head, police_body = make_police_gear()
 for piece in police_head:
     bind_rigid(piece, rig, "head")
@@ -727,7 +840,14 @@ bake_action(rig, "hit", 12, pose_hit)
 bake_action(rig, "down", 72, pose_down)
 reset_pose(rig)
 
-# Every mesh gets a (flat) UV map: Godot's importer needs UVs to build tangents.
+for o in scene.objects:
+    if o.name == "Body":
+        cloth_uvs(o, 6, 0.15)
+    elif o.name == "Dress":
+        cloth_uvs(o, 9, 0.17)
+    elif o.name.startswith("Acc_cardigan"):
+        cloth_uvs(o)
+# Every other mesh gets a (flat) UV map: Godot's importer needs UVs to build tangents.
 for o in scene.objects:
     if o.type == "MESH" and not o.data.uv_layers:
         o.data.uv_layers.new(name="UVMap")

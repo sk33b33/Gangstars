@@ -53,6 +53,9 @@ untar to `~/opt`, link `~/bin/blender`. For Forward+ screenshots without a GPU: 
   - Add an accessory: create `Acc_<name>` and add the name to `CharacterModel.ACCESSORIES`. Bind it
     with `bind_rigid(..., "head")` for head pieces or `bind_by_height` for torso pieces.
   - Give a named character a look in `data/npcs/looks.json`. Check it with `lineup.gd --named`.
+  - Printed cloth (the aunty house dresses) uses real UVs from `cloth_uvs()` (cylindrical, seams
+    fixed per face) and `PixelMaterials.fabric(print)`. Triplanar smears on thin cone strips, and
+    primitives already carry a UV layer, so `cloth_uvs` removes it first. Check with `lineup.gd --aunties`.
 - **Animations:**
   - Full-body poses (sit, lean) are Blend2 nodes before the upper-body gestures (talk, guard, wave)
     in `CharacterModel._build_tree`.

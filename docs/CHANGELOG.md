@@ -4,6 +4,32 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### The Mitchells Plain aunty look (2026-11-11)
+- Most grown women residents (16 of 28 across the three suburbs) now dress in the classic
+  Mitchells Plain aunty style:
+  - **House dresses and maxis:** long, with an elasticated waist, in bright cotton prints
+    (rose, blue, sunflower, teal, lilac) or a bright solid colour.
+  - **Comfort footwear:** slippers or PVC sandals in pink, sky blue or black, white sneakers, or
+    tan wedges.
+  - **Hair and accessories:** a satin doek or pink curlers, bold gold hoops, and a handbag in
+    the hand.
+  - **Layers:** a cardigan, or an apron on the named cooks.
+- Generated looks are deterministic per resident.
+- Named aunties have hand-made outfits:
+  - Aunty Mavis: lilac print, red doek, black cardigan.
+  - Auntie Faiza: rose print, blue doek, hoops, handbag.
+  - Rachel: sunflower print, curlers, apron.
+  - Gail: teal print, white cardigan, apron.
+- **Data:** `data/npcs/looks.json` takes `dress`, `print`, `shoe_color`, `cardigan_color` and
+  `bag_color`; `dress: 0` opts someone out.
+- **Models:** the Blender character gains Dress (weighted to the legs so it drapes over the knees
+  when sitting), Acc_hoops, Acc_curlers, Acc_handbag and Acc_cardigan (with sleeves). Body,
+  dress and cardigan get cylindrical cloth UVs for the prints. Prints are pxl textures
+  (`print_*`). `lineup.gd --aunties` shows the look; the `--aunty` screenshot flag frames one in
+  game.
+- **Tests:** look derivation, variety, named outfits, and the model showing the right pieces. The
+  traffic stop test tolerates slow queued cars.
+
 ### The hustle: smokkie, phone and clients (2026-11-10)
 - **Aunty Mavis' smokkie** (shebeen) in Westridge, with a counter, chairs and
   a "smokkie night" crowd every evening (17:00–23:00). Mavis (`npc_mavis`) gives two missions

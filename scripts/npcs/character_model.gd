@@ -9,7 +9,9 @@ extends Node3D
 const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail"]
 const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
-	"police_cap", "police_vest", "dutybelt"]
+	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan"]
+## House-dress prints (pxl textures in assets/textures/pxl).
+const PRINTS: PackedStringArray = ["print_rose", "print_blue", "print_sun", "print_teal", "print_lilac"]
 const WAVE_TIME := 1.8
 const BLEND_RATE := 6.0        # how fast the gait blends in/out
 const WALK_REF := 1.5          # m/s the walk animation is authored for
@@ -52,7 +54,9 @@ var _hair: Array[MeshInstance3D] = []
 
 
 ## opts: {hair_style, hair_color: Color, height (1.0 = 1.75 m), sleeves: "long"/"short",
-##        figure: 0..1, heavy: 0..1, skirt: bool, accessories: Array[String], apron_color: Color}
+##        figure: 0..1, heavy: 0..1, skirt: bool, accessories: Array[String], apron_color: Color,
+##        dress: bool (long house dress; the shirt colour is its colour), print: one of PRINTS or "",
+##        cardigan_color, bag_color, shoe_color: Color}
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
 	for c in get_children():
 		c.queue_free()
@@ -73,18 +77,25 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	_skeleton = _root.find_child("Skeleton3D", true, false)
 	_head_bone = _skeleton.find_bone("head")
 	_head_scale = 1.3 if child else 1.0
-	var skirt: bool = bool(opts.get("skirt", false))
+	var dress: bool = bool(opts.get("dress", false))
+	var skirt: bool = bool(opts.get("skirt", false)) and not dress
 	var hair_color: Color = opts.get("hair_color", Color("#1d1b24"))
+	var extras: Array = opts.get("accessories", [])
+	var cardigan: Color = opts.get("cardigan_color", Color("#d8cbb0"))
+	# A printed house dress: the same cotton print on the bodice and the long skirt.
+	var fabric: Variant = shirt
+	if dress and PRINTS.has(str(opts.get("print", ""))):
+		fabric = PixelMaterials.fabric(str(opts.print))
 	var colours := {
-		"skin": skin, "shirt": shirt, "pants": skin.darkened(0.08) if skirt else pants,
-		"forearm": shirt if opts.get("sleeves", "long") == "long" else skin,
-		"shoes": Color("#1d1b24"), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
+		"skin": skin, "shirt": fabric, "pants": skin.darkened(0.08) if skirt or dress else pants,
+		"forearm": cardigan if extras.has("cardigan") else (fabric if opts.get("sleeves", "long") == "long" else skin),
+		"dress": fabric, "cardigan": cardigan, "bag": opts.get("bag_color", Color("#7a2e2a")), "acc_pink": Color("#f29bbd"),
+		"shoes": opts.get("shoe_color", Color("#1d1b24")), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
 		"apron": opts.get("apron_color", Color("#ece8dc")), "acc_frame": Color("#1a1a1e"), "acc_lens": Color("#101018"),
 		"acc_gold": Color("#d4a63a"), "acc_white": Color("#f4f4f0"),
 		"uniform": Color("#25366a"), "vest": Color("#5b7097"), "badge": Color("#e8b400"), "belt": Color("#121214"),
 	}
-	var extras: Array = opts.get("accessories", [])
 	var style := str(opts.get("hair_style", "short"))
 	for mi in _skeleton.get_children():
 		if not mi is MeshInstance3D:
@@ -99,8 +110,13 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.visible = false
 		elif n == "Skirt":
 			mi.visible = skirt
+		elif n == "Dress":
+			mi.visible = dress
 		elif n.begins_with("Acc_"):
-			mi.visible = extras.has(n.trim_prefix("Acc_"))
+			var key := n.trim_prefix("Acc_")
+			if key.begins_with("cardigan"):
+				key = "cardigan"   # Acc_cardigan + Acc_cardigan_armL/R
+			mi.visible = extras.has(key)
 		elif n == "Body":
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Figure"), clampf(float(opts.get("figure", 0.0)), 0.0, 1.0))
 			mi.set_blend_shape_value(mi.find_blend_shape_by_name("Heavy"), clampf(float(opts.get("heavy", 0.0)), 0.0, 1.0))
@@ -298,7 +314,8 @@ func _recolour(mi: MeshInstance3D, colours: Dictionary) -> void:
 		var m := mi.mesh.surface_get_material(i)
 		var key := m.resource_name if m else ""
 		if colours.has(key):
-			mi.set_surface_override_material(i, PixelMaterials.flat(colours[key]))
+			var c: Variant = colours[key]
+			mi.set_surface_override_material(i, c if c is Material else PixelMaterials.flat(c))
 
 
 func _build_tree(player: AnimationPlayer) -> void:

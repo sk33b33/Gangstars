@@ -316,3 +316,37 @@ sprite("icon_drink", { w: 8, h: 14 },
 sprite("sign_shebeen", { w: 64, h: 16 },
   rect(0, 0, 64, 16, "#2a2a30"), rect(0, 14, 64, 2, "#e2585e"),
   text(32, 2, "AUNTY MAVIS", "#ffd75e", { align: "c" }), text(32, 8, "COLD DRINKS", "#f4f4f0", { align: "c" }))
+
+// ------------------------------------------------------------------ aunty house-dress prints
+// Seamless 16x16 cotton prints for house dresses and maxis (mapped onto the dress in object
+// space, ~20 cm per repeat). A base colour, two flowers (petals P, centre C) and leaf pairs.
+sprite("_flower", { w: 5, h: 5 }, `
+  .PPP.
+  PPCPP
+  PCCCP
+  PPCPP
+  .PPP.`)
+sprite("_bud", { w: 3, h: 3 }, `
+  .P.
+  PCP
+  .P.`)
+sprite("_leaf", { w: 3, h: 2 }, `
+  .LL
+  LL.`)
+const PRINTS = {
+  //            base       petals     centre     leaf       bud petals
+  print_rose:  ["#e86a8a", "#fff3f0", "#f2c43a", "#3f8a4a", "#b8325a"],
+  print_blue:  ["#2f6db8", "#fdf6e3", "#f2c43a", "#7fc3e8", "#f4f4f0"],
+  print_sun:   ["#f2b632", "#d9442e", "#5a2a14", "#4f8a3c", "#fff3d6"],
+  print_teal:  ["#159a8c", "#f6e7c8", "#e2585e", "#0d5f57", "#f2c43a"],
+  print_lilac: ["#9a6cc4", "#ffffff", "#f2c43a", "#5b9a5a", "#f4a6c8"],
+}
+for (const [name, [base, petal, centre, leaf, bud]] of Object.entries(PRINTS)) {
+  const sw = { P: petal, C: centre, L: leaf }
+  sprite(name, { w: 16, h: 16 },
+    rect(0, 0, 16, 16, base),
+    stamp("_flower", 1, 1, { swap: sw }), stamp("_flower", 9, 9, { swap: sw }),
+    stamp("_bud", 11, 2, { swap: { P: bud, C: centre } }), stamp("_bud", 2, 11, { swap: { P: bud, C: centre } }),
+    stamp("_leaf", 6, 5, { swap: sw }), stamp("_leaf", 13, 13, { swap: sw, flip: "x" }),
+    stamp("_leaf", 6, 13, { swap: sw }), stamp("_leaf", 13, 6, { swap: sw, flip: "x" }))
+}

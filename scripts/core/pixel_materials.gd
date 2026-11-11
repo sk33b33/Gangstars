@@ -42,6 +42,18 @@ static func flat(color: Color) -> StandardMaterial3D:
 	return mat
 
 
+## Cloth print for clothes. The character model's cloth has cylindrical UVs (one repeat per
+## 0.2 m of height, 8 round the body), so the print follows the body as it moves.
+static func fabric(tex_name: String) -> StandardMaterial3D:
+	var key := "c|%s" % tex_name
+	if _cache.has(key):
+		return _cache[key]
+	var mat := _base(tex_name, Color.WHITE, false)
+	mat.roughness = 0.9
+	_cache[key] = mat
+	return mat
+
+
 ## Shared streetlight/window glow material; DayNight drives its emission energy.
 static func lamp() -> StandardMaterial3D:
 	if _cache.has("lamp"):

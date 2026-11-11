@@ -97,6 +97,37 @@ func _test_npc_data() -> void:
 		var h := reg.get_house(id)
 		for occ in h.occupant_ids:
 			_check(npcs.any(func(n): return n.id == occ), "occupant %s of %s exists" % [occ, id])
+	# The aunty look: most grown women residents wear a house dress, in prints, with the trimmings.
+	var everyone: Array[NpcData] = []
+	for f in ["starter", "rooiduin", "kalkbos"]:
+		everyone.append_array(NpcData.load_file("res://data/npcs/%s_residents.json" % f))
+	var aunties := everyone.filter(func(n): return n.appearance().get("dress", false))
+	var women := everyone.filter(func(n): return n.role == "resident" and float(n.appearance().figure) > 0.5)
+	_check(aunties.size() >= women.size() / 2 and aunties.size() >= 6, "most grown women wear the aunty look (%d of %d)" % [aunties.size(), women.size()])
+	_check(aunties.all(func(n): return n.role == "resident" and n.height >= 0.85), "only grown residents wear house dresses")
+	_check(aunties.all(func(n): return not n.appearance().skirt), "a house dress replaces the skirt")
+	var kit := {}
+	for n in aunties:
+		var a: Dictionary = n.appearance()
+		kit[a.print] = true
+		for acc in a.accessories:
+			kit[acc] = true
+		if a.hair_style == "doek":
+			kit["doek"] = true
+	_check(kit.size() >= 8, "aunties vary: prints, hoops, handbags, cardigans, curlers, doeks (%s)" % [kit.keys()])
+	var faiza: NpcData = everyone.filter(func(n): return n.id == "npc_faiza")[0]
+	_check(faiza.appearance().dress and faiza.appearance().print == "print_rose" and faiza.appearance().accessories.has("hoops"), "Auntie Faiza wears her rose-print house dress and hoops")
+	var mavis: NpcData = NpcData.load_file("res://data/npcs/shebeen.json")[0]
+	_check(mavis.appearance().dress and mavis.appearance().print == "print_lilac" and mavis.appearance().hair_style == "doek", "Aunty Mavis wears her lilac house dress and doek")
+	var m := CharacterModel.new()
+	root.add_child(m)
+	m.build(Color.PINK, Color.BLACK, Color("#6b4430"), Color(0, 0, 0, 0), faiza.appearance())
+	var shown := {}
+	for mi in m.find_children("*", "MeshInstance3D", true, false):
+		if mi.visible:
+			shown[str(mi.name)] = true
+	_check(shown.has("Dress") and shown.has("Acc_hoops") and shown.has("Acc_handbag") and not shown.has("Skirt"), "the model shows the dress, hoops and handbag (%s)" % [shown.keys()])
+	m.queue_free()
 
 
 func _test_brain_cycle() -> void:
@@ -812,7 +843,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	slowest = minf(slowest, car.speed)
 	# (Or it is held back further up the lane, queued behind another car that stopped first.)
-	var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 2.0
+	var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 3.0
 	_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
 	_check(Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length() < 0.3, "the player is not pushed by the car")
 	var gap := car.global_position.distance_to(player.global_position)

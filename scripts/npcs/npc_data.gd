@@ -33,6 +33,13 @@ extends Resource
 ## Extras shown on the model (see CharacterModel.ACCESSORIES), e.g. glasses, beard, apron.
 @export var accessories: PackedStringArray = []
 @export var apron_color: Color = Color("#ece8dc")
+## The Mitchells Plain aunty look (house dress or maxi, slippers, hoops, doek or curlers,
+## handbag, cardigan). -1 derive (most grown women residents), 0 never, 1 always.
+@export var dress: int = -1
+@export var dress_print: String = ""        # a CharacterModel.PRINTS name, "solid", or "" (pick)
+@export var cardigan_color: Color = Color(0, 0, 0, 0)
+@export var bag_color: Color = Color(0, 0, 0, 0)
+@export var shoe_color: Color = Color(0, 0, 0, 0)
 
 ## Hand-made looks for named characters, merged over generated data (see data/npcs/looks.json).
 const LOOKS_FILE := "res://data/npcs/looks.json"
@@ -44,8 +51,47 @@ func appearance() -> Dictionary:
 	var fig := figure if figure >= 0.0 else (0.85 + float(h % 15) / 100.0 if hair_style in ["long", "doek"] else 0.0)
 	var hv := heavy if heavy >= 0.0 else (float(h / 7 % 60) / 100.0 if h % 3 == 0 else float(h / 7 % 15) / 100.0)
 	var sk := skirt == 1 or (skirt == -1 and fig > 0.5 and h / 11 % 2 == 0)
-	return {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves,
+	var look := {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves,
 		"figure": fig, "heavy": hv, "skirt": sk, "accessories": Array(accessories), "apron_color": apron_color}
+	if dress == 1 or (dress == -1 and skirt == -1 and accessories.is_empty() and role == "resident" and fig > 0.5 and height >= 0.85 and h / 13 % 4 != 0):
+		_aunty_look(look, h)
+	return look
+
+
+const SLIPPERS := ["#f29bbd", "#7fc3e8", "#1d1b24", "#f4f4f0", "#c8a27a", "#e2585e"]
+const CARDIGANS := ["#d8cbb0", "#f4f4f0", "#a7c0d6", "#c98aa5", "#8c6044", "#5b7097"]
+const BAGS := ["#7a2e2a", "#1d1b24", "#c8a27a", "#e2585e", "#f2b632", "#f4f4f0"]
+const DOEKS := ["#d9442e", "#2f6db8", "#9a6cc4", "#e86a8a", "#159a8c", "#f2b632"]
+
+
+## A house dress or maxi in a bright print (or a bright solid colour), comfortable shoes and,
+## by hash, hoops, a handbag, a cardigan and either curlers or a satin doek. Hand-made looks
+## (data/npcs/looks.json) can set any part.
+func _aunty_look(look: Dictionary, h: int) -> void:
+	look.dress = true
+	look.skirt = false
+	var p := dress_print
+	if p.is_empty():
+		p = "solid" if h / 37 % 6 == 0 else CharacterModel.PRINTS[h / 37 % CharacterModel.PRINTS.size()]
+	look.print = p
+	look.shoe_color = shoe_color if shoe_color.a > 0.0 else Color(SLIPPERS[h / 41 % SLIPPERS.size()])
+	look.cardigan_color = cardigan_color if cardigan_color.a > 0.0 else Color(CARDIGANS[h / 43 % CARDIGANS.size()])
+	look.bag_color = bag_color if bag_color.a > 0.0 else Color(BAGS[h / 47 % BAGS.size()])
+	if dress == 1:
+		return   # a hand-made look lists its own accessories and hair
+	var acc: Array = look.accessories
+	if h / 17 % 5 < 3:
+		acc.append("hoops")
+	if h / 19 % 5 < 2:
+		acc.append("handbag")
+	if h / 23 % 3 == 0:
+		acc.append("cardigan")
+	if h / 29 % 5 == 0:
+		acc.append("curlers")
+		look.hair_style = "short"
+	elif h / 29 % 5 < 3:
+		look.hair_style = "doek"
+		look.hair_color = Color(DOEKS[h / 31 % DOEKS.size()])
 
 
 static func from_dict(d: Dictionary) -> NpcData:
@@ -87,6 +133,11 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.skirt = int(d.get("skirt", -1))
 	n.accessories = PackedStringArray(d.get("accessories", []))
 	n.apron_color = DataFiles.to_color(d.get("apron_color"), Color("#ece8dc"))
+	n.dress = int(d.get("dress", -1))
+	n.dress_print = str(d.get("print", ""))
+	n.cardigan_color = DataFiles.to_color(d.get("cardigan_color"), Color(0, 0, 0, 0))
+	n.bag_color = DataFiles.to_color(d.get("bag_color"), Color(0, 0, 0, 0))
+	n.shoe_color = DataFiles.to_color(d.get("shoe_color"), Color(0, 0, 0, 0))
 	return n
 
 

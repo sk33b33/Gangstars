@@ -1,13 +1,19 @@
 {
-  "_comment": "Per-character look overrides, merged over the generated resident data (any NpcData field). accessories: glasses, sunglasses, beard, moustache, collar, chain, apron. Hair: short, long, doek, beanie, bald, afro, ponytail.",
+  "_comment": "Per-character look overrides, merged over the generated resident data (any NpcData field). accessories: glasses, sunglasses, beard, moustache, collar, chain, apron, hoops, curlers, handbag, cardigan. Hair: short, long, doek, beanie, bald, afro, ponytail. The aunty look: dress 1 (house dress / maxi), print (print_rose, print_blue, print_sun, print_teal, print_lilac or solid), shoe_color, cardigan_color, bag_color. dress 0 keeps someone out of the generated aunty look.",
   "looks": {
     "npc_faiza": {
       "figure": 1.0,
       "heavy": 0.55,
-      "skirt": 1,
       "accessories": [
-        "glasses"
-      ]
+        "glasses",
+        "hoops",
+        "handbag"
+      ],
+      "dress": 1,
+      "print": "print_rose",
+      "hair_style": "doek",
+      "hair_color": "#2f6db8",
+      "shoe_color": "#f29bbd"
     },
     "npc_boeta": {
       "hair_style": "short",
@@ -20,7 +26,8 @@
       "hair_style": "ponytail",
       "figure": 0.95,
       "heavy": 0.0,
-      "skirt": 0
+      "skirt": 0,
+      "dress": 0
     },
     "npc_lionel": {
       "hair_style": "short",
@@ -36,17 +43,22 @@
       "figure": 0.6,
       "heavy": 0.0,
       "skirt": 0,
-      "hair_color": "#16a085"
+      "hair_color": "#16a085",
+      "dress": 0
     },
     "npc_rooi_rachel": {
       "figure": 1.0,
       "heavy": 0.7,
-      "skirt": 1,
       "accessories": [
         "apron",
-        "glasses"
+        "glasses",
+        "curlers"
       ],
-      "apron_color": "#f6e7c8"
+      "apron_color": "#f6e7c8",
+      "dress": 1,
+      "print": "print_sun",
+      "hair_style": "short",
+      "shoe_color": "#7fc3e8"
     },
     "npc_rooi_solly": {
       "accessories": [
@@ -77,11 +89,16 @@
     "npc_kalk_gail": {
       "figure": 1.0,
       "heavy": 0.4,
-      "skirt": 0,
       "accessories": [
-        "apron"
+        "apron",
+        "cardigan",
+        "hoops"
       ],
-      "apron_color": "#3d6e8f"
+      "apron_color": "#3d6e8f",
+      "dress": 1,
+      "print": "print_teal",
+      "shoe_color": "#f4f4f0",
+      "cardigan_color": "#f4f4f0"
     },
     "npc_kalk_pastor": {
       "shirt_color": "#1d1b24",
@@ -113,6 +130,20 @@
       "heavy": 0.55,
       "sleeves": "short",
       "height": 1.1
+    },
+    "npc_mavis": {
+      "figure": 1.0,
+      "heavy": 0.6,
+      "dress": 1,
+      "print": "print_lilac",
+      "hair_style": "doek",
+      "hair_color": "#d9442e",
+      "shoe_color": "#1d1b24",
+      "cardigan_color": "#1d1b24",
+      "accessories": [
+        "hoops",
+        "cardigan"
+      ]
     }
   }
 }

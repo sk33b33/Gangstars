@@ -79,6 +79,17 @@ func _run() -> void:
 			[Color("#2c3e50"), Color("#4a4e6a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "bald"}, "holster:shotgun", 1.5],
 			[Color("#7a1f1f"), Color("#1c2833"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "short"}, "down", 0.0],
 		]
+	if args.has("aunties"):
+		# The Mitchells Plain aunty look: prints, doeks, curlers, hoops, handbags, cardigans, slippers.
+		var a := {"figure": 1.0, "dress": true, "accessories": ["hoops"]}
+		looks = [
+			[Color("#e86a8a"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), a.merged({"print": "print_rose", "hair_style": "doek", "hair_color": Color("#2f6db8"), "heavy": 0.6, "shoe_color": Color("#f29bbd"), "accessories": ["hoops", "handbag"]}, true), "talk", 0.0],
+			[Color("#2f6db8"), Color("#3b2f4a"), Color("#8d5a3b"), Color(0, 0, 0, 0), a.merged({"print": "print_blue", "hair_style": "short", "heavy": 0.3, "shoe_color": Color("#7fc3e8"), "accessories": ["curlers", "handbag"]}, true), "idle", 1.2],
+			[Color("#f2b632"), Color("#3b2f4a"), Color("#a7754f"), Color(0, 0, 0, 0), a.merged({"print": "print_sun", "hair_style": "doek", "hair_color": Color("#d9442e"), "heavy": 0.7, "cardigan_color": Color("#d8cbb0"), "shoe_color": Color("#1d1b24"), "accessories": ["hoops", "cardigan"]}, true), "sit", 0.0],
+			[Color("#d9442e"), Color("#3b2f4a"), Color("#6b4430"), Color(0, 0, 0, 0), a.merged({"print": "solid", "hair_style": "long", "heavy": 0.2, "shoe_color": Color("#f4f4f0"), "accessories": ["hoops", "handbag"], "bag_color": Color("#1d1b24")}, true), "wave", 0.0],
+			[Color("#159a8c"), Color("#3b2f4a"), Color("#4a2f22"), Color(0, 0, 0, 0), a.merged({"print": "print_teal", "hair_style": "doek", "hair_color": Color("#9a6cc4"), "heavy": 0.5, "apron_color": Color("#f4f1ea"), "shoe_color": Color("#c8a27a"), "accessories": ["apron", "glasses", "hoops"]}, true), "guard", 0.0],
+			[Color("#9a6cc4"), Color("#3b2f4a"), Color("#8d5a3b"), Color(0, 0, 0, 0), a.merged({"print": "print_lilac", "hair_style": "short", "hair_color": Color("#a7a39a"), "heavy": 0.45, "cardigan_color": Color("#a7c0d6"), "shoe_color": Color("#e2585e"), "accessories": ["cardigan", "curlers", "handbag"]}, true), "idle", 1.0],
+		]
 	var models: Array = []
 	var spacing := 0.85 if looks.size() > 6 else 1.0
 	for i in looks.size():

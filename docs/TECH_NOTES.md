@@ -249,6 +249,17 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## The aunty look
+
+- `NpcData.appearance()` gives grown women residents the Mitchells Plain aunty look by hash
+  (`dress == -1`, no hand-made skirt or accessories, figure > 0.5): about 3 in 4 of them.
+- `_aunty_look()` picks a print or a solid colour, shoes, and the cardigan and bag colours.
+  Hoops (60%), a handbag (40%), a cardigan (1 in 3), and curlers (1 in 5) or a doek (2 in 5).
+- `dress: 1` in looks.json uses only the listed accessories and hair; `dress: 0` opts out.
+- In `CharacterModel`, `opts.dress` shows `Dress`, hides the skirt and makes the legs skin.
+  `opts.print` (a `PRINTS` name) puts `PixelMaterials.fabric()` on the shirt and dress slots.
+  The `cardigan` accessory also shows its arm sleeves and recolours the forearm slot.
+
 ## Crews
 
 - `data/factions/crews.json` (`CrewCatalog`) defines the crews: id, name, home district, colour,
