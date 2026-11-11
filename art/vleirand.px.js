@@ -470,3 +470,11 @@ sprite("window_inside", { w: 24, h: 20 },
   rect(0, 0, 24, 20, "#e8e2d6"), rect(2, 2, 20, 16, "#a7cde8"), rect(2, 12, 20, 6, "#c8dcc0"),
   vline(12, 2, 16, "#e8e2d6"), hline(2, 10, 20, "#e8e2d6"),
   (c) => { for (let x = 4; x < 22; x += 3) c.vline(x, 2, 16, "#3a3d46") })
+
+// House smokkie signs (Lentegeur, Rocklands).
+sprite("sign_doreen", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "#1d4a46"), rect(0, 14, 64, 2, "#f2b632"),
+  text(32, 2, "DOREEN'S", "#f4f1ea", { align: "c" }), text(32, 8, "COLD DRINKS", "#f2b632", { align: "c" }))
+sprite("sign_lena", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "#3f2a4a"), rect(0, 14, 64, 2, "#d9442e"),
+  text(32, 2, "MA LENA'S", "#f4f1ea", { align: "c" }), text(32, 8, "TAVERN", "#f2c43a", { align: "c" }))

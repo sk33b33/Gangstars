@@ -166,7 +166,7 @@ func _run_screenshot() -> void:
 	if _args.has("interior"):
 		await get_tree().create_timer(maxf(delay - 1.0, 0.1)).timeout
 		var id := str(_args.interior)
-		if id != GameSession.SAFEHOUSE_ID and id != InteriorSystem.SHEBEEN:
+		if id != GameSession.SAFEHOUSE_ID and not session.dealing.is_venue(id):
 			session.interiors.welcome(id)
 		var why := session.interiors.enter(id)
 		if not why.is_empty():

@@ -1,17 +1,108 @@
 {
   "_comment": "Early-game economy (game-like, abstract): stock bought from your crew's runner, sold at the smokkie counter or on the street by phone order.",
   "products": {
-    "weed": {"name": "bankie", "plural": "bankies", "buy": 20, "sell": 45},
-    "drink": {"name": "drink", "plural": "drinks", "buy": 12, "sell": 25}
+    "weed": {
+      "name": "bankie",
+      "plural": "bankies",
+      "buy": 20,
+      "sell": 45
+    },
+    "drink": {
+      "name": "drink",
+      "plural": "drinks",
+      "buy": 12,
+      "sell": 25
+    }
   },
   "restock": [
-    {"product": "weed", "qty": 5, "label": "5 bankies"},
-    {"product": "drink", "qty": 12, "label": "a crate of 12 drinks"}
+    {
+      "product": "weed",
+      "qty": 5,
+      "label": "5 bankies"
+    },
+    {
+      "product": "drink",
+      "qty": 12,
+      "label": "a crate of 12 drinks"
+    }
   ],
   "client_share": 0.5,
-  "call_every_minutes": [300, 600],
-  "order_window_minutes": [120, 200],
+  "call_every_minutes": [
+    300,
+    600
+  ],
+  "order_window_minutes": [
+    120,
+    200
+  ],
   "max_open_orders": 2,
   "ring_seconds": 30,
-  "mood": {"start": 70, "fast": 10, "on_time": 5, "late": -35, "declined": -15, "missed": -10, "spooked": -10, "lost_below": 25, "win_back": 45}
+  "mood": {
+    "start": 70,
+    "fast": 10,
+    "on_time": 5,
+    "late": -35,
+    "declined": -15,
+    "missed": -10,
+    "spooked": -10,
+    "lost_below": 25,
+    "win_back": 45
+  },
+  "venues": [
+    {
+      "id": "shebeen",
+      "name": "Aunty Mavis' smokkie",
+      "host": "npc_mavis",
+      "crowd": "poi_shebeen",
+      "hours": [
+        10,
+        23
+      ]
+    },
+    {
+      "id": "rooi_h17",
+      "name": "Doreen's smokkie",
+      "host": "npc_rooi_doreen",
+      "crowd": "rooi_h17:gate",
+      "hours": [
+        12,
+        24
+      ],
+      "sign": "sign_doreen"
+    },
+    {
+      "id": "kalk_h20",
+      "name": "Ma Lena's smokkie",
+      "host": "npc_kalk_lena",
+      "crowd": "kalk_h20:gate",
+      "hours": [
+        12,
+        23
+      ],
+      "sign": "sign_lena"
+    }
+  ],
+  "prices": {
+    "_comment": "Street price multiplier: risk premium per heat star, cheaper where rivals hold the corners, dearer where you do.",
+    "per_heat": 0.1,
+    "competition": 0.25,
+    "own_turf": 0.15,
+    "min": 0.75,
+    "max": 1.5
+  },
+  "runner": {
+    "_comment": "A runner (hired at the safehouse) takes answered orders for you: a cut of the money, some risk.",
+    "hire_cost": 200,
+    "max": 2,
+    "minutes": 30,
+    "cut": 0.2,
+    "base_success": 0.9,
+    "per_heat": 0.08,
+    "competition": 0.1
+  },
+  "drops": {
+    "_comment": "Restock is ordered at the safehouse and picked up: ready after a while, gone if left too long.",
+    "ready_minutes": 20,
+    "expire_minutes": 240
+  }
 }

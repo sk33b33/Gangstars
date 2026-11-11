@@ -1,0 +1,93 @@
+{
+  "_comment": "Hosts of the house smokkies in Lentegeur and Rocklands (venues in data/dealing/dealing.json).",
+  "residents": [
+    {
+      "id": "npc_rooi_doreen",
+      "display_name": "Auntie Doreen",
+      "home_id": "rooi_h17",
+      "role": "resident",
+      "shirt_color": "#159a8c",
+      "pants_color": "#3b2f4a",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.2,
+      "start_delay": 20.0,
+      "schedule": [
+        {
+          "activity": "guard",
+          "destination": "rooi_h17:gate",
+          "duration": 60
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Doreen's is open, come in.",
+        "Cold drinks inside. No fighting on my stoep.",
+        "You selling? Then sell inside, not on my gate."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        7,
+        23
+      ],
+      "hair_style": "doek",
+      "hair_color": "#f2b632",
+      "figure": 1.0,
+      "heavy": 0.5,
+      "dress": 1,
+      "print": "print_teal",
+      "shoe_color": "#f29bbd",
+      "accessories": [
+        "hoops"
+      ]
+    },
+    {
+      "id": "npc_kalk_lena",
+      "display_name": "Ma Lena",
+      "home_id": "kalk_h20",
+      "role": "resident",
+      "shirt_color": "#9a6cc4",
+      "pants_color": "#3b2f4a",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.1,
+      "start_delay": 25.0,
+      "schedule": [
+        {
+          "activity": "guard",
+          "destination": "kalk_h20:gate",
+          "duration": 60
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Ma Lena's tavern. Wipe your feet.",
+        "Quarry men drink here. Mind your manners.",
+        "Bring stock, I'll give you the counter."
+      ],
+      "personality": "steady",
+      "active_hours": [
+        7,
+        23
+      ],
+      "hair_style": "short",
+      "hair_color": "#a7a39a",
+      "figure": 1.0,
+      "heavy": 0.7,
+      "dress": 1,
+      "print": "print_sun",
+      "shoe_color": "#1d1b24",
+      "cardigan_color": "#5b7097",
+      "accessories": [
+        "cardigan",
+        "curlers"
+      ]
+    }
+  ]
+}

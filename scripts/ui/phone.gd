@@ -89,6 +89,14 @@ func refresh() -> void:
 	_label("PHONE", 26, Color("#7fd1ff"))
 	_label("Stock: %d %s · %d %s" % [int(st.stock.weed), "bankie" if int(st.stock.weed) == 1 else "bankies",
 		int(st.stock.drink), "drink" if int(st.stock.drink) == 1 else "drinks"], 16, Color("#ffd75e"))
+	var here := dealing.district.area_at(dealing.player.global_position)
+	var m := dealing.price_mult(here if not here.is_empty() else "starter")
+	_label("Street prices here: bankie R%d · drink R%d  (%s)%s" % [st.price("weed", m), st.price("drink", m),
+		"x%.2f" % m, "  · %d runner%s" % [st.runners, "" if st.runners == 1 else "s"] if st.runners > 0 else ""], 14, Color("#c9c6bf"))
+	for d in st.drops:
+		var wait := float(d.ready) - dealing.minutes()
+		_label("Drop: %d %s at %s — %s" % [int(d.qty), dealing._plural(str(d.product), int(d.qty)), dealing.district.destinations.display_name(str(d.at)),
+			"ready" if wait <= 0.0 else "in %d min" % int(ceil(wait))], 14, Color("#9fd8b8"))
 	if dealing.police_watching(dealing.player.global_position):
 		_label("!! SAPS nearby. Don't deal here.", 16, Color("#ff6b6b"))
 	var tabs := HBoxContainer.new()
@@ -146,8 +154,19 @@ func _orders_view() -> void:
 		_label("No open orders. Clients call when they want something.", 15, Color("#c9c6bf"))
 	for o in st.orders:
 		var left := maxf(0.0, float(o.deadline) - dealing.minutes())
-		_row(str(o.npc), "%s — %d %s" % [str(st.clients[o.npc].name), int(o.qty), dealing._plural(str(o.product), int(o.qty))],
-			"At %s · %d:%02d left" % [dealing.district.destinations.display_name(str(o.place)), int(left / 60.0), int(fmod(left, 60.0))])
+		var each := st.price(str(o.product), dealing.client_mult(str(o.npc)))
+		_row(str(o.npc), "%s — %d %s (R%d each)" % [str(st.clients[o.npc].name), int(o.qty), dealing._plural(str(o.product), int(o.qty)), each],
+			"At %s · %d:%02d left%s" % [dealing.district.destinations.display_name(str(o.place)), int(left / 60.0), int(fmod(left, 60.0)),
+				"  · your runner's on it" if o.has("runner_at") else ""])
+		if st.runners > 0 and not o.has("runner_at"):
+			var b := Button.new()
+			b.name = "Runner_" + str(o.npc)
+			b.text = "Send your runner (%d free) — %d%% safe" % [st.runners - st.runners_busy(), int(dealing.runner_success(str(o.npc)) * 100)]
+			b.disabled = st.runners_busy() >= st.runners
+			b.pressed.connect(func():
+				dealing.message.emit(dealing.send_runner(str(o.npc)))
+				refresh())
+			_list.add_child(b)
 
 
 func _contacts_view() -> void:

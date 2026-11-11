@@ -347,6 +347,15 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
 
 ## Dealing (the hustle)
 
+- **Venues:** `dealing.json` venues {id, name, host, crowd, hours, sign}. An id is either the
+  shebeen landmark or a house id. House venues get a sign and a door that enters directly
+  (InteriorSystem layout "shebeen").
+- **Prices:** `DealingController.price_mult(area)` covers heat and the turf share of the
+  suburb's corners. `DealingState.price(p, mult)` rounds to R5.
+- **Runners:** `DealingState.send_runner()` / `resolve_runners(minutes, rng, success, mult)`.
+- **Drops:** `DealingState.order_drop()` / `collect_drop()` / `expire_drops()`. The controller
+  shows each drop as a crate with a Collect Interactable at `drop_anchor()`.
+
 - `data/dealing/dealing.json` holds the tuning: products, restock lots, call timing, order windows
   and mood rules.
 - `DealingState` is pure logic and unit-tested. It holds stock, clients (mood, status, rival),

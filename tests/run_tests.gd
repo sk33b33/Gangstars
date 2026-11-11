@@ -47,6 +47,7 @@ func _run() -> void:
 	_test_combat_units()
 	_test_dealing_units()
 	_test_turf_units()
+	_test_hustle_units()
 	print("== district (integration)")
 	await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -1390,8 +1391,21 @@ func _test_dealing_in_game(main: Node, district: District, player: Player) -> vo
 	# Restock from the safehouse menu.
 	prog.add_cash(500)
 	var before := int(dealing.state.stock.drink)
-	_check(dealing.buy_stock(1) and int(dealing.state.stock.drink) == before + 12, "buy a crate of drinks from your crew's runner")
-	_check(dealing.buy_stock(0) and int(dealing.state.stock.weed) >= 5, "...and some bankies")
+	var weed0 := int(dealing.state.stock.weed)
+	_check(dealing.buy_stock(1) and dealing.buy_stock(0) and dealing.state.drops.size() >= 2 and int(dealing.state.stock.drink) == before,
+		"ordering stock leaves a drop to pick up (not instant)")
+	for i in 3:
+		await physics_frame
+	var drop_node: Node = district.get_node_or_null("Drop%d" % int(dealing.state.drops[0].id))
+	_check(drop_node != null and drop_node.has_node("Collect"), "a crate waits at the drop (%s)" % district.destinations.display_name(dealing.drop_anchor()))
+	_check(not dealing.collect(int(dealing.state.drops[0].id)).begins_with("Picked"), "...not ready straight away")
+	for d in dealing.state.drops:
+		d.ready = 0.0
+	for d in dealing.state.drops.duplicate():
+		var it: Interactable = district.get_node("Drop%d/Collect" % int(d.id))
+		it.interact(player)
+	_check(dealing.state.drops.is_empty() and int(dealing.state.stock.drink) == before + 12 and int(dealing.state.stock.weed) == weed0 + 5,
+		"collecting the drop puts the crate and bankies in your stock")
 	# Evening: the crowd gathers; serve them at the counter.
 	district.director.clock.set_hour(18.5)
 	var served := 0
@@ -1585,6 +1599,72 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 		if district.registry.get_house(id).ownership == "hostile":
 			_check(not interiors.why_not(id).is_empty(), "no way into a hostile house")
 			break
+
+
+func _test_hustle_units() -> void:
+	print("== hustle units (prices, runners, drops)")
+	var st := DealingState.load_default()
+	_check(st.price("weed", 1.0) == 45 and st.price("weed", 1.2) == 55 and st.price("drink", 0.8) == 20, "prices scale and round to R5")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	st.add_client("c1", "Client One", "weed", "h1", 0.0, rng)
+	st.add_client("c2", "Client Two", "weed", "h2", 0.0, rng)
+	st.add_stock("weed", 4)
+	st.call = {"npc": "c1", "product": "weed", "qty": 1, "place": "h1:gate", "rings_until": 99.0}
+	st.answer(10.0, rng)
+	_check(not st.send_runner("c1", 10.0), "no runner hired: can't send one")
+	_check(st.hire_runner() and st.runners == 1, "hire a runner")
+	_check(st.send_runner("c1", 10.0) and st.runners_busy() == 1, "send the runner with an order")
+	_check(st.resolve_runners(20.0, rng, func(_n): return 1.0, func(_n): return 1.0).is_empty(), "the runner takes a while")
+	var res := st.resolve_runners(60.0, rng, func(_n): return 1.0, func(_n): return 1.0)
+	_check(res.size() == 1 and res[0].ok and res[0].cash == 36 and st.stats.runner_deals == 1 and st.orders.is_empty(), "the runner sells it and keeps a 20% cut (R36 of R45)")
+	st.call = {"npc": "c2", "product": "weed", "qty": 1, "place": "h2:gate", "rings_until": 99.0}
+	st.answer(70.0, rng)
+	st.send_runner("c2", 70.0)
+	var stock0 := int(st.stock.weed)
+	res = st.resolve_runners(200.0, rng, func(_n): return 0.0, func(_n): return 1.0)
+	_check(res.size() == 1 and not res[0].ok and int(st.stock.weed) == stock0 - 1 and st.stats.runner_busts == 1, "a caught runner loses the stock")
+	var d := st.order_drop("drink", 12, "x:gate", 100.0)
+	_check(st.collect_drop(int(d.id), 105.0).begins_with("Not here"), "a drop isn't ready at once")
+	_check(st.collect_drop(int(d.id), 125.0) == "" and int(st.stock.drink) == 12, "collect it when it's there")
+	st.order_drop("drink", 12, "x:gate", 0.0)
+	_check(st.expire_drops(500.0).size() == 1 and st.drops.is_empty(), "left too long, a drop is gone")
+	var st2 := DealingState.load_default()
+	st2.load_dict(st.to_dict())
+	_check(st2.runners == 1 and st2.stats.runner_deals == 1, "runners save and load")
+
+
+func _test_hustle_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dealing := session.dealing
+	var interiors := session.interiors
+	interiors.discard()
+	_check(dealing.venues.size() == 3 and district.residents.has("npc_rooi_doreen") and district.residents.has("npc_kalk_lena"),
+		"three smokkies: Mavis', Doreen's (Lentegeur) and Ma Lena's (Rocklands)")
+	district.director.clock.set_hour(18.0)
+	var plot: HousePlot = district.plots["rooi_h17"]
+	player.global_position = plot.door_position() + plot.global_basis.z + Vector3(0, 0.1, 0)
+	await physics_frame
+	_talk(player, plot.door_interactable)
+	_check(interiors.current == "rooi_h17" and interiors.room.has_node("Counter"), "Doreen's door takes you straight into her smokkie")
+	_check(interiors.room.has_node("StandIn_npc_rooi_doreen"), "Doreen is behind her bar")
+	interiors.leave()
+	district.director.clock.set_hour(3.0)
+	_check(not interiors.why_not("kalk_h20").is_empty(), "Ma Lena's is closed at night")
+	# Prices: a risk premium with heat; cheaper where rivals hold the corners.
+	session.police.heat.clear()
+	var calm := dealing.price_mult("district_east")
+	session.police.heat.add(2.0)
+	_check(dealing.price_mult("district_east") > calm + 0.15, "prices rise with heat (%.2f -> %.2f)" % [calm, dealing.price_mult("district_east")])
+	session.police.heat.clear()
+	var share: Dictionary = dealing.turf_share("district_west")
+	_check(share.rival > 0.0 and dealing.price_mult("district_west") < 1.0, "rival corners mean cheaper street prices in Rocklands (x%.2f)" % dealing.price_mult("district_west"))
+	# Runners from the safehouse menu, sent from the phone.
+	session.progression.add_cash(500)
+	_check(dealing.hire_runner() == "" and dealing.state.runners >= 1, "hire a runner at the safehouse")
+	session.phone.open()
+	session.phone.refresh()
+	session.phone.close()
 
 
 func _test_turf_units() -> void:
@@ -2332,6 +2412,7 @@ func _test_district() -> void:
 	await _test_dealing_in_game(main, district, player)
 	await _test_interiors_in_game(main, district, player)
 	await _test_turf_war_in_game(main, district, player)
+	await _test_hustle_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame

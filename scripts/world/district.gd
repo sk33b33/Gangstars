@@ -47,7 +47,7 @@ var events: NeighbourhoodEvents
 var director: SimulationDirector
 var day_night: DayNight
 ## Residents that don't come from a district's generated data (the neighbourhood kids).
-@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json", "res://data/npcs/police.json", "res://data/npcs/vipers.json", "res://data/npcs/shebeen.json"]
+@export var extra_residents_files: PackedStringArray = ["res://data/npcs/kids.json", "res://data/npcs/police.json", "res://data/npcs/vipers.json", "res://data/npcs/shebeen.json", "res://data/npcs/smokkies.json"]
 ## The joinable crews; crew members wear their crew's colour.
 var crews := CrewCatalog.load_default()
 ## The crew the player joined ("" until chosen). Its members are allies, the rest rivals.

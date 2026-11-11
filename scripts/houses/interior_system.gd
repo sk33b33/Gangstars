@@ -12,7 +12,6 @@ signal left(place_id: String)
 
 const DEPTH := -40.0
 const SHEBEEN := "shebeen"
-const SHEBEEN_HOURS := Vector2(10, 23)
 ## How long a "come in" lasts after a knock (game minutes).
 const WELCOME_MINUTES := 20.0
 
@@ -74,10 +73,11 @@ func why_not(place_id: String) -> String:
 		return "Park first."
 	if place_id == GameSession.SAFEHOUSE_ID:
 		return ""
-	if place_id == SHEBEEN:
-		var h := district.director.clock.minutes / 60.0
-		if h < SHEBEEN_HOURS.x or h >= SHEBEEN_HOURS.y:
-			return "Aunty Mavis' smokkie is closed. It opens at %02d:00." % int(SHEBEEN_HOURS.x)
+	var dealing: DealingController = session.dealing if session else null
+	if dealing and dealing.is_venue(place_id):
+		if not dealing.venue_open(place_id):
+			var v: Dictionary = dealing.venues[place_id]
+			return "%s is closed. It opens at %02d:00." % [str(v.name), int(v.hours[0])]
 		return ""
 	var house := district.registry.get_house(place_id)
 	if house == null:
@@ -122,6 +122,8 @@ func enter(place_id: String) -> String:
 		if plot == null:
 			return "There's no way in."
 		kind = "safehouse" if place_id == GameSession.SAFEHOUSE_ID else "home"
+		if session.dealing and session.dealing.is_venue(place_id):
+			kind = "shebeen"   # a house smokkie
 		var out := plot.global_basis.z
 		_exit_pos = plot.door_position() + out * 0.6
 		_exit_yaw = atan2(-out.x, -out.z) + PI
@@ -132,7 +134,10 @@ func enter(place_id: String) -> String:
 	room.name = "Interior_" + place_id
 	district.add_child(room)
 	room.global_position = Vector3(origin.x, DEPTH, origin.z)
-	spots = InteriorBuilder.build(room, kind, absi(place_id.hash()))
+	var sign := "sign_shebeen"
+	if session.dealing and session.dealing.is_venue(place_id):
+		sign = str(session.dealing.venues[place_id].get("sign", sign))
+	spots = InteriorBuilder.build(room, kind, absi(place_id.hash()), sign)
 	current = place_id
 	_add_people(place_id, kind)
 	_add_fittings(kind)
@@ -217,9 +222,11 @@ func _add_fittings(kind: String) -> void:
 			session.open_safehouse_menu()
 			return "")
 	if kind == "shebeen" and session.dealing:
-		var counter := _interactable("Counter", "Serve at Aunty Mavis' counter", spots.counter, session.dealing.serve_counter)
+		var v: Dictionary = session.dealing.venues.get(current, {"name": "the smokkie"})
+		var counter := _interactable("Counter", "Serve at %s's counter" % str(v.name).trim_suffix("'s smokkie").trim_suffix(" smokkie"), spots.counter,
+			session.dealing.serve_counter.bind(current))
 		counter.kind = "counter"
-		counter.target = SHEBEEN
+		counter.target = current
 
 
 func _interactable(n: String, prompt: String, at: Vector3, fn: Callable) -> Interactable:
@@ -239,13 +246,15 @@ func _add_people(place_id: String, kind: String) -> void:
 	var seats: Array = spots.seats.duplicate()
 	var stands: Array = spots.stands.duplicate()
 	if kind == "shebeen":
-		var mavis: Resident = district.residents.get("npc_mavis")
-		if mavis and not mavis.is_down():
-			_stand_in(mavis, spots.host, false)
+		var v: Dictionary = session.dealing.venues.get(place_id, {"host": "npc_mavis", "crowd": "poi_shebeen"})
+		var host: Resident = district.residents.get(str(v.host))
+		if host and not host.is_down():
+			_stand_in(host, spots.host, false)
+		var crowd_at := district.destinations.anchor_position(str(v.crowd))
 		var h := district.director.clock.minutes / 60.0
 		if h >= 17.0:
-			var regulars := district.residents.values().filter(func(r): return r.data.role == "resident" and r.data.id != "npc_mavis" \
-					and not r.is_down() and r.global_position.distance_to(district.destinations.anchor_position("poi_shebeen")) < 12.0)
+			var regulars := district.residents.values().filter(func(r): return r.data.role == "resident" and r.data.id != str(v.host) \
+					and not r.is_down() and r.global_position.distance_to(crowd_at) < 12.0)
 			for r: Resident in regulars.slice(0, seats.size() + stands.size()):
 				var sitting := not seats.is_empty()
 				_stand_in(r, seats.pop_front() if sitting else stands.pop_front(), sitting)
@@ -304,7 +313,7 @@ func _process(delta: float) -> void:
 	# Someone who heads out leaves the room (only home occupants; Mavis stays at her bar).
 	for s in _stand_ins.duplicate():
 		var r: Resident = s.resident
-		if current != SHEBEEN and (not r.is_inside or r.is_down()):
+		if not (session.dealing and session.dealing.is_venue(current)) and (not r.is_inside or r.is_down()):
 			s.model.queue_free()
 			_stand_ins.erase(s)
 

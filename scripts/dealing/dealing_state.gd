@@ -18,7 +18,11 @@ var stock := {"weed": 0, "drink": 0}
 var clients := {}       # npc id -> {name, product, home, mood, status: "client"|"lost", rival, next_call}
 var orders: Array = []  # {id, npc, product, qty, place, deadline, accepted_at}
 var call: Dictionary = {}   # ringing call: {npc, product, qty, place, rings_until}
-var stats := {"weed_sold": 0, "drinks_sold": 0, "street_deals": 0, "busts": 0, "missed": 0, "lost_clients": 0}
+var stats := {"weed_sold": 0, "drinks_sold": 0, "street_deals": 0, "busts": 0, "missed": 0, "lost_clients": 0,
+	"runner_deals": 0, "runner_busts": 0}
+var runners := 0        # hired runners (take answered orders for you)
+var drops: Array = []   # restock waiting to be picked up: {id, product, qty, at, ready, expires}
+var _next_drop_id := 1
 var enabled := false    # calls only come once the player is dealing (mission)
 var _next_order_id := 1
 
@@ -171,7 +175,7 @@ func order_for(npc: String) -> Dictionary:
 
 
 ## Hands the goods over. Returns the cash earned, or -1 if there's no stock.
-func complete(npc: String, minutes: float) -> int:
+func complete(npc: String, minutes: float, mult := 1.0) -> int:
 	var o := order_for(npc)
 	if o.is_empty() or not take_stock(o.product, int(o.qty)):
 		return -1
@@ -182,7 +186,92 @@ func complete(npc: String, minutes: float) -> int:
 	_count_sale(o.product, int(o.qty))
 	stats.street_deals += 1
 	order_changed.emit()
-	return int(product(o.product).get("sell", 0)) * int(o.qty)
+	return price(o.product, mult) * int(o.qty)
+
+
+## Street price of one unit with a multiplier (heat, turf), rounded to R5.
+func price(p: String, mult := 1.0) -> int:
+	return maxi(5, int(round(float(product(p).get("sell", 0)) * mult / 5.0)) * 5)
+
+
+# ------------------------------------------------------------------ runners
+
+func hire_runner() -> bool:
+	var r: Dictionary = cfg.get("runner", {})
+	if runners >= int(r.get("max", 2)):
+		return false
+	runners += 1
+	return true
+
+
+func runners_busy() -> int:
+	return orders.filter(func(o): return o.has("runner_at")).size()
+
+
+## Sends a free runner with an open order; it resolves after "minutes" (see resolve_runners).
+func send_runner(npc: String, minutes: float) -> bool:
+	var o := order_for(npc)
+	if o.is_empty() or o.has("runner_at") or runners_busy() >= runners or int(stock.get(o.product, 0)) < int(o.qty):
+		return false
+	o.runner_at = minutes + float(cfg.get("runner", {}).get("minutes", 30))
+	order_changed.emit()
+	return true
+
+
+## Runners who've arrived make the deal. success(npc) -> chance 0..1; roll from rng; mult(npc)
+## -> price multiplier. Returns [{npc, ok, cash}].
+func resolve_runners(minutes: float, rng: RandomNumberGenerator, success: Callable, mult: Callable) -> Array:
+	var out: Array = []
+	for o in orders.duplicate():
+		if not o.has("runner_at") or minutes < float(o.runner_at):
+			continue
+		var npc: String = o.npc
+		if rng.randf() < float(success.call(npc)):
+			var gross := complete(npc, minutes, float(mult.call(npc)))
+			stats.street_deals -= 1   # that one was the runner's
+			stats.runner_deals += 1
+			var cash := int(round(gross * (1.0 - float(cfg.get("runner", {}).get("cut", 0.2)))))
+			out.append({"npc": npc, "ok": true, "cash": cash})
+		else:
+			take_stock(o.product, int(o.qty))
+			orders.erase(o)
+			stats.runner_busts += 1
+			change_mood(npc, mood_cfg("spooked") * 0.5)
+			order_changed.emit()
+			out.append({"npc": npc, "ok": false, "cash": 0})
+	return out
+
+
+# ------------------------------------------------------------------ restock drops
+
+## Orders stock for pick-up at an anchor; ready after a while, gone if left too long.
+func order_drop(p: String, qty: int, at: String, minutes: float) -> Dictionary:
+	var d: Dictionary = cfg.get("drops", {})
+	var drop := {"id": _next_drop_id, "product": p, "qty": qty, "at": at,
+		"ready": minutes + float(d.get("ready_minutes", 20)), "expires": minutes + float(d.get("expire_minutes", 240))}
+	_next_drop_id += 1
+	drops.append(drop)
+	return drop
+
+
+## Collects a drop that's ready. Returns "" or why not.
+func collect_drop(id: int, minutes: float) -> String:
+	for drop in drops:
+		if int(drop.id) == id:
+			if minutes < float(drop.ready):
+				return "Not here yet. Give it %d minutes." % int(ceil(float(drop.ready) - minutes))
+			drops.erase(drop)
+			add_stock(str(drop.product), int(drop.qty))
+			return ""
+	return "Nothing to collect."
+
+
+## Drops left lying too long are gone. Returns the expired ones.
+func expire_drops(minutes: float) -> Array:
+	var gone := drops.filter(func(d): return minutes > float(d.expires))
+	for d in gone:
+		drops.erase(d)
+	return gone
 
 
 ## Police saw the hand-over: the goods are gone, the client is spooked.
@@ -198,11 +287,11 @@ func bust(npc: String) -> void:
 
 
 ## A drink (or bankie) sold over the smokkie counter. Returns cash, or -1 if out of stock.
-func sell_counter(p: String) -> int:
+func sell_counter(p: String, mult := 1.0) -> int:
 	if not take_stock(p, 1):
 		return -1
 	_count_sale(p, 1)
-	return int(product(p).get("sell", 0))
+	return price(p, mult)
 
 
 func _count_sale(p: String, qty: int) -> void:
@@ -227,7 +316,8 @@ func stat(name: String) -> int:
 
 func to_dict() -> Dictionary:
 	return {"stock": stock.duplicate(), "clients": clients.duplicate(true), "orders": orders.duplicate(true),
-		"stats": stats.duplicate(), "enabled": enabled, "next_order_id": _next_order_id}
+		"stats": stats.duplicate(), "enabled": enabled, "next_order_id": _next_order_id, "runners": runners,
+		"drops": drops.duplicate(true), "next_drop_id": _next_drop_id}
 
 
 func load_dict(d: Variant) -> void:
@@ -238,6 +328,9 @@ func load_dict(d: Variant) -> void:
 	orders = d.get("orders", []) if d.get("orders") is Array else []
 	for k in stats:
 		stats[k] = int(d.get("stats", {}).get(k, 0)) if d.get("stats") is Dictionary else 0
+	runners = int(d.get("runners", 0))
+	drops = d.get("drops", []) if d.get("drops") is Array else []
+	_next_drop_id = int(d.get("next_drop_id", 1))
 	enabled = bool(d.get("enabled", false))
 	_next_order_id = int(d.get("next_order_id", 1))
 	call = {}

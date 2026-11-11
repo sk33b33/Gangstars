@@ -112,6 +112,7 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	turf.setup(district, player, progression, police, dealing, interiors)
 	turf.message.connect(_on_turf_message)
 	turf_map.turf = turf
+	dealing.turf = turf
 	dealing.message.connect(hud.show_message)
 	phone = Phone.new()
 	phone.name = "Phone"
@@ -308,7 +309,7 @@ func _on_interacted(target: Interactable, base_message: String) -> void:
 	hud.show_message(text)
 	if target.kind == "vehicle" and district.vehicles.has(target.target):
 		player.enter_vehicle(district.vehicles[target.target])
-	if target.kind == "door" and (target.target == SAFEHOUSE_ID or target.target == InteriorSystem.SHEBEEN \
+	if target.kind == "door" and (target.target == SAFEHOUSE_ID or dealing.is_venue(target.target) \
 			or district.enter_request == target.target):
 		district.enter_request = ""
 		var why := interiors.enter(target.target)
@@ -433,12 +434,19 @@ func open_safehouse_menu() -> void:
 		elif not why.is_empty():
 			label += "  [%s]" % why
 		items.append({"text": label, "disabled": not why.is_empty(), "action": buy_upgrade.bind(id)})
+	var rc: Dictionary = dealing.state.cfg.get("runner", {})
+	items.append({"text": "Hire a runner — R%d  (you have %d; they take phone orders for a cut)" % [int(rc.get("hire_cost", 200)), dealing.state.runners],
+		"action": func():
+			var why := dealing.hire_runner()
+			hud.show_message(why if not why.is_empty() else "You've got a runner now. Send them from your phone's Orders.")
+			open_safehouse_menu()})
 	for r in dealing.restock_items():
 		var idx: int = r.index
 		items.append({"text": "%s   (have %d bankies, %d drinks)" % [r.label, int(dealing.state.stock.weed), int(dealing.state.stock.drink)],
 			"disabled": progression.cash < int(r.cost),
 			"action": func():
-				hud.show_message("Your crew's runner drops off the stock." if dealing.buy_stock(idx) else "You can't afford that.")
+				hud.show_message(("Ordered. Pick it up at %s in about %d minutes." % [district.destinations.display_name(dealing.drop_anchor()),
+					int(dealing.state.cfg.get("drops", {}).get("ready_minutes", 20))]) if dealing.buy_stock(idx) else "You can't afford that.")
 				open_safehouse_menu()})
 	items.append({"text": "Rest until morning (07:00)", "action": _rest})
 	items.append({"text": "Save game", "action": func(): _menu_feedback(save_game())})

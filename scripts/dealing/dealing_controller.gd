@@ -6,7 +6,12 @@ extends Node
 ## - Calls: clients ring with orders; answering sends them out to wait at their gate.
 ## - Street deals: talk to the client to hand over. If SAPS can see it, it's a bust: stock lost,
 ##   heat up.
-## - The smokkie counter (Aunty Mavis'): serve the evening crowd from your own stock.
+## - Smokkie counters (venues in dealing.json: Aunty Mavis', Doreen's, Ma Lena's): serve the
+##   evening crowd from your own stock.
+## - Prices move: a risk premium per heat star; cheaper where rivals hold the corners, dearer
+##   where you do.
+## - Runners (hired at the safehouse) take answered orders for you, for a cut and some risk.
+## - Restock is ordered at the safehouse and picked up at a drop (ready after a while).
 ## - Mood faces float over clients' heads when you're near.
 ## Game-like and abstract on purpose (see CLAUDE.md: no real-world specifics).
 
@@ -28,6 +33,9 @@ var progression: ProgressionState
 var missions: MissionManager
 var police: PoliceDispatch
 var counter: Interactable
+var turf: TurfWar       # set by the GameSession once turf exists (prices follow the corners)
+var venues: Dictionary = {}   # id -> venue dict (dealing.json)
+var _drop_nodes: Dictionary = {}   # drop id -> Node3D
 
 var _rng := RandomNumberGenerator.new()
 var _tick := 0.0
@@ -46,7 +54,10 @@ func setup(p_district: District, p_player: Player, p_progression: ProgressionSta
 	state.call_incoming.connect(func(c: Dictionary): ringing.emit(c))
 	state.client_lost.connect(_on_client_lost)
 	state.order_changed.connect(func(): missions._check_stat_objectives())
+	for v in state.cfg.get("venues", []):
+		venues[str(v.id)] = v
 	_build_counter()
+	_build_venue_houses()
 
 
 func minutes() -> float:
@@ -67,6 +78,17 @@ func _physics_process(delta: float) -> void:
 	_tick = TICK
 	state.enabled = collecting_contacts()
 	state.tick(minutes(), _rng, _rival_for, _can_call)
+	for res in state.resolve_runners(minutes(), _rng, runner_success, client_mult):
+		var who := str(state.clients[res.npc].name) if state.clients.has(res.npc) else "a client"
+		if res.ok:
+			progression.add_cash(int(res.cash))
+			message.emit("Your runner sorted %s: R%d (after their cut)." % [who, int(res.cash)])
+		else:
+			message.emit("Your runner got caught by SAPS on the way to %s. The stock's gone." % who)
+		missions._check_stat_objectives()
+	for gone in state.expire_drops(minutes()):
+		message.emit("Nobody picked up the %s. It's gone." % _plural(str(gone.product), int(gone.qty)))
+	_update_drops()
 	_update_icons()
 
 
@@ -141,7 +163,7 @@ func try_sell(npc_id: String) -> String:
 		state.bust(npc_id)
 		police.heat.add(2.0)
 		return "BUSTED! SAPS saw the hand-over. The %s is gone and %s is spooked." % [_plural(o.product, int(o.qty)), name]
-	var cash := state.complete(npc_id, minutes())
+	var cash := state.complete(npc_id, minutes(), client_mult(npc_id))
 	progression.add_cash(cash)
 	missions._check_stat_objectives()
 	var r: Resident = district.residents.get(npc_id)
@@ -179,9 +201,13 @@ func _build_counter() -> void:
 	counter.global_position = district.destinations.anchor_position("shebeen:counter") + Vector3(0, 1.0, 0)
 
 
-## Serves everyone waiting at the smokkie: a drink each (sometimes a bankie).
-func serve_counter() -> String:
-	var at := district.destinations.anchor_position("poi_shebeen")
+## Serves everyone waiting at a smokkie: a drink each (sometimes a bankie).
+func serve_counter(venue_id := "shebeen") -> String:
+	var v: Dictionary = venues.get(venue_id, {"crowd": "poi_shebeen", "host": "npc_mavis"})
+	if not district.destinations.has(str(v.crowd)):
+		return "Nobody's about."
+	var at := district.destinations.anchor_position(str(v.crowd))
+	var mult := price_mult(district.area_at(at))
 	var crowd: Array[Resident] = []
 	for r: Resident in district.residents.values():
 		if r.is_inside or r.data.role in ["kid", "police"] or r.data.id == "npc_mavis" or r.is_down():
@@ -197,7 +223,7 @@ func serve_counter() -> String:
 		var wants := "weed" if absi((r.data.id + "smokkie").hash()) % 10 < 3 and int(state.stock.weed) > 0 else "drink"
 		if wants == "weed" and police_watching(player.global_position):
 			wants = "drink"   # not with SAPS looking
-		var cash := state.sell_counter(wants)
+		var cash := state.sell_counter(wants, mult)
 		if cash < 0:
 			out_of = wants
 			continue
@@ -214,7 +240,8 @@ func serve_counter() -> String:
 
 # ------------------------------------------------------------------ restocking
 
-## Buys stock from your crew's runner (safehouse menu). False if you can't afford it.
+## Orders stock from your crew's runner (safehouse menu): it's dropped off for you to pick up.
+## False if you can't afford it.
 func buy_stock(index: int) -> bool:
 	var r: Array = state.cfg.get("restock", [])
 	if index < 0 or index >= r.size():
@@ -223,7 +250,8 @@ func buy_stock(index: int) -> bool:
 	var cost := int(state.product(str(item.product)).get("buy", 0)) * int(item.qty)
 	if not progression.spend(cost):
 		return false
-	state.add_stock(str(item.product), int(item.qty))
+	state.order_drop(str(item.product), int(item.qty), drop_anchor(), minutes())
+	_update_drops()
 	return true
 
 
@@ -232,8 +260,145 @@ func restock_items() -> Array:
 	var r: Array = state.cfg.get("restock", [])
 	for i in r.size():
 		var cost := int(state.product(str(r[i].product)).get("buy", 0)) * int(r[i].qty)
-		out.append({"label": "Buy %s from your crew's runner  —  R%d" % [r[i].label, cost], "cost": cost, "index": i})
+		out.append({"label": "Order %s from your crew's runner  —  R%d (pick up at %s)" % [r[i].label, cost,
+			district.destinations.display_name(drop_anchor())], "cost": cost, "index": i})
 	return out
+
+
+## Where drops are left: a corner you hold in Westridge, else your safehouse gate.
+func drop_anchor() -> String:
+	if turf:
+		for id in turf.state.players_corners():
+			if turf.area_of(id) == "starter":
+				return str(turf.state.corners[id].anchor)
+	return GameSession.SAFEHOUSE_ID + ":gate"
+
+
+## A crate at each waiting drop, with "Collect".
+func _update_drops() -> void:
+	var live := {}
+	for d in state.drops:
+		live[int(d.id)] = d
+		if _drop_nodes.has(int(d.id)) or not district.destinations.has(str(d.at)):
+			continue
+		var n := Node3D.new()
+		n.name = "Drop%d" % int(d.id)
+		district.add_child(n)
+		n.global_position = district.destinations.anchor_position(str(d.at)) + Vector3(1.2, 0, 1.2)
+		PropLibrary.place(n, "crate_stack", Vector3.ZERO, 0.4, Color("#c0392b") if str(d.product) == "drink" else Color("#2f6e3a"))
+		var it := Interactable.new()
+		it.name = "Collect"
+		it.kind = "drop"
+		it.target = str(d.id)
+		it.radius = 1.6
+		it.prompt = "Collect your %s" % _plural(str(d.product), int(d.qty))
+		it.on_interact = collect.bind(int(d.id))
+		n.add_child(it)
+		it.position = Vector3(0, 1.0, 0)
+		_drop_nodes[int(d.id)] = n
+	for id in _drop_nodes.keys():
+		if not live.has(id):
+			_drop_nodes[id].queue_free()
+			_drop_nodes.erase(id)
+
+
+func collect(drop_id: int) -> String:
+	var d: Array = state.drops.filter(func(x): return int(x.id) == drop_id)
+	var why := state.collect_drop(drop_id, minutes())
+	_update_drops()
+	if not why.is_empty() or d.is_empty():
+		return why
+	return "Picked up %d %s." % [int(d[0].qty), _plural(str(d[0].product), int(d[0].qty))]
+
+
+# ------------------------------------------------------------------ prices and runners
+
+## Street price multiplier in a suburb: +10% per heat star (risk), cheaper where rivals hold the
+## corners (competition), dearer where you do.
+func price_mult(area: String) -> float:
+	var pc: Dictionary = state.cfg.get("prices", {})
+	var m := 1.0 + float(pc.get("per_heat", 0.1)) * (police.heat.level() if police else 0)
+	if turf:
+		var share := turf_share(area)
+		m += float(pc.get("own_turf", 0.15)) * share.own - float(pc.get("competition", 0.25)) * share.rival
+	return clampf(m, float(pc.get("min", 0.75)), float(pc.get("max", 1.5)))
+
+
+## {own, rival}: shares of a suburb's corners held by your crew and by rival crews.
+func turf_share(area: String) -> Dictionary:
+	var total := 0
+	var own := 0
+	var rival := 0
+	if turf:
+		for id in turf.state.order:
+			if turf.area_of(id) != area:
+				continue
+			total += 1
+			if turf.state.is_players(id):
+				own += 1
+			elif not turf.state.owner(id).is_empty():
+				rival += 1
+	return {"own": float(own) / maxf(1.0, total), "rival": float(rival) / maxf(1.0, total)}
+
+
+func client_area(npc_id: String) -> String:
+	var r: Resident = district.residents.get(npc_id)
+	return district.resident_district(r) if r else "starter"
+
+
+func client_mult(npc_id: String) -> float:
+	return price_mult(client_area(npc_id))
+
+
+func runner_success(npc_id: String) -> float:
+	var rc: Dictionary = state.cfg.get("runner", {})
+	var heat := police.heat.level() if police else 0
+	return clampf(float(rc.get("base_success", 0.9)) - float(rc.get("per_heat", 0.08)) * heat
+		- float(rc.get("competition", 0.1)) * float(turf_share(client_area(npc_id)).rival), 0.2, 0.98)
+
+
+## Hire a runner (safehouse menu). "" or why not.
+func hire_runner() -> String:
+	var rc: Dictionary = state.cfg.get("runner", {})
+	if state.runners >= int(rc.get("max", 2)):
+		return "You've got all the runners you can use."
+	if not progression.spend(int(rc.get("hire_cost", 200))):
+		return "You can't afford a runner (R%d)." % int(rc.get("hire_cost", 200))
+	state.hire_runner()
+	return ""
+
+
+func send_runner(npc_id: String) -> String:
+	if state.send_runner(npc_id, minutes()):
+		return "Your runner's on the way to %s." % str(state.clients[npc_id].name)
+	return "No runner free (or not enough stock)."
+
+
+# ------------------------------------------------------------------ venues
+
+func is_venue(id: String) -> bool:
+	return venues.has(id)
+
+
+func venue_open(id: String) -> bool:
+	var h: Array = venues[id].get("hours", [10, 23])
+	var hour := district.director.clock.minutes / 60.0
+	return hour >= float(h[0]) and hour < float(h[1])
+
+
+## House smokkies: a sign over the door, and the door takes you in (no knocking).
+func _build_venue_houses() -> void:
+	for id in venues:
+		var plot: HousePlot = district.plots.get(id)
+		if plot == null:
+			continue
+		var v: Dictionary = venues[id]
+		var facade := plot.door_position() - plot.global_basis.z * 0.86 + Vector3(0, 2.35, 0)
+		var sign := Geo.quad(district, Vector2(2.4, 0.6), Vector3.ZERO, PixelMaterials.panel(str(v.get("sign", "sign_shebeen"))))
+		sign.global_position = facade
+		sign.global_rotation = plot.global_rotation
+		plot.door_interactable.prompt = "Go into %s" % str(v.name)
+		plot.door_interactable.on_interact = func(): return ""
 
 
 # ------------------------------------------------------------------ moods

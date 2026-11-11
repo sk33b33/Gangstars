@@ -24,14 +24,14 @@ const PRINTS := ["print_rose", "print_blue", "print_sun", "print_teal", "print_l
 
 
 ## kind: "home", "safehouse" or "shebeen". seed varies colours. Returns the layout's spots.
-static func build(root: Node3D, kind: String, seed: int) -> Dictionary:
+static func build(root: Node3D, kind: String, seed: int, sign := "sign_shebeen") -> Dictionary:
 	var size := Vector2(10.0, 7.0) if kind == "shebeen" else Vector2(9.0, 6.5)
 	var wall_tint: Color = Color("#3d5a4a") if kind == "shebeen" else WALL_COLOURS[seed % WALL_COLOURS.size()]
 	var floor_tex := "floor_boards" if kind == "shebeen" else "floor_lino"
 	var spots := _shell(root, size, wall_tint, floor_tex, seed)
 	match kind:
 		"shebeen":
-			_shebeen(root, size, spots, seed)
+			_shebeen(root, size, spots, seed, sign)
 		"safehouse":
 			_home(root, size, spots, seed, true)
 		_:
@@ -155,7 +155,7 @@ static func _home(root: Node3D, size: Vector2, spots: Dictionary, seed: int, saf
 		spots.seats.append({"pos": Vector3(-w / 2 + 0.6, 0, -1.6), "yaw": PI / 2})
 
 
-static func _shebeen(root: Node3D, size: Vector2, spots: Dictionary, seed: int) -> void:
+static func _shebeen(root: Node3D, size: Vector2, spots: Dictionary, seed: int, sign := "sign_shebeen") -> void:
 	var w := size.x
 	var d := size.y
 	_put(root, "bottle_shelf", Vector3(0, 0, -d / 2 + 0.18))
@@ -176,7 +176,7 @@ static func _shebeen(root: Node3D, size: Vector2, spots: Dictionary, seed: int) 
 	spots.stands.append({"pos": Vector3(w / 2 - 0.9, 0, -0.4), "yaw": -PI / 2})  # by the jukebox
 	_picture(root, "poster_cold", Vector2(0.6, 0.84), Vector3(-w / 2 + 0.01, 1.6, -1.0), PI / 2)
 	_picture(root, "poster_soccer", Vector2(0.6, 0.84), Vector3(w / 2 - 0.01, 1.6, 2.0), -PI / 2)
-	_picture(root, "sign_shebeen", Vector2(2.0, 0.5), Vector3(0, 2.25, -d / 2 + 0.01), 0.0)
+	_picture(root, sign, Vector2(2.0, 0.5), Vector3(0, 2.25, -d / 2 + 0.01), 0.0)
 	# Coloured party lights.
 	for l in [[Vector3(-3.0, 2.3, 0.5), Color("#ff5a5a")], [Vector3(3.0, 2.3, 0.5), Color("#5aff8a")], [Vector3(0, 2.2, -d / 2 + 1.5), Color("#ffd27a")]]:
 		var o := OmniLight3D.new()

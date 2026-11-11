@@ -85,6 +85,40 @@
       "start_text": "Music starts up at Aunty Mavis' smokkie.",
       "end_text": "",
       "district": "starter"
+    },
+    {
+      "id": "smokkie_night_rooi",
+      "name": "Evening at Doreen's smokkie",
+      "every_days": 1,
+      "offset": 0,
+      "hours": [
+        17,
+        23
+      ],
+      "anchor": "rooi_h17:gate",
+      "activity": "socializing",
+      "join_chance": 0.3,
+      "duration": 40,
+      "start_text": "",
+      "end_text": "",
+      "district": "district_east"
+    },
+    {
+      "id": "smokkie_night_kalk",
+      "name": "Evening at Ma Lena's smokkie",
+      "every_days": 1,
+      "offset": 0,
+      "hours": [
+        17,
+        23
+      ],
+      "anchor": "kalk_h20:gate",
+      "activity": "socializing",
+      "join_chance": 0.3,
+      "duration": 40,
+      "start_text": "",
+      "end_text": "",
+      "district": "district_west"
     }
   ]
 }

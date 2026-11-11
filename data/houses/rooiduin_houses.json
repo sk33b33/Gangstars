@@ -571,7 +571,7 @@
       "number": 4,
       "street": "Duin Road",
       "district_id": "district_east",
-      "display_name": "Empty house",
+      "display_name": "Doreen's smokkie",
       "kit": "row_house",
       "position": [
         175.0,
@@ -586,9 +586,11 @@
       "roof": "tiles",
       "fence": "palisade",
       "fence_color": "#56606e",
-      "occupancy": "vacant",
-      "ownership": "neutral",
-      "occupant_ids": [],
+      "occupancy": "occupied",
+      "ownership": "friendly",
+      "occupant_ids": [
+        "npc_rooi_doreen"
+      ],
       "props": {
         "yard": "sand",
         "bin": false,

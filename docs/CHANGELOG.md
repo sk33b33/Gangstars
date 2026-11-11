@@ -4,6 +4,28 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### A deeper hustle (2026-11-11)
+- **More smokkies:** Doreen's smokkie in Lentegeur (12:00–24:00) and Ma Lena's tavern in
+  Rocklands (12:00–23:00). Both are houses that used to be empty, with a sign over the door and
+  a host. The door takes you straight in to a bar you can serve at, with the host behind it and
+  regulars on evening smokkie nights. Venues live in `data/dealing/dealing.json`.
+- **Prices move:**
+  - +10% per heat star (risk), clamped to x0.75–x1.5.
+  - Cheaper where rival crews hold the suburb's corners, dearer where you do.
+  - The phone shows today's street prices where you stand and each order's price.
+- **Runners:**
+  - Hire up to two at the safehouse stash (R200 each).
+  - On the phone, "Send your runner" takes an answered order for you: 30 minutes, a 20% cut.
+  - The safe chance drops with heat and rival corners; a caught runner loses the stock (no heat
+    on you).
+- **Restock is a pick-up:** ordering stock from the safehouse leaves a crate at a drop (a
+  Westridge corner you hold, else your safehouse gate). It's ready after 20 minutes and gone if
+  left for 4 hours. The phone lists your drops.
+- **Saving:** runners and drops are saved.
+- **Tests:** units for prices, runners (cut, caught) and drops (ready, collect, expire). In game:
+  the three smokkies, Doreen's door and bar, closing hours, price changes with heat and rival
+  turf, the drop crate and collecting it, hiring a runner.
+
 ### Turf wars (2026-11-11)
 - **Corners:** 10 street corners across the three suburbs (`data/factions/corners.json`):
   - Westridge: the Corner, the park, the sand court, the cafe corner.
