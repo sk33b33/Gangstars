@@ -3,7 +3,12 @@
 Run headless:  blender -b --factory-startup --python tools/blender/build_vehicles.py
 One object per vehicle (origin on the ground at the centre, front = -Y in Blender = +Z in Godot):
   hatch (3.9 m), sedan (4.4 m), bakkie (single cab + load bin, 4.6 m), taxi (minibus, 5.2 m),
-  police (double-cab bakkie with canopy and light bar, 5.0 m; SAPS-inspired livery, no real crest).
+  police (double-cab bakkie with canopy and light bar, 5.0 m; SAPS-inspired livery, no real crest),
+  skoro (a rusty old boxy sedan with a mismatched door, 4.3 m).
+Cabins have interiors (dash, right-hand-drive wheel, seats) behind see-through glass; empties
+"<model>_seat_N" (driver first) place the occupant_driver / occupant_passenger busts. Bodies
+carry vertex colours (road grime) that Godot uses on dirty cars. "tint" is opaque dark glass
+(taxi and canopy windows, which have a solid body behind them).
 Material slots are roles Godot recolours or swaps: paint (body colour), glass, trim (black
 plastic), tyre, rim, chrome, headlight (shared night-glow lamp), taillight, plate_front (white),
 plate_rear (yellow), police_blue, police_yellow, lightbar (flashes when responding),
@@ -49,11 +54,14 @@ M = {
     "plate_front": mat("plate_front", "#f2f2ee", 0.6), "plate_rear": mat("plate_rear", "#f2c618", 0.6),
     "police_blue": mat("police_blue", "#123f8c", 0.4), "police_yellow": mat("police_yellow", "#f5c400", 0.4),
     "lightbar": mat("lightbar", "#2a6cff", 0.2),
+    "tint": mat("tint", "#1b232c", 0.1), "seat": mat("seat", "#2c2c31", 0.9), "rust": mat("rust", "#7a3f22", 0.95),
+    "paint2": mat("paint2", "#8f949a", 0.6), "occ_shirt": mat("occ_shirt", "#3f5874", 0.9),
+    "occ_skin": mat("occ_skin", "#8d5a3b", 0.6), "occ_hair": mat("occ_hair", "#1d1b24", 0.9),
     "indicator_L": mat("indicator_L", "#e8901c", 0.3), "indicator_R": mat("indicator_R", "#e8901c", 0.3),
 }
 # Filled while a vehicle is built, turned into marker empties by finish():
 # wheels (x, y, radius, width) and plates (name, (x, y, z)).
-PENDING = {"wheels": [], "plates": []}
+PENDING = {"wheels": [], "plates": [], "seats": []}
 
 
 def assign(o, name):
@@ -238,6 +246,72 @@ def cabin(parts, glass_profile, width, roof_y0, roof_y1, roof_z, pillars):
             parts.append(p)
 
 
+def interior(parts, W, dash_y, belt, rows, ws_top=None, roof=None):
+    """What you see through the windows: dashboard, right-hand-drive steering wheel, seats with
+    headrests, a rear-view mirror; records seat markers (driver first) for occupants."""
+    parts.append(box((0, dash_y, belt - 0.02), (W - 0.2, 0.32, 0.14), "trim", 0.03))
+    wx, wy, wz = -0.37, dash_y + 0.3, belt + 0.1          # driver sits on the right (Blender -X)
+    bpy.ops.mesh.primitive_torus_add(major_segments=20, minor_segments=6, major_radius=0.16, minor_radius=0.018,
+                                     location=(wx, wy, wz), rotation=(1.15, 0, 0))
+    ring = bpy.context.active_object
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    parts.append(assign(ring, "trim"))
+    parts.append(cyl((wx, (wy + dash_y) / 2, wz - 0.04), 0.025, 0.3, "trim", axis="Y", seg=8))
+    if ws_top and roof:
+        parts.append(box((0, ws_top[0] + 0.12, ws_top[1] - 0.07), (0.2, 0.03, 0.06), "trim", 0.01))
+    for k, y in enumerate(rows):
+        xs = (-0.37, 0.37) if k == 0 else (-0.4, 0.0, 0.4)
+        for x in (-0.37, 0.37) if k == 0 else (-0.4, 0.4):
+            parts.append(box((x, y + 0.2, belt + 0.06), (0.44, 0.12, 0.5), "seat", 0.04))
+            parts.append(box((x, y + 0.22, belt + 0.38), (0.24, 0.09, 0.15), "seat", 0.03))
+        for x in xs:
+            PENDING["seats"].append((x, y, belt - 0.3))
+
+
+def handles(parts, ys, z, W):
+    for y in ys:
+        for s in (1, -1):
+            parts.append(box((s * (W / 2 + 0.012), y, z), (0.02, 0.14, 0.03), "trim", 0.008))
+
+
+def wipers(parts, y, z):
+    for x in (-0.28, 0.2):
+        w = box((0, 0, 0), (0.5, 0.018, 0.014), "trim")
+        w.rotation_euler = (0, 0, 0.12)
+        bpy.context.view_layer.objects.active = w
+        bpy.ops.object.transform_apply(rotation=True)
+        w.location = (x, y, z)
+        bpy.ops.object.transform_apply(location=True)
+        parts.append(w)
+
+
+def extras(parts, F, R, W, belt, light_z, exhaust_z=0.3, flaps=False, wheelbase=0.0):
+    """Grille slats, side indicator repeaters, exhaust, optional mud flaps."""
+    for dz in (-0.03, 0.03):
+        parts.append(box((0, F - 0.02, light_z + dz), (W - 0.9, 0.02, 0.015), "chrome"))
+    for s in (1, -1):
+        parts.append(box((s * (W / 2 + 0.006), F + 0.55, belt - 0.12), (0.012, 0.07, 0.03),
+                         "indicator_L" if s > 0 else "indicator_R", 0.005))
+    parts.append(cyl((0.45, R + 0.06, exhaust_z), 0.032, 0.18, "chrome", axis="Y", seg=10))
+    if flaps:
+        for s in (1, -1):
+            parts.append(box((s * (W / 2 - 0.12), wheelbase / 2 + 0.42, 0.28), (0.22, 0.012, 0.3), "trim"))
+
+
+def dirt(o, strength=1.0):
+    """Vertex colours: road grime fading up from the sills (Godot multiplies a dirty car's
+    paint by them; clean cars ignore them)."""
+    me = o.data
+    if "Col" not in me.color_attributes:
+        me.color_attributes.new(name="Col", type="BYTE_COLOR", domain="CORNER")
+    col = me.color_attributes["Col"]
+    for poly in me.polygons:
+        for li in poly.loop_indices:
+            z = me.vertices[me.loops[li].vertex_index].co.z
+            g = max(0.0, min(1.0, (0.85 - z) / 0.55)) * 0.55 * strength
+            col.data[li].color = (1.0 - g * 0.3, 1.0 - g * 0.4, 1.0 - g * 0.55, 1.0)
+
+
 def finish(parts, name, offset_x):
     bpy.ops.object.select_all(action="DESELECT")
     for p in parts:
@@ -262,6 +336,13 @@ def finish(parts, name, offset_x):
         scene.collection.objects.link(e)
         e.parent = o
         e.location = at
+    for i, at in enumerate(PENDING["seats"]):
+        e = bpy.data.objects.new("%s_seat_%d" % (name, i), None)
+        scene.collection.objects.link(e)
+        e.parent = o
+        e.location = at
+    PENDING["seats"] = []
+    dirt(o, 1.6 if name == "skoro" else 1.0)
     if ws:
         w = wheel_mesh(name + "_tyre", ws[0][2], ws[0][3])
         w.location = (offset_x, -8, ws[0][2])
@@ -280,6 +361,10 @@ def hatch():
     bumpers(p, F, R, W, 0.38)
     mirrors(p, -0.95, 0.98, W)
     seams(p, [-1.05, 0.4], 0.38, 0.86, W)
+    interior(p, W, -0.92, 0.88, [-0.05, 0.75], (-0.45, 1.38), 1.42)
+    handles(p, [0.22], 0.78, W)
+    wipers(p, -1.08, 0.9)
+    extras(p, F, R, W, 0.86, 0.7)
     return finish(p, "hatch", 0)
 
 
@@ -293,6 +378,11 @@ def sedan():
     bumpers(p, F, R, W, 0.36)
     mirrors(p, -0.85, 0.96, W)
     seams(p, [-0.95, 0.35, 1.45], 0.36, 0.84, W)
+    interior(p, W, -0.85, 0.84, [-0.05, 0.75], (-0.35, 1.38), 1.4)
+    handles(p, [0.18, 1.28], 0.76, W)
+    wipers(p, -1.03, 0.87)
+    extras(p, F, R, W, 0.84, 0.68)
+    p.append(cyl((-0.3, 0.9, 1.6), 0.006, 0.4, "trim", axis="Z", seg=6))   # aerial
     return finish(p, "sedan", 6)
 
 
@@ -315,6 +405,12 @@ def bakkie():
     bumpers(p, F, R, W, 0.42)
     mirrors(p, -1.0, 1.1, W)
     seams(p, [-1.2, -0.05], 0.42, 0.96, W)
+    interior(p, W, -1.05, 0.96, [-0.38], (-0.6, 1.6), 1.62)
+    handles(p, [-0.2], 0.88, W)
+    wipers(p, -1.18, 0.99)
+    extras(p, F, R, W, 0.96, 0.74, 0.36, True, 3.0)
+    p.append(box((0, R + 0.1, 0.42), (0.12, 0.2, 0.06), "trim"))        # tow bar
+    p.append(cyl((0, R + 0.2, 0.48), 0.03, 0.06, "chrome", axis="Z", seg=8))
     return finish(p, "bakkie", 12)
 
 
@@ -333,7 +429,7 @@ def police():
     band(can, 1.5, 1.53, "police_yellow")
     p.append(can)
     for s in (1, -1):   # small barred canopy windows
-        p.append(box((s * (W / 2 - 0.01), 1.6, 1.42), (0.02, 1.2, 0.28), "glass"))
+        p.append(box((s * (W / 2 - 0.01), 1.6, 1.42), (0.02, 1.2, 0.28), "tint"))
         for k in range(5):
             p.append(box((s * (W / 2 + 0.005), 1.1 + k * 0.24, 1.42), (0.015, 0.025, 0.3), "trim"))
     # Light bar on the cab roof.
@@ -349,6 +445,10 @@ def police():
     p.append(cyl((0, F - 0.16, 0.5), 0.03, 0.9, "chrome", axis="X", seg=10))
     mirrors(p, -1.1, 1.1, W)
     seams(p, [-1.3, -0.05, 0.62], 0.44, 0.98, W)
+    interior(p, W, -1.15, 0.98, [-0.5, 0.25], (-0.7, 1.62), 1.64)
+    handles(p, [-0.2, 0.47], 0.9, W)
+    wipers(p, -1.28, 1.01)
+    extras(p, F, R, W, 0.98, 0.78, 0.38, True, 3.1)
     return finish(p, "police", 18)
 
 
@@ -357,11 +457,11 @@ def taxi():
     W, F, R = 1.9, -2.6, 2.6
     p = [prism([(F, 0.35), (F - 0.03, 0.75), (F + 0.15, 1.05), (-2.0, 1.95), (R - 0.1, 2.02), (R, 1.9), (R, 0.35)], W, "paint", 0.06)]
     for s in (1, -1):
-        p.append(box((s * (W / 2 + 0.004), 0.35, 1.52), (0.012, 4.0, 0.5), "glass"))
+        p.append(box((s * (W / 2 + 0.004), 0.35, 1.52), (0.012, 4.0, 0.5), "tint"))
         for y in (-1.0, 0.0, 0.9, 1.75):
             p.append(box((s * (W / 2 + 0.008), y, 1.52), (0.01, 0.07, 0.5), "paint"))
-    p.append(prism([(F + 0.17, 1.07), (-2.02, 1.88), (-1.95, 1.88), (F + 0.24, 1.07)], W - 0.16, "glass", 0.0))
-    p.append(box((0, R + 0.005, 1.5), (W - 0.4, 0.012, 0.45), "glass"))
+    p.append(prism([(F + 0.17, 1.07), (-2.02, 1.88), (-1.95, 1.88), (F + 0.24, 1.07)], W - 0.16, "tint", 0.0))
+    p.append(box((0, R + 0.005, 1.5), (W - 0.4, 0.012, 0.45), "tint"))
     wheels(p, 3.1, 1.62, 0.33)
     lights_and_plates(p, F, R, W, 0.8, 0.5)
     bumpers(p, F, R, W, 0.42)
@@ -369,14 +469,103 @@ def taxi():
     seams(p, [-1.75, -0.3, 1.3], 0.42, 1.25, W)
     for s in (1, -1):   # roof rails
         p.append(box((s * 0.6, -0.1, 2.06), (0.05, 3.2, 0.05), "trim", 0.01))
+    handles(p, [-1.55, -0.1], 1.12, W)
+    for s in (1, -1):   # sliding door rail
+        p.append(box((s * (W / 2 + 0.01), 0.6, 1.24), (0.012, 1.6, 0.025), "trim"))
+    wipers(p, F + 0.24, 1.1)
+    extras(p, F, R, W, 1.15, 0.8, 0.36, True, 3.1)
     return finish(p, "taxi", 24)
 
 
-for build in (hatch, sedan, bakkie, police, taxi):
+def skoro():
+    """The skorokoro: a tired old boxy sedan with a door from another car, primer patches,
+    rust on the sills and arches, a dented flank and a rear bumper hanging a bit low."""
+    W, F, R = 1.68, -2.15, 2.15
+    body = prism([(F, 0.32), (F - 0.02, 0.66), (F + 0.06, 0.8), (-1.15, 0.84), (1.45, 0.86), (R - 0.04, 0.84), (R, 0.62), (R, 0.32)],
+                 W, "paint", 0.02)
+    for v in body.data.vertices:   # dents: push in a few spots on the flanks
+        if v.co.x > W / 2 - 0.03:
+            d = math.exp(-((v.co.y - 0.9) / 0.35) ** 2) * math.exp(-((v.co.z - 0.6) / 0.15) ** 2)
+            v.co.x -= 0.035 * d
+    p = [body]
+    cabin(p, [(-1.1, 0.84), (-0.42, 1.36), (0.95, 1.38), (1.55, 0.86)], W - 0.12, -0.42, 0.95, 1.38,
+          [(-1.1, 0.85, -0.42, 1.36), (0.3, 0.86, 0.3, 1.37), (1.55, 0.86, 0.95, 1.38)])
+    p.append(box((-(W / 2 + 0.006), -0.35, 0.6), (0.012, 1.15, 0.44), "paint2"))   # the other car's door
+    for y, z, sx, sz in ((-1.35, 0.45, 0.4, 0.14), (1.3, 0.42, 0.5, 0.12), (0.3, 0.36, 0.7, 0.07), (-0.6, 0.37, 0.4, 0.06)):
+        for s in (1, -1):
+            p.append(box((s * (W / 2 + 0.008), y, z), (0.012, sx, sz), "rust", 0.004))
+    p.append(box((0.3, -1.62, 0.83), (0.5, 0.45, 0.014), "paint2"))   # a primer patch on the bonnet
+    wheels(p, 2.55, 1.46, 0.3)
+    lights_and_plates(p, F, R, W, 0.66, 0.43)
+    p.append(box((0, F - 0.02, 0.36), (W + 0.02, 0.15, 0.17), "chrome", 0.04))   # old chrome bumper
+    rb = box((0, 0, 0), (W + 0.02, 0.15, 0.17), "chrome", 0.04)
+    rb.rotation_euler = (0, 0.05, 0)
+    bpy.context.view_layer.objects.active = rb
+    bpy.ops.object.transform_apply(rotation=True)
+    rb.location = (0, R + 0.03, 0.31)
+    bpy.ops.object.transform_apply(location=True)
+    p.append(rb)
+    mirrors(p, -0.9, 0.95, W)
+    seams(p, [-0.95, 0.3, 1.45], 0.34, 0.84, W)
+    interior(p, W, -0.85, 0.84, [-0.05, 0.75], (-0.42, 1.36), 1.38)
+    handles(p, [0.15, 1.3], 0.76, W)
+    wipers(p, -1.03, 0.87)
+    extras(p, F, R, W, 0.84, 0.66)
+    return finish(p, "skoro", 30)
+
+
+def occupants():
+    """Drivers and passengers seen through the windows: a seated upper body (origin at the hip),
+    arms to the wheel for the driver, in the lap for passengers. Godot recolours occ_*."""
+    for kind in ("driver", "passenger"):
+        parts = [box((0, 0.02, 0.28), (0.36, 0.2, 0.5), "occ_shirt", 0.06)]
+        parts.append(cyl((0, 0.02, 0.57), 0.05, 0.1, "occ_skin", axis="Z", seg=10))
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=10, radius=1, location=(0, 0.0, 0.7))
+        head = bpy.context.active_object
+        head.scale = (0.088, 0.1, 0.11)
+        bpy.ops.object.transform_apply(scale=True)
+        parts.append(assign(head, "occ_skin"))
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=10, radius=1, location=(0, 0.01, 0.725))
+        hair = bpy.context.active_object
+        hair.scale = (0.093, 0.106, 0.1)
+        bpy.ops.object.transform_apply(scale=True)
+        parts.append(assign(hair, "occ_hair"))
+        for s in (1, -1):
+            if kind == "driver":
+                a, b = Vector((0.17 * s, 0.0, 0.48)), Vector((0.14 * s, -0.42, 0.42))
+            else:
+                a, b = Vector((0.19 * s, 0.0, 0.48)), Vector((0.16 * s, -0.18, 0.12))
+            mid, d = (a + b) / 2, (b - a)
+            arm = cyl((0, 0, 0), 0.04, d.length, "occ_shirt", axis="Z", seg=8)
+            arm.rotation_euler = Vector((0, 0, 1)).rotation_difference(d.normalized()).to_euler()
+            bpy.context.view_layer.objects.active = arm
+            bpy.ops.object.transform_apply(rotation=True)
+            arm.location = mid
+            bpy.ops.object.transform_apply(location=True)
+            parts.append(arm)
+            parts.append(assign(_sphere(b, 0.035), "occ_skin"))   # hand
+        bpy.ops.object.select_all(action="DESELECT")
+        for o in parts:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = parts[0]
+        bpy.ops.object.join()
+        o = bpy.context.active_object
+        o.name = o.data.name = "occupant_" + kind
+        o.location.x = 40 + (2 if kind == "passenger" else 0)
+
+
+def _sphere(at, r):
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=r, location=at)
+    return bpy.context.active_object
+
+
+for build in (hatch, sedan, bakkie, police, taxi, skoro):
     build()
+occupants()
 for o in scene.objects:
     if o.type == "MESH" and not o.data.uv_layers:
         o.data.uv_layers.new(name="UVMap")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_yup=True, export_apply=True)
+bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_yup=True, export_apply=True,
+                          export_vertex_color="ACTIVE")
 print("WROTE", OUT, [(o.name, len(o.data.vertices)) for o in scene.objects if o.type == "MESH"])

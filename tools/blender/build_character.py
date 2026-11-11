@@ -277,12 +277,13 @@ def join(objs, name):
     return o
 
 
-def cut_below(obj, z, keep_above=True):
-    """Removes the part of a mesh below (or above) a plane z (for caps and hair)."""
+def cut_below(obj, z, keep_above=True, slope=0.0):
+    """Removes the part of a mesh below (or above) a plane z (for caps and hair). slope > 0
+    raises the cut at the front (a hairline above the forehead, lower at the nape)."""
     bm = bmesh.new()
     bm.from_mesh(obj.data)
     geom = bm.verts[:] + bm.edges[:] + bm.faces[:]
-    bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(0, 0, z), plane_no=(0, 0, 1),
+    bmesh.ops.bisect_plane(bm, geom=geom, plane_co=(0, HEAD_C.y, z), plane_no=(0, slope, 1),
                            clear_inner=keep_above, clear_outer=not keep_above)
     bm.to_mesh(obj.data)
     bm.free()
@@ -291,20 +292,102 @@ def cut_below(obj, z, keep_above=True):
 HEAD_C = Vector((0, 0.005, 1.665))
 
 
+def _g(v, c, w):
+    return math.exp(-((v - c) / w) ** 2)
+
+
+def sculpt_skull(o):
+    """One skull mesh shaped in code: narrower jaw and chin, cheekbones, eye sockets, a brow
+    ridge, a flatter face and a fuller back of the head. Coordinates are normalised to the skull
+    radii (front = -Y)."""
+    rx, ry, rz = 0.098, 0.108, 0.118
+    for v in o.data.vertices:
+        p = v.co - HEAD_C
+        xn, yn, zn = p.x / rx, p.y / ry, p.z / rz
+        front = max(0.0, -yn)
+        k = max(0.0, min(1.0, (0.1 - zn) / 1.0))
+        k = k * k * (3 - 2 * k)
+        p.x *= 1.0 - 0.24 * k                                   # jaw tapers to the chin
+        if yn > 0:
+            p.y *= 1.0 - 0.32 * k                               # neck side of the jaw
+        p.y *= 1.0 - 0.07 * front * _g(zn, 0.0, 0.55)          # flatter face
+        p.y -= 0.011 * front * _g(zn, -0.8, 0.2) * _g(xn, 0, 0.35)   # chin
+        p.y -= 0.004 * front * _g(zn, -0.45, 0.18) * _g(xn, 0, 0.3)  # mouth
+        for sx in (1, -1):
+            sock = _g(xn, 0.37 * sx, 0.17) * _g(zn, 0.15, 0.13) * front
+            p.y += 0.008 * sock                                 # eye sockets
+            cheek = _g(xn, 0.62 * sx, 0.18) * _g(zn, -0.12, 0.15) * front
+            p.x += 0.005 * sx * cheek                           # cheekbones
+            p.y -= 0.003 * cheek
+        p.y -= 0.005 * front * _g(zn, 0.38, 0.09) * _g(abs(xn), 0.35, 0.3)   # brow ridge
+        if yn > 0.3 and zn > -0.1:
+            p.y *= 1.04                                         # fuller back of the head
+        v.co = HEAD_C + p
+
+
+def surf_y(o, x, z):
+    """Front surface (most negative y) of a mesh at (x, z), by ray cast."""
+    hit, loc, _n, _i = o.ray_cast(Vector((x, -0.5, z)), Vector((0, 1, 0)))
+    return loc.y if hit else HEAD_C.y - 0.1
+
+
 def make_head():
-    parts = [prim("sphere", "skull", HEAD_C, (0.098, 0.108, 0.118), seg=20, rings=14)]
-    parts.append(prim("sphere", "jaw", HEAD_C + Vector((0, -0.022, -0.055)), (0.078, 0.08, 0.06)))
-    parts.append(prim("sphere", "nose", HEAD_C + Vector((0, -0.105, -0.012)), (0.016, 0.02, 0.024), seg=10, rings=6))
+    skull = prim("sphere", "skull", HEAD_C, (0.098, 0.108, 0.118), seg=32, rings=24)
+    sculpt_skull(skull)
+    bpy.context.view_layer.update()
+    sy = lambda x, z: surf_y(skull, x, HEAD_C.z + z)
+    parts = [skull]
+    # Nose: a narrow bridge widening to a rounded tip, with two nostril wings.
+    nz = -0.012
+    ny = sy(0, nz)
+    nose = prim("sphere", "nose", (0, ny - 0.011, HEAD_C.z + nz), (0.013, 0.016, 0.032), seg=14, rings=10)
+    for v in nose.data.vertices:
+        t = (v.co.z - (HEAD_C.z + nz)) / 0.032           # -1 tip/bottom .. 1 bridge/top
+        v.co.x *= 1.0 - 0.45 * max(0.0, t)
+        v.co.y += 0.008 * max(0.0, t)                    # bridge sinks into the face
+        if t < -0.3:
+            v.co.y -= 0.004 * (-t - 0.3)                 # tip pushes forward
+    parts.append(nose)
     for s in (1, -1):
-        parts.append(prim("sphere", "ear", HEAD_C + Vector((0.097 * s, 0.0, -0.005)), (0.014, 0.022, 0.03), seg=10, rings=6))
+        parts.append(prim("sphere", "wing", (0.0125 * s, sy(0.0125 * s, nz - 0.022) - 0.0015, HEAD_C.z + nz - 0.021),
+                          (0.0065, 0.006, 0.0055), seg=10, rings=6))
+        parts.append(prim("sphere", "ear", HEAD_C + Vector((0.094 * s, 0.004, -0.005)), (0.013, 0.022, 0.031), seg=12, rings=8))
     head = join(parts, "Head")
     face = []
     for s in (1, -1):
-        face.append(prim("sphere", "eye", HEAD_C + Vector((0.036 * s, -0.087, 0.018)), (0.017, 0.012, 0.014), "eye_white", seg=10, rings=6))
-        face.append(prim("sphere", "pupil", HEAD_C + Vector((0.036 * s, -0.097, 0.017)), (0.009, 0.006, 0.01), "pupil", seg=8, rings=5))
-        face.append(prim("cube", "brow", HEAD_C + Vector((0.038 * s, -0.094, 0.044)), (0.022, 0.006, 0.005), "hair", rot=(0, 0.12 * s, 0), smooth=False))
+        ex, ez = 0.036 * s, HEAD_C.z + 0.018
+        ey = sy(ex, 0.018) + 0.004
+        face.append(prim("sphere", "eye", (ex, ey, ez), (0.016, 0.01, 0.012), "eye_white", seg=12, rings=8))
+        face.append(prim("sphere", "pupil", (ex, ey - 0.008, ez - 0.001), (0.0085, 0.004, 0.0095), "pupil", seg=10, rings=6))
+        by = sy(0.038 * s, 0.044)
+        face.append(prim("cube", "brow", (0.038 * s, by - 0.003, HEAD_C.z + 0.046), (0.021, 0.005, 0.0045), "hair",
+                         rot=(0, 0.12 * s, 0), smooth=False))
     # (The mouth and lips are painted on the face shell, see make_face_paint.)
-    return head, join(face, "Face")
+    face = join(face, "Face")
+    # Blink: skin-coloured lids over the eyes, and a dark open mouth for talking; Godot shows them.
+    lids = []
+    for s in (1, -1):
+        ex, ez = 0.036 * s, HEAD_C.z + 0.018
+        lid = prim("sphere", "lid", (ex, sy(ex, 0.018) + 0.0035, ez + 0.001), (0.018, 0.0115, 0.0135), seg=12, rings=8)
+        cut_below(lid, ez - 0.004)
+        lids.append(lid)
+    blink = join(lids, "Blink")
+    mouth = prim("sphere", "Mouth_open", (0, sy(0, -0.056) - 0.0005, HEAD_C.z - 0.057), (0.011, 0.003, 0.0055), "pupil", seg=10, rings=6)
+    return head, face, blink, mouth
+
+
+def make_fingers(side, s):
+    """Four fingers and a thumb on a hand (rigid on hand.L/R): small, but hands stop looking like mittens."""
+    parts = []
+    hx = 0.298 * s
+    for k, dy in enumerate((-0.0165, -0.0055, 0.0055, 0.0165)):
+        length = (0.022, 0.025, 0.024, 0.019)[k]
+        f = prim("sphere", "finger", (hx - 0.003 * s, -0.026 + dy, 0.866 - length), (0.0068, 0.0062, length), seg=8, rings=6,
+                 rot=(0, -0.12 * s, 0))
+        parts.append(f)
+    parts.append(prim("sphere", "thumb", (hx - 0.01 * s, -0.047, 0.872), (0.0072, 0.0072, 0.02), seg=8, rings=6,
+                      rot=(-0.6, -0.25 * s, 0)))
+    return join(parts, "Fingers_" + side)
 
 
 def make_face_paint(head):
@@ -339,14 +422,14 @@ def make_face_paint(head):
 def make_hair_pieces():
     out = []
     short = prim("sphere", "Hair_short", HEAD_C + Vector((0, 0.008, 0.012)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)
-    cut_below(short, HEAD_C.z + 0.02)
+    cut_below(short, HEAD_C.z + 0.01, slope=0.45)
     out.append(short)
     cap = prim("sphere", "long_top", HEAD_C + Vector((0, 0.008, 0.012)), (0.106, 0.116, 0.122), "hair", seg=20, rings=14)
-    cut_below(cap, HEAD_C.z + 0.0)
+    cut_below(cap, HEAD_C.z + 0.0, slope=0.45)
     back = prim("cube", "long_back", HEAD_C + Vector((0, 0.07, -0.07)), (0.1, 0.045, 0.12), "hair")
     out.append(join([cap, back], "Hair_long"))
     doek = prim("sphere", "doek_top", HEAD_C + Vector((0, 0.02, 0.035)), (0.11, 0.122, 0.13), "hair", seg=20, rings=14)
-    cut_below(doek, HEAD_C.z + 0.012)
+    cut_below(doek, HEAD_C.z + 0.012, slope=0.3)
     knot = prim("sphere", "doek_knot", HEAD_C + Vector((0, 0.07, 0.14)), (0.06, 0.05, 0.045), "hair", seg=12, rings=8)
     out.append(join([doek, knot], "Hair_doek"))
     beanie = prim("sphere", "beanie_top", HEAD_C + Vector((0, 0.005, 0.03)), (0.108, 0.118, 0.13), "hair", seg=20, rings=14)
@@ -368,14 +451,74 @@ def make_hair_pieces():
     skirt = prim("cone", "Skirt", (0, 0, 0.75), (0.25, 0.22, 0.26), "skirt", seg=24, r2=0.76)
     out.append(skirt)
     afro = prim("sphere", "Hair_afro", HEAD_C + Vector((0, 0.025, 0.05)), (0.14, 0.15, 0.135), "hair", seg=20, rings=14)
-    cut_below(afro, HEAD_C.z - 0.015)
+    cut_below(afro, HEAD_C.z - 0.01, slope=0.45)
     out.append(afro)
     pony_top = prim("sphere", "pony_top", HEAD_C + Vector((0, 0.008, 0.012)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)
-    cut_below(pony_top, HEAD_C.z + 0.015)
+    cut_below(pony_top, HEAD_C.z + 0.01, slope=0.45)
     tie = prim("sphere", "pony_tie", HEAD_C + Vector((0, 0.11, 0.05)), (0.03, 0.03, 0.03), "hair", seg=10, rings=6)
     tail = prim("cone", "pony_tail", HEAD_C + Vector((0, 0.135, -0.05)), (0.035, 0.035, 0.1), "hair", seg=10, r2=0.4,
                 rot=(-0.25, 0, 0))
     out.append(join([pony_top, tie, tail], "Hair_ponytail"))
+    out += make_more_hair()
+    return out
+
+
+def _on_skull(x, theta, lift):
+    """A point on the skull surface (scaled by `lift`) in lane x, at angle theta measured from
+    the front (0 = straight ahead at eye height, pi/2 = crown, pi = back)."""
+    rx, ry, rz = 0.098, 0.108, 0.118
+    f = math.sqrt(max(0.0, 1.0 - (x / rx) ** 2)) * lift
+    return HEAD_C + Vector((x * lift, -ry * math.cos(theta) * f + 0.006, rz * math.sin(theta) * f + 0.004))
+
+
+def make_more_hair():
+    """Fade, cornrows, braids, curls and a bun (the hair colour slot)."""
+    out = []
+    # Fade: a skin-tight shell low on the sides, fuller on top.
+    sides = prim("sphere", "fade_sides", HEAD_C + Vector((0, 0.006, 0.006)), (0.1, 0.11, 0.12), "hair", seg=24, rings=16)
+    cut_below(sides, HEAD_C.z - 0.005, slope=0.45)
+    top = prim("sphere", "fade_top", HEAD_C + Vector((0, 0.004, 0.022)), (0.103, 0.114, 0.125), "hair", seg=24, rings=16)
+    cut_below(top, HEAD_C.z + 0.06, slope=0.25)
+    out.append(join([sides, top], "Hair_fade"))
+    # Cornrows: a close shell with raised rows running front to back.
+    base = prim("sphere", "rows_base", HEAD_C + Vector((0, 0.006, 0.006)), (0.1, 0.11, 0.12), "hair", seg=24, rings=16)
+    cut_below(base, HEAD_C.z + 0.01, slope=0.45)
+    rows = [base]
+    for x in (-0.06, -0.04, -0.02, 0.0, 0.02, 0.04, 0.06):
+        th = 0.55
+        while th < math.pi + 0.3:
+            rows.append(prim("sphere", "bead", _on_skull(x, th, 1.02), (0.0085, 0.0085, 0.0085), "hair", seg=6, rings=4))
+            th += 0.14
+    out.append(join(rows, "Hair_cornrows"))
+    # Braids: a close cap plus braids hanging to the shoulders from the sides and back.
+    cap = prim("sphere", "braid_cap", HEAD_C + Vector((0, 0.008, 0.01)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)
+    cut_below(cap, HEAD_C.z + 0.005, slope=0.45)
+    braids = [cap]
+    for k in range(16):
+        a = math.pi * 0.15 + k * (math.pi * 0.7 / 15)      # round the back, ear to ear
+        x = 0.1 * math.cos(a)
+        y = 0.105 * math.sin(a) + 0.01
+        top_pt = HEAD_C + Vector((x, y, -0.01 * (k % 2)))
+        length = 0.2 + 0.03 * (k % 3)
+        b = prim("cyl", "braid", top_pt + Vector((0, 0.01, -length / 2)), (0.0075, 0.0075, length / 2), "hair", seg=6)
+        braids.append(b)
+    out.append(join(braids, "Hair_braids"))
+    # Curls: a cap of small tight curls.
+    curls = [prim("sphere", "curl_base", HEAD_C + Vector((0, 0.008, 0.012)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)]
+    cut_below(curls[0], HEAD_C.z + 0.01, slope=0.45)
+    for x in (-0.075, -0.05, -0.025, 0.0, 0.025, 0.05, 0.075):
+        th = 0.6 + (0.07 if int(x * 100) % 2 else 0.0)
+        while th < math.pi + 0.2:
+            c = _on_skull(x, th, 1.08)
+            curls.append(prim("sphere", "curl", c, (0.019, 0.019, 0.018), "hair", seg=8, rings=6))
+            th += 0.26
+    out.append(join(curls, "Hair_curls"))
+    # Bun: hair pulled back into a bun on the crown.
+    pulled = prim("sphere", "bun_cap", HEAD_C + Vector((0, 0.008, 0.012)), (0.104, 0.114, 0.12), "hair", seg=20, rings=14)
+    cut_below(pulled, HEAD_C.z + 0.01, slope=0.45)
+    bun = prim("sphere", "bun", HEAD_C + Vector((0, 0.07, 0.11)), (0.042, 0.04, 0.036), "hair", seg=14, rings=10)
+    tie = prim("torus_thick", "bun_tie", HEAD_C + Vector((0, 0.055, 0.092)), (0.03, 0.03, 0.03), "hair", rot=(0.9, 0, 0))
+    out.append(join([pulled, bun, tie], "Hair_bun"))
     return out
 
 
@@ -716,6 +859,34 @@ def pose_guard(rig, t):
     set_multi(rig, "head", [("X", -0.05)])
 
 
+def pose_idle_shift(rig, t):
+    """Weight on the left leg, right knee relaxed, hips cocked (a slower, lazier idle)."""
+    ph = t * 2 * math.pi
+    breathe = math.sin(ph)
+    rig.pose.bones["hips"].location = Vector((0.022, -0.012 + breathe * 0.002, 0))
+    set_multi(rig, "hips", [("Y", 0.06)])
+    set_multi(rig, "thigh.L", [("Y", -0.07)])
+    set_multi(rig, "thigh.R", [("Y", -0.04), ("X", -0.12)])
+    set_rot(rig, "shin.R", "X", 0.28)
+    set_rot(rig, "foot.R", "X", -0.12)
+    set_multi(rig, "spine", [("Y", -0.05)])
+    set_rot(rig, "chest", "X", -0.02 * breathe)
+    set_multi(rig, "neck", [("Y", -0.03), ("Z", math.sin(ph * 0.5) * 0.08)])
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("Y", 0.08 * sign), ("X", 0.04 + 0.02 * breathe)])
+        set_rot(rig, "forearm." + side, "X", -0.22)
+
+
+def pose_idle_hips(rig, t):
+    """Hands on the hips, elbows out."""
+    pose_idle(rig, t)
+    for side, sign in (("L", 1), ("R", -1)):
+        set_multi(rig, "upper_arm." + side, [("Y", -0.62 * sign), ("X", 0.2)])
+        set_multi(rig, "forearm." + side, [("Y", 1.75 * sign), ("X", 0.35)])
+        set_multi(rig, "hand." + side, [("Y", -0.3 * sign)])
+    set_rot(rig, "chest", "X", -0.03)
+
+
 def pose_sit(rig, t):
     """Seated on a 0.45 m bench/chair: the character's origin is the middle of the seat."""
     ph = t * 2 * math.pi
@@ -861,9 +1032,11 @@ add_hem_loops(body)
 paint_body(body)
 bind_auto(body, rig)
 add_shape_keys(body)
-head, face = make_head()
-for o in (head, face, make_face_paint(head)):
+head, face, blink, mouth = make_head()
+for o in (head, face, blink, mouth, make_face_paint(head)):
     bind_rigid(o, rig, "head")
+for side, sgn in (("L", 1), ("R", -1)):
+    bind_rigid(make_fingers(side, sgn), rig, "hand." + side)
 for piece in make_hair_pieces() + make_accessories():
     if piece.name == "Skirt":
         bind_skirt(piece, rig)
@@ -890,6 +1063,8 @@ for piece in police_body:
 bake_action(rig, "idle", 72, pose_idle)
 bake_action(rig, "walk", 24, lambda r, t: pose_walk(r, t, False))
 bake_action(rig, "run", 15, lambda r, t: pose_walk(r, t, True))
+bake_action(rig, "idle_shift", 96, pose_idle_shift)
+bake_action(rig, "idle_hips", 72, pose_idle_hips)
 bake_action(rig, "talk", 72, pose_talk)
 bake_action(rig, "guard", 72, pose_guard)
 bake_action(rig, "sit", 96, pose_sit)

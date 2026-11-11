@@ -361,10 +361,10 @@ function face(name, o) {
     const row = (y, x0, x1, col) => { for (let x = x0; x <= x1; x++) both(x, y, col) }
     const lid = "#3a302c", soft = "#9a8a84", line = "#7d6c66"
     // upper lids (outer corner at the image edge side), lower lash line
-    row(11, 10, 15, lid); both(9, 12, lid); both(16, 12, lid)
-    if (o.lashes) { row(10, 10, 14, lid); both(8, 11, lid); both(7, 10, lid) }
+    row(12, 10, 15, lid); both(9, 13, lid); both(16, 13, lid)
+    if (o.lashes) { row(11, 10, 14, lid); both(8, 12, lid); both(7, 11, lid) }
     if (o.old) {
-      row(19, 11, 14, soft)                                   // bags under the eyes
+      row(17, 11, 14, soft)                                   // bags under the eyes
       both(7, 13, line); both(7, 15, line); both(6, 14, line)  // crow's feet
       row(5, 14, 19, soft); row(7, 15, 19, soft)              // forehead lines
       both(15, 25, line); both(14, 26, line); both(14, 27, line)  // smile lines

@@ -4,6 +4,38 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Modeling pass: heads, hands, hair, life; vehicle interiors and the skorokoro (2026-11-11)
+- **Heads:** sculpted in code from one skull mesh:
+  - a jaw tapering to the chin, cheekbones, eye sockets, a brow ridge and a fuller back;
+  - a shaped nose (bridge to tip) with nostril wings, eyes set in their sockets;
+  - hairlines that sit above the forehead and lower at the nape.
+- **Hands:** four fingers and a thumb on each hand.
+- **Hair:** new fade, cornrows, braids, curls and bun styles. Generated residents with short or
+  long hair now spread across them; hand-made looks keep their hair.
+- **Life:**
+  - Blinking, and a mouth that moves while someone talks.
+  - Two idle variants: weight on one leg, and hands on hips.
+  - Older people stoop and walk 15% slower; some young men are lanky teens.
+- **Vehicles:**
+  - See-through glass, with a dashboard, a right-hand-drive steering wheel and seats with
+    headrests inside.
+  - Drivers in traffic, sometimes passengers, and two officers in police bakkies. The player
+    shows at the wheel while driving.
+  - Body details: door handles, wipers, grille slats, side repeaters, an exhaust, a sedan
+    aerial, mud flaps and a bakkie tow bar.
+  - Taxi and canopy windows are dark tinted.
+- **The skorokoro:** a tired old boxy sedan in the civilian mix. It has a door from another car,
+  a primer patch, rust on the sills and arches, a dented flank, chrome bumpers and a sagging rear
+  bumper.
+- **Wear:** about a third of the cars are dusty, with road grime fading up from the sills.
+- **Performance:** small parts (fingers, lids, face paint, occupants, wheels) are not drawn from
+  far away. Draw calls are 2,813 against 2,800 before.
+- **Traffic:** a car stuck for 10 s behind a resident who stays in the lane eases past them
+  (avoidance pushes walkers aside). The player and other cars are never ignored.
+- **Tests:** occupants, see-through glass, the skorokoro, the player at the wheel, blinking,
+  talking mouths, hair variety, stooping. The "keep driving" check now catches stuck cars
+  without failing busy streets (> 30 m in 25 s).
+
 ### Detail pass: faces, clothes and vehicles (2026-11-11)
 - **Painted faces:** a thin face-paint shell with pixel-art overlays tinted by skin tone:
   - eyelids and lashes;

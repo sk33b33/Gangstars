@@ -7,16 +7,21 @@ extends RefCounted
 ## material per vehicle so its lights can flash (see set_lights()).
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
-const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police"]
-const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie"]   # weighted pick for everyday cars
+const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro"]
+const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4}
+## Colours for the skorokoro's odd door and primer patches, and for occupants.
+const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
+const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
+const SKINS := [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f"), Color("#4a2f22"), Color("#c58c62")]
 
 static var _meshes: Dictionary = {}
 static var _markers: Dictionary = {}   # model -> {"wheels": [Vector3], "plate_front": Vector3, "plate_rear": Vector3}
 ## 0 by day, 1 at night; DayNight sets it. Moving cars switch their headlight beams on at night.
 static var night := 0.0
 static var _glass: StandardMaterial3D
+static var _tint: StandardMaterial3D
 
 
 static func mesh(model: String) -> Mesh:
@@ -33,16 +38,20 @@ static func _load() -> void:
 	# Marker empties under each body: <model>_axle_0..3 (front pair first), <model>_plate_*.
 	for model in MODELS:
 		var body := root.find_child(model, true, false) as Node3D
-		var m := {"wheels": []}
+		var m := {"wheels": [], "seats": []}
 		if body:
 			for c in body.get_children():
 				var n := str(c.name)
 				if n.begins_with(model + "_axle_"):
 					m.wheels.append([n, (c as Node3D).position])
+				elif n.begins_with(model + "_seat_"):
+					m.seats.append([n, (c as Node3D).position])
 				elif n.begins_with(model + "_plate_"):
 					m[n.trim_prefix(model + "_")] = (c as Node3D).position
 		m.wheels.sort_custom(func(a, b): return a[0] < b[0])
 		m.wheels = m.wheels.map(func(w): return w[1])
+		m.seats.sort_custom(func(a, b): return a[0] < b[0])
+		m.seats = m.seats.map(func(w): return w[1])
 		_markers[model] = m
 	root.free()
 
@@ -65,6 +74,11 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 	if m == null:
 		push_warning("Unknown vehicle model: " + model)
 		return pivot
+	var seed := absi(("%s|%s|%s" % [model, color, center]).hash())
+	# Some cars are dusty from the roads; the skorokoro always is.
+	var dirty := model == "skoro" or seed % 20 < 7
+	pivot.set_meta("model", model)
+	pivot.set_meta("seed", seed)
 	var tilt := Node3D.new()
 	tilt.name = "Tilt"
 	tilt.rotation.y = PI * 0.5   # Blender front (-Y) -> Godot +Z -> rotate to +X
@@ -85,9 +99,21 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 				paint.clearcoat_enabled = true
 				paint.clearcoat = 0.8
 				paint.clearcoat_roughness = 0.12
+				if dirty:   # road grime (vertex colours) and a duller finish
+					paint.vertex_color_use_as_albedo = true
+					paint.roughness = 0.55 if model != "skoro" else 0.8
+					paint.clearcoat = 0.2 if model != "skoro" else 0.0
 				mi.set_surface_override_material(i, paint)
+			"paint2":
+				var odd := StandardMaterial3D.new()
+				odd.albedo_color = ODD_PANELS[seed % ODD_PANELS.size()]
+				odd.roughness = 0.75
+				odd.vertex_color_use_as_albedo = dirty
+				mi.set_surface_override_material(i, odd)
 			"glass":
 				mi.set_surface_override_material(i, glass())
+			"tint":
+				mi.set_surface_override_material(i, tint())
 			"headlight":
 				mi.set_surface_override_material(i, PixelMaterials.lamp())
 			"taillight":
@@ -115,6 +141,7 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 			w.name = "Wheel%d" % k
 			w.mesh = wheel_mesh
 			w.position = marks.wheels[k]
+			w.visibility_range_end = 90.0
 			# The mesh's rim faces +X: wheels on the -X side are turned round.
 			w.set_meta("flip", 0.0 if w.position.x > 0.0 else PI)
 			w.set_meta("front", k < 2)
@@ -144,16 +171,76 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 	return pivot
 
 
-## Reflective windscreen glass (opaque: there are no interiors yet).
+## See-through, reflective glass (cabins have interiors behind it).
 static func glass() -> StandardMaterial3D:
 	if _glass == null:
 		_glass = StandardMaterial3D.new()
-		_glass.albedo_color = Color("#1b2633")
-		_glass.metallic = 0.8
-		_glass.roughness = 0.06
-		_glass.clearcoat_enabled = true
-		_glass.clearcoat_roughness = 0.0
+		_glass.albedo_color = Color(0.1, 0.14, 0.19, 0.55)
+		_glass.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_glass.metallic = 0.6
+		_glass.roughness = 0.05
+		_glass.metallic_specular = 0.9
 	return _glass
+
+
+## Dark tinted glass (taxi and canopy windows: there is solid body behind them).
+static func tint() -> StandardMaterial3D:
+	if _tint == null:
+		_tint = StandardMaterial3D.new()
+		_tint.albedo_color = Color("#1b2633")
+		_tint.metallic = 0.8
+		_tint.roughness = 0.06
+		_tint.clearcoat_enabled = true
+		_tint.clearcoat_roughness = 0.0
+	return _tint
+
+
+## People in the car: a driver (and, by seed, passengers) seen through the windows.
+## Police cars carry two officers. Parked cars stay empty.
+static func add_occupants(pivot: Node3D, passengers := -1) -> void:
+	var model: String = pivot.get_meta("model", "")
+	var seats: Array = _markers.get(model, {}).get("seats", [])
+	if seats.is_empty() or not pivot.has_meta("tilt"):
+		return
+	var seed: int = pivot.get_meta("seed", 0)
+	var count: int = 1 + (passengers if passengers >= 0 else (1 if model == "police" else [0, 0, 1, 2][seed / 7 % 4]))
+	var people: Array = []
+	for k in mini(count, seats.size()):
+		var mi := MeshInstance3D.new()
+		mi.name = "Occupant%d" % k
+		mi.mesh = _meshes.get("occupant_driver" if k == 0 else "occupant_passenger")
+		mi.position = seats[k]
+		mi.visibility_range_end = 45.0
+		var s := seed / (k + 3)
+		var shirt: Color = Color("#9db4d6") if model == "police" else SHIRTS[s % SHIRTS.size()]
+		_dress(mi, shirt, SKINS[(s / 5) % SKINS.size()], Color("#1d1b24") if s % 4 else Color("#a7a39a"))
+		(pivot.get_meta("tilt") as Node3D).add_child(mi)
+		people.append(mi)
+	pivot.set_meta("occupants", people)
+
+
+## The player at the wheel of a drivable car (shown while they drive).
+static func set_driver(pivot: Node3D, on: bool, shirt := Color("#f1eee8")) -> void:
+	if not pivot.has_meta("occupants"):
+		add_occupants(pivot, 0)
+	for mi: MeshInstance3D in pivot.get_meta("occupants", []):
+		if on:
+			_dress(mi, shirt, Color("#8d5a3b"), Color("#1d1b24"))
+		mi.visible = on
+
+
+static func _dress(mi: MeshInstance3D, shirt: Color, skin: Color, hair: Color) -> void:
+	if mi.mesh == null:
+		return
+	for i in mi.mesh.get_surface_count():
+		var m := mi.mesh.surface_get_material(i)
+		match m.resource_name if m else "":
+			"occ_shirt":
+				mi.set_surface_override_material(i, PixelMaterials.cloth(shirt))
+			"occ_skin":
+				mi.set_surface_override_material(i, PixelMaterials.skin(skin))
+			"occ_hair":
+				mi.set_surface_override_material(i, PixelMaterials.cloth(hair))
 
 
 static func _glow(albedo: Color, glow: Color) -> StandardMaterial3D:

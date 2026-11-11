@@ -57,6 +57,9 @@ func is_driven() -> bool:
 
 
 func _physics_process(delta: float) -> void:
+	if body and bool(body.get_meta("driver_shown", false)) != (driver != null):
+		body.set_meta("driver_shown", driver != null)   # the player shows at the wheel while driving
+		VehicleLibrary.set_driver(body, driver != null, Color("#f1eee8"))
 	if driver == null and absf(speed) < 0.05:
 		# Parked: no physics step, so passing traffic can never nudge it out of its bay.
 		speed = 0.0

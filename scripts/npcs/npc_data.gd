@@ -54,12 +54,25 @@ func appearance() -> Dictionary:
 	var fig := figure if figure >= 0.0 else (0.85 + float(h % 15) / 100.0 if hair_style in ["long", "doek"] else 0.0)
 	var hv := heavy if heavy >= 0.0 else (float(h / 7 % 60) / 100.0 if h % 3 == 0 else float(h / 7 % 15) / 100.0)
 	var sk := skirt == 1 or (skirt == -1 and fig > 0.5 and h / 11 % 2 == 0)
-	var look := {"hair_style": hair_style, "hair_color": hair_color, "height": height, "sleeves": sleeves,
+	var look := {"hair_style": _hair_for(h), "hair_color": hair_color, "height": height, "sleeves": sleeves,
 		"figure": fig, "heavy": hv, "skirt": sk, "accessories": Array(accessories), "apron_color": apron_color}
 	_everyday_look(look, h)
 	if dress == 1 or (dress == -1 and skirt == -1 and accessories.is_empty() and role == "resident" and fig > 0.5 and height >= 0.85 and h / 13 % 4 != 0):
 		_aunty_look(look, h)
 	return look
+
+
+## More hair variety for generated residents (hand-made looks keep their hair): short hair
+## may be a fade or cornrows, long hair braids, a bun, curls or a ponytail.
+func _hair_for(h: int) -> String:
+	if _looks.has(id):
+		return hair_style
+	match hair_style:
+		"short":
+			return ["short", "fade", "cornrows", "short", "fade"][h / 73 % 5]
+		"long":
+			return ["long", "braids", "bun", "curls", "ponytail", "braids"][h / 73 % 6]
+	return hair_style
 
 
 ## Faces, trousers, hoodies, soles and crew cap logos for everyone (hand-made looks can set
@@ -74,6 +87,12 @@ func _everyday_look(look: Dictionary, h: int) -> void:
 		if not woman and not grey and not kid and h / 61 % 3 == 0 and not accessories.has("beard"):
 			face = "face_stubble"
 	look.face = face
+	look.idle = ["idle", "idle", "idle_shift", "idle", "idle_shift", "idle_hips"][h / 83 % 6]
+	if grey and not kid:
+		look.stoop = 0.6 + float(h / 89 % 5) * 0.1
+	elif role == "resident" and not woman and not kid and h / 79 % 6 == 0 and height >= 0.98 and height <= 1.02:
+		look.height = 0.94   # a lanky teen
+		look.heavy = 0.0
 	if role == "police":
 		look.sole_color = Color("#1d1b24")
 		return
@@ -167,6 +186,8 @@ static func from_dict(d: Dictionary) -> NpcData:
 	n.skirt = int(d.get("skirt", -1))
 	n.accessories = PackedStringArray(d.get("accessories", []))
 	n.apron_color = DataFiles.to_color(d.get("apron_color"), Color("#ece8dc"))
+	if n.hair_color.s < 0.15 and n.hair_color.v > 0.5 and n.role == "resident":
+		n.walk_speed *= 0.85   # older people walk a little slower
 	n.dress = int(d.get("dress", -1))
 	n.dress_print = str(d.get("print", ""))
 	n.cardigan_color = DataFiles.to_color(d.get("cardigan_color"), Color(0, 0, 0, 0))

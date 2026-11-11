@@ -36,6 +36,10 @@ var _served_stop := -1
 var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
 var _anim_time := 0.0
+var _stuck_time := 0.0
+var _clock := 0.0
+var _ignore_until := {}
+const STUCK_GIVE_WAY := 10.0
 var _full_radius := 2.2
 var blocker: Node3D
 ## Model override (e.g. "police"); "" = taxi or a civilian model from the id.
@@ -65,6 +69,7 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length,
 		model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
 	VehicleLibrary.add_headlights(body, model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
+	VehicleLibrary.add_occupants(body)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
 	box.size = Vector3(1.75, 1.5, length)
@@ -82,6 +87,7 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 func _physics_process(delta: float) -> void:
 	if route.is_empty():
 		return
+	_clock += delta
 	var target := route[_i]
 	var to := target - global_position
 	to.y = 0.0
@@ -112,6 +118,15 @@ func _physics_process(delta: float) -> void:
 				blocker.step_aside(global_basis.x * (side if side != 0.0 else 1.0))
 	else:
 		blocked_time = 0.0
+	# A resident who stays put in the lane for a long time (chatting, guarding) is eased past:
+	# avoidance pushes walkers aside from a moving car. Never the player or another car.
+	if blocked and blocker is Resident:
+		_stuck_time += delta
+		if _stuck_time > STUCK_GIVE_WAY:
+			_ignore_until[blocker] = _clock + 6.0
+			_stuck_time = 0.0
+	else:
+		_stuck_time = 0.0
 	_was_blocked = blocked
 	var before := speed
 	var yaw_before := rotation.y
@@ -151,7 +166,7 @@ func is_blocked() -> bool:
 	if _was_blocked:
 		reach += 2.0   # hysteresis: braking shortens the reach, so don't let go and creep forward
 	for n: Node3D in candidates:
-		if n == self:
+		if n == self or (_ignore_until.has(n) and float(_ignore_until[n]) > _clock):
 			continue
 		var local := to_local(n.global_position)
 		if local.z > 1.0 and local.z < reach and absf(local.x) < HALF_WIDTH + 0.7:

@@ -7,7 +7,8 @@ extends Node3D
 ## The tree is advanced manually from animate(), so far-away NPCs cost what their tier allows.
 
 const MODEL := preload("res://assets/models/characters/person.glb")
-const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail"]
+const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail",
+	"fade", "cornrows", "braids", "curls", "bun"]
 const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
 	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood"]
 ## Painted face overlays (pxl textures); "none" hides the face paint.
@@ -55,6 +56,15 @@ var _head_yaw := 0.0
 var _head_scale := 1.0
 var _hat: MeshInstance3D
 var _logo_mesh: MeshInstance3D
+var _lids: MeshInstance3D
+var _mouth: MeshInstance3D
+var _idle_name := "idle"
+## 0..1: older people stoop (spine and neck bent forward, head up), applied after the animation.
+var stoop := 0.0
+var _blink_in := 3.0
+var _mouth_in := 0.0
+var _spine_bone := -1
+var _neck_bone := -1
 var _logo := ""
 var _hair: Array[MeshInstance3D] = []
 
@@ -71,6 +81,8 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	_hair = []
 	_hat = null
 	_logo_mesh = null
+	_lids = null
+	_mouth = null
 	_hand = null
 	_holster = null
 	_chest = null
@@ -85,6 +97,13 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	_skeleton = _root.find_child("Skeleton3D", true, false)
 	_head_bone = _skeleton.find_bone("head")
 	_head_scale = 1.3 if child else 1.0
+	_spine_bone = _skeleton.find_bone("spine")
+	_neck_bone = _skeleton.find_bone("neck")
+	_idle_name = str(opts.get("idle", "idle"))
+	if not _idle_name in ["idle", "idle_shift", "idle_hips"]:
+		_idle_name = "idle"
+	stoop = clampf(float(opts.get("stoop", 0.0)), 0.0, 1.0)
+	_blink_in = 1.0 + float(get_instance_id() % 30) / 10.0
 	var dress: bool = bool(opts.get("dress", false))
 	var skirt: bool = bool(opts.get("skirt", false)) and not dress
 	var hair_color: Color = opts.get("hair_color", Color("#1d1b24"))
@@ -122,6 +141,11 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			continue
 		_recolour(mi, colours)
 		var n := str(mi.name)
+		# Small details aren't drawn from far away.
+		if n.begins_with("Fingers_") or n in ["Blink", "Mouth_open"]:
+			mi.visibility_range_end = 18.0
+		elif n in ["Face_paint", "Face", "Acc_hoops", "Acc_curlers", "Acc_cap_logo", "Acc_glasses"]:
+			mi.visibility_range_end = 35.0
 		if n.begins_with("Hair_"):
 			_hair.append(mi)
 			mi.visible = n == "Hair_" + style
@@ -132,6 +156,12 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.visible = skirt
 		elif n == "Dress":
 			mi.visible = dress
+		elif n == "Blink":
+			_lids = mi
+			mi.visible = false
+		elif n == "Mouth_open":
+			_mouth = mi
+			mi.visible = false
 		elif n == "Face_paint":
 			mi.visible = FACES.has(face)
 		elif n == "Acc_cap_logo":
@@ -217,6 +247,32 @@ func animate(delta: float, speed: float) -> void:
 	_tree.set("parameters/down_mix/blend_amount", _down)
 	_tree.advance(delta)
 	_apply_look(delta)
+	_apply_face(delta)
+
+
+## Blinks every few seconds; the mouth moves while talking. Older people stoop.
+func _apply_face(delta: float) -> void:
+	if _lids:
+		_blink_in -= delta
+		if _blink_in <= 0.0:
+			_lids.visible = not _lids.visible
+			var r := float((get_instance_id() + int(Time.get_ticks_msec() / 97)) % 100) / 100.0
+			_blink_in = 0.12 if _lids.visible else 2.2 + r * 3.5
+	if _mouth:
+		if _talk > 0.5 and base_pose != "down":
+			_mouth_in -= delta
+			if _mouth_in <= 0.0:
+				_mouth.visible = not _mouth.visible
+				_mouth_in = 0.09 + float((get_instance_id() + int(Time.get_ticks_msec() / 53)) % 10) * 0.012
+		elif _mouth.visible:
+			_mouth.visible = false
+	if stoop > 0.0 and _spine_bone >= 0 and _sit < 0.5 and _down < 0.5:
+		var q := _skeleton.get_bone_pose_rotation(_spine_bone)
+		_skeleton.set_bone_pose_rotation(_spine_bone, q * Quaternion(Vector3.RIGHT, 0.22 * stoop))
+		var n := _skeleton.get_bone_pose_rotation(_neck_bone)
+		_skeleton.set_bone_pose_rotation(_neck_bone, n * Quaternion(Vector3.RIGHT, 0.12 * stoop))
+		var hq := _skeleton.get_bone_pose_rotation(_head_bone)
+		_skeleton.set_bone_pose_rotation(_head_bone, hq * Quaternion(Vector3.RIGHT, -0.2 * stoop))
 
 
 ## Turns the head (within ±60°) towards a world point; null looks straight ahead.
@@ -360,7 +416,7 @@ func _build_tree(player: AnimationPlayer) -> void:
 	var loco := AnimationNodeBlendSpace1D.new()
 	loco.min_space = 0.0
 	loco.max_space = RUN_REF
-	loco.add_blend_point(_anim("idle"), 0.0)
+	loco.add_blend_point(_anim(_idle_name), 0.0)
 	loco.add_blend_point(_anim("walk"), WALK_REF)
 	loco.add_blend_point(_anim("run"), RUN_REF)
 	var bt := AnimationNodeBlendTree.new()

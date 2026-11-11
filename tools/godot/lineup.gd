@@ -62,11 +62,12 @@ func _run() -> void:
 				if not n.id.get_slice("_", n.id.get_slice_count("_") - 1).is_valid_int():
 					looks.append([n.shirt_color, n.pants_color, n.skin_color, Color(0, 0, 0, 0), n.appearance(), "idle", 0.0, n.display_name])
 	if args.has("cars"):
-		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea")]
+		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea"), Color("#b5651d")]
 		for i in VehicleLibrary.MODELS.size():
 			var m: String = VehicleLibrary.MODELS[i]
 			var car := VehicleLibrary.build(world, m, paints[i], Vector3(-6.0 + (i % 3) * 5.6, 0, -3.2 + (i / 3) * 4.6), deg_to_rad(-30.0))
 			VehicleLibrary.set_lights(car, m == "police", 0.1)
+			VehicleLibrary.add_occupants(car)
 	if args.has("dogs"):
 		var coats := [[Color("#5a3a22"), Color("#d8c4a0")], [Color("#1d1b20"), Color("#e8e2d6")], [Color("#c9a26b"), Color("#f0e2c4")], [Color("#8a7d70"), Color("#d8d0c4")]]
 		for i in coats.size():
@@ -91,6 +92,13 @@ func _run() -> void:
 			[Color("#2c3e50"), Color("#4a4e6a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "bald"}, "holster:shotgun", 1.5],
 			[Color("#7a1f1f"), Color("#1c2833"), Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "short"}, "down", 0.0],
 		]
+	if args.has("hair"):
+		var styles := ["fade", "cornrows", "braids", "curls", "bun", "short"]
+		looks = []
+		for i in styles.size():
+			var woman: bool = styles[i] in ["braids", "curls", "bun"]
+			looks.append([Color("#3f5874"), Color("#29384a"), [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f")][i % 3], Color(0, 0, 0, 0),
+				{"hair_style": styles[i], "figure": 0.95 if woman else 0.0, "face": "face_f" if woman else "face_m", "pants_style": "denim"}, "idle", 0.0, styles[i]])
 	if args.has("aunties"):
 		# The Mitchells Plain aunty look: prints, doeks, curlers, hoops, handbags, cardigans, slippers.
 		var a := {"figure": 1.0, "dress": true, "accessories": ["hoops"]}
@@ -102,6 +110,10 @@ func _run() -> void:
 			[Color("#159a8c"), Color("#3b2f4a"), Color("#4a2f22"), Color(0, 0, 0, 0), a.merged({"print": "print_teal", "hair_style": "doek", "hair_color": Color("#9a6cc4"), "heavy": 0.5, "apron_color": Color("#f4f1ea"), "shoe_color": Color("#c8a27a"), "accessories": ["apron", "glasses", "hoops"]}, true), "guard", 0.0],
 			[Color("#9a6cc4"), Color("#3b2f4a"), Color("#8d5a3b"), Color(0, 0, 0, 0), a.merged({"print": "print_lilac", "hair_style": "short", "hair_color": Color("#a7a39a"), "heavy": 0.45, "cardigan_color": Color("#a7c0d6"), "shoe_color": Color("#e2585e"), "accessories": ["cardigan", "curlers", "handbag"]}, true), "idle", 1.0],
 		]
+	if args.has("stoop"):
+		for i in looks.size():
+			if i == looks.size() - 1:
+				looks[i][4] = (looks[i][4] as Dictionary).merged({"stoop": 1.0}, true)
 	var models: Array = []
 	var spacing := 0.85 if looks.size() > 6 else 1.0
 	for i in looks.size():
@@ -152,7 +164,10 @@ func _run() -> void:
 	elif args.has("face"):
 		var who: Node3D = models[clampi(int(args.face), 0, models.size() - 1)][0]
 		var head := who.global_position + Vector3(0, 1.64 * who.scale.y, 0)
-		cam.position = head + Vector3(0.12, 0.02, 0.62)
+		var dist := float(args.get("dist", "0.62"))
+		cam.position = head + Vector3(0.12 * dist / 0.62, 0.02 - (dist - 0.62) * 0.3, dist)
+		if args.has("side"):
+			cam.position = head + Vector3(dist, 0.02 - (dist - 0.62) * 0.3, 0.05)
 		cam.look_at(head)
 	elif args.has("close"):
 		cam.position = Vector3(-1.0, 1.55, 1.6)

@@ -249,6 +249,23 @@ old mesh. Rocklands is the worked example of a second district (`tools/specs/kal
     the police_post landmark registers.
 - **Screenshots:** `--firefight` stages a stand-off with the nearest officer; `--follow` frames them.
 
+## Modeling pass
+
+- **Heads:** `sculpt_skull()` deforms one sphere with gaussian bumps in coordinates normalised
+  to the skull radii. Eyes, brows, nose and mouth are placed by ray-casting the sculpted surface
+  (`surf_y`). Hair cuts use `cut_below(..., slope=)` so hairlines rise at the front.
+- **Hair:** `NpcData._hair_for()` remaps generated hair (not looks.json characters).
+- **Life:**
+  - `CharacterModel._apply_face()` runs after the animation. It toggles `Blink` and
+    `Mouth_open` (talk mode), and bends spine and neck forward by `stoop` (head back up).
+  - `opts.idle` picks idle, idle_shift or idle_hips for the locomotion blend space.
+- **Vehicles:**
+  - `interior()` in build_vehicles.py records `<model>_seat_N` empties; the driver comes first,
+    on the right (Blender −X).
+  - `VehicleLibrary.add_occupants()` places `occupant_driver` / `occupant_passenger` busts there.
+  - Glass is alpha-blended. Body vertex colours hold grime, and dirty cars set
+    `vertex_color_use_as_albedo` on the paint.
+
 ## Detail pass (faces, clothes, vehicles)
 
 - **Faces:** `Face_paint` is a copy of the head's front, pushed out 1.5 mm, with front-projected
