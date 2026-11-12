@@ -1,16 +1,16 @@
 class_name VehicleLibrary
 extends RefCounted
 ## Vehicle meshes from tools/blender/build_vehicles.py (vehicles.glb), by model name:
-## hatch, sedan, bakkie, taxi, police. build() returns a pivot whose model faces local +X (the
+## hatch, sedan, bakkie, taxi, police, skoro, combi, panel_van. build() returns a pivot whose model faces local +X (the
 ## convention the traffic, parking and driving code already uses). "paint" takes the car's colour,
 ## "headlight" shares the night-glow lamp material, and police "lightbar" surfaces get their own
 ## material per vehicle so its lights can flash (see set_lights()).
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
-const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro"]
-const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro"]   # weighted pick for everyday cars
+const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van"]
+const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
@@ -114,6 +114,12 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 				mi.set_surface_override_material(i, glass())
 			"tint":
 				mi.set_surface_override_material(i, tint())
+			"white", "sign_panel":
+				var white := StandardMaterial3D.new()
+				white.albedo_color = Color("#f2f0ea")
+				white.roughness = 0.4 if key == "white" else 0.6
+				white.vertex_color_use_as_albedo = dirty
+				mi.set_surface_override_material(i, white)
 			"headlight":
 				mi.set_surface_override_material(i, PixelMaterials.lamp())
 			"taillight":
@@ -168,7 +174,26 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 	pivot.set_meta("tilt", tilt)
 	if model == "police":
 		_police_markings(pivot)
+	elif model == "panel_van":
+		_bakery_panels(tilt)
 	return pivot
+
+
+## The made-up bakery's painted side panels on the delivery van (Tilt space: front is -Z... the
+## model's Blender -Y, so the van's length runs along Tilt's Z and its sides face +-X).
+static func _bakery_panels(tilt: Node3D) -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(2.8, 0.95)
+	var mat := PixelMaterials.panel("van_bakery", Color.WHITE, false)
+	for side in [1.0, -1.0]:
+		var mi := MeshInstance3D.new()
+		mi.name = "BakeryPanel%s" % ("L" if side > 0 else "R")
+		mi.mesh = quad
+		mi.material_override = mat
+		mi.visibility_range_end = 60.0
+		mi.position = Vector3(side * 0.94, 1.35, -0.7)
+		mi.rotation.y = side * PI * 0.5
+		tilt.add_child(mi)
 
 
 ## See-through, reflective glass (cabins have interiors behind it).
@@ -203,7 +228,7 @@ static func add_occupants(pivot: Node3D, passengers := -1) -> void:
 	if seats.is_empty() or not pivot.has_meta("tilt"):
 		return
 	var seed: int = pivot.get_meta("seed", 0)
-	var count: int = 1 + (passengers if passengers >= 0 else (1 if model == "police" else [0, 0, 1, 2][seed / 7 % 4]))
+	var count: int = 1 + (passengers if passengers >= 0 else (1 if model == "police" else (4 + seed % 6 if model == "taxi" else [0, 0, 1, 2][seed / 7 % 4])))
 	var people: Array = []
 	for k in mini(count, seats.size()):
 		var mi := MeshInstance3D.new()

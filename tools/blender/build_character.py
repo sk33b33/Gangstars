@@ -86,7 +86,8 @@ MATS = {n: mat(n, c) for n, c in {
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
     "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
     "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
-    "face_paint": (1.0, 1.0, 1.0), "soles": (0.92, 0.9, 0.86), "cap_logo": (1.0, 1.0, 1.0),
+    "face_paint": (1.0, 1.0, 1.0), "tie": (0.45, 0.1, 0.15), "overall": (0.18, 0.3, 0.55), "bag_red": (0.75, 0.12, 0.12),
+    "phone_screen": (0.1, 0.2, 0.3), "soles": (0.92, 0.9, 0.86), "cap_logo": (1.0, 1.0, 1.0),
     "dress": (0.9, 0.4, 0.55), "cardigan": (0.85, 0.8, 0.7), "bag": (0.5, 0.2, 0.15), "acc_pink": (0.95, 0.55, 0.7),
     "uniform": (0.03, 0.05, 0.12), "vest": (0.02, 0.025, 0.04), "badge": (0.9, 0.7, 0.05), "belt": (0.015, 0.015, 0.018),
 }.items()}
@@ -565,6 +566,32 @@ def make_hoodie():
     return [join([hood, rim, pocket] + strings, "Acc_hood")]
 
 
+def make_everyday_pieces():
+    """Tie and overall bib (torso, bound by height); phone (left hand) and a plastic shopping bag
+    (right hand), rigid on the hand bones."""
+    tie = prim("cube", "Acc_tie", (0, -0.128, 1.3), (0.022, 0.008, 0.13), "tie", smooth=False)
+    for v in tie.data.vertices:   # wider at the bottom, following the chest
+        v.co.x *= 1.0 + (1.36 - v.co.z) * 3.0
+        v.co.y -= 0.012 * math.exp(-((v.co.z - 1.33) / 0.06) ** 2)
+    knot = prim("cube", "knot", (0, -0.122, 1.44), (0.02, 0.01, 0.018), "tie", smooth=False)
+    tie = join([tie, knot], "Acc_tie")
+    bib = prim("cube", "bib", (0, -0.124, 1.16), (0.13, 0.012, 0.17), "overall", smooth=False)
+    for v in bib.data.vertices:
+        v.co.y -= 0.025 * math.exp(-((v.co.z - 1.2) / 0.12) ** 2)
+    straps = [prim("cube", "strap", (s * 0.08, 0.0, 1.4), (0.022, 0.13, 0.012), "overall", rot=(0.0, 0, 0), smooth=False) for s in (1, -1)]
+    pocket = prim("cube", "bib_pocket", (0, -0.14, 1.2), (0.06, 0.006, 0.05), "overall", smooth=False)
+    overall = join([bib, pocket] + straps, "Acc_overall")
+    phone = join([prim("cube", "phone", (0.29, -0.035, 0.84), (0.012, 0.035, 0.065), "acc_frame", smooth=False),
+                  prim("cube", "screen", (0.277, -0.035, 0.84), (0.002, 0.03, 0.058), "phone_screen", smooth=False)], "Acc_phone")
+    bag = prim("sphere", "bag", (-0.31, -0.025, 0.66), (0.05, 0.13, 0.14), "acc_white", seg=12, rings=8)
+    for v in bag.data.vertices:
+        v.co.z += 0.03 * math.sin(v.co.y * 40.0) * (1 if v.co.z < 0.66 else 0)   # crumpled
+    stripe = prim("cube", "bag_stripe", (-0.31, -0.025, 0.7), (0.052, 0.125, 0.012), "bag_red", smooth=False)
+    handle = prim("torus_thick", "bag_handle", (-0.31, -0.025, 0.82), (0.045, 0.045, 0.04), "acc_white", rot=(0, math.pi / 2, 0))
+    shopbag = join([bag, stripe, handle], "Acc_shopbag")
+    return [tie, overall], [(phone, "hand.L"), (shopbag, "hand.R")]
+
+
 def make_body_accessories():
     """Chain and apron sit on the torso and bend with it."""
     chain = prim("torus_ring", "Acc_chain", (0, -0.015, 1.455), (0.088, 0.08, 0.088), "acc_gold", rot=(0.4, 0, 0))
@@ -887,6 +914,16 @@ def pose_idle_hips(rig, t):
     set_rot(rig, "chest", "X", -0.03)
 
 
+def pose_phone(rig, t):
+    """Left hand holding a phone to the ear, the head tilted to it."""
+    pose_idle(rig, t)
+    ph = t * 2 * math.pi
+    set_multi(rig, "upper_arm.L", [("Y", -1.4), ("X", -0.6)])
+    set_multi(rig, "forearm.L", [("Y", -2.45), ("X", -0.15)])
+    set_multi(rig, "hand.L", [("Y", -0.3)])
+    set_multi(rig, "head", [("Z", 0.12), ("X", math.sin(ph) * 0.04)])
+
+
 def pose_sit(rig, t):
     """Seated on a 0.45 m bench/chair: the character's origin is the middle of the seat."""
     ph = t * 2 * math.pi
@@ -1042,7 +1079,10 @@ for piece in make_hair_pieces() + make_accessories():
         bind_skirt(piece, rig)
     else:
         bind_rigid(piece, rig, "head")
-for piece in make_body_accessories() + make_hoodie():
+everyday_torso, everyday_hands = make_everyday_pieces()
+for piece, bone in everyday_hands:
+    bind_rigid(piece, rig, bone)
+for piece in make_body_accessories() + make_hoodie() + everyday_torso:
     bind_by_height(piece, rig)
 aunty_head, aunty_other = make_aunty_pieces()
 for piece in aunty_head:
@@ -1066,6 +1106,7 @@ bake_action(rig, "run", 15, lambda r, t: pose_walk(r, t, True))
 bake_action(rig, "idle_shift", 96, pose_idle_shift)
 bake_action(rig, "idle_hips", 72, pose_idle_hips)
 bake_action(rig, "talk", 72, pose_talk)
+bake_action(rig, "phone", 72, pose_phone)
 bake_action(rig, "guard", 72, pose_guard)
 bake_action(rig, "sit", 96, pose_sit)
 bake_action(rig, "lean", 96, pose_lean)

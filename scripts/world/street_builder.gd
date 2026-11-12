@@ -25,6 +25,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 	for s in streets:
 		_build_streetlights(root, s, b)
 	_build_street_signs(root, streets)
+	StreetDetail.build(root, info)
 	for lm in info.get("landmarks", []):
 		var p := DataFiles.to_vec2(lm.get("position"))
 		var pos := Vector3(p.x, 0, p.y)
@@ -318,6 +319,19 @@ static func _build_cafe(root: Node3D, c: Vector3) -> void:
 	for wx in [-3.0, 3.0]:
 		Geo.quad(root, Vector2(2.4, 1.6), Vector3(c.x + wx, 1.2, face), PixelMaterials.panel("window_bars"))
 	Geo.patch(root, Rect2(c.x - 5, c.z + 4, 10, 2.1), 0.013, PixelMaterials.surface("sidewalk", Vector2(2, 2)))
+	_shop_front(root, Vector3(c.x - 4.3, 0, face + 0.9), Vector3(c.x + 4.2, 0, face + 0.5), 0.0)
+
+
+## Outside a shop: an A-frame board (bread, milk, airtime) and a stack of cooldrink crates.
+static func _shop_front(root: Node3D, board_at: Vector3, crates_at: Vector3, rot_y: float) -> void:
+	var frame := PixelMaterials.flat(Color("#1d1b24"))
+	Geo.box(root, Vector3(0.66, 0.95, 0.05), board_at + Vector3(0, 0.48, 0), frame, false, rot_y)
+	var face := Geo.quad(root, Vector2(0.6, 0.85), board_at + Vector3(0, 0.5, 0) + Basis(Vector3.UP, rot_y) * Vector3(0, 0, 0.03), PixelMaterials.panel("board_bread"), rot_y)
+	face.name = "Board"
+	var red := PixelMaterials.flat(Color("#c0392b"))
+	var yellow := PixelMaterials.flat(Color("#f2b632"))
+	for k in 3:
+		Geo.box(root, Vector3(0.5, 0.3, 0.36), crates_at + Basis(Vector3.UP, rot_y) * Vector3(0.55 * (k % 2), 0.16 + 0.3 * (k / 2), 0), red if k != 1 else yellow, false, rot_y)
 
 
 ## Shelter open towards local +Z; rot_y = PI turns it to face north.
@@ -352,6 +366,7 @@ static func _build_container_shop(root: Node3D, c: Vector3, rot_y: float, sign: 
 	SpotRegistry.marker(pivot, "lean", Vector3(1.05, 0, 1.2 + 0.3))
 	SpotRegistry.marker(pivot, "lean", Vector3(3.0 + 0.3, 0, 0.3), PI * 0.5)
 	SpotRegistry.marker(pivot, "lean", Vector3(-3.0 - 0.3, 0, 0.3), -PI * 0.5)
+	_shop_front(pivot, Vector3(-2.2, 0, 2.0), Vector3(2.0, 0, 1.75), 0.0)
 
 
 ## Dusty soccer pitch: red-dirt surface, white lines, two goals (solid posts).

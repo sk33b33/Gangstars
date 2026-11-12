@@ -58,6 +58,7 @@ func build(house: HouseData, closing_fence := false) -> void:
 	var face := front_z + 0.03
 	for win in kit.windows:
 		Geo.quad(self, Vector2(1.5, 1.25), Vector3(win[0], win[1] + 0.62, face), PixelMaterials.panel("window_bars"))
+	_build_facade_details(kit, h, front_z, face, center)
 	_door_local = Vector3(kit.door_x, 0.0, front_z + 0.9)
 	# Door on a hinge in front of a dark doorway, so it can swing open.
 	Geo.quad(self, Vector2(1.0, 2.0), Vector3(kit.door_x, 1.0, face - 0.01), PixelMaterials.flat(Color("#141218")))
@@ -98,6 +99,53 @@ func build(house: HouseData, closing_fence := false) -> void:
 	if house.ownership == "player":
 		door_interactable.prompt = "Enter safehouse (%s)" % house.address()
 	add_child(door_interactable)
+
+
+## Lived-in facade: gutter and downpipe, window sills, a meter box by the door, some cracks
+## and rust stains, and (by plot) a stoep canopy, a TV aerial or a solar geyser on the roof.
+## Plain shared-material meshes, so the static batcher merges them.
+func _build_facade_details(kit: Dictionary, h: float, front_z: float, face: float, center: Vector3) -> void:
+	var roll := absi(hash(data.id + ":facade"))
+	var side := 1.0 if roll % 2 else -1.0
+	var grey := PixelMaterials.flat(Color("#8a8f99"))
+	var trim := PixelMaterials.flat(Color("#e8e4da"))
+	var flat_roof: bool = str(kit.roof) == "flat"
+	if not flat_roof:
+		Geo.box(self, Vector3(float(kit.w) + 0.3, 0.12, 0.14), Vector3(kit.x, h - 0.04, face + 0.1), grey, false)   # gutter
+	Geo.box(self, Vector3(0.09, h, 0.09), Vector3(float(kit.x) + side * (float(kit.w) * 0.5 - 0.15), h * 0.5, face + 0.07), grey, false)   # downpipe
+	for win in kit.windows:
+		Geo.box(self, Vector3(1.62, 0.06, 0.16), Vector3(win[0], float(win[1]) - 0.03, face + 0.08), trim, false)   # sill
+	var door_x: float = kit.door_x
+	Geo.box(self, Vector3(0.36, 0.5, 0.14), Vector3(door_x - side * 0.95, 1.55, face + 0.07), PixelMaterials.flat(Color("#c9c9c4")), false)   # meter box
+	# Weathering: a crack from a window corner, a rust streak under a sill.
+	if roll / 3 % 2 == 0 and not kit.windows.is_empty():
+		var w0: Array = kit.windows[roll / 5 % kit.windows.size()]
+		Geo.quad(self, Vector2(0.9, 0.9), Vector3(float(w0[0]) + 0.85, float(w0[1]) + 1.4, face + 0.012), PixelMaterials.panel("crack_a", Color.WHITE, true))
+	if roll / 7 % 3 == 0 and not kit.windows.is_empty():
+		var w1: Array = kit.windows[0]
+		Geo.quad(self, Vector2(0.45, 0.9), Vector3(float(w1[0]), float(w1[1]) - 0.5, face + 0.011), PixelMaterials.panel("stain_rust", Color.WHITE, true))
+	# Stoep canopy over the door (single-storey homes).
+	if int(kit.storeys) == 1 and roll / 11 % 5 < 2:
+		var roof := PixelMaterials.surface("roof_ibr", Vector2(2, 2), Color("#9aa3ab"))
+		Geo.box(self, Vector3(2.4, 0.06, 1.5), Vector3(door_x, 2.42, face + 0.75), roof, false)
+		for px in [-1.1, 1.1]:
+			Geo.box(self, Vector3(0.07, 2.42, 0.07), Vector3(door_x + px, 1.21, face + 1.42), PixelMaterials.flat(Color("#f4f1ea")), false)
+	if flat_roof:
+		return
+	var roof_h: float = kit.get("roof_h", 1.2)
+	if roll / 13 % 5 < 2:   # TV aerial on the ridge
+		var ax: float = float(kit.x) + side * 1.2
+		var ay := h + roof_h
+		Geo.box(self, Vector3(0.04, 1.6, 0.04), Vector3(ax, ay + 0.7, center.z), grey, false)
+		for k in 3:
+			Geo.box(self, Vector3(0.9 - k * 0.2, 0.03, 0.03), Vector3(ax, ay + 1.0 + k * 0.22, center.z), grey, false)
+	elif roll / 13 % 5 == 2:   # solar geyser on the front slope
+		var slope := atan2(roof_h, float(kit.d) * 0.5)
+		var panel := Geo.box(self, Vector3(1.7, 0.06, 1.1), Vector3(float(kit.x) - side * 1.6, h + roof_h * 0.45 - 0.12, front_z - float(kit.d) * 0.24),
+			PixelMaterials.flat(Color("#1f2f45")), false)
+		panel.rotation.x = slope
+		Geo.box(self, Vector3(1.6, 0.4, 0.4), Vector3(float(kit.x) - side * 1.6, h + roof_h * 0.8 + 0.3, front_z - float(kit.d) * 0.4),
+			PixelMaterials.flat(Color("#d8dadf")), false)
 
 
 ## Front yard side that is free of the garden path and the garage/driveway.

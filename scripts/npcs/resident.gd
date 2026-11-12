@@ -203,6 +203,7 @@ func set_tier(tier: String) -> void:
 ## Shows a speech bubble for a few seconds (only rendered for nearby NPCs).
 ## Set by the GameSession: plays a voice for whoever speaks (pos, seed, female).
 static var on_say: Callable
+var _last_activity := ""
 
 
 func say(text: String, seconds := 3.0) -> void:
@@ -256,6 +257,15 @@ func _update_pose() -> void:
 		return
 	var s := brain.state
 	model.mode = "talk" if s == NpcBrain.State.SOCIALIZING else ("guard" if s == NpcBrain.State.GUARDING else "idle")
+	# Waiting (bus stops, the rank, a client at the gate): about half get on their phones.
+	if s == NpcBrain.State.AT_DESTINATION and brain.activity == "waiting" and absi(data.id.hash()) % 2 == 0:
+		model.mode = "phone"
+	# Back from the shops: carry the bag home.
+	if s == NpcBrain.State.AT_DESTINATION:
+		_last_activity = brain.activity
+	elif s == NpcBrain.State.AT_HOME:
+		_last_activity = ""
+	model.carrying = _last_activity == "shopping" and s == NpcBrain.State.TRAVELLING
 	if s == NpcBrain.State.FIGHTING or s == NpcBrain.State.DOWN:
 		model.mode = "idle"
 		model.look_at_point(fight_target.global_position + Vector3(0, 1.4, 0) if fight_target != null and is_instance_valid(fight_target) else null)

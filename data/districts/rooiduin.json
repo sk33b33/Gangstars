@@ -360,6 +360,12 @@
             "id": "rooi_traffic_1",
             "color": "#8e44ad",
             "start": 0.6
+          },
+          {
+            "id": "rooi_combi_1",
+            "model": "combi",
+            "color": "#c0392b",
+            "start": 0.1
           }
         ]
       }

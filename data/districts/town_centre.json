@@ -297,6 +297,12 @@
             "id": "tc_traffic_2",
             "color": "#2c3e50",
             "start": 0.5
+          },
+          {
+            "id": "tc_bakery_van",
+            "model": "panel_van",
+            "color": "#f2f0ea",
+            "start": 0.0
           }
         ]
       }

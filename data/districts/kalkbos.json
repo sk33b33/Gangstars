@@ -379,6 +379,12 @@
             "id": "kalk_traffic_1",
             "color": "#c0392b",
             "start": 0.7
+          },
+          {
+            "id": "kalk_bakkie_2",
+            "model": "bakkie",
+            "color": "#b5651d",
+            "start": 0.2
           }
         ]
       }

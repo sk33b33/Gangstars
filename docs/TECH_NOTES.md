@@ -176,7 +176,7 @@ Profiling (Xvfb + llvmpipe, street view, 1280×720):
 Frame time under software rendering (~200 ms) is not representative of a GPU. Headless
 simulation cost is about 1.2 ms per physics frame with 28 residents and 4 cars.
 
-Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain`, `--drive=car_player`, `--pause-menu`.
+Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain|cloudy|windy|clear` (held for the shot), `--wet`, `--drive=car_player`, `--pause-menu`.
 
 ## Phase 7: adding a district
 
@@ -418,3 +418,21 @@ tools/export_windows.sh     # -> build/windows/Gangstars.exe + Gangstars-windows
 - Forward+ cost on real GPUs hasn't been measured. In this container it renders through a CPU Vulkan
   driver, so frame rates here say nothing.
 - In software-rendered containers the game runs at about 8 FPS; this is not representative of real GPUs.
+
+
+## Detail pass (2026-11-12)
+
+- `StreetDetail.build(root, area_info)` adds litter, potholes, drains, manholes, bins, humps and a
+  transformer box per street from a seeded RNG. Plain meshes with shared `PixelMaterials`, no
+  colliders, so MeshMerger batches them and navigation is unchanged.
+- `HousePlot._build_facade_details()` adds gutters, downpipes, sills, meter boxes, cracks, rust
+  stains, canopies, aerials and solar geysers, rolled from the house id.
+- Vehicles: `build_vehicles.py` builds `combi` and `panel_van`; the taxi uses `cabin()` with real
+  glass and `interior()` with four seat rows. `VehicleLibrary` gives taxis 4–9 passengers and the
+  panel van two `BakeryPanelL/R` quads (`van_bakery` texture).
+- Atmosphere: `Weather` feeds `DayNight.dust` (wind), `.wet` (rain, dries slowly) and
+  `.cloud_cover`; `PixelMaterials.set_wetness()` darkens and glosses every triplanar surface
+  material. Cloud shadows are three 70 m decals with a noise texture built synchronously
+  (an async `NoiseTexture2D` never reached the decal atlas). `LightPool` draws one
+  MultiMesh of additive ground glows under every lamp at night. `Weather.hold(kind)` fixes the
+  weather for screenshots.

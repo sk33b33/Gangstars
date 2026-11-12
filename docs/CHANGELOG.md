@@ -4,6 +4,32 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### More detail: streets, houses, characters, vehicles, light (2026-11-12)
+- **Streets:** litter on pavements and in gutters, potholes and tar patches, storm drains at
+  the kerb, manholes, pole bins every 40 m, speed humps on side streets and a transformer box
+  per street (`scripts/world/street_detail.gd`). Visual only, batched, never blocks walking.
+  Cafés and container shops get a "Bread / Milk / Airtime" A-frame board and crates.
+- **Houses:** gutters and downpipes, window sills, an electricity meter box, cracks and rust
+  stains, stoep canopies on some single-storey houses, TV aerials and solar geysers.
+- **Characters:** school uniforms (white shirt, grey trousers, maroon tie) for most kids,
+  work overalls for some men, Sunday best (shirt, cardigan, tie) for some older men. People
+  waiting check their phones (new phone pose), and shoppers carry a bag home.
+- **Vehicles:**
+  - the minibus taxi is hollow now: a glass cabin with pillars, four rows of seats and 4–9
+    passengers;
+  - new **combi** (two-tone, white roof) and **bakery panel van** (a made-up "Ouma's Bakery"
+    sign on both sides) join the everyday cars;
+  - 5 more cars in traffic (19 in all).
+- **Lighting and atmosphere:**
+  - golden hour: a deep orange low sun, a violet sky overhead at sunset and a pinker dawn;
+  - windy days lift a tan Cape Flats dust haze;
+  - cloud shadows drift over the streets on cloudy days;
+  - the ground goes dark and glossy in the rain and stays wet for a while after;
+  - every streetlight paints a warm pool of light on the ground at night.
+- **Tests:** street detail (count, no colliders), outfits, phone and shopping bag, taxi
+  passengers and glass, combi and panel van, bakery sign, 19 cars, wet ground, puddles
+  linger, cloud shadows, dust haze, golden hour, lamp ground glow.
+
 ### Sound and music (2026-11-11)
 - **Music, made in code:** three made-up radio stations, each a seamless 4-bar loop synthesized
   at runtime (no audio files):

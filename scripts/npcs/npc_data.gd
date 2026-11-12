@@ -109,6 +109,38 @@ func _everyday_look(look: Dictionary, h: int) -> void:
 		acc.append("hood")
 	if role == "crew" and not faction_id.is_empty():
 		look.cap_logo = faction_id
+	_outfit(look, h, woman, grey, kid)
+
+
+## Outfits on top of the everyday look (generated residents only): school uniforms for most
+## kids, work overalls for some men, and Sunday best (white shirt, dark jacket, tie) for some
+## older men.
+func _outfit(look: Dictionary, h: int, woman: bool, grey: bool, kid: bool) -> void:
+	if _looks.has(id) or bool(look.get("dress", false)):
+		return
+	var acc: Array = look.accessories
+	if kid and h / 97 % 5 < 3:
+		look.shirt_override = Color("#f4f4f0")
+		look.pants_override = Color("#5d6066")
+		look.tie_color = Color("#7a1f2e")
+		look.sole_color = Color("#1d1b24")
+		look.pants_style = ""
+		acc.append("tie")
+	elif role == "resident" and not woman and not grey and not kid and h / 97 % 6 == 0:
+		var c: Color = [Color("#2f4f8a"), Color("#d35400"), Color("#3d5a3a")][h / 101 % 3]
+		look.pants_override = c
+		look.overall_color = c
+		look.pants_style = ""
+		acc.erase("hood")
+		acc.append("overall")
+	elif role == "resident" and not woman and grey and h / 103 % 3 == 0:
+		look.shirt_override = Color("#f4f4f0")
+		look.pants_override = Color("#26262e")
+		look.cardigan_color = Color("#2c2c34")
+		look.tie_color = [Color("#7a1f2e"), Color("#2f4a6e"), Color("#5a4a1e")][h / 107 % 3]
+		look.pants_style = ""
+		look.sole_color = Color("#1d1b24")
+		acc.append_array(["cardigan", "tie"])
 
 
 const SLIPPERS := ["#f29bbd", "#7fc3e8", "#1d1b24", "#f4f4f0", "#c8a27a", "#e2585e"]

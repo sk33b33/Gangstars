@@ -7,6 +7,8 @@ extends RefCounted
 const TEX_DIR := "res://assets/textures/pxl/"
 
 static var _cache: Dictionary = {}
+## 0..1: after rain the outdoor surfaces (triplanar ground, walls, roads) go darker and glossy.
+static var wetness := 0.0
 
 
 static func surface(tex_name: String, tile_size: Vector2, tint: Color = Color.WHITE, alpha: bool = false) -> StandardMaterial3D:
@@ -18,8 +20,27 @@ static func surface(tex_name: String, tile_size: Vector2, tint: Color = Color.WH
 	mat.uv1_world_triplanar = true
 	# x/z use tile_size.x, vertical uses tile_size.y (metres per texture repeat).
 	mat.uv1_scale = Vector3(1.0 / tile_size.x, 1.0 / tile_size.y, 1.0 / tile_size.x)
+	if wetness > 0.0:
+		_wet(mat)
 	_cache[key] = mat
 	return mat
+
+
+## Wet look for every world surface material: darker albedo and a glossy finish. New surface
+## materials pick it up as they're made.
+static func set_wetness(w: float) -> void:
+	wetness = clampf(w, 0.0, 1.0)
+	for key: String in _cache:
+		if key.begins_with("s|"):
+			_wet(_cache[key])
+
+
+static func _wet(mat: StandardMaterial3D) -> void:
+	if not mat.has_meta("dry_tint"):
+		mat.set_meta("dry_tint", mat.albedo_color)
+	mat.albedo_color = (mat.get_meta("dry_tint") as Color).darkened(0.28 * wetness)
+	mat.roughness = lerpf(0.95, 0.3, wetness)
+	mat.metallic_specular = lerpf(0.5, 0.8, wetness)
 
 
 static func panel(tex_name: String, tint: Color = Color.WHITE, alpha: bool = false) -> StandardMaterial3D:

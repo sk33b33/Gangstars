@@ -10,7 +10,7 @@ const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail",
 	"fade", "cornrows", "braids", "curls", "bun"]
 const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
-	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood"]
+	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood", "tie", "overall", "phone", "shopbag"]
 ## Painted face overlays (pxl textures); "none" hides the face paint.
 const FACES: PackedStringArray = ["face_m", "face_f", "face_old_m", "face_old_f", "face_stubble"]
 ## Cloth slots: matte with a sheen (CharacterModel._recolour).
@@ -57,6 +57,12 @@ var _head_scale := 1.0
 var _hat: MeshInstance3D
 var _logo_mesh: MeshInstance3D
 var _lids: MeshInstance3D
+## Carrying a shopping bag home (Resident sets it); "phone" mode holds a phone to the ear.
+var carrying := false
+var _phone := 0.0
+var _phone_mesh: MeshInstance3D
+var _bag_mesh: MeshInstance3D
+var _always: Array = []
 var _mouth: MeshInstance3D
 var _idle_name := "idle"
 ## 0..1: older people stoop (spine and neck bent forward, head up), applied after the animation.
@@ -75,6 +81,10 @@ var _hair: Array[MeshInstance3D] = []
 ##        cardigan_color, bag_color, shoe_color, sole_color: Color, face: one of FACES,
 ##        pants_style: ""/"denim"/"tracksuit", cap_logo: crew id (logo on the cap)}
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
+	# Outfits can replace the base colours (school uniforms, overalls, Sunday best).
+	shirt = opts.get("shirt_override", shirt)
+	pants = opts.get("pants_override", pants)
+	_always = opts.get("accessories", [])
 	for c in get_children():
 		c.queue_free()
 	# A rebuild (e.g. the player changing into crew colours) starts from a clean slate.
@@ -83,6 +93,8 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	_logo_mesh = null
 	_lids = null
 	_mouth = null
+	_phone_mesh = null
+	_bag_mesh = null
 	_hand = null
 	_holster = null
 	_chest = null
@@ -128,6 +140,8 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		"forearm": cardigan if extras.has("cardigan") else (fabric if opts.get("sleeves", "long") == "long" else PixelMaterials.skin(skin)),
 		"face_paint": PixelMaterials.face(face, skin) if FACES.has(face) else null,
 		"soles": opts.get("sole_color", Color("#ece8dc")),
+		"tie": opts.get("tie_color", Color("#7a1f2e")), "overall": opts.get("overall_color", pants),
+		"bag_red": Color("#c0392b"), "phone_screen": Color("#1f3a4f"),
 		"dress": fabric, "cardigan": cardigan, "bag": opts.get("bag_color", Color("#7a2e2a")), "acc_pink": Color("#f29bbd"),
 		"shoes": opts.get("shoe_color", Color("#1d1b24")), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
 		"skirt": pants, "eye_white": Color("#ece8dc"), "pupil": Color("#1a1412"), "lips": skin.darkened(0.35),
@@ -156,6 +170,12 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 			mi.visible = skirt
 		elif n == "Dress":
 			mi.visible = dress
+		elif n == "Acc_phone":
+			_phone_mesh = mi
+			mi.visible = extras.has("phone")
+		elif n == "Acc_shopbag":
+			_bag_mesh = mi
+			mi.visible = extras.has("shopbag")
 		elif n == "Blink":
 			_lids = mi
 			mi.visible = false
@@ -227,6 +247,7 @@ func animate(delta: float, speed: float) -> void:
 	var idle := 1.0 - minf(_amp, 1.0)
 	_talk = lerpf(_talk, (1.0 if mode == "talk" else 0.0) * idle, k)
 	_guard = lerpf(_guard, (1.0 if mode == "guard" else 0.0) * idle, k)
+	_phone = lerpf(_phone, 1.0 if mode == "phone" else 0.0, k)
 	var k_slow := clampf(delta * 4.0, 0.0, 1.0)
 	_sit = lerpf(_sit, 1.0 if base_pose == "sit" else 0.0, k_slow)
 	_down = lerpf(_down, 1.0 if base_pose == "down" else 0.0, clampf(delta * 6.0, 0.0, 1.0))
@@ -238,6 +259,11 @@ func animate(delta: float, speed: float) -> void:
 	_tree.set("parameters/pace/scale", _pace(_speed))
 	_tree.set("parameters/talk_mix/blend_amount", _talk)
 	_tree.set("parameters/guard_mix/blend_amount", _guard)
+	_tree.set("parameters/phone_mix/blend_amount", _phone)
+	if _phone_mesh:
+		_phone_mesh.visible = _phone > 0.4 or _always.has("phone")
+	if _bag_mesh:
+		_bag_mesh.visible = carrying or _always.has("shopbag")
 	_tree.set("parameters/sit_mix/blend_amount", _sit)
 	_tree.set("parameters/lean_mix/blend_amount", _lean)
 	_tree.set("parameters/wave_mix/blend_amount", _wave)
@@ -442,7 +468,7 @@ func _build_tree(player: AnimationPlayer) -> void:
 	previous = "kick_shot"
 	# Upper-body gestures on top (legs keep walking, sitting or leaning).
 	var upper := _upper_paths(player.get_animation("talk"))
-	for pose in ["talk", "guard", "wave", "aim_pistol", "aim_long"]:
+	for pose in ["talk", "guard", "phone", "wave", "aim_pistol", "aim_long"]:
 		bt.add_node(pose, _anim(pose))
 		var mix := AnimationNodeBlend2.new()
 		mix.filter_enabled = true

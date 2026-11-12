@@ -62,7 +62,7 @@ func _run() -> void:
 				if not n.id.get_slice("_", n.id.get_slice_count("_") - 1).is_valid_int():
 					looks.append([n.shirt_color, n.pants_color, n.skin_color, Color(0, 0, 0, 0), n.appearance(), "idle", 0.0, n.display_name])
 	if args.has("cars"):
-		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea"), Color("#b5651d")]
+		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea"), Color("#b5651d"), Color("#2f7d6d"), Color.WHITE]
 		for i in VehicleLibrary.MODELS.size():
 			var m: String = VehicleLibrary.MODELS[i]
 			var car := VehicleLibrary.build(world, m, paints[i], Vector3(-6.0 + (i % 3) * 5.6, 0, -3.2 + (i / 3) * 4.6), deg_to_rad(-30.0))
@@ -99,6 +99,14 @@ func _run() -> void:
 			var woman: bool = styles[i] in ["braids", "curls", "bun"]
 			looks.append([Color("#3f5874"), Color("#29384a"), [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f")][i % 3], Color(0, 0, 0, 0),
 				{"hair_style": styles[i], "figure": 0.95 if woman else 0.0, "face": "face_f" if woman else "face_m", "pants_style": "denim"}, "idle", 0.0, styles[i]])
+	if args.has("outfits"):
+		looks = [
+			[Color("#3f5874"), Color("#29384a"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"height": 0.72, "shirt_override": Color("#f4f4f0"), "pants_override": Color("#5d6066"), "accessories": ["tie"], "tie_color": Color("#7a1f2e"), "hair_style": "fade"}, "idle", 0.0, "uniform"],
+			[Color("#3f5874"), Color("#29384a"), Color("#6b4430"), Color(0, 0, 0, 0), {"pants_override": Color("#2f4f8a"), "overall_color": Color("#2f4f8a"), "accessories": ["overall"], "hair_style": "short"}, "idle", 0.0, "overall"],
+			[Color("#3f5874"), Color("#29384a"), Color("#a7754f"), Color(0, 0, 0, 0), {"shirt_override": Color("#f4f4f0"), "pants_override": Color("#26262e"), "cardigan_color": Color("#2c2c34"), "accessories": ["cardigan", "tie"], "hair_style": "short", "hair_color": Color("#a7a39a"), "stoop": 0.6}, "idle", 0.0, "sunday"],
+			[Color("#e84393"), Color("#29384a"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"figure": 0.9, "hair_style": "braids", "face": "face_f"}, "phone", 0.0, "phone"],
+			[Color("#27ae60"), Color("#29384a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "cornrows", "accessories": ["shopbag"], "pants_style": "denim"}, "idle", 1.4, "shopping"],
+		]
 	if args.has("aunties"):
 		# The Mitchells Plain aunty look: prints, doeks, curlers, hoops, handbags, cardigans, slippers.
 		var a := {"figure": 1.0, "dress": true, "accessories": ["hoops"]}
@@ -156,8 +164,8 @@ func _run() -> void:
 	var cam := Camera3D.new()
 	world.add_child(cam)
 	if args.has("cars"):
-		cam.position = Vector3(0.0, 4.2, 9.5)
-		cam.look_at(Vector3(-0.5, 0.6, -1.0))
+		cam.position = Vector3(0.0, 5.6, 12.5)
+		cam.look_at(Vector3(-0.5, 0.6, 1.0))
 	elif args.has("dogs"):
 		cam.position = Vector3(0.2, 1.1, 3.6)
 		cam.look_at(Vector3(-0.3, 0.45, 1.2))

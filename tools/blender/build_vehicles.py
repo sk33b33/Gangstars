@@ -54,7 +54,7 @@ M = {
     "plate_front": mat("plate_front", "#f2f2ee", 0.6), "plate_rear": mat("plate_rear", "#f2c618", 0.6),
     "police_blue": mat("police_blue", "#123f8c", 0.4), "police_yellow": mat("police_yellow", "#f5c400", 0.4),
     "lightbar": mat("lightbar", "#2a6cff", 0.2),
-    "tint": mat("tint", "#1b232c", 0.1), "seat": mat("seat", "#2c2c31", 0.9), "rust": mat("rust", "#7a3f22", 0.95),
+    "tint": mat("tint", "#1b232c", 0.1), "white": mat("white", "#f2f0ea", 0.4), "sign_panel": mat("sign_panel", "#f2f0ea", 0.6), "seat": mat("seat", "#2c2c31", 0.9), "rust": mat("rust", "#7a3f22", 0.95),
     "paint2": mat("paint2", "#8f949a", 0.6), "occ_shirt": mat("occ_shirt", "#3f5874", 0.9),
     "occ_skin": mat("occ_skin", "#8d5a3b", 0.6), "occ_hair": mat("occ_hair", "#1d1b24", 0.9),
     "indicator_L": mat("indicator_L", "#e8901c", 0.3), "indicator_R": mat("indicator_R", "#e8901c", 0.3),
@@ -453,20 +453,18 @@ def police():
 
 
 def taxi():
-    """Minibus taxi: tall van with a window band all round and a sliding door line."""
+    """Minibus taxi: a body to the belt line, then a glass cabin all round (pillars between the
+    windows), four rows of seats inside and room for a full load of passengers."""
     W, F, R = 1.9, -2.6, 2.6
-    p = [prism([(F, 0.35), (F - 0.03, 0.75), (F + 0.15, 1.05), (-2.0, 1.95), (R - 0.1, 2.02), (R, 1.9), (R, 0.35)], W, "paint", 0.06)]
-    for s in (1, -1):
-        p.append(box((s * (W / 2 + 0.004), 0.35, 1.52), (0.012, 4.0, 0.5), "tint"))
-        for y in (-1.0, 0.0, 0.9, 1.75):
-            p.append(box((s * (W / 2 + 0.008), y, 1.52), (0.01, 0.07, 0.5), "paint"))
-    p.append(prism([(F + 0.17, 1.07), (-2.02, 1.88), (-1.95, 1.88), (F + 0.24, 1.07)], W - 0.16, "tint", 0.0))
-    p.append(box((0, R + 0.005, 1.5), (W - 0.4, 0.012, 0.45), "tint"))
+    p = [prism([(F, 0.35), (F - 0.03, 0.75), (F + 0.15, 1.05), (-2.0, 1.22), (R, 1.22), (R, 0.35)], W, "paint", 0.06)]
+    cabin(p, [(F + 0.17, 1.07), (-2.0, 1.93), (R - 0.12, 1.98), (R - 0.02, 1.22)], W - 0.12, -2.0, R - 0.12, 1.99,
+          [(F + 0.17, 1.08, -2.0, 1.93), (-1.0, 1.23, -1.0, 1.95), (0.0, 1.23, 0.0, 1.96), (0.9, 1.23, 0.9, 1.97),
+           (1.75, 1.23, 1.75, 1.98), (R - 0.02, 1.23, R - 0.12, 1.98)])
     wheels(p, 3.1, 1.62, 0.33)
     lights_and_plates(p, F, R, W, 0.8, 0.5)
     bumpers(p, F, R, W, 0.42)
     mirrors(p, -2.2, 1.25, W)
-    seams(p, [-1.75, -0.3, 1.3], 0.42, 1.25, W)
+    seams(p, [-1.75, -0.3, 1.3], 0.42, 1.22, W)
     for s in (1, -1):   # roof rails
         p.append(box((s * 0.6, -0.1, 2.06), (0.05, 3.2, 0.05), "trim", 0.01))
     handles(p, [-1.55, -0.1], 1.12, W)
@@ -474,7 +472,48 @@ def taxi():
         p.append(box((s * (W / 2 + 0.01), 0.6, 1.24), (0.012, 1.6, 0.025), "trim"))
     wipers(p, F + 0.24, 1.1)
     extras(p, F, R, W, 1.15, 0.8, 0.36, True, 3.1)
+    interior(p, W, -1.95, 1.22, [-1.3, -0.35, 0.55, 1.45], (-2.0, 1.93), 1.99)
     return finish(p, "taxi", 24)
+
+
+def combi():
+    """An old two-tone combi: rounded van, white upper half, a long window band, split roof line."""
+    W, F, R = 1.78, -2.2, 2.2
+    p = [prism([(F, 0.35), (F - 0.05, 0.95), (F + 0.05, 1.12), (R - 0.05, 1.12), (R, 0.35)], W, "paint", 0.08)]
+    cabin(p, [(F + 0.07, 1.13), (F + 0.22, 1.86), (R - 0.18, 1.88), (R - 0.06, 1.13)], W - 0.1, F + 0.22, R - 0.18, 1.9,
+          [(F + 0.07, 1.14, F + 0.22, 1.86), (-1.0, 1.14, -1.0, 1.87), (0.1, 1.14, 0.1, 1.88), (1.2, 1.14, 1.2, 1.88),
+           (R - 0.06, 1.14, R - 0.18, 1.88)])
+    p.append(box((0, (F + R) / 2, 1.93), (W - 0.06, R - F - 0.5, 0.06), "white", 0.03))   # white roof
+    p.append(box((0, F - 0.02, 0.98), (W - 0.3, 0.04, 0.16), "white", 0.02))                # white nose band
+    wheels(p, 2.4, 1.5, 0.32)
+    lights_and_plates(p, F, R, W, 0.78, 0.45)
+    bumpers(p, F, R, W, 0.4)
+    mirrors(p, -1.8, 1.15, W)
+    seams(p, [-1.1, 0.2], 0.4, 1.12, W)
+    handles(p, [-1.2, 0.0], 0.98, W)
+    wipers(p, F + 0.12, 1.16)
+    extras(p, F, R, W, 1.1, 0.78)
+    interior(p, W, -1.65, 1.12, [-1.0, 0.1, 1.2], (F + 0.22, 1.86), 1.9)
+    return finish(p, "combi", 36)
+
+
+def panel_van():
+    """A bakery delivery van: tall boxy body with a painted side panel (a made-up bakery)."""
+    W, F, R = 1.85, -2.5, 2.5
+    p = [prism([(F, 0.38), (F - 0.03, 0.85), (F + 0.15, 1.1), (-1.75, 1.98), (R, 2.05), (R, 0.38)], W, "white", 0.06)]
+    p.append(prism([(F + 0.17, 1.12), (-1.77, 1.92), (-1.7, 1.92), (F + 0.24, 1.12)], W - 0.16, "tint", 0.0))
+    for s in (1, -1):
+        p.append(box((s * (W / 2 + 0.004), -1.45, 1.5), (0.012, 0.6, 0.45), "tint"))      # cab side windows
+        p.append(box((s * (W / 2 + 0.006), 0.7, 1.35), (0.012, 2.8, 0.95), "sign_panel"))  # the bakery panel
+    wheels(p, 3.0, 1.6, 0.34)
+    lights_and_plates(p, F, R, W, 0.82, 0.5)
+    bumpers(p, F, R, W, 0.44)
+    mirrors(p, -1.9, 1.3, W)
+    seams(p, [-1.1, 2.3], 0.44, 1.95, W)
+    handles(p, [-1.25], 1.1, W)
+    wipers(p, F + 0.25, 1.16)
+    extras(p, F, R, W, 1.15, 0.82, 0.4, True, 3.0)
+    return finish(p, "panel_van", 42)
 
 
 def skoro():
@@ -559,7 +598,7 @@ def _sphere(at, r):
     return bpy.context.active_object
 
 
-for build in (hatch, sedan, bakkie, police, taxi, skoro):
+for build in (hatch, sedan, bakkie, police, taxi, skoro, combi, panel_van):
     build()
 occupants()
 for o in scene.objects:

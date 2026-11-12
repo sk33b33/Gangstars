@@ -444,6 +444,12 @@
             "model": "police",
             "color": "#ffffff",
             "start": 0.78
+          },
+          {
+            "id": "combi_vlei",
+            "model": "combi",
+            "color": "#2f7d6d",
+            "start": 0.33
           }
         ]
       },
@@ -477,6 +483,12 @@
             "id": "traffic_3",
             "color": "#27ae60",
             "start": 0.8
+          },
+          {
+            "id": "bakery_van_vlei",
+            "model": "panel_van",
+            "color": "#f2f0ea",
+            "start": 0.05
           }
         ]
       }

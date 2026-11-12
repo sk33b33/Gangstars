@@ -483,3 +483,42 @@ sprite("sign_lena", { w: 64, h: 16 },
 sprite("sign_promenade", { w: 96, h: 16 },
   rect(0, 0, 96, 16, "#2e5c8a"), rect(0, 14, 96, 2, "#f2b632"),
   text(48, 4, "THE PROMENADE", "#f4f1ea", { align: "c" }))
+
+// ------------------------------------------------------------------ street detail
+// Litter (flat on the ground, alpha), road wear, drains, a speed hump, wall cracks and stains,
+// a shop A-frame board and a danger sticker for transformer boxes.
+sprite("litter_chips", { w: 8, h: 8 },
+  rect(1, 1, 6, 6, "#e2585e"), rect(2, 2, 4, 2, "#f2c43a"), px(3, 5, "#f4f1ea"), px(4, 5, "#f4f1ea"), px(0, 3, "#b8323a"), px(7, 4, "#b8323a"))
+sprite("litter_can", { w: 8, h: 8 },
+  rect(1, 3, 6, 3, "#c9c9c4"), rect(2, 3, 3, 3, "#2f6db8"), rect(6, 3, 1, 3, "#8a8f99"))
+sprite("litter_paper", { w: 8, h: 8 },
+  poly([0, 2, 6, 0, 7, 5, 2, 7], "#ece8dc"), line(2, 3, 5, 2, "#a8a39a"), line(2, 5, 5, 4, "#a8a39a"))
+sprite("litter_bottle", { w: 8, h: 8 },
+  rect(1, 3, 5, 2, "#2f6a2a"), rect(6, 3, 2, 2, "#4f8a3c"), px(2, 3, "#7fb07a"))
+sprite("pothole", { w: 16, h: 12 },
+  ellipse(8, 6, 7, 5, "#2a2a2e"), ellipse(8, 6, 5, 3, "#1d1d20"), px(4, 3, "#8a8578"), px(11, 8, "#8a8578"), px(6, 9, "#6d6a62"))
+sprite("tar_patch", { w: 16, h: 16 },
+  rect(1, 2, 13, 11, "#2e2e33"), rect(2, 3, 11, 9, "#26262b"), line(1, 2, 14, 2, "#3b3b40"))
+sprite("manhole", { w: 12, h: 12 },
+  circ(5, 5, 5, "#3a3d46"), circ(5, 5, 4, "#565a64"), hline(2, 3, 7, "#3a3d46"), hline(2, 5, 7, "#3a3d46"), hline(2, 7, 7, "#3a3d46"))
+sprite("drain_grate", { w: 16, h: 6 },
+  rect(0, 0, 16, 6, "#1d1b24"), (c) => { for (let x = 1; x < 16; x += 2) c.vline(x, 1, 4, "#565a64") })
+sprite("speed_hump", { w: 32, h: 8 },
+  (c) => { for (let x = 0; x < 32; x += 8) { c.rect(x, 0, 4, 8, "#f2c43a"); c.rect(x + 4, 0, 4, 8, "#1d1b24") } })
+sprite("crack_a", { w: 24, h: 24 },
+  line(2, 22, 7, 15, "#5a5550"), line(7, 15, 9, 9, "#5a5550"), line(9, 9, 14, 6, "#5a5550"), line(14, 6, 21, 1, "#5a5550"),
+  line(9, 9, 5, 4, "#6d6862"), line(7, 15, 12, 17, "#6d6862"))
+sprite("stain_rust", { w: 16, h: 32 },
+  (c) => { for (let y = 0; y < 32; y++) { const w = 6 - Math.floor(y / 7); for (let x = 8 - w; x < 8 + w; x++) if ((x * 7 + y * 3) % 5 !== 0) c.px(x, y, y < 6 ? "#8a5a3c" : "#a8826a") } })
+sprite("board_bread", { w: 36, h: 28 },
+  rect(0, 0, 36, 28, "#1d1b24"), rect(1, 1, 34, 26, "#2b3a2e"),
+  text(18, 3, "BREAD", "#f4f1ea", { align: "c" }), text(18, 10, "MILK", "#f2c43a", { align: "c" }), text(18, 17, "AIRTIME", "#7fd1ff", { align: "c" }))
+sprite("danger_sticker", { w: 12, h: 12 },
+  poly([6, 0, 12, 11, 0, 11], "#f2c43a"), poly([6, 2, 10, 10, 2, 10], "#1d1b24"), rect(5, 4, 2, 4, "#f2c43a"), px(5, 9, "#f2c43a"), px(6, 9, "#f2c43a"))
+
+// Side panel of the (made-up) bakery delivery van.
+sprite("van_bakery", { w: 64, h: 26 },
+  rect(0, 0, 64, 26, "#f2f0ea"), rect(0, 16, 64, 8, "#c0392b"), rect(0, 24, 64, 1, "#f2c43a"),
+  ellipse(10, 9, 7, 5, "#c98a3d"), ellipse(10, 8, 6, 3, "#e0a95a"), line(6, 8, 8, 6, "#8a5a24"), line(10, 8, 12, 6, "#8a5a24"), line(14, 9, 15, 7, "#8a5a24"),
+  text(40, 2, "OUMA'S", "#c0392b", { align: "c" }), text(40, 9, "BAKERY", "#1d1b24", { align: "c" }),
+  text(32, 17, "FRESH DAILY", "#f4f1ea", { align: "c" }))

@@ -143,9 +143,12 @@ func _run_screenshot() -> void:
 	if _args.has("day"):
 		district.director.clock.day = int(_args.day)
 	if _args.has("weather"):
-		district.weather.set_kind(_args.weather)
+		district.weather.hold(_args.weather)
 		district.weather.rain = float(Weather.KINDS[_args.weather][0])
 		district.weather.overcast = float(Weather.KINDS[_args.weather][1])
+		district.weather.wind = float(Weather.KINDS[_args.weather][2])
+		if _args.weather == "rain" or _args.has("wet"):
+			district.weather.wet = 1.0
 	if _args.has("drive") and district.vehicles.has(_args.drive):
 		player.enter_vehicle(district.vehicles[_args.drive])
 	if _args.has("pause-menu"):

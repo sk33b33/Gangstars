@@ -185,7 +185,29 @@ func _test_npc_data() -> void:
 	_check(own.get_meta("occupants", []).size() == 1 and own.get_meta("occupants")[0].visible, "the player shows at the wheel of their car")
 	VehicleLibrary.set_driver(own, false)
 	_check(not own.get_meta("occupants")[0].visible, "and not once they get out")
+	# Detail pass: a hollow taxi with a load of passengers, the combi and the bakery van.
+	var taxi := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(40, 0, 0))
+	VehicleLibrary.add_occupants(taxi)
+	_check(taxi.get_meta("occupants", []).size() >= 5, "taxis carry a load of passengers (%d)" % taxi.get_meta("occupants", []).size())
+	var taxi_glass := false
+	var taxi_mesh: Mesh = VehicleLibrary.mesh("taxi")
+	for i in taxi_mesh.get_surface_count():
+		taxi_glass = taxi_glass or (taxi_mesh.surface_get_material(i) != null and taxi_mesh.surface_get_material(i).resource_name == "glass")
+	_check(taxi_glass, "taxi windows are see-through glass")
+	for vm in ["combi", "panel_van"]:
+		var v := VehicleLibrary.build(garage, vm, Color.TEAL, Vector3(50 + vm.length(), 0, 0))
+		_check(VehicleLibrary.CIVILIAN.has(vm) and v.get_meta("wheels", []).size() == 4, "the %s is on the road" % vm)
+	var van := garage.get_children().back() as Node3D
+	_check(van.find_children("BakeryPanel*", "MeshInstance3D", true, false).size() == 2, "the bakery van has its (made-up) sign on both sides")
 	garage.queue_free()
+	# Detail pass: litter, potholes, drains, bins along the streets.
+	var district_data: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
+	var street_root := Node3D.new()
+	root.add_child(street_root)
+	var bits := StreetDetail.build(street_root, district_data)
+	_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
+	_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
+	street_root.queue_free()
 	# Faces blink and talk; hair and posture vary.
 	var talker := CharacterModel.new()
 	root.add_child(talker)
@@ -212,6 +234,28 @@ func _test_npc_data() -> void:
 			stooped += 1
 	_check(["fade", "cornrows", "braids", "bun"].filter(func(h): return hairs.has(h)).size() >= 3, "hair styles vary (%s)" % [hairs.keys()])
 	_check(stooped >= 2, "older people stoop (%d)" % stooped)
+	# Detail pass: school uniforms, overalls, Sunday best; phones and shopping bags.
+	var outfits := {}
+	for n in everyone:
+		var a: Dictionary = n.appearance()
+		if a.has("tie_color"):
+			outfits["tie"] = true
+		if a.has("overall_color"):
+			outfits["overall"] = true
+	_check(outfits.has("tie") and outfits.has("overall"), "work and school clothes show up (%s)" % [outfits.keys()])
+	var caller := CharacterModel.new()
+	root.add_child(caller)
+	caller.build(Color.GREEN, Color.BLACK, Color("#8d5a3b"), Color(0, 0, 0, 0), {"hair_style": "short"})
+	var phone: MeshInstance3D = caller.find_child("Acc_phone", true, false)
+	var bag: MeshInstance3D = caller.find_child("Acc_shopbag", true, false)
+	caller.animate(1.0 / 60.0, 0.0)
+	_check(phone != null and not phone.visible and bag != null and not bag.visible, "phone and shopping bag are put away by default")
+	caller.mode = "phone"
+	caller.carrying = true
+	for i in 60:
+		caller.animate(1.0 / 60.0, 0.0)
+	_check(phone.visible and bag.visible, "people check their phones and carry shopping home")
+	caller.queue_free()
 
 
 func _test_brain_cycle() -> void:
@@ -855,7 +899,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 14, "14 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 19, "19 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -985,12 +1029,35 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 60 * 10:
 		await physics_frame
 	_check(weather.is_raining() and district.residents.values().all(func(r): return r.brain.raining), "rain reaches every resident's brain")
+	var road := PixelMaterials.surface("road_asphalt", Vector2(4, 4))
+	_check(weather.wet > 0.3 and road.roughness < 0.8, "the ground goes wet and shiny in the rain (wet %.2f, roughness %.2f)" % [weather.wet, road.roughness])
 	var leisure_only: Resident = district.residents["npc_h06_1"]
 	_check(not leisure_only.brain._any_entry_allowed(), "in the rain a resident with only outdoor leisure plans has nothing to go out for")
 	weather.set_kind("clear")
 	for i in 60 * 12:
 		await physics_frame
 	_check(not weather.is_raining(), "rain clears again")
+	_check(weather.wet > 0.05, "puddles don't vanish the moment the rain stops (%.2f)" % weather.wet)
+	weather.wet = 0.0
+	weather.set_kind("cloudy")
+	weather.overcast = 0.55
+	for i in 60 * 3:
+		await physics_frame
+	_check(weather._clouds.any(func(d): return d.visible), "cloud shadows drift over the streets on a cloudy day")
+	weather.set_kind("windy")
+	weather.wind = 0.9
+	weather.overcast = 0.3
+	for i in 30:
+		await physics_frame
+	_check(district.day_night.dust > 0.5, "wind lifts a dusty haze (%.2f)" % district.day_night.dust)
+	weather.set_kind("clear")
+	weather.wind = 0.25
+	weather.overcast = 0.0
+	district.director.clock.set_hour(17.8)
+	await physics_frame
+	await process_frame
+	var sun_c: Color = district.get_node("Sun").light_color
+	_check(sun_c.r > sun_c.b + 0.25, "golden hour: the low sun is warm orange (%s)" % sun_c)
 
 	# Events: braai (odd days) and load-shedding (even days).
 	var clock := district.director.clock
@@ -1020,6 +1087,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 90:
 		await physics_frame
 	_check(district.light_pool.active_count() == LightPool.POOL, "at night the nearest streetlights cast light (%d)" % district.light_pool.active_count())
+	_check(district.light_pool.glow_visible(), "every streetlight paints a warm pool on the ground at night")
 	_check(PixelMaterials.panel("window_bars").emission_energy_multiplier > 0.5, "windows glow at night")
 
 	# Settings and pause.
