@@ -85,15 +85,15 @@ func apply() -> void:
 	var sky := environment.sky.sky_material as ProceduralSkyMaterial if environment.sky else null
 	if sky:
 		var clear := 1.0 - overcast
-		sky.sky_top_color = DAY_SKY_TOP.lerp(DUSK_TOP, dusk * clear * 0.7).lerp(OVERCAST_SKY, overcast * (1.0 - night)).lerp(NIGHT_SKY_TOP, night)
+		sky.sky_top_color = DAY_SKY_TOP.lerp(DUST_FOG, dust * 0.55).lerp(DUSK_TOP, dusk * clear * 0.7).lerp(OVERCAST_SKY, overcast * (1.0 - night)).lerp(NIGHT_SKY_TOP, night)
 		var glow := DAWN_HORIZON if h < 12.0 else DUSK_HORIZON
-		var horizon := DAY_HORIZON.lerp(DUST_FOG, dust * 0.6).lerp(glow, dusk * clear).lerp(OVERCAST_SKY.lightened(0.15), overcast * (1.0 - night)).lerp(NIGHT_HORIZON, night)
+		var horizon := DAY_HORIZON.lerp(DUST_FOG, dust * 0.9).lerp(glow, dusk * clear).lerp(OVERCAST_SKY.lightened(0.15), overcast * (1.0 - night)).lerp(NIGHT_HORIZON, night)
 		sky.sky_horizon_color = horizon
 		sky.ground_horizon_color = horizon
 		sky.ground_bottom_color = horizon.darkened(0.3)
 		environment.fog_light_color = horizon.lerp(DUST_FOG.darkened(night * 0.8), dust * 0.7)
-		environment.fog_depth_begin = lerpf(80.0, 35.0, maxf(overcast, dust * 0.8))
-		environment.fog_depth_end = lerpf(320.0, 170.0, dust)
+		environment.fog_depth_begin = lerpf(80.0, 10.0, maxf(overcast * 0.45, dust))
+		environment.fog_depth_end = lerpf(320.0, 110.0, dust)
 	var power := 1.0 if power_on else 0.0
 	PixelMaterials.lamp().emission_energy_multiplier = lerpf(0.3, 4.0, night) * power
 	VehicleLibrary.night = night

@@ -87,6 +87,7 @@ func _physics_process(delta: float) -> void:
 	_dt = dt
 	state.tick(now, dt, presence)
 	_provoke_pushers()
+	_maybe_retaliate(now)
 	_maybe_push(now)
 
 
@@ -129,6 +130,32 @@ func _maybe_push(now: float) -> void:
 	if mine.is_empty() or Array(state.order).any(func(id): return state.pushed(id)):
 		return
 	start_push(mine[_rng.randi() % mine.size()])
+
+
+## Story consequences: a choice can leave a grudge ("retaliate:<crew>" holds the game minute it
+## comes due). Once due, that crew moves on one of your corners, whatever the usual push timer says.
+## If there's nothing of yours to hit yet, or a push is already on, it waits.
+func _maybe_retaliate(now: float) -> void:
+	for key in Array(progression.flags.keys()):
+		if not str(key).begins_with("retaliate:") or now < float(progression.flags[key]):
+			continue
+		if Array(state.order).any(func(id): return state.pushed(id)):
+			continue
+		var crew := str(key).trim_prefix("retaliate:")
+		var mine := state.players_corners()
+		var order := range(mine.size())
+		order.shuffle()
+		var sent := ""
+		for i in order:
+			sent = start_push(mine[i], crew)
+			if not sent.is_empty():
+				break
+		if sent.is_empty():
+			if not mine.is_empty():   # they have nobody near your corners: the grudge fades
+				progression.flags.erase(key)
+			continue
+		progression.flags.erase(key)
+		message.emit("PAYBACK: the %s are making their move." % crew_name(sent))
 
 
 ## A rival crew from the corner's suburb moves on it. Returns the crew, or "" if none can.
@@ -181,6 +208,8 @@ func _on_push_ended(id: String, held: bool) -> void:
 			r.brain.pending_event = {}
 	pushers.erase(id)
 	if held:
+		if dealing:
+			dealing.state.stats.pushes_held += 1
 		progression.add_reputation(3)
 		message.emit("You held %s." % corner_name(id))
 	_refresh_tags()

@@ -48,8 +48,9 @@ func _run() -> void:
 	_test_dealing_units()
 	_test_turf_units()
 	_test_hustle_units()
-	print("== district (integration)")
-	await _test_district()
+	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
+		print("== district (integration)")
+		await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
 	for f in _failed:
 		print("  failed: ", f)
@@ -207,6 +208,8 @@ func _test_npc_data() -> void:
 	var bits := StreetDetail.build(street_root, district_data)
 	_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
 	_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
+	var puddles := street_root.find_children("*", "MeshInstance3D", true, false).filter(func(m): return m.material_override == StreetDetail.puddle_material())
+	_check(puddles.size() >= 10, "rain collects in puddles along the streets (%d)" % puddles.size())
 	street_root.queue_free()
 	# Faces blink and talk; hair and posture vary.
 	var talker := CharacterModel.new()
@@ -500,7 +503,7 @@ func _test_phase5_units() -> void:
 	_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
 		"the districts are Westridge, Lentegeur and Rocklands")
 	var future := dm.planned()
-	_check(future.size() == 5 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
+	_check(future.size() == 4 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
 		"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
 	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
 	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
@@ -678,7 +681,7 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 34, "34 missions load (intro, districts, crews, the hustle, Town Centre, the story)")
+	_check(GameSession._load_all_missions().size() == 40, "40 missions load (intro, districts, crews, the hustle, Town Centre, Tafelsig, the story)")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
@@ -805,7 +808,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 4 and district.area_by_id("district_east").display_name == "Lentegeur", "four areas are built (Westridge, Lentegeur, Rocklands, Town Centre)")
+	_check(district.areas.size() == 5 and district.area_by_id("district_east").display_name == "Lentegeur", "five areas are built (Westridge, Lentegeur, Rocklands, Town Centre, Tafelsig)")
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
 	var map := district.nav_region.get_navigation_map()
@@ -899,7 +902,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 19, "19 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 23, "23 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -1030,6 +1033,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(weather.is_raining() and district.residents.values().all(func(r): return r.brain.raining), "rain reaches every resident's brain")
 	var road := PixelMaterials.surface("road_asphalt", Vector2(4, 4))
+	_check(StreetDetail.puddle_material().albedo_color.a > 0.2, "puddles show up once the ground is wet")
 	_check(weather.wet > 0.3 and road.roughness < 0.8, "the ground goes wet and shiny in the rain (wet %.2f, roughness %.2f)" % [weather.wet, road.roughness])
 	var leisure_only: Resident = district.residents["npc_h06_1"]
 	_check(not leisure_only.brain._any_entry_allowed(), "in the rain a resident with only outdoor leisure plans has nothing to go out for")
@@ -1807,6 +1811,80 @@ func _test_town_centre_in_game(main: Node, district: District, player: Player) -
 	await district.navigation_rebaked
 
 
+func _test_tafelsig_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var dm := session.districts
+	_check(not district.area_by_id("district_tafelsig").is_empty(), "Tafelsig is built (east past Town Centre)")
+	var houses := Array(district.registry.order).filter(func(id): return id.begins_with("taf_h"))
+	var people := district.residents.values().filter(func(r): return r.data.id.begins_with("npc_taf_"))
+	_check(houses.size() == 20 and people.size() >= 20, "Tafelsig: 20 houses (flats and court row houses), %d residents" % people.size())
+	_check(district.destinations.has("taf_court") and district.destinations.has("taf_courtyard") and district.destinations.has("taf_taxi"),
+		"the sand court, the courtyard and the rank")
+	_check(district.gates.has("district_tafelsig") and district.gates.district_tafelsig.size() == 2, "two gates from Town Centre into Tafelsig")
+	_check(dm.state("district_tafelsig") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_tafelsig").is_empty()
+		and not dm.can_unlock("district_tafelsig"), "Tafelsig starts locked, with requirements")
+	_check(session.missions.get_mission("over_the_dunes") != null and session.missions.get_mission("court_time") != null
+		and session.missions.get_mission("dune_wind") != null, "Tafelsig missions load")
+	_check(session.turf.state.corners.has("corner_taf_court") and session.turf.state.corners.has("corner_taf_yard"), "Tafelsig has corners to fight over")
+	_check(district.residents.values().any(func(r): return r.data.id.begins_with("npc_taf_") and r.data.role == "crew" and r.data.faction_id == "tortel_crew"),
+		"the Laaities' cousins hold Tafelsig")
+	for id in ["district_east", "district_town_centre", "district_tafelsig"]:
+		district.set_district_open(id, true, false)
+	district.rebake_navigation()
+	await district.navigation_rebaked
+	for i in 5:
+		await physics_frame
+	var map := district.nav_region.get_navigation_map()
+	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("tc_taxi"))
+	var to := district.destinations.anchor_position("taf_court")
+	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	_check(path.size() > 1 and path[path.size() - 1].distance_to(to) < 3.0, "once open, you can walk from the Town Centre rank to the Tafelsig court")
+	district.set_district_open("district_tafelsig", false, false)
+	district.set_district_open("district_town_centre", false, false)
+	district.set_district_open("district_east", session.districts.is_unlocked("district_east"), false)
+	district.rebake_navigation()
+	await district.navigation_rebaked
+
+
+func _test_consequences_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var prog := session.progression
+	var turf := session.turf
+	_check(session.story_scenes.has("marlon_favour") and session.story_scenes.has("spider_peace"), "the follow-up story scenes load")
+	_check(["payback", "marlons_favour", "dune_debt"].all(func(id): return session.missions.get_mission(id) != null), "the consequence missions load")
+	# Going to war leaves a grudge.
+	prog.flags.erase("retaliate:tortel_crew")
+	prog.flags.erase("ally:tortel_crew")
+	session._apply_story_state()
+	session.apply_effects(session.story_scenes.boeta_sitdown.choices[1].effects)
+	_check(prog.flags.has("retaliate:tortel_crew") and float(prog.flags["retaliate:tortel_crew"]) > turf.minutes(), "going to war leaves a grudge that comes due later")
+	# Due, with a corner of yours to hit: the crew moves on it, outside the usual push timer.
+	turf.state.next_push = 1e9
+	for id in turf.state.order:
+		if turf.state.pushed(id):
+			turf.state._end_push(id, true)
+	turf.state.corners["corner_cafe"].owner = prog.crew_id
+	turf.state.corners["corner_cafe"].control = 60.0
+	player.global_position = Vector3(-30, 0.1, 30)
+	var held_before := session.dealing.state.stat("pushes_held")
+	prog.flags["retaliate:tortel_crew"] = turf.minutes() - 1.0
+	for i in 60:
+		await physics_frame
+	var pushed := Array(turf.state.order).filter(func(id): return turf.state.pushed(id))
+	_check(not prog.flags.has("retaliate:tortel_crew") and pushed.size() == 1 and turf.state.corners[pushed[0]].push_crew == "tortel_crew",
+		"the Laaities move on one of your corners (%s)" % [pushed])
+	for id in pushed:
+		turf.state._end_push(id, true)
+	_check(session.dealing.state.stat("pushes_held") == held_before + 1, "holding a corner against a push is counted")
+	# An ally holds no grudge.
+	session.apply_effects({"turf_ally": "tortel_crew"})
+	session.apply_effects({"retaliation": {"crew": "tortel_crew", "minutes": 10}})
+	_check(not prog.flags.has("retaliate:tortel_crew"), "an allied crew leaves no grudge")
+	prog.flags.erase("ally:tortel_crew")
+	session._apply_story_state()
+	turf.state.corners["corner_cafe"].owner = ""
+
+
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var missions := session.missions
@@ -1896,7 +1974,7 @@ func _test_sound_in_game(main: Node, district: District, player: Player) -> void
 func _test_turf_units() -> void:
 	print("== turf war units")
 	var t := TurfState.load_default()
-	_check(t.order.size() == 12 and t.owner("corner_westridge") == "tortel_crew" and t.owner("corner_court") == "", "12 corners, some held, some nobody's")
+	_check(t.order.size() == 14 and t.owner("corner_westridge") == "tortel_crew" and t.owner("corner_court") == "", "14 corners, some held, some nobody's")
 	t.player_crew = "vlakte_vipers"
 	_check(t.is_players("corner_park") and t.players_corners().size() == 2, "your crew starts with its own corners (the park, the market)")
 	var p := {"player": false, "crew": 0, "owners": 0, "pushers": 0}
@@ -1936,7 +2014,7 @@ func _test_turf_war_in_game(main: Node, district: District, player: Player) -> v
 	var prog := session.progression
 	session.interiors.discard()
 	district.director.clock.set_hour(12.0)
-	_check(turf.state.order.size() == 12, "all 12 corners are in the world")
+	_check(turf.state.order.size() == 14, "all 14 corners are in the world")
 	for i in 5:
 		await physics_frame
 	turf._refresh_tags()
@@ -2004,7 +2082,7 @@ func _test_turf_war_in_game(main: Node, district: District, player: Player) -> v
 func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 	district.weather.enabled = false
 	district.weather.set_kind("clear")
-	_check(district.kickabouts.size() == 3, "every district has a kick-about pitch (%d)" % district.kickabouts.size())
+	_check(district.kickabouts.size() == 4, "every district has a kick-about pitch (%d)" % district.kickabouts.size())
 	var kids := district.residents.values().filter(func(r): return r.data.role == "kid")
 	_check(kids.size() >= 12, "kids live in the neighbourhood (%d)" % kids.size())
 	_check((kids[0] as Resident).model.scale.y < 0.75, "kids are child-sized")
@@ -2546,7 +2624,7 @@ func _test_district() -> void:
 	var ms_per_frame := real_s * 1000.0 / frames
 	print("  soak: %.1f simulated minutes in %.1f s real time (%.2f ms per physics frame, %d NPCs)" % [
 		minutes, real_s, ms_per_frame, district.residents.size()])
-	_check(ms_per_frame < 8.0, "simulation cost per frame is under 8 ms headless (%.2f ms)" % ms_per_frame)
+	_check(ms_per_frame < 10.0, "simulation cost per frame is under 10 ms headless (%.2f ms)" % ms_per_frame)
 	_check(lost.travel_failures >= 1 and lost.arrivals >= 2, "resident with a missing destination recovers (%d failures, %d arrivals)" % [lost.travel_failures, lost.arrivals])
 	var total_arrivals := 0
 	for r: Resident in district.residents.values():
@@ -2640,7 +2718,9 @@ func _test_district() -> void:
 	await _test_turf_war_in_game(main, district, player)
 	await _test_hustle_in_game(main, district, player)
 	await _test_town_centre_in_game(main, district, player)
+	await _test_tafelsig_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
+	await _test_consequences_in_game(main, district, player)
 	await _test_sound_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()

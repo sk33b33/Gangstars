@@ -1,0 +1,133 @@
+{
+  "missions": [
+    {
+      "id": "over_the_dunes",
+      "title": "Over the Dunes",
+      "giver": "npc_taf_gadija",
+      "prerequisites": {
+        "missions": [
+          "market_day"
+        ],
+        "districts": [
+          "district_tafelsig"
+        ]
+      },
+      "intro": "Aunty Gadija: \"A new face, all the way out here? Walk the court, see the rank, then come tell me what you think. Out here we watch strangers.\"",
+      "description": "Get to know Tafelsig.",
+      "objectives": [
+        {
+          "id": "court",
+          "type": "visit",
+          "target": "taf_court",
+          "radius": 5,
+          "text": "Walk to the sand court"
+        },
+        {
+          "id": "rank",
+          "type": "visit",
+          "target": "taf_taxi",
+          "radius": 4,
+          "text": "See the Tafelsig rank"
+        },
+        {
+          "id": "gadija",
+          "type": "talk_to",
+          "target": "npc_taf_gadija",
+          "text": "Report back to Aunty Gadija"
+        }
+      ],
+      "rewards": {
+        "cash": 180,
+        "reputation": 14,
+        "influence": {
+          "district_tafelsig": 10
+        },
+        "relationship": {
+          "npc_taf_gadija": 10
+        }
+      }
+    },
+    {
+      "id": "court_time",
+      "title": "Court Time",
+      "giver": "npc_taf_ricardo",
+      "prerequisites": {
+        "missions": [
+          "over_the_dunes"
+        ]
+      },
+      "intro": "Ricardo: \"The Laaities' cousins bully the juniors off the court. Stand here with your people through the afternoon and they'll learn.\"",
+      "description": "Hold the sand court with your crew.",
+      "objectives": [
+        {
+          "id": "hold",
+          "type": "hold",
+          "target": "taf_court",
+          "radius": 9,
+          "minutes": 30,
+          "with_crew": true,
+          "window": [
+            13,
+            20
+          ],
+          "text": "Hold the sand court with your crew (13:00–20:00)"
+        }
+      ],
+      "rewards": {
+        "cash": 320,
+        "reputation": 22,
+        "crew_influence": 5,
+        "influence": {
+          "district_tafelsig": 20
+        },
+        "relationship": {
+          "npc_taf_ricardo": 10,
+          "npc_taf_gadija": 5
+        }
+      }
+    },
+    {
+      "id": "dune_wind",
+      "title": "Before the Wind Turns",
+      "giver": "npc_taf_hester",
+      "prerequisites": {
+        "missions": [
+          "court_time"
+        ]
+      },
+      "intro": "Ouma Hester: \"Take a message to Aunty Gadija for me, then sit with me in the courtyard. An old woman likes company before the weather turns.\"",
+      "description": "Carry a message, then keep Ouma Hester company.",
+      "objectives": [
+        {
+          "id": "gadija",
+          "type": "talk_to",
+          "target": "npc_taf_gadija",
+          "text": "Take Ouma Hester's message to Aunty Gadija"
+        },
+        {
+          "id": "yard",
+          "type": "visit",
+          "target": "taf_courtyard",
+          "radius": 4,
+          "text": "Sit in the courtyard"
+        },
+        {
+          "id": "hester",
+          "type": "talk_to",
+          "target": "npc_taf_hester",
+          "text": "Tell Ouma Hester it's done"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 12,
+        "influence": {
+          "district_tafelsig": 15
+        },
+        "relationship": {
+          "npc_taf_hester": 15
+        }
+      }
+    }
+  ]
+}

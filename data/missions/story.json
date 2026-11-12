@@ -180,6 +180,92 @@
         "reputation": 50,
         "crew_influence": 20
       }
+    },
+    {
+      "id": "payback",
+      "title": "Payback",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "send_a_message"
+        ],
+        "flags": [
+          "path_war"
+        ]
+      },
+      "intro": "Boeta: \"They felt that. The Laaities will come for one of our corners. Be there when they do, and don't let it go.\"",
+      "description": "Beat back a rival push on your turf.",
+      "objectives": [
+        {
+          "id": "hold",
+          "type": "stat",
+          "stat": "pushes_held",
+          "value": 1,
+          "text": "Hold a corner against a rival push"
+        }
+      ],
+      "rewards": {
+        "cash": 250,
+        "reputation": 20,
+        "crew_influence": 5,
+        "influence": {
+          "starter": 10
+        }
+      }
+    },
+    {
+      "id": "marlons_favour",
+      "title": "Marlon's Favour",
+      "giver": "npc_h29_1",
+      "prerequisites": {
+        "missions": [
+          "the_sit_down"
+        ],
+        "flags": [
+          "deal_split"
+        ]
+      },
+      "intro": "Marlon Carelse: \"A word. Come by the corner.\"",
+      "description": "Hear Marlon out.",
+      "objectives": [
+        {
+          "id": "favour",
+          "type": "dialogue",
+          "target": "npc_h29_1",
+          "scene": "marlon_favour",
+          "text": "Hear Marlon's favour"
+        }
+      ],
+      "rewards": {
+        "reputation": 5
+      }
+    },
+    {
+      "id": "dune_debt",
+      "title": "The Dune Debt",
+      "giver": "npc_rooi_spider",
+      "prerequisites": {
+        "missions": [
+          "east_of_the_gate"
+        ],
+        "flags": [
+          "ally_none"
+        ]
+      },
+      "intro": "Spider: \"You stood alone, and my boys leaned on your corners. Come talk before this gets ugly.\"",
+      "description": "Settle things with Spider.",
+      "objectives": [
+        {
+          "id": "peace",
+          "type": "dialogue",
+          "target": "npc_rooi_spider",
+          "scene": "spider_peace",
+          "text": "Settle things with Spider"
+        }
+      ],
+      "rewards": {
+        "reputation": 5
+      }
     }
   ]
 }

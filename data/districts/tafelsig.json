@@ -1,0 +1,339 @@
+{
+  "dogs": {
+    "street": 3,
+    "yard": 2
+  },
+  "id": "district_tafelsig",
+  "display_name": "Tafelsig",
+  "street_name": "Tafelsig",
+  "bounds": [
+    420.0,
+    -78,
+    540.0,
+    22
+  ],
+  "houses_file": "res://data/houses/tafelsig_houses.json",
+  "residents_file": "res://data/npcs/tafelsig_residents.json",
+  "ground_texture": "yard_sand",
+  "ground_tint": "#f4ead2",
+  "ground_margin": {
+    "west": 0
+  },
+  "open_sides": [
+    "west"
+  ],
+  "backdrop_skip": [
+    "west"
+  ],
+  "streets": [
+    {
+      "id": "duif_f",
+      "name": "AZ Berman Drive",
+      "axis": "x",
+      "at": 0,
+      "from": 408.0,
+      "to": 552.0,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "mossie_f",
+      "name": "Spine Road",
+      "axis": "x",
+      "at": -56,
+      "from": 408.0,
+      "to": 552.0,
+      "half_width": 4.0,
+      "sidewalk": 2.5
+    },
+    {
+      "id": "duin_taf",
+      "name": "Court Lane",
+      "axis": "z",
+      "at": 480.0,
+      "from": -4,
+      "to": -52,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    },
+    {
+      "id": "kers_taf",
+      "name": "Dune Street",
+      "axis": "z",
+      "at": 532.0,
+      "from": -4,
+      "to": -52,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -6.5,
+      "sidewalk_to": -49.5
+    }
+  ],
+  "landmarks": [
+    {
+      "type": "container_shop",
+      "position": [
+        432.0,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_spaza",
+      "color": "#16a085"
+    },
+    {
+      "type": "container_shop",
+      "position": [
+        512.0,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_spaza",
+      "color": "#d35400"
+    },
+    {
+      "type": "court",
+      "position": [
+        442.0,
+        -34
+      ]
+    },
+    {
+      "type": "taxi_rank",
+      "position": [
+        508.0,
+        -48.8
+      ],
+      "facing": "north"
+    },
+    {
+      "type": "courtyard",
+      "position": [
+        516.0,
+        -30
+      ]
+    }
+  ],
+  "pois": [
+    {
+      "id": "taf_spaza",
+      "name": "Gadija's Spaza",
+      "kind": "shop",
+      "position": [
+        432.0,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "spaza"
+    },
+    {
+      "id": "taf_stoep_shop",
+      "name": "Dune Street Tuck Shop",
+      "kind": "shop",
+      "position": [
+        512.0,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "tuck shop"
+    },
+    {
+      "id": "taf_court",
+      "name": "the sand court",
+      "kind": "court",
+      "position": [
+        442.0,
+        -34
+      ],
+      "radius": 4.0,
+      "map_label": "court"
+    },
+    {
+      "id": "taf_taxi",
+      "name": "the Tafelsig taxi rank",
+      "kind": "transit",
+      "position": [
+        508.0,
+        -50.7
+      ],
+      "radius": 1.0,
+      "map_label": "taxi"
+    },
+    {
+      "id": "taf_courtyard",
+      "name": "the courtyard",
+      "kind": "gathering",
+      "position": [
+        516.0,
+        -30
+      ],
+      "radius": 2.5,
+      "map_label": "yard"
+    }
+  ],
+  "patrol_routes": {
+    "taf_loop": [
+      [
+        472.0,
+        -5.4
+      ],
+      [
+        485.0,
+        -12
+      ],
+      [
+        485.0,
+        -46
+      ],
+      [
+        462.0,
+        -50.8
+      ],
+      [
+        430.0,
+        -50.8
+      ],
+      [
+        430.0,
+        -5.4
+      ]
+    ]
+  },
+  "parked_cars": [
+    {
+      "position": [
+        452.0,
+        3.4
+      ],
+      "rot": 0,
+      "color": "#bdc3c7"
+    },
+    {
+      "position": [
+        522.0,
+        -3.4
+      ],
+      "rot": 180,
+      "color": "#2e86c1"
+    }
+  ],
+  "decals": [
+    {
+      "texture": "tag_tortel",
+      "position": [
+        498.0,
+        0.8,
+        -62.94
+      ],
+      "size": [
+        2.2,
+        0.92
+      ],
+      "rot": 0
+    },
+    {
+      "texture": "tag_tortel",
+      "position": [
+        511.0,
+        0.45,
+        -8.78
+      ],
+      "size": [
+        1.6,
+        0.66
+      ],
+      "rot": 0
+    }
+  ],
+  "traffic": {
+    "lane_offset": 1.3,
+    "corner_radius": 6.0,
+    "taxi_stops": [
+      "taf_taxi"
+    ],
+    "taxi_wait": 5.0,
+    "loops": [
+      {
+        "points": [
+          [
+            480.0,
+            0
+          ],
+          [
+            532.0,
+            0
+          ],
+          [
+            532.0,
+            -56
+          ],
+          [
+            480.0,
+            -56
+          ]
+        ],
+        "cars": [
+          {
+            "id": "taf_taxi_1",
+            "color": "#f1eee8",
+            "start": 0.2,
+            "taxi": true
+          },
+          {
+            "id": "taf_bakkie_1",
+            "model": "bakkie",
+            "color": "#b5651d",
+            "start": 0.7
+          }
+        ]
+      },
+      {
+        "points": [
+          [
+            480.0,
+            -56
+          ],
+          [
+            532.0,
+            -56
+          ],
+          [
+            532.0,
+            0
+          ],
+          [
+            480.0,
+            0
+          ]
+        ],
+        "cars": [
+          {
+            "id": "taf_traffic_1",
+            "color": "#8e44ad",
+            "start": 0.6
+          },
+          {
+            "id": "taf_combi_1",
+            "model": "combi",
+            "color": "#c0392b",
+            "start": 0.1
+          }
+        ]
+      }
+    ]
+  },
+  "kickabouts": [
+    {
+      "poi": "taf_court",
+      "center": [
+        442.0,
+        -34
+      ],
+      "half": [
+        12.0,
+        7.6
+      ]
+    }
+  ]
+}

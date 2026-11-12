@@ -83,6 +83,18 @@
       "name": "the big taxi rank",
       "anchor": "tc_taxi",
       "owner": ""
+    },
+    {
+      "id": "corner_taf_court",
+      "name": "the sand court",
+      "anchor": "taf_court",
+      "owner": "tortel_crew"
+    },
+    {
+      "id": "corner_taf_yard",
+      "name": "the Tafelsig courtyard",
+      "anchor": "taf_courtyard",
+      "owner": ""
     }
   ]
 }

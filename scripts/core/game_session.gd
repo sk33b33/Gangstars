@@ -567,6 +567,10 @@ func apply_effects(e: Dictionary) -> void:
 			turf.state.corners[corner].control = 60.0
 	if e.has("turf_ally"):
 		progression.flags["ally:" + str(e.turf_ally)] = true
+		progression.flags.erase("retaliate:" + str(e.turf_ally))   # allies don't hold grudges
+	var grudge: Dictionary = e.get("retaliation", {})
+	if not grudge.is_empty() and not turf.allies.has(str(grudge.get("crew", ""))):
+		progression.flags["retaliate:" + str(grudge.crew)] = turf.minutes() + float(grudge.get("minutes", 300))
 	_apply_story_state()
 	turf._refresh_tags()
 	progression.changed.emit()
@@ -585,7 +589,7 @@ func _apply_story_state() -> void:
 ## the smokkies (music on smokkie nights); voices for whoever talks; music inside smokkies.
 func _setup_street_sound() -> void:
 	var dest := district.destinations
-	for id in ["rooi_taxi", "tc_taxi"]:
+	for id in ["rooi_taxi", "tc_taxi", "taf_taxi"]:
 		if dest.has(id):
 			audio.ranks.append(dest.anchor_position(id))
 	if dest.has("tc_market"):

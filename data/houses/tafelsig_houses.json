@@ -1,0 +1,708 @@
+{
+  "district_id": "district_tafelsig",
+  "houses": [
+    {
+      "id": "taf_h01",
+      "number": 1,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Damons block",
+      "kit": "flats",
+      "position": [
+        434.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h01_1",
+        "npc_taf_h01_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h02",
+      "number": 3,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Ockhuis block",
+      "kit": "flats",
+      "position": [
+        458.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#e0d0b0",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h02_1",
+        "npc_taf_h02_2"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h03",
+      "number": 5,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Maans family",
+      "kit": "row_house",
+      "position": [
+        476.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d9c8a0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_gadija"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h04",
+      "number": 7,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Hartnick family",
+      "kit": "row_house",
+      "position": [
+        484.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#b8d4c8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h04_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h05",
+      "number": 9,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Van Wyk family",
+      "kit": "row_house",
+      "position": [
+        492.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#a8c8e0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h05_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h06",
+      "number": 11,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Empty house",
+      "kit": "row_house",
+      "position": [
+        500.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d9c8a0",
+      "roof": "tiles",
+      "fence": "precast",
+      "fence_color": "#d9c8a0",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h07",
+      "number": 13,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Hartnick family",
+      "kit": "row_house",
+      "position": [
+        508.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e8b4a0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h07_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h08",
+      "number": 15,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Maans family",
+      "kit": "row_house",
+      "position": [
+        516.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#b8d4c8",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h08_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h09",
+      "number": 17,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Rhode family",
+      "kit": "row_house",
+      "position": [
+        524.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#d8d8d0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_ricardo"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h10",
+      "number": 19,
+      "street": "AZ Berman Drive",
+      "district_id": "district_tafelsig",
+      "display_name": "Isaacs family",
+      "kit": "row_house",
+      "position": [
+        532.0,
+        7.0
+      ],
+      "facing": "north",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "precast",
+      "fence_color": "#e0d0b0",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h10_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": true,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h11",
+      "number": 2,
+      "street": "Spine Road",
+      "district_id": "district_tafelsig",
+      "display_name": "Lottering block",
+      "kit": "flats",
+      "position": [
+        434.0,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h11_1",
+        "npc_taf_h11_2"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h12",
+      "number": 4,
+      "street": "Spine Road",
+      "district_id": "district_tafelsig",
+      "display_name": "Ockhuis block",
+      "kit": "flats",
+      "position": [
+        458.0,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#d9c8a0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_hester",
+        "npc_taf_h12_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h13",
+      "number": 6,
+      "street": "Spine Road",
+      "district_id": "district_tafelsig",
+      "display_name": "Van Wyk block",
+      "kit": "flats",
+      "position": [
+        482.0,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h13_1",
+        "npc_taf_h13_2"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": false
+      }
+    },
+    {
+      "id": "taf_h14",
+      "number": 8,
+      "street": "Spine Road",
+      "district_id": "district_tafelsig",
+      "display_name": "Lottering block",
+      "kit": "flats",
+      "position": [
+        506.0,
+        -63.0
+      ],
+      "facing": "south",
+      "plot_size": [
+        22,
+        16
+      ],
+      "wall_color": "#a8c8e0",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "hostile",
+      "occupant_ids": [
+        "npc_taf_dawie",
+        "npc_taf_tortel_2",
+        "npc_taf_tortel_3"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h15",
+      "number": 8,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Rhode family",
+      "kit": "row_house",
+      "position": [
+        487.0,
+        -14
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e8b4a0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h15_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": true,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h16",
+      "number": 6,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Hartnick family",
+      "kit": "row_house",
+      "position": [
+        487.0,
+        -22
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e8b4a0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h16_1"
+      ],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h17",
+      "number": 4,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Empty house",
+      "kit": "row_house",
+      "position": [
+        487.0,
+        -30
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "vacant",
+      "ownership": "neutral",
+      "occupant_ids": [],
+      "props": {
+        "yard": "paved",
+        "bin": true,
+        "dish": false,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h18",
+      "number": 2,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Booysen family",
+      "kit": "row_house",
+      "position": [
+        487.0,
+        -38
+      ],
+      "facing": "west",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h18_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": true,
+        "washing": false,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h19",
+      "number": 3,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Rhode family",
+      "kit": "row_house",
+      "position": [
+        473.0,
+        -14
+      ],
+      "facing": "east",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#c8b8d8",
+      "roof": "tiles",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h19_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": true,
+        "dish": false,
+        "washing": true,
+        "wendy": false,
+        "tree": false,
+        "gate": true
+      }
+    },
+    {
+      "id": "taf_h20",
+      "number": 1,
+      "street": "Court Lane",
+      "district_id": "district_tafelsig",
+      "display_name": "Ockhuis family",
+      "kit": "row_house",
+      "position": [
+        473.0,
+        -22
+      ],
+      "facing": "east",
+      "plot_size": [
+        8,
+        14
+      ],
+      "wall_color": "#e0d0b0",
+      "roof": "ibr",
+      "fence": "palisade",
+      "fence_color": "#56606e",
+      "occupancy": "occupied",
+      "ownership": "neutral",
+      "occupant_ids": [
+        "npc_taf_h20_1"
+      ],
+      "props": {
+        "yard": "sand",
+        "bin": false,
+        "dish": false,
+        "washing": false,
+        "wendy": true,
+        "tree": false,
+        "gate": true
+      }
+    }
+  ]
+}

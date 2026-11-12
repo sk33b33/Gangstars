@@ -18,7 +18,7 @@ var stock := {"weed": 0, "drink": 0}
 var clients := {}       # npc id -> {name, product, home, mood, status: "client"|"lost", rival, next_call}
 var orders: Array = []  # {id, npc, product, qty, place, deadline, accepted_at}
 var call: Dictionary = {}   # ringing call: {npc, product, qty, place, rings_until}
-var stats := {"weed_sold": 0, "drinks_sold": 0, "street_deals": 0, "busts": 0, "missed": 0, "lost_clients": 0,
+var stats := {"pushes_held": 0, "weed_sold": 0, "drinks_sold": 0, "street_deals": 0, "busts": 0, "missed": 0, "lost_clients": 0,
 	"runner_deals": 0, "runner_busts": 0}
 var runners := 0        # hired runners (take answered orders for you)
 var drops: Array = []   # restock waiting to be picked up: {id, product, qty, at, ready, expires}

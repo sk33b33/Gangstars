@@ -24,6 +24,7 @@ var _banner_timer := 0.0
 var _district := ""
 var _prompt_target: Interactable
 var _message_timer := 0.0
+var _help_timer := 40.0   # the controls line fades away after a while; a key/pad switch brings it back
 
 
 func _ready() -> void:
@@ -89,7 +90,7 @@ func _ready() -> void:
 
 func set_district_name(text: String) -> void:
 	_district = text
-	_title.text = "%s\n%s" % [text.to_upper(), InputHints.help_line()]
+	_show_title()
 
 
 func set_clock(clock: SimClock) -> void:
@@ -161,8 +162,8 @@ func _build_menu() -> void:
 	_menu.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	_menu.offset_left = -330
 	_menu.offset_right = 330
-	_menu.offset_top = -260
-	_menu.offset_bottom = 260
+	_menu.offset_top = -300
+	_menu.offset_bottom = 300
 	_menu.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_menu.grow_vertical = Control.GROW_DIRECTION_BOTH
 	var style := StyleBoxFlat.new()
@@ -179,8 +180,15 @@ func _build_menu() -> void:
 	_menu_title.add_theme_color_override("font_color", Color("#ffd75e"))
 	box.add_child(_menu_title)
 	_menu_list = VBoxContainer.new()
+	_menu_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_menu_list.add_theme_constant_override("separation", 6)
-	box.add_child(_menu_list)
+	# Long menus (the safehouse has a dozen entries) scroll instead of running off the screen.
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(640, 420)
+	scroll.follow_focus = true
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(_menu_list)
+	box.add_child(scroll)
 	_menu_note = Label.new()
 	_menu_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_menu_note.custom_minimum_size = Vector2(620, 0)
@@ -203,8 +211,14 @@ func _input(event: InputEvent) -> void:
 
 
 func refresh_hints() -> void:
-	_title.text = "%s\n%s" % [_district.to_upper() if not _district.is_empty() else "GANGSTARS", InputHints.help_line()]
+	_help_timer = 40.0 if _help_timer > 0.0 else 10.0
+	_show_title()
 	set_prompt(_prompt_target if is_instance_valid(_prompt_target) else null)
+
+
+func _show_title() -> void:
+	var name_text := _district.to_upper() if not _district.is_empty() else "GANGSTARS"
+	_title.text = "%s\n%s" % [name_text, InputHints.help_line()] if _help_timer > 0.0 else name_text
 
 
 func show_message(text: String) -> void:
@@ -246,6 +260,10 @@ func set_fps_visible(v: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	if _help_timer > 0.0:
+		_help_timer -= delta
+		if _help_timer <= 0.0:
+			_show_title()
 	if _fps.visible:
 		_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	if _banner_timer > 0.0:

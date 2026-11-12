@@ -151,6 +151,7 @@ func _process(delta: float) -> void:
 		_particles.global_position = follow.global_position + Vector3(0, 12, 0)
 	# The ground stays wet for a while after the rain stops, drying in the sun and wind.
 	wet = clampf(wet + (rain * 0.1 - (0.004 + wind * 0.004)) * delta * (0.25 if rain < 0.2 else 1.0), 0.0, 1.0) if enabled else 0.0
+	StreetDetail.puddle_material().albedo_color.a = smoothstep(0.25, 0.8, wet) * 0.9
 	if day_night:
 		day_night.overcast = overcast
 		day_night.dust = smoothstep(0.5, 0.9, wind) * (1.0 - rain)

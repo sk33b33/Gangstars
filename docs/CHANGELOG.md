@@ -4,6 +4,32 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Tafelsig, grudges and a calmer HUD (2026-11-12)
+- **Tafelsig, the fifth area** (east of Town Centre, "out towards the dunes"): 20 houses (flats
+  on the main roads, row-house courts on Court Lane), 25 residents, a sand court, a courtyard, a
+  taxi rank, a spaza and a tuck shop, sandy ground, its own traffic and two corners.
+  - Locked until *Market Day* is done, with 200 reputation, 3 crew members and 40% Town Centre
+    influence. Two gates from Town Centre; no longer listed as "planned".
+  - The Laaities' cousins hold it (Tortel Laaities crew members).
+  - Missions: *Over the Dunes* (Aunty Gadija), *Court Time* (Ricardo, hold the court),
+    *Before the Wind Turns* (Ouma Hester).
+  - Built with `tools/make_tafelsig.py` and `tools/generate_district.py`.
+- **Story consequences:** hard choices leave a grudge. A story choice can now carry
+  `retaliation: {crew, minutes}`; when it comes due the crew moves on one of your corners (once
+  there is one). Allies leave no grudge. Going to war, walking out of Marlon's sit-down and
+  standing alone against the Dune Cruisers all do this. New follow-ups:
+  - *Payback*: hold a corner against a push (new `pushes_held` stat);
+  - *Marlon's Favour*: after the split, pact with the Laaities or decline;
+  - *The Dune Debt*: after standing alone, make peace with Spider or feud.
+- **Weather:** puddles collect in potholes and gutters and show when the ground is wet; dust
+  haze is thicker (denser fog, tan sky) and more visible on windy days.
+- **HUD and menus:** the controls line fades after 40 s (a keyboard/pad switch brings it back);
+  long menus (the safehouse) scroll instead of running off screen; turf map zone names are no
+  longer clipped ("ROCKLANDS · LOCKED").
+- **Tests:** `tests/run.sh` wrapper (see TECH_NOTES for why), `--units-only`, Tafelsig and
+  consequence tests, puddles; 149 simulated NPCs now cost about 8 ms per physics frame headless,
+  so that budget is 10 ms.
+
 ### More detail: streets, houses, characters, vehicles, light (2026-11-12)
 - **Streets:** litter on pavements and in gutters, potholes and tar patches, storm drains at
   the kerb, manholes, pole bins every 40 m, speed humps on side streets and a transformer box

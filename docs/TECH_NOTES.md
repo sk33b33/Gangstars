@@ -436,3 +436,34 @@ tools/export_windows.sh     # -> build/windows/Gangstars.exe + Gangstars-windows
   (an async `NoiseTexture2D` never reached the decal atlas). `LightPool` draws one
   MultiMesh of additive ground glows under every lamp at night. `Weather.hold(kind)` fixes the
   weather for screenshots.
+
+## Running the tests, and the exit abort (2026-11-12)
+
+Use `tests/run.sh [--soak-minutes=2] [--units-only]`. It runs the suite and decides pass/fail from
+the "N passed, M failed" line. Why: when the suite runs as a SceneTree script (`-s`), Godot 4.5.1
+headless aborts at shutdown with "corrupted size vs. prev_size in fastbins" (exit 134) after
+printing the summary. What we established:
+- it needs the full game scene (the district alone, an empty script and the unit tests alone are
+  clean) and a run longer than a few seconds;
+- the real game exits cleanly: `--quit-after 8000`, and `SceneTree.quit()` from inside the game;
+- valgrind shows engine teardown touching a freed 1.7 KB object (mutex lock) in `main()`'s cleanup,
+  i.e. inside the engine, not in game code;
+- not caused by audio loops, the PackedScene reference, `auto_load`, `current_scene` or how Main
+  is attached. Left as a known engine issue; re-check on the next Godot update.
+
+## Story grudges (2026-11-12)
+
+`GameSession.apply_effects()` understands `retaliation: {crew, minutes}`: it stores
+`progression.flags["retaliate:<crew>"] = due game minute` (saved with the flags). `TurfWar` checks
+those every tick; when due, and no push is already on, the crew starts a push on one of your
+corners (`start_push`, ignoring the push timer and reputation gate). No corners of yours yet: it
+waits. The crew has nobody near your corners: the grudge is dropped. An ally never holds a grudge.
+Holding off a push increments the `pushes_held` stat (`DealingState.stats`, usable by `stat`
+objectives).
+
+## Tafelsig (2026-11-12)
+
+`tools/make_tafelsig.py` shifts Lentegeur's layout 312 m east and writes
+`tools/specs/tafelsig.json` + `data/districts/tafelsig.json`; `tools/generate_district.py` then
+writes the houses and residents. Town Centre names it as its east neighbour (gates), the catalog
+entry in `data/districts/districts.json` carries the unlock requirements.

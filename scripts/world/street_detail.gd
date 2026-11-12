@@ -6,6 +6,7 @@ extends RefCounted
 ## Everything is a plain mesh with a shared material, so MeshMerger batches it into a few draw
 ## calls. Visual only (no colliders): it never changes where people can walk.
 
+static var _puddle_mat: StandardMaterial3D
 const LITTER := ["litter_chips", "litter_can", "litter_paper", "litter_bottle"]
 
 
@@ -38,9 +39,14 @@ static func _street(root: Node3D, s: Dictionary, rng: RandomNumberGenerator) -> 
 			n += 1
 		if int(t - a0) % 12 < 3 and rng.randf() < 0.3 and not near_crossing.call(t):   # road wear
 			var pot := rng.randf() < 0.5
-			_flat(root, "pothole" if pot else "tar_patch", Vector2(1.2, 0.9) if pot else Vector2(1.6, 1.4),
-				StreetBuilder._world(s, t, rng.randf_range(-hw + 1.0, hw - 1.0)) + Vector3(0, 0.016, 0), yaw + rng.randf_range(-0.3, 0.3))
+			var at := StreetBuilder._world(s, t, rng.randf_range(-hw + 1.0, hw - 1.0))
+			_flat(root, "pothole" if pot else "tar_patch", Vector2(1.2, 0.9) if pot else Vector2(1.6, 1.4), at + Vector3(0, 0.016, 0), yaw + rng.randf_range(-0.3, 0.3))
+			if pot:   # rain collects in potholes
+				_puddle(root, at + Vector3(0, 0.02, 0), Vector2(2.0, 1.5), yaw)
 			n += 1
+		if rng.randf() < 0.3:   # puddles along the gutter and low spots (shown only when wet)
+			_puddle(root, StreetBuilder._world(s, t, side * (hw - rng.randf_range(0.6, 1.4))) + Vector3(0, 0.02, 0),
+				Vector2(rng.randf_range(1.5, 3.2), rng.randf_range(0.9, 1.8)), yaw + rng.randf_range(-0.2, 0.2))
 		if int(t - a0) % 22 < 3:   # storm drain at the kerb
 			_flat(root, "drain_grate", Vector2(0.9, 0.32), StreetBuilder._world(s, t, side * (hw - 0.22)) + Vector3(0, 0.017, 0), yaw)
 			n += 1
@@ -68,6 +74,39 @@ static func _street(root: Node3D, s: Dictionary, rng: RandomNumberGenerator) -> 
 	sticker.global_position = tp + Vector3(0, 0.95, 0) + out * 0.31
 	sticker.rotation.y = yaw
 	return n + 2
+
+
+## Dark mirror-like water; Weather fades its alpha in with the wetness of the ground.
+static func puddle_material() -> StandardMaterial3D:
+	if _puddle_mat == null:
+		var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+		for y in 32:
+			for x in 32:
+				var r := Vector2(x - 15.5, y - 15.5).length() / 15.5
+				var wob := 0.85 + 0.12 * sin(atan2(y - 15.5, x - 15.5) * 3.0 + 1.0)
+				img.set_pixel(x, y, Color(1, 1, 1, 1.0 - smoothstep(wob - 0.18, wob, r)))
+		_puddle_mat = StandardMaterial3D.new()
+		_puddle_mat.albedo_texture = ImageTexture.create_from_image(img)
+		_puddle_mat.albedo_color = Color(0.08, 0.1, 0.14, 0.0)
+		_puddle_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_puddle_mat.metallic = 0.9
+		_puddle_mat.metallic_specular = 1.0
+		_puddle_mat.roughness = 0.04
+		_puddle_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	return _puddle_mat
+
+
+static func _puddle(root: Node3D, pos: Vector3, size: Vector2, yaw: float) -> void:
+	var pm := PlaneMesh.new()
+	pm.size = size
+	var mi := MeshInstance3D.new()
+	mi.name = "Puddle"
+	mi.mesh = pm
+	mi.material_override = puddle_material()
+	mi.position = pos
+	mi.rotation.y = yaw
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
 
 
 ## A flat decal-like plane lying on the ground (alpha-scissor pixel texture).

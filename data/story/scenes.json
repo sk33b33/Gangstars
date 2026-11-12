@@ -31,6 +31,10 @@
             "reputation": 5,
             "relationship": {
               "npc_h29_1": -10
+            },
+            "retaliation": {
+              "crew": "tortel_crew",
+              "minutes": 300
             }
           },
           "reply": "Boeta: \"Then we do it at night, with the whole crew.\""
@@ -73,6 +77,10 @@
             "reputation": 5,
             "relationship": {
               "npc_h29_1": -10
+            },
+            "retaliation": {
+              "crew": "tortel_crew",
+              "minutes": 420
             }
           },
           "reply": "Marlon: \"Your funeral, laaitie.\""
@@ -109,7 +117,11 @@
             "flags": [
               "ally_none"
             ],
-            "reputation": 8
+            "reputation": 8,
+            "retaliation": {
+              "crew": "duin_boys",
+              "minutes": 900
+            }
           },
           "reply": "Spider: \"None taken. Just don't come crying.\""
         }
@@ -151,6 +163,89 @@
             }
           },
           "reply": "Uncle Faried: \"...Fine. Here. Same as the last ones, then.\""
+        }
+      ]
+    },
+    "marlon_favour": {
+      "speaker": "Marlon Carelse",
+      "lines": [
+        "We shook on the cafe. I keep my word, so now I ask for one.",
+        "The Vipers have been sniffing round the park. I want them to hear that the Laaities and you are one table.",
+        "Put your name next to mine for a week. That's all."
+      ],
+      "choices": [
+        {
+          "text": "Done. The Laaities and us, one table.",
+          "effects": {
+            "flags": [
+              "pact_tortel"
+            ],
+            "turf_ally": "tortel_crew",
+            "reputation": 6,
+            "relationship": {
+              "npc_h29_1": 15
+            },
+            "cash": 250
+          },
+          "reply": "Marlon: \"Good. Anyone who touches your corners answers to me.\""
+        },
+        {
+          "text": "I'll keep my own name out of it.",
+          "effects": {
+            "flags": [
+              "pact_declined"
+            ],
+            "reputation": 2,
+            "relationship": {
+              "npc_h29_1": -5
+            }
+          },
+          "reply": "Marlon: \"Smart, maybe. Lonely, definitely.\""
+        }
+      ]
+    },
+    "spider_peace": {
+      "speaker": "Spider",
+      "lines": [
+        "You said you'd stand alone. Then my boys found out what alone means.",
+        "I'm not a man who holds a grudge for sport. Take my hand, and the corners stay quiet.",
+        "Or don't. Either way I'll know where you stand."
+      ],
+      "choices": [
+        {
+          "text": "Fair. We stand with the Dune Cruisers after all.",
+          "effects": {
+            "flags": [
+              "ally_duin",
+              "made_peace_duin"
+            ],
+            "turf_ally": "duin_boys",
+            "reputation": -3,
+            "relationship": {
+              "npc_rooi_spider": 10
+            },
+            "influence": {
+              "district_east": 10
+            }
+          },
+          "reply": "Spider: \"Smart. Welcome to the east.\""
+        },
+        {
+          "text": "Come and try again, Spider.",
+          "effects": {
+            "flags": [
+              "duin_feud"
+            ],
+            "reputation": 6,
+            "relationship": {
+              "npc_rooi_spider": -15
+            },
+            "retaliation": {
+              "crew": "duin_boys",
+              "minutes": 600
+            }
+          },
+          "reply": "Spider: \"Oh, I will.\""
         }
       ]
     }

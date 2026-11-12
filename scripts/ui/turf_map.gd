@@ -274,9 +274,11 @@ func _draw_map() -> void:
 	# District names last, centred just above each zone so houses and landmarks never cover them.
 	for lb in labels:
 		var zr: Rect2 = lb[0]
-		var pos := Vector2(zr.position.x, zr.position.y - 8)
-		_canvas.draw_string_outline(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, 4, Color("#1d1b24"))
-		_canvas.draw_string(font, pos, lb[1], HORIZONTAL_ALIGNMENT_CENTER, zr.size.x, 14, lb[2])
+		# Centred on the zone but never clipped to its width (long names + "LOCKED" overflow narrow zones).
+		var text_w := font.get_string_size(lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
+		var pos := Vector2(zr.get_center().x - text_w * 0.5, zr.position.y - 8)
+		_canvas.draw_string_outline(font, pos, lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color("#1d1b24"))
+		_canvas.draw_string(font, pos, lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, lb[2])
 	# Corners: a ring in the holder's colour (white = nobody's), flashing red while pushed.
 	if turf:
 		for id in turf.state.order:

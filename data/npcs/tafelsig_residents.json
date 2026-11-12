@@ -1,0 +1,1225 @@
+{
+  "residents": [
+    {
+      "id": "npc_taf_gadija",
+      "display_name": "Aunty Gadija",
+      "home_id": "taf_h03",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.5,
+      "start_delay": 16.1,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "working",
+          "destination": "taf_spaza",
+          "duration": 45,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Sand in everything out here. Sand in my bread, even.",
+        "Tafelsig is quiet, hey. Don't let the quiet fool you.",
+        "The Laaities' cousins come through on a Friday. I close early."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#c0392b",
+      "height": 0.94,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_ricardo",
+      "display_name": "Ricardo Fortuin",
+      "home_id": "taf_h09",
+      "role": "resident",
+      "shirt_color": "#e67e22",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.39,
+      "start_delay": 18.5,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 40,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 10,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "I coach the juniors on this court. Somebody has to.",
+        "Every kid on this court is one bad decision from the streets."
+      ],
+      "hair_style": "fade",
+      "hair_color": "#2b1d16",
+      "height": 1.04,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_hester",
+      "display_name": "Ouma Hester",
+      "home_id": "taf_h12",
+      "role": "resident",
+      "shirt_color": "#8e44ad",
+      "pants_color": "#1c2833",
+      "skin_color": "#b98458",
+      "walk_speed": 1.33,
+      "start_delay": 15.5,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 40,
+          "window": [
+            9,
+            17
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 20
+        }
+      ],
+      "lines": [
+        "I watched these dunes move forty years. People move slower.",
+        "Sit, sit. The wind will pass."
+      ],
+      "hair_style": "bun",
+      "hair_color": "#9a9a9a",
+      "height": 0.9,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_dawie",
+      "display_name": "Dawie",
+      "home_id": "taf_h14",
+      "role": "crew",
+      "faction_id": "tortel_crew",
+      "shirt_color": "#7a1f1f",
+      "pants_color": "#6b4630",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.46,
+      "start_delay": 4.2,
+      "personality": "tough",
+      "active_hours": [
+        10,
+        2
+      ],
+      "schedule": [
+        {
+          "activity": "patrol",
+          "route": [
+            "patrol:taf_loop:0",
+            "patrol:taf_loop:1",
+            "patrol:taf_loop:2",
+            "patrol:taf_loop:3",
+            "patrol:taf_loop:4",
+            "patrol:taf_loop:5"
+          ],
+          "duration": 1,
+          "window": [
+            17,
+            2
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 25
+        },
+        {
+          "activity": "guard",
+          "destination": "taf_h14:gate",
+          "duration": 30
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 20
+        }
+      ],
+      "lines": [
+        "The Laaities hold this side.",
+        "Nothing to see here, bru."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#1d1b24",
+      "height": 1.05,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_tortel_2",
+      "display_name": "Brandon",
+      "home_id": "taf_h14",
+      "role": "crew",
+      "faction_id": "tortel_crew",
+      "shirt_color": "#7a1f1f",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.42,
+      "start_delay": 12.9,
+      "personality": "tough",
+      "active_hours": [
+        10,
+        2
+      ],
+      "schedule": [
+        {
+          "activity": "follow",
+          "destination": "@leader:npc_taf_dawie",
+          "duration": 70,
+          "window": [
+            17,
+            2
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "taf_h14:gate",
+          "duration": 35
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 20
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Move along.",
+        "Nothing to see here, bru."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#1d1b24",
+      "height": 1.01,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_tortel_3",
+      "display_name": "Mervyn",
+      "home_id": "taf_h14",
+      "role": "crew",
+      "faction_id": "tortel_crew",
+      "shirt_color": "#7a1f1f",
+      "pants_color": "#2c3e50",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.69,
+      "start_delay": 12.5,
+      "personality": "tough",
+      "active_hours": [
+        10,
+        2
+      ],
+      "schedule": [
+        {
+          "activity": "follow",
+          "destination": "@leader:npc_taf_dawie",
+          "duration": 70,
+          "window": [
+            17,
+            2
+          ]
+        },
+        {
+          "activity": "guard",
+          "destination": "taf_h14:gate",
+          "duration": 35
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 20
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "The Laaities hold this side.",
+        "Move along."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#1d1b24",
+      "height": 0.91,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h01_1",
+      "display_name": "Dillon Damons",
+      "home_id": "taf_h01",
+      "role": "resident",
+      "shirt_color": "#e84393",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.33,
+      "start_delay": 11.7,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 16,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 17,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 35
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 1.07,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h01_2",
+      "display_name": "Raeesa Damons",
+      "home_id": "taf_h01",
+      "role": "resident",
+      "shirt_color": "#6c5ce7",
+      "pants_color": "#2c3e50",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.52,
+      "start_delay": 6.0,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 13,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 9,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 22
+        }
+      ],
+      "lines": [
+        "Sand under the door again.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "bald",
+      "hair_color": "#3a2a1e",
+      "height": 0.98,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h02_1",
+      "display_name": "Wendy Ockhuis",
+      "home_id": "taf_h02",
+      "role": "resident",
+      "shirt_color": "#d35400",
+      "pants_color": "#1c2833",
+      "skin_color": "#8d5a3b",
+      "walk_speed": 1.36,
+      "start_delay": 26.4,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 10,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 10,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 32
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "short",
+      "hair_color": "#5a4636",
+      "height": 0.93,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h02_2",
+      "display_name": "Dillon Ockhuis",
+      "home_id": "taf_h02",
+      "role": "resident",
+      "shirt_color": "#27ae60",
+      "pants_color": "#4a4e6a",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.56,
+      "start_delay": 23.1,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 10,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 8,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 18
+        }
+      ],
+      "lines": [
+        "You can see the dunes from my bedroom.",
+        "Sand under the door again."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#16a085",
+      "height": 1.03,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h04_1",
+      "display_name": "Uzair Hartnick",
+      "home_id": "taf_h04",
+      "role": "resident",
+      "shirt_color": "#e67e22",
+      "pants_color": "#4a4e6a",
+      "skin_color": "#6a4128",
+      "walk_speed": 1.43,
+      "start_delay": 32.1,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 9,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 13,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 24
+        }
+      ],
+      "lines": [
+        "You can see the dunes from my bedroom.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "bald",
+      "hair_color": "#5a4636",
+      "height": 0.96,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h05_1",
+      "display_name": "Abigail Van",
+      "home_id": "taf_h05",
+      "role": "resident",
+      "shirt_color": "#e84393",
+      "pants_color": "#212f3d",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.46,
+      "start_delay": 37.1,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 8,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 11,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 26
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "Quiet out here, until it isn't."
+      ],
+      "hair_style": "long",
+      "hair_color": "#9a9a9a",
+      "height": 1.02,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h07_1",
+      "display_name": "Quinton Hartnick",
+      "home_id": "taf_h07",
+      "role": "resident",
+      "shirt_color": "#fdcb6e",
+      "pants_color": "#2c3e50",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.63,
+      "start_delay": 24.2,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 11,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 16,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 15
+        }
+      ],
+      "lines": [
+        "Quiet out here, until it isn't.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "long",
+      "hair_color": "#5a4636",
+      "height": 1.06,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h08_1",
+      "display_name": "Mogamat Maans",
+      "home_id": "taf_h08",
+      "role": "resident",
+      "shirt_color": "#e67e22",
+      "pants_color": "#34495e",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.37,
+      "start_delay": 6.8,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 17,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 14,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 26
+        }
+      ],
+      "lines": [
+        "Sand under the door again.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#3a2a1e",
+      "height": 1.03,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h10_1",
+      "display_name": "Mogamat Isaacs",
+      "home_id": "taf_h10",
+      "role": "resident",
+      "shirt_color": "#d35400",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.59,
+      "start_delay": 28.0,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 15,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 15,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 20
+        }
+      ],
+      "lines": [
+        "Quiet out here, until it isn't.",
+        "Sand under the door again."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 1.01,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h11_1",
+      "display_name": "Raeesa Lottering",
+      "home_id": "taf_h11",
+      "role": "resident",
+      "shirt_color": "#2e86c1",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#a7754f",
+      "walk_speed": 1.69,
+      "start_delay": 34.2,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 18,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 17,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 19
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "The court's busy from three."
+      ],
+      "hair_style": "short",
+      "hair_color": "#1d1b24",
+      "height": 1.07,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h11_2",
+      "display_name": "Faheem Lottering",
+      "home_id": "taf_h11",
+      "role": "resident",
+      "shirt_color": "#16a085",
+      "pants_color": "#6b4630",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.71,
+      "start_delay": 34.9,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 14,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 9,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Quiet out here, until it isn't.",
+        "Sand under the door again."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#2b1d16",
+      "height": 1.05,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h12_1",
+      "display_name": "Lucinda Ockhuis",
+      "home_id": "taf_h12",
+      "role": "resident",
+      "shirt_color": "#e84393",
+      "pants_color": "#2c3e50",
+      "skin_color": "#6a4128",
+      "walk_speed": 1.29,
+      "start_delay": 21.7,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 14,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 15,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 24
+        }
+      ],
+      "lines": [
+        "The court's busy from three.",
+        "Quiet out here, until it isn't."
+      ],
+      "hair_style": "long",
+      "hair_color": "#2b1d16",
+      "height": 0.99,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h13_1",
+      "display_name": "Quinton Van",
+      "home_id": "taf_h13",
+      "role": "resident",
+      "shirt_color": "#6c5ce7",
+      "pants_color": "#212f3d",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.5,
+      "start_delay": 24.2,
+      "personality": "steady",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 18,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 9,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 21
+        }
+      ],
+      "lines": [
+        "Sand under the door again.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#3a2a1e",
+      "height": 0.92,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h13_2",
+      "display_name": "Keenan Van",
+      "home_id": "taf_h13",
+      "role": "resident",
+      "shirt_color": "#2c3e50",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#b98458",
+      "walk_speed": 1.5,
+      "start_delay": 33.9,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 10,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 18,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 35
+        }
+      ],
+      "lines": [
+        "You can see the dunes from my bedroom.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#16a085",
+      "height": 0.95,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h15_1",
+      "display_name": "Igshaan Rhode",
+      "home_id": "taf_h15",
+      "role": "resident",
+      "shirt_color": "#8e44ad",
+      "pants_color": "#212f3d",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.36,
+      "start_delay": 27.6,
+      "personality": "gossip",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 18,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 14,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 30
+        }
+      ],
+      "lines": [
+        "Quiet out here, until it isn't.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "doek",
+      "hair_color": "#e67e22",
+      "height": 1.02,
+      "sleeves": "long"
+    },
+    {
+      "id": "npc_taf_h16_1",
+      "display_name": "Keenan Hartnick",
+      "home_id": "taf_h16",
+      "role": "resident",
+      "shirt_color": "#2e86c1",
+      "pants_color": "#5d6d7e",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.32,
+      "start_delay": 28.0,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 10,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 10,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 29
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "bald",
+      "hair_color": "#5a4636",
+      "height": 0.96,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h18_1",
+      "display_name": "Keenan Booysen",
+      "home_id": "taf_h18",
+      "role": "resident",
+      "shirt_color": "#f4d03f",
+      "pants_color": "#212f3d",
+      "skin_color": "#9a6a45",
+      "walk_speed": 1.43,
+      "start_delay": 2.5,
+      "personality": "timid",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 15,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "playing",
+          "destination": "taf_court",
+          "duration": 12,
+          "window": [
+            9,
+            21
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 33
+        }
+      ],
+      "lines": [
+        "The court's busy from three.",
+        "The wind never stops out here."
+      ],
+      "hair_style": "short",
+      "hair_color": "#5a4636",
+      "height": 1.06,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h19_1",
+      "display_name": "Mogamat Rhode",
+      "home_id": "taf_h19",
+      "role": "resident",
+      "shirt_color": "#fdcb6e",
+      "pants_color": "#2c3e50",
+      "skin_color": "#7b4f33",
+      "walk_speed": 1.74,
+      "start_delay": 19.3,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "waiting",
+          "destination": "taf_taxi",
+          "duration": 10,
+          "window": [
+            6,
+            20
+          ]
+        },
+        {
+          "activity": "socializing",
+          "destination": "taf_courtyard",
+          "duration": 12,
+          "window": [
+            10,
+            22
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 20
+        }
+      ],
+      "lines": [
+        "The wind never stops out here.",
+        "The court's busy from three."
+      ],
+      "hair_style": "beanie",
+      "hair_color": "#3a2a1e",
+      "height": 1.05,
+      "sleeves": "short"
+    },
+    {
+      "id": "npc_taf_h20_1",
+      "display_name": "Faheem Ockhuis",
+      "home_id": "taf_h20",
+      "role": "resident",
+      "shirt_color": "#d35400",
+      "pants_color": "#212f3d",
+      "skin_color": "#c49a6c",
+      "walk_speed": 1.44,
+      "start_delay": 19.7,
+      "personality": "curious",
+      "active_hours": [
+        6,
+        22
+      ],
+      "schedule": [
+        {
+          "activity": "shopping",
+          "destination": "taf_spaza",
+          "duration": 13,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "shopping",
+          "destination": "taf_stoep_shop",
+          "duration": 18,
+          "window": [
+            7,
+            19
+          ]
+        },
+        {
+          "activity": "home",
+          "destination": "home",
+          "duration": 18
+        }
+      ],
+      "lines": [
+        "Quiet out here, until it isn't.",
+        "You can see the dunes from my bedroom."
+      ],
+      "hair_style": "short",
+      "hair_color": "#5a4636",
+      "height": 1.07,
+      "sleeves": "short"
+    }
+  ]
+}

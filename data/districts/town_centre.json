@@ -308,5 +308,8 @@
       }
     ]
   },
-  "kickabouts": []
+  "kickabouts": [],
+  "neighbours": {
+    "east": "district_tafelsig"
+  }
 }

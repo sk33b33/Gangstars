@@ -49,16 +49,21 @@
     {
       "id": "district_tafelsig",
       "display_name": "Tafelsig",
-      "planned": true,
       "is_initially_unlocked": false,
-      "description": "Courts and flats on the far side, out towards the dunes.",
+      "description": "Courts, flats and sand out towards the dunes, east past the Town Centre.",
       "unlock_requirements": {
+        "missions": [
+          "market_day"
+        ],
         "reputation": 200,
-        "crew": 4,
+        "crew": 3,
         "influence": {
-          "district_east": 60
+          "district_town_centre": 40
         }
-      }
+      },
+      "side": "far east",
+      "data": "res://data/districts/tafelsig.json",
+      "missions": "res://data/missions/tafelsig.json"
     },
     {
       "id": "district_beacon_valley",
@@ -120,7 +125,7 @@
       "id": "district_town_centre",
       "display_name": "Town Centre",
       "is_initially_unlocked": false,
-      "description": "The Promenade mall, the market stalls and the big taxi rank \u2014 the heart of Mitchells Plain, east past Lentegeur.",
+      "description": "The Promenade mall, the market stalls and the big taxi rank — the heart of Mitchells Plain, east past Lentegeur.",
       "unlock_requirements": {
         "missions": [
           "dune_truce"
