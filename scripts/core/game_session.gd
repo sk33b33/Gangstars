@@ -8,6 +8,7 @@ const MISSIONS_FILE := "res://data/missions/intro.json"
 const CREW_MISSIONS_FILE := "res://data/missions/crews.json"
 const DEALING_MISSIONS_FILE := "res://data/missions/dealing.json"
 const STORY_MISSIONS_FILE := "res://data/missions/story.json"
+const LIFE_MISSIONS_FILE := "res://data/missions/life.json"
 const STORY_SCENES_FILE := "res://data/story/scenes.json"
 const UPGRADES_FILE := "res://data/progression/safehouse_upgrades.json"
 const SAFEHOUSE_ID := "starter_h05"
@@ -43,7 +44,7 @@ var _beacon: MeshInstance3D
 static func _load_all_missions() -> Array[MissionData]:
 	var out: Array[MissionData] = []
 	var catalog: Variant = DataFiles.load_json("res://data/districts/districts.json")
-	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE, DEALING_MISSIONS_FILE, STORY_MISSIONS_FILE]
+	var files: PackedStringArray = [MISSIONS_FILE, CREW_MISSIONS_FILE, DEALING_MISSIONS_FILE, STORY_MISSIONS_FILE, LIFE_MISSIONS_FILE]
 	if catalog is Dictionary:
 		for d in catalog.get("districts", []):
 			var f := str(d.get("missions", ""))
@@ -67,6 +68,12 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	missions.resident_info = district.resident_info
 	missions.occupants_inside = district.occupants_inside
 	missions.anchor_position = district.anchor_or_null
+	missions.npc_position = func(id: String) -> Variant:
+		var r: Resident = district.residents.get(id)
+		return r.global_position if r and is_instance_valid(r) else null
+	missions.objective_started.connect(_on_objective_started)
+	Resident.standing = func(npc_id: String) -> Dictionary:
+		return {"rep": progression.reputation, "rel": progression.relationship(npc_id), "heat": police.heat.level() if police else 0}
 	missions.crew_near = district.crew_near
 	missions.driving_vehicle = func() -> String: return player.vehicle.vehicle_id if player.is_driving() else ""
 	missions.event_active = func(id: String) -> bool: return district.director.calendar.is_active(id)
@@ -181,6 +188,7 @@ func choose_crew(crew_id: String) -> bool:
 	if turf:
 		turf.state.player_crew = crew_id
 		turf._refresh_tags()
+		turf._refresh_flags()
 	_refresh()
 	return true
 
@@ -354,7 +362,9 @@ func _setup_audio() -> void:
 		if e.kind == "car_alarm":
 			audio.play_at("alarm", e.position + Vector3(0, 1, 0), -2.0))
 	districts.district_unlocked.connect(func(_id): audio.play_ui("jingle"))
-	missions.mission_completed.connect(func(_m, _g): audio.play_ui("jingle", -6.0))
+	missions.mission_completed.connect(func(_m, _g):
+		audio.play_ui("jingle", -6.0)
+		autosave.call_deferred("mission done"))
 	for car in district.vehicles.values():
 		audio.attach_engine(car, -8.0)
 	if district.traffic:
@@ -429,6 +439,7 @@ static func _relationship_word(rel: int) -> String:
 
 
 func _on_new_day(day: int) -> void:
+	autosave.call_deferred("new day")
 	var income := safehouse.daily_income(progression)
 	if income > 0:
 		progression.add_cash(income)
@@ -547,6 +558,21 @@ func choose(mission_id: String, choice: Dictionary) -> void:
 	missions.finish_dialogue(mission_id)
 
 
+## A "follow" objective: the person sets off for their destination now.
+func _on_objective_started(_mission_id: String, o: Dictionary) -> void:
+	if str(o.get("type", "")) != "follow":
+		return
+	var r: Resident = district.residents.get(str(o.target))
+	if r == null or not district.destinations.has(str(o.destination)):
+		return
+	r.brain.pending_event = {"activity": str(o.get("activity", "waiting")), "destination": str(o.destination),
+		"duration": float(o.get("stay", 25.0)), "event": "mission"}
+	if r.brain.state == NpcBrain.State.AT_HOME:
+		r.brain.timer = minf(r.brain.timer, 1.0)
+	elif r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING]:
+		r.brain.timer = 0.0
+
+
 func apply_effects(e: Dictionary) -> void:
 	progression.add_cash(int(e.get("cash", 0)))
 	progression.add_reputation(int(e.get("reputation", 0)))
@@ -568,11 +594,21 @@ func apply_effects(e: Dictionary) -> void:
 	if e.has("turf_ally"):
 		progression.flags["ally:" + str(e.turf_ally)] = true
 		progression.flags.erase("retaliate:" + str(e.turf_ally))   # allies don't hold grudges
+	for crew in e.get("turf_allies", []):
+		progression.flags["ally:" + str(crew)] = true
+		progression.flags.erase("retaliate:" + str(crew))
+	if bool(e.get("turf_release", false)):   # walk away: every corner you hold goes back to nobody
+		for id in turf.state.players_corners():
+			turf.state.corners[id].owner = ""
+			turf.state.corners[id].control = 50.0
+	if e.has("banner"):
+		hud.show_banner(str(e.banner), 6.0)
 	var grudge: Dictionary = e.get("retaliation", {})
 	if not grudge.is_empty() and not turf.allies.has(str(grudge.get("crew", ""))):
 		progression.flags["retaliate:" + str(grudge.crew)] = turf.minutes() + float(grudge.get("minutes", 300))
 	_apply_story_state()
 	turf._refresh_tags()
+	turf._refresh_flags()
 	progression.changed.emit()
 	missions.check_auto_start()
 
@@ -600,6 +636,9 @@ func _setup_street_sound() -> void:
 		var crowd := str(dealing.venues[id].get("crowd", ""))
 		if dest.has(crowd):
 			audio.add_venue(dest.anchor_position(crowd), Vector2(17, 23))
+	audio.calendar = district.director.calendar
+	if dest.has("poi_park"):   # the Tweede Nuwe Jaar parade: ghoema drum and brass at the park
+		audio.add_venue(dest.anchor_position("poi_park"), Vector2(0, 24), "music_ghoema", "klopse_parade")
 	Resident.on_say = func(pos: Vector3, seed: int, female: bool): audio.voice(pos, seed, female)
 	interiors.entered.connect(func(id): audio.set_inside_music(dealing.is_venue(id)))
 	interiors.left.connect(func(_id): audio.set_inside_music(false))
@@ -642,6 +681,23 @@ func _vehicles_snapshot() -> Dictionary:
 		var car: DrivableCar = district.vehicles[id]
 		out[id] = {"position": [car.global_position.x, car.global_position.y, car.global_position.z], "yaw": car.rotation.y}
 	return out
+
+
+## Autosave after a mission and at each new day. The settings switch it off; tests turn it off
+## so a save they made on purpose is never overwritten behind their back.
+var autosave_enabled := true
+var autosave_user := true   # the player's setting (Main copies it here)
+var autosaves := 0
+
+
+func autosave(reason: String) -> void:
+	if not autosave_enabled or not autosave_user or player == null or player.is_down() or crew_picker != null and crew_picker.visible:
+		return
+	if progression.crew_id.is_empty():
+		return
+	if save_game().is_empty():
+		autosaves += 1
+		hud.show_message("Autosaved (%s)." % reason)
 
 
 ## Returns "" on success, otherwise the error.
@@ -710,6 +766,7 @@ func apply_snapshot(data: Dictionary) -> String:
 	if data.get("turf") is Dictionary:
 		turf.state.load_dict(data.turf)
 		turf._refresh_tags()
+		turf._refresh_flags()
 	_apply_story_state()
 	var clock := district.director.clock
 	clock.minutes = clampf(float(c.minutes), 0.0, 1439.9)

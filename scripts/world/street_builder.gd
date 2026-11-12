@@ -662,6 +662,39 @@ static func _build_park(root: Node3D, c: Vector3) -> void:
 	for a in [0.0, PI]:
 		var p := c + Vector3(cos(a), 0, sin(a)) * 4.0
 		Geo.bench(root, p, -PI * 0.5 if a == 0.0 else PI * 0.5)
+	# Westridge Gardens (docs/MITCHELLS_PLAIN_REFERENCE.md): roses along the paths and indigenous
+	# fynbos (restios and proteas), with a little sign. Visual only.
+	var soil := PixelMaterials.flat(Color("#5a3d2a"))
+	var reds := [Color("#d6403e"), Color("#f0a8c0"), Color("#f4f1ea"), Color("#e8b400")]
+	for k in 4:
+		var bed := c + Vector3(-5.5 + k * 3.6, 0, 6.2)
+		Geo.box(root, Vector3(3.0, 0.2, 0.9), bed + Vector3(0, 0.1, 0), soil, false)
+		for r in 5:
+			var rose := PixelMaterials.flat(reds[(k + r) % reds.size()])
+			Geo.box(root, Vector3(0.22, 0.26, 0.22), bed + Vector3(-1.1 + r * 0.55, 0.38, 0), rose, false)
+			Geo.box(root, Vector3(0.28, 0.2, 0.28), bed + Vector3(-1.1 + r * 0.55, 0.22, 0), PixelMaterials.flat(Color("#3f6a35")), false)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(c.x * 31.0 + c.z)
+	for k in 7:   # fynbos clumps: grey-green restio tufts with a protea head
+		var at := c + Vector3(rng.randf_range(-7.0, 7.0), 0, rng.randf_range(-7.0, -3.0))
+		if at.distance_to(c) < 3.0:
+			continue
+		var tuft := PixelMaterials.panel("dune_grass", Color(0.8, 0.95, 0.8), true)
+		for q in 2:
+			Geo.quad(root, Vector2(1.0, 1.3), at + Vector3(0, 0.65, 0), tuft, q * PI * 0.5 + rng.randf())
+		if k % 2 == 0:
+			Geo.box(root, Vector3(0.22, 0.22, 0.22), at + Vector3(0, 1.0, 0), PixelMaterials.flat(Color("#e48aa0")), false)
+	var sign := Label3D.new()
+	sign.text = "WESTRIDGE GARDENS"
+	sign.font_size = 48
+	sign.pixel_size = 0.006
+	sign.modulate = Color("#f4f1ea")
+	sign.outline_modulate = Color("#2f5d3a")
+	sign.outline_size = 12
+	sign.position = c + Vector3(0, 1.4, 7.7)
+	root.add_child(sign)
+	Geo.box(root, Vector3(0.1, 1.4, 0.1), c + Vector3(-1.9, 0.7, 7.7), PixelMaterials.flat(Color("#6b4630")), false)
+	Geo.box(root, Vector3(0.1, 1.4, 0.1), c + Vector3(1.9, 0.7, 7.7), PixelMaterials.flat(Color("#6b4630")), false)
 
 
 static func _build_corner(root: Node3D, c: Vector3) -> void:

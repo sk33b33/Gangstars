@@ -4,6 +4,41 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Missions, daily life, accessibility, weather, music, tooling (2026-11-12)
+- **New missions** (`data/missions/life.json`):
+  - *Where's Piet?* (Auntie Faiza): ask around, check the court and the Lentegeur field.
+  - *Quiet Eyes* (Boeta): a new **follow** objective. Marlon walks to the cafe; stay within range
+    but not on top of him, or you lose him.
+  - *Candles* (Aunty Gadija): buy candles in Lentegeur, bring them during load-shedding.
+- **An ending:** *The Long View* (after *Kings of the Plain*, Tafelsig open, ten corners). Boeta asks
+  what the Plain becomes: **rule it**, **share it** (every crew becomes your ally) or **walk away**
+  (your corners go back to nobody). The game carries on afterwards (`game_finished` flag).
+- **People react to you** (`ReputationVoice`): greetings by reputation, personal relationship and
+  police heat (wary, known, respected, legend, friendly, cold, "Police are looking for you!"). Some
+  turn away instead of waving. Lines mix in Kaaps ("Hoezit", "ja nee", "my bra"); they should be read
+  through by someone from the Plain.
+- **Your corners show:** your crew's flag flies on every corner you hold and comes down when you lose it.
+- **Daily life events:** Friday prayers at the Town Centre mosque, Sunday service at the Rocklands
+  hall, the school run at the Westridge bus stop, market day at the Promenade, and a *Tweede Nuwe
+  Jaar* parade at the park with a made-up ghoema drum and brass loop (no costumes yet).
+- **Places:** Westridge Gardens (roses along the beds, fynbos, a sign) in the park; a fish den in Tafelsig.
+- **Accessibility:** re-bindable keys (pause menu; swaps on a clash; prompts follow; saved), sound
+  captions with a direction arrow ("◀ [Gunshot]"), speech-bubble switch.
+- **Autosave** after each mission and each new day (switchable; never while knocked out).
+- **Weather you feel:** rain rings on the ground, drops running down the screen in heavy rain, paper
+  and plastic tumbling in the wind, a heat shimmer over the horizon on a clear still midday.
+- **People:** three school uniforms, football kits, church clothes.
+- **Radio:** two more stations, Kasi Beats (log-drum groove) and Cape Ghoema FM.
+- **Performance:** *Crowd simulation range* (Settings > Video): far-off residents sleep (frozen,
+  hidden, no thinking) and wake exactly where they were. Default is everyone, all the time.
+- **Playtest bot** (`tests/playbot.sh`): boots the game and plays every mission, once per crew and
+  story branch; it found no stuck mission (34 finished in the first run; the rest need another crew
+  or branch).
+- **Tests:** rebinding, settings save, captions, autosave, reputation voice, the follow objective,
+  endings, flags, events and the parade, weather effects, dormant crowd.
+- **Not done:** a library, a railway line with trains, washing lines that sway, Klopse costumes, and
+  true district streaming (everything is still built at once).
+
 ### The look of the Plain: skyline, ground, houses, people, light (2026-11-12)
 Researched first: `docs/MITCHELLS_PLAIN_REFERENCE.md` (what is confirmed by sources and what is general
 knowledge, plus how each finding shows up in the game).

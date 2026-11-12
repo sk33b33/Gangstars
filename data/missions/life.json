@@ -1,0 +1,129 @@
+{
+  "missions": [
+    {
+      "id": "missing_piet",
+      "title": "Where's Piet?",
+      "giver": "npc_faiza",
+      "prerequisites": {
+        "districts": [
+          "district_east"
+        ]
+      },
+      "intro": "Auntie Faiza: \"Piet didn't come home after school. He's a good boy, but he follows his friends. Please, ask around, check the courts and the fields. You walk further than I can.\"",
+      "description": "Find Auntie Faiza's grandson.",
+      "objectives": [
+        {
+          "id": "ask",
+          "type": "talk_distinct",
+          "count": 3,
+          "text": "Ask three people if they've seen Piet"
+        },
+        {
+          "id": "court",
+          "type": "visit",
+          "target": "poi_court",
+          "radius": 6,
+          "text": "Check the sand court in Westridge"
+        },
+        {
+          "id": "field",
+          "type": "visit",
+          "target": "rooi_field",
+          "radius": 8,
+          "text": "Look at the soccer field in Lentegeur"
+        },
+        {
+          "id": "kaylin",
+          "type": "talk_to",
+          "target": "npc_rooi_kaylin",
+          "text": "Ask Kaylin Booysen: she plays there every day"
+        },
+        {
+          "id": "back",
+          "type": "talk_to",
+          "target": "npc_faiza",
+          "text": "Tell Auntie Faiza he's safe"
+        }
+      ],
+      "rewards": {
+        "cash": 150,
+        "reputation": 10,
+        "relationship": {
+          "npc_faiza": 20
+        }
+      }
+    },
+    {
+      "id": "tail_the_runner",
+      "title": "Quiet Eyes",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "first_crew"
+        ]
+      },
+      "intro": "Boeta: \"Marlon Carelse is going to meet someone at the cafe. I want to know who. Follow him, but stay back. If he sees you, he stops talking.\"",
+      "description": "Follow Marlon to the cafe without losing him.",
+      "objectives": [
+        {
+          "id": "tail",
+          "type": "follow",
+          "target": "npc_h29_1",
+          "destination": "poi_shop",
+          "activity": "shopping",
+          "radius": 6,
+          "max_distance": 28,
+          "lose_minutes": 10,
+          "text": "Follow Marlon Carelse to the cafe (by day, 09:00-18:00)",
+          "window": [
+            9,
+            18
+          ]
+        }
+      ],
+      "rewards": {
+        "cash": 100,
+        "reputation": 8,
+        "relationship": {
+          "npc_boeta": 5
+        }
+      }
+    },
+    {
+      "id": "candles_for_gadija",
+      "title": "Candles",
+      "giver": "npc_taf_gadija",
+      "prerequisites": {
+        "missions": [
+          "over_the_dunes"
+        ]
+      },
+      "intro": "Aunty Gadija: \"Load-shedding again! I'm out of candles and the customers sit in the dark. Buy a box at Duin Spaza in Lentegeur, and bring it here when the lights go out.\"",
+      "description": "Bring candles during a power cut.",
+      "objectives": [
+        {
+          "id": "buy",
+          "type": "visit",
+          "target": "rooi_spaza",
+          "radius": 3,
+          "text": "Buy candles at Duin Spaza in Lentegeur"
+        },
+        {
+          "id": "bring",
+          "type": "visit",
+          "target": "taf_spaza",
+          "radius": 3,
+          "event": "load_shedding",
+          "text": "Bring them to Gadija's spaza during load-shedding (19:00-21:00 on even days)"
+        }
+      ],
+      "rewards": {
+        "cash": 120,
+        "reputation": 8,
+        "relationship": {
+          "npc_taf_gadija": 15
+        }
+      }
+    }
+  ]
+}

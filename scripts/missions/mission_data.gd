@@ -13,13 +13,16 @@ extends Resource
 ##   district_unlocked {target: district_id}        - a district has been unlocked
 ##   enter_vehicle {target: vehicle_id}             - get into that car
 ##   drive_to {target, radius, vehicle?}            - arrive somewhere while driving
+##   follow {target: npc_id, destination: anchor_id, radius?, max_distance?, lose_minutes?, activity?}
+##                                                  - they walk to the place; stay within max_distance (fall behind
+##                                                    too long and you lose them)
 ##   dialogue {target: npc_id, scene}               - talk to them: a story scene with choices
 ##                                                    (data/story/scenes.json)
 ## Prerequisites may also list "flags" (story choices that must have been made) and
 ## "any_missions" (at least one of them completed).
 ## visit / talk_distinct may add "event": id       - only counts while that calendar event runs
 
-const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked", "enter_vehicle", "drive_to", "stat", "dialogue"]
+const OBJECTIVE_TYPES: PackedStringArray = ["talk_to", "knock", "visit", "talk_distinct", "reputation", "hold", "district_unlocked", "enter_vehicle", "drive_to", "stat", "dialogue", "follow"]
 
 @export var id := ""
 @export var title := ""
@@ -74,7 +77,7 @@ func validate() -> PackedStringArray:
 	for o in objectives:
 		if not o is Dictionary or not OBJECTIVE_TYPES.has(str(o.get("type", ""))):
 			problems.append("%s: bad objective %s" % [id, o])
-		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked", "enter_vehicle", "drive_to", "dialogue"] and str(o.get("target", "")).is_empty():
+		elif o.type in ["talk_to", "knock", "visit", "hold", "district_unlocked", "enter_vehicle", "drive_to", "dialogue", "follow"] and str(o.get("target", "")).is_empty():
 			problems.append("%s: objective %s needs a target" % [id, o.get("id", "?")])
 		elif o.type == "stat" and str(o.get("stat", "")).is_empty():
 			problems.append("%s: objective %s needs a stat" % [id, o.get("id", "?")])

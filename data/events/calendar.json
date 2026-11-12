@@ -119,6 +119,91 @@
       "start_text": "",
       "end_text": "",
       "district": "district_west"
+    },
+    {
+      "id": "friday_prayers",
+      "name": "Friday prayers at the Town Centre mosque",
+      "every_days": 7,
+      "offset": 5,
+      "hours": [
+        12.75,
+        13.75
+      ],
+      "district": "district_town_centre",
+      "anchor": "tc_mosque",
+      "activity": "at Friday prayers",
+      "join_chance": 0.3,
+      "duration": 40,
+      "start_text": "Friday prayers at the Town Centre mosque: men and boys in their best head the same way.",
+      "end_text": ""
+    },
+    {
+      "id": "sunday_service",
+      "name": "Sunday service at the Rocklands hall",
+      "every_days": 7,
+      "offset": 6,
+      "hours": [
+        9,
+        11
+      ],
+      "district": "district_west",
+      "anchor": "kalk_hall",
+      "activity": "at the service",
+      "join_chance": 0.45,
+      "duration": 45,
+      "start_text": "Hymns drift out of the Rocklands hall.",
+      "end_text": ""
+    },
+    {
+      "id": "school_run",
+      "name": "School run",
+      "every_days": 1,
+      "offset": 0,
+      "hours": [
+        7.0,
+        7.75
+      ],
+      "district": "starter",
+      "anchor": "poi_bus_stop",
+      "activity": "waiting for the school lift",
+      "join_chance": 0.6,
+      "duration": 20,
+      "start_text": "",
+      "end_text": ""
+    },
+    {
+      "id": "market_day",
+      "name": "Market day at the Promenade",
+      "every_days": 7,
+      "offset": 6,
+      "hours": [
+        8,
+        14
+      ],
+      "district": "district_town_centre",
+      "anchor": "tc_market",
+      "activity": "at the market",
+      "join_chance": 0.55,
+      "duration": 40,
+      "start_text": "Market day at the Promenade: the stalls are full and the callers are warming up.",
+      "end_text": ""
+    },
+    {
+      "id": "klopse_parade",
+      "name": "Tweede Nuwe Jaar parade",
+      "every_days": 21,
+      "offset": 20,
+      "hours": [
+        11,
+        15
+      ],
+      "district": "starter",
+      "anchor": "poi_park",
+      "activity": "watching the parade",
+      "join_chance": 0.7,
+      "duration": 50,
+      "start_text": "Tweede Nuwe Jaar: a brass band and the ghoema drum start up at the park.",
+      "end_text": "The parade moves on."
     }
   ]
 }

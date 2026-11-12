@@ -24,7 +24,8 @@ var _ui: AudioStreamPlayer
 var _bird_timer := 3.0
 var _engines: Array = []   # [player, node with `speed`]
 const STATIONS := [{"name": "Plain FM", "stream": "music_plain"}, {"name": "Spine Road Jazz", "stream": "music_jazz"},
-	{"name": "Gospel 101", "stream": "music_gospel"}]
+	{"name": "Gospel 101", "stream": "music_gospel"}, {"name": "Kasi Beats", "stream": "music_kasi"},
+	{"name": "Cape Ghoema FM", "stream": "music_ghoema"}]
 var radio_station := 0      # index into STATIONS; -1 = off
 var radio_on := false
 var _radio: AudioStreamPlayer
@@ -74,7 +75,16 @@ func _loop_player(stream_name: String, bus: StringName) -> AudioStreamPlayer:
 	return p
 
 
+## Sounds that get a caption for players who can't hear them (Settings > Accessibility).
+const CAPTIONS := {"gunshot": "Gunshot", "horn": "Car horn", "hooter": "Taxi hooter", "door": "Door", "bark": "Dog barking",
+	"ring": "Phone ringing", "siren": "Siren", "alarm": "Alarm", "whistle": "Whistle", "bell": "Bell", "bird": "Birdsong"}
+## label, world position: the HUD turns it into "[Gunshot]" with an arrow towards the sound.
+signal sound_heard(label: String, pos: Vector3)
+
+
 func play_at(stream_name: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> void:
+	if CAPTIONS.has(stream_name) and listener_node and listener_node.global_position.distance_to(pos) < 45.0:
+		sound_heard.emit(str(CAPTIONS[stream_name]), pos)
 	var p := _pool[_next]
 	_next = (_next + 1) % _pool.size()
 	p.stream = AudioBank.get_stream(stream_name)
@@ -136,8 +146,13 @@ func _update_radio() -> void:
 		_radio.stop()
 
 
-## Music from a smokkie's speakers during its evening hours.
-func add_venue(pos: Vector3, hours := Vector2(17, 23), stream_name := "music_plain") -> void:
+## Set by the session so event music (the Tweede Nuwe Jaar parade) can follow the calendar.
+var calendar: NeighbourhoodCalendar
+
+
+## Music from a smokkie's speakers during its evening hours (or, with event_id, while that
+## calendar event runs).
+func add_venue(pos: Vector3, hours := Vector2(17, 23), stream_name := "music_plain", event_id := "") -> void:
 	var p := AudioStreamPlayer3D.new()
 	p.bus = &"Music"
 	p.unit_size = 4.0
@@ -146,7 +161,7 @@ func add_venue(pos: Vector3, hours := Vector2(17, 23), stream_name := "music_pla
 	p.set_meta("stream", stream_name)
 	add_child(p)
 	p.global_position = pos + Vector3(0, 1.5, 0)
-	_venues.append([p, hours])
+	_venues.append([p, hours, event_id])
 
 
 func venues_playing() -> int:
@@ -214,7 +229,9 @@ func _process(delta: float) -> void:
 		for v in _venues:
 			var p: AudioStreamPlayer3D = v[0]
 			var hrs: Vector2 = v[1]
-			var on := hour >= hrs.x and hour < hrs.y and listener_node != null and listener_node.global_position.distance_to(p.global_position) < 60.0
+			var ev := str(v[2]) if v.size() > 2 else ""
+			var in_hours := hour >= hrs.x and hour < hrs.y and (ev.is_empty() or (calendar != null and calendar.is_active(ev)))
+			var on := in_hours and listener_node != null and listener_node.global_position.distance_to(p.global_position) < 60.0
 			if on and not p.playing:
 				p.stream = AudioBank.get_stream(str(p.get_meta("stream")))
 				p.play()

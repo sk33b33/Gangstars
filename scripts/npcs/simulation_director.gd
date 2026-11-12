@@ -64,11 +64,25 @@ func _physics_process(delta: float) -> void:
 			_raise_ambient()
 
 
+## Residents farther than this from the player are dormant: frozen where they stand and hidden, with no
+## thinking or physics at all, until you come back (they resume exactly where they were, so nothing
+## teleports). INF = everyone is simulated all the time. Low-end computers can lower it (Settings >
+## Video > Crowd simulation range).
+var dormant_distance := INF
+var dormant_count := 0
+
+
 func update_tiers() -> void:
 	var origin := observer.global_position if observer else Vector3.ZERO
 	tier_counts = {"near": 0, "mid": 0, "far": 0}
+	dormant_count = 0
 	for r: Resident in district.residents.values():
 		var d := r.global_position.distance_to(origin)
+		var sleepy := d > dormant_distance and r.can_be_dormant()
+		r.set_dormant(sleepy)
+		if sleepy:
+			dormant_count += 1
+			continue
 		var tier := "near" if d < near_distance else ("mid" if d < mid_distance else "far")
 		r.set_tier(tier)
 		tier_counts[tier] += 1

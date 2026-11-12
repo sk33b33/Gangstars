@@ -48,6 +48,8 @@ func _run() -> void:
 	_test_dealing_units()
 	_test_turf_units()
 	_test_hustle_units()
+	_test_access_units()
+	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
 		print("== district (integration)")
 		await _test_district()
@@ -710,7 +712,7 @@ func _test_phase7_units() -> void:
 					continue
 				bad.append("%s->%s" % [n.id, d])
 	_check(bad.is_empty(), "Lentegeur schedules stay in Lentegeur %s" % [bad])
-	_check(GameSession._load_all_missions().size() == 40, "40 missions load (intro, districts, crews, the hustle, Town Centre, Tafelsig, the story)")
+	_check(GameSession._load_all_missions().size() == 44, "44 missions load (intro, districts, crews, the hustle, Town Centre, Tafelsig, the story, daily life)")
 	var cal := NeighbourhoodCalendar.load_file("res://data/events/calendar.json")
 	_check(cal.get_event("soccer_match").get("district") == "district_east" and cal.get_event("braai").get("district") == "starter",
 		"calendar events belong to their districts")
@@ -1061,6 +1063,8 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 60 * 10:
 		await physics_frame
 	_check(weather.is_raining() and district.residents.values().all(func(r): return r.brain.raining), "rain reaches every resident's brain")
+	_check(weather._ripples.emitting and not weather._litter.emitting, "rain makes ripples on the ground")
+	_check(main.hud._rain_fx != null and main.hud._rain_fx.visible, "heavy rain runs down the lens")
 	var road := PixelMaterials.surface("road_asphalt", Vector2(4, 4))
 	_check(StreetDetail.puddle_material().albedo_color.a > 0.2, "puddles show up once the ground is wet")
 	_check(weather.wet > 0.3 and road.roughness < 0.8, "the ground goes wet and shiny in the rain (wet %.2f, roughness %.2f)" % [weather.wet, road.roughness])
@@ -1083,12 +1087,19 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 30:
 		await physics_frame
 	_check(district.day_night.dust > 0.5, "wind lifts a dusty haze (%.2f)" % district.day_night.dust)
+	_check(weather._litter.emitting, "paper and plastic tumble along in the wind")
 	weather.set_kind("clear")
 	weather.wind = 0.25
 	weather.overcast = 0.0
 	district.director.clock.set_hour(17.8)
 	await physics_frame
 	await process_frame
+	district.day_night.wind = 0.1
+	district.day_night.overcast = 0.0
+	district.day_night.wet = 0.0
+	district.director.clock.set_hour(13.0)
+	_check(district.day_night.heat() > 0.4, "a clear still midday is hot: heat shimmer (%.2f)" % district.day_night.heat())
+	district.director.clock.set_hour(17.8)
 	var sun_c: Color = district.get_node("Sun").light_color
 	_check(sun_c.r > sun_c.b + 0.25, "golden hour: the low sun is warm orange (%s)" % sun_c)
 
@@ -1763,6 +1774,75 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 	interiors.leave()
 
 
+func _test_access_units() -> void:
+	print("== accessibility units (re-binding, captions, autosave)")
+	InputRebinder.snapshot_defaults()
+	var t_key := InputEventKey.new()
+	t_key.physical_keycode = KEY_T
+	var changed := InputRebinder.bind("interact", t_key)
+	_check(InputRebinder.label("interact") == "T" and InputHints.key("interact") == "T" and changed.has("interact"), "interact can be re-bound to T (%s)" % InputRebinder.label("interact"))
+	var e_key := InputEventKey.new()
+	e_key.physical_keycode = KEY_Q   # Q is whistle: binding it to phone swaps, so nothing ends up unbound
+	var before_phone := InputRebinder.label("phone")
+	InputRebinder.bind("shout", e_key)
+	InputRebinder.bind("phone", e_key)
+	_check(InputRebinder.label("phone") == "Q" and InputRebinder.label("shout") == "P" and before_phone == "P", "a clash swaps the two keys, nothing is left unbound (%s / %s)" % [InputRebinder.label("phone"), InputRebinder.label("shout")])
+	_check(InputHints.help_line().contains("T interact"), "the prompts and help line follow the new keys")
+	var store := SettingsStore.new()
+	store.path = "user://test_settings_bind.cfg"
+	store.note_bindings(changed)
+	var again := SettingsStore.new()
+	again.path = store.path
+	again.load_settings()
+	_check(again.bindings.has("interact") and again.bindings.interact[0].k == KEY_T, "re-bound keys are saved with the settings")
+	InputRebinder.reset_all()
+	_check(InputRebinder.label("interact") == "E" and InputRebinder.label("phone") == "P" and InputRebinder.label("shout") == "Q" and not InputHints.custom.has("interact") or InputHints.key("interact") == "E",
+		"'Reset keys' brings back the defaults (%s)" % InputRebinder.label("interact"))
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(store.path))
+	_check(again.get_value("access/captions") == true and again.get_value("access/speech_bubbles") == true and again.get_value("gameplay/autosave") == true,
+		"captions, speech bubbles and autosave are on by default")
+
+
+func _test_life_units() -> void:
+	print("== daily life units (reputation voice, follow objective, endgame data)")
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 5
+	var wary := ReputationVoice.greet(-5, 0, 0, rng)
+	var legend := ReputationVoice.greet(300, 0, 0, rng)
+	var friend := ReputationVoice.greet(10, 25, 0, rng)
+	var cold := ReputationVoice.greet(200, -15, 0, rng)
+	var hot := ReputationVoice.greet(200, 30, 4, rng)
+	_check(not wary.line.is_empty() and ReputationVoice.WARY.has(wary.line) and ReputationVoice.LEGEND.has(legend.line) and ReputationVoice.FRIEND.has(friend.line),
+		"people greet you by how well they know you")
+	_check(not cold.wave and not hot.wave and ReputationVoice.HEAT.has(hot.line) and legend.wave, "people turn away when they dislike you or the police are on you")
+	var life := MissionData.load_file(GameSession.LIFE_MISSIONS_FILE)
+	_check(life.size() == 3 and life.any(func(m): return m.objectives.any(func(o): return o.type == "follow")), "daily-life missions load, including a follow mission")
+	var story := MissionData.load_file(GameSession.STORY_MISSIONS_FILE)
+	var ending: MissionData = story.filter(func(m): return m.id == "the_long_view")[0]
+	var scenes: Variant = DataFiles.load_json(GameSession.STORY_SCENES_FILE)
+	_check(ending != null and scenes.scenes.has("plain_ending") and scenes.scenes.plain_ending.choices.size() == 3, "the endgame mission and its three endings exist")
+	# The follow objective: stay close to them, they arrive, done; fall behind and you lose them.
+	var prog := ProgressionState.new()
+	var clock := SimClock.new()
+	var mm := MissionManager.new()
+	mm.setup([MissionData.from_dict({"id": "t_follow", "title": "T", "giver": "g", "objectives": [
+		{"id": "f", "type": "follow", "target": "who", "destination": "goal", "radius": 4, "max_distance": 20, "lose_minutes": 5, "text": "t"}]})], prog, clock)
+	var who_pos := [Vector3(0, 0, 0)]
+	mm.npc_position = func(_id): return who_pos[0]
+	mm.anchor_position = func(_id): return Vector3(50, 0, 0)
+	mm.start("t_follow")
+	clock.minutes = 100.0
+	mm.on_player_position(Vector3(-5, 0, 0))
+	who_pos[0] = Vector3(48, 0, 0)
+	clock.minutes = 105.0
+	mm.on_player_position(Vector3(100, 0, 0))   # arrived, but you're too far behind
+	_check(mm.active.has("t_follow"), "if you're too far behind when they arrive, it doesn't count")
+	clock.minutes = 110.0
+	mm.on_player_position(Vector3(40, 0, 0))
+	_check(mm.is_completed("t_follow"), "following someone to their destination completes the mission")
+	mm.free()
+
+
 func _test_hustle_units() -> void:
 	print("== hustle units (prices, runners, drops)")
 	var st := DealingState.load_default()
@@ -1934,6 +2014,52 @@ func _test_consequences_in_game(main: Node, district: District, player: Player) 
 	prog.flags.erase("ally:tortel_crew")
 	session._apply_story_state()
 	turf.state.corners["corner_cafe"].owner = ""
+	# Your flag flies on corners you hold; the endings change the turf for good.
+	turf._refresh_flags()
+	var flags_before := turf.flag_count()
+	turf.state.corners["corner_cafe"].owner = prog.crew_id
+	turf._refresh_flags()
+	_check(turf.flag_count() == flags_before + 1, "your crew's flag flies on a corner you hold")
+	session.apply_effects(session.story_scenes.plain_ending.choices[1].effects)
+	_check(["tortel_crew", "duin_boys", "klipspringers"].all(func(c): return turf.allies.has(c)) and prog.flags.has("game_finished"),
+		"the 'share it' ending makes every crew an ally and finishes the game")
+	session.apply_effects(session.story_scenes.plain_ending.choices[2].effects)
+	_check(turf.state.players_corners().is_empty(), "the 'walk away' ending hands the corners back")
+	turf._refresh_flags()
+	_check(turf.flag_count() == 0, "...and the flags come down")
+	for c in ["tortel_crew", "vlakte_vipers", "duin_boys", "klipspringers"]:
+		prog.flags.erase("ally:" + c)
+	prog.flags.erase("game_finished")
+	prog.flags.erase("ending_council")
+	prog.flags.erase("ending_exit")
+	session._apply_story_state()
+
+
+func _test_dormant_in_game(main: Node, district: District, player: Player) -> void:
+	var dir := district.director
+	_check(is_inf(dir.dormant_distance), "by default everyone is simulated all the time")
+	player.global_position = Vector3(0, 0.1, -30)
+	main.settings.set_value("video/crowd_range", 0)
+	for i in 90:
+		await physics_frame
+	_check(dir.dormant_distance == 150.0 and dir.dormant_count >= 40, "a short crowd range puts far-off people to sleep (%d dormant)" % dir.dormant_count)
+	var sleeper: Resident = null
+	for r: Resident in district.residents.values():
+		if r.dormant:
+			sleeper = r
+			break
+	var frozen_at := sleeper.global_position
+	for i in 120:
+		await physics_frame
+	_check(sleeper != null and not sleeper.visible and sleeper.global_position.distance_to(frozen_at) < 0.01, "a sleeper is hidden and doesn't move")
+	main.settings.set_value("video/crowd_range", 2)
+	for i in 90:
+		await physics_frame
+	_check(is_inf(dir.dormant_distance) and dir.dormant_count == 0 and not sleeper.dormant and sleeper.visible, "everyone wakes up again when you widen the range")
+	var teleports := 0
+	for r: Resident in district.residents.values():
+		teleports += r.teleport_violations
+	_check(teleports == 0, "nobody teleported while sleeping or waking (%d)" % teleports)
 
 
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
@@ -2020,6 +2146,57 @@ func _test_sound_in_game(main: Node, district: District, player: Player) -> void
 		r._bubble.visible = false
 		r.say("Howzit")
 		_check(audio.voices_played > v0, "people speak in (made-up) voices")
+	# Captions for sounds, the speech-bubble switch and autosave.
+	player.global_position = Vector3(0, 0.1, -30)
+	audio.play_at("gunshot", player.global_position + Vector3(-8, 1, 0))
+	await process_frame
+	_check(main.hud.caption_text().contains("Gunshot"), "a gunshot is captioned for players who can't hear it (%s)" % main.hud.caption_text())
+	main.settings.set_value("access/captions", false)
+	main.hud.show_caption("x", 0.0)
+	main.hud._caption.visible = false
+	audio.play_at("horn", player.global_position + Vector3(8, 1, 0))
+	await process_frame
+	_check(main.hud.caption_text().is_empty(), "captions can be switched off")
+	main.settings.set_value("access/captions", true)
+	if r:
+		main.settings.set_value("access/speech_bubbles", false)
+		r._bubble.visible = false
+		r.say("Howzit")
+		_check(not r._bubble.visible, "speech bubbles can be switched off")
+		main.settings.set_value("access/speech_bubbles", true)
+	# Daily-life events and the parade's music.
+	var cal := district.director.calendar
+	_check(not cal.get_event("friday_prayers").is_empty() and not cal.get_event("sunday_service").is_empty() and not cal.get_event("school_run").is_empty()
+		and not cal.get_event("market_day").is_empty() and not cal.get_event("klopse_parade").is_empty(), "Friday prayers, Sunday service, the school run, market day and the parade are on the calendar")
+	_check(NeighbourhoodCalendar.runs_at(cal.get_event("school_run"), 3, 7.2) and not NeighbourhoodCalendar.runs_at(cal.get_event("school_run"), 3, 12.0)
+		and NeighbourhoodCalendar.runs_at(cal.get_event("klopse_parade"), 20, 12.0) and not NeighbourhoodCalendar.runs_at(cal.get_event("klopse_parade"), 5, 12.0),
+		"the events run on their days and hours")
+	_check(district.destinations.has("tc_mosque") and district.destinations.has("taf_fish_den"), "the mosque forecourt and the fish den are places people can go")
+	var w := AudioBank.get_stream("music_ghoema")
+	_check(w.loop_mode == AudioStreamWAV.LOOP_FORWARD and w.data.size() / 2.0 / AudioBank.RATE > 6.0, "the parade has its own (made-up) ghoema-and-brass loop")
+	var day_keep: int = district.director.clock.day
+	var hour_keep: float = district.director.clock.hour()
+	district.director.clock.day = 20
+	district.director.clock.set_hour(12.0)
+	player.global_position = district.destinations.anchor_position("poi_park") + Vector3(0, 0.1, 6)
+	for i in 30:
+		await physics_frame
+	_check(cal.is_active("klopse_parade") and audio.venues_playing() >= 1, "the Tweede Nuwe Jaar parade plays its band at the park")
+	district.director.clock.day = day_keep
+	district.director.clock.set_hour(hour_keep)
+	var chatter_text := FileAccess.get_file_as_string("res://data/npcs/chatter.json")
+	_check(chatter_text.contains("Ja nee, dis warm vandag."), "chatter includes Cape Afrikaans (Kaaps) lines")
+	var save_file: String = session.save_path
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(save_file))
+	session.autosave_enabled = true
+	var auto0 := session.autosaves
+	session.autosave("test")
+	_check(session.autosaves == auto0 + 1 and FileAccess.file_exists(save_file), "the game autosaves (%d)" % session.autosaves)
+	main.settings.set_value("gameplay/autosave", false)
+	session.autosave("test")
+	_check(session.autosaves == auto0 + 1, "autosave obeys the setting")
+	main.settings.set_value("gameplay/autosave", true)
+	session.autosave_enabled = false
 
 
 func _test_turf_units() -> void:
@@ -2523,6 +2700,7 @@ func _test_district() -> void:
 		await process_frame
 	# New game: the crew choice comes first. Join the Spine Road Stylers through the picker's button.
 	main.session.turf.state.next_push = 1e9   # no surprise rival pushes during the other tests
+	main.session.autosave_enabled = false     # a test's own save is never overwritten behind its back
 	var picker: CrewPicker = main.session.crew_picker
 	_check(picker != null and picker.visible and not player.input_enabled, "a new game opens the crew picker first")
 	_check(picker.button("tortel_crew") != null and picker.button("klipspringers") != null, "four crews to choose from")
@@ -2771,6 +2949,7 @@ func _test_district() -> void:
 	await _test_town_centre_in_game(main, district, player)
 	await _test_tafelsig_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
+	await _test_dormant_in_game(main, district, player)
 	await _test_consequences_in_game(main, district, player)
 	await _test_sound_in_game(main, district, player)
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])

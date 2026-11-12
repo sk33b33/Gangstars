@@ -183,6 +183,24 @@ func current_path() -> PackedVector3Array:
 	return agent.get_current_navigation_path() if _travelling else PackedVector3Array()
 
 
+var dormant := false
+
+
+## Only ordinary people sleep: not the player's crew, not anyone mid-incident or on an errand.
+func can_be_dormant() -> bool:
+	return data.role in ["resident", "kid", "crew"] and not is_ally() and not brain.is_reacting() \
+		and brain.pending_event.is_empty() and not is_inside and not health.down
+
+
+func set_dormant(on: bool) -> void:
+	if on == dormant:
+		return
+	dormant = on
+	visible = not on
+	set_physics_process(not on)
+	set_process(not on)
+
+
 func set_tier(tier: String) -> void:
 	if tier == "far" and spot_phase == "approach":
 		_leave_spot()
@@ -206,8 +224,14 @@ static var on_say: Callable
 var _last_activity := ""
 
 
+## Settings > Accessibility: speech bubbles (the voices are gibberish, so the bubbles are the subtitles).
+static var bubbles_on := true
+## standing(npc_id) -> {rep, rel, heat}: how the player stands with this person (set by GameSession).
+static var standing: Callable
+
+
 func say(text: String, seconds := 3.0) -> void:
-	if is_inside or sim_tier != "near":
+	if is_inside or sim_tier != "near" or not bubbles_on:
 		return
 	if on_say.is_valid() and not _bubble.visible:
 		on_say.call(global_position, data.id.hash(), data.figure > 0.5 or data.hair_style in ["long", "doek"])
@@ -299,7 +323,15 @@ func _maybe_wave(s: NpcBrain.State) -> void:
 
 
 func _wave_at(p: Vector3) -> void:
-	model.wave()
+	var wave := true
+	if standing.is_valid() and p.distance_to(global_position) < 9.0 and data.role in ["resident", "kid"]:
+		var st: Dictionary = standing.call(data.id)
+		var talk := ReputationVoice.greet(int(st.rep), int(st.rel), int(st.heat), _rng)
+		wave = bool(talk.wave)
+		if _rng.randf() < 0.6:
+			say(str(talk.line), 3.0)
+	if wave:
+		model.wave()
 	model.look_at_point(p + Vector3(0, 1.5, 0))
 	_wave_cooldown = WAVE_COOLDOWN
 	waves += 1

@@ -271,6 +271,10 @@ func set_fps_visible(v: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	if _caption and _caption_timer > 0.0:
+		_caption_timer -= delta
+		if _caption_timer <= 0.0:
+			_caption.visible = false
 	for l: Label in [_tracker, _stats]:   # no empty glass panels
 		l.visible = not l.text.is_empty()
 	if _help_timer > 0.0:
@@ -351,6 +355,88 @@ void fragment() {
 	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_vignette)
 	move_child(_vignette, 0)
+
+
+var _caption: Label
+var _caption_timer := 0.0
+
+
+## A sound caption near the bottom left: "◀ [Gunshot]" if it came from the left, "[Gunshot] ▶" from the right.
+## side: -1 left .. 1 right (relative to where you look), 0 ahead or behind.
+func show_caption(text: String, side: float) -> void:
+	if _caption == null:
+		_caption = _label(Vector2.ZERO, 22)
+		_caption.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+		_caption.offset_left = 16
+		_caption.offset_top = -120
+		_caption.offset_bottom = -80
+		_caption.add_theme_stylebox_override("normal", panel_style(Color("#d9c49a"), 0.7))
+	_caption.text = ("◀ [%s]" if side < -0.3 else ("[%s] ▶" if side > 0.3 else "[%s]")) % text
+	_caption.visible = true
+	_caption_timer = 2.5
+
+
+func caption_text() -> String:
+	return _caption.text if _caption and _caption.visible else ""
+
+
+var _rain_fx: ColorRect
+var _heat_fx: ColorRect
+
+
+func _screen_effect(code: String) -> ColorRect:
+	var sh := Shader.new()
+	sh.code = code
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	var r := ColorRect.new()
+	r.material = mat
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	r.visible = false
+	add_child(r)
+	move_child(r, 1)
+	return r
+
+
+## Drops running down the "lens" in heavy rain, and a shimmer over the horizon on a hot still day.
+func _build_weather_fx() -> void:
+	_rain_fx = _screen_effect("""shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
+uniform float amount : hint_range(0.0, 1.0) = 0.0;
+float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	vec2 grid = vec2(16.0, 9.0);
+	vec2 id = floor(uv * grid);
+	float h = hash(id);
+	vec2 cell = fract(uv * grid);
+	float fall = fract(TIME * (0.12 + h * 0.1) + h * 7.0);
+	vec2 centre = vec2(0.15 + h * 0.7, 1.0 - fall);
+	float d = length((cell - centre) * vec2(1.0, 0.55));
+	float drop = smoothstep(0.1, 0.03, d) * step(h, amount * 0.55);
+	vec2 off = (cell - centre) * drop * 0.05;
+	COLOR = vec4(texture(screen_tex, uv + off).rgb * 1.08, drop);
+}""")
+	_heat_fx = _screen_effect("""shader_type canvas_item;
+uniform sampler2D screen_tex : hint_screen_texture, filter_linear;
+uniform float strength : hint_range(0.0, 1.0) = 0.0;
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	float band = smoothstep(0.3, 0.46, uv.y) * smoothstep(0.66, 0.5, uv.y);
+	float wob = sin(uv.y * 160.0 + TIME * 2.6) * 0.0016 * band * strength;
+	COLOR = vec4(texture(screen_tex, uv + vec2(wob, 0.0)).rgb, 1.0);
+}""")
+
+
+func set_weather(rain: float, heat: float) -> void:
+	if _rain_fx == null:
+		_build_weather_fx()
+	var drops := clampf((rain - 0.4) / 0.6, 0.0, 1.0)
+	_rain_fx.visible = drops > 0.02
+	(_rain_fx.material as ShaderMaterial).set_shader_parameter("amount", drops)
+	_heat_fx.visible = heat > 0.12
+	(_heat_fx.material as ShaderMaterial).set_shader_parameter("strength", heat)
 
 
 func set_night(night: float) -> void:

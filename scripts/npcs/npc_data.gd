@@ -120,14 +120,24 @@ func _outfit(look: Dictionary, h: int, woman: bool, grey: bool, kid: bool) -> vo
 		return
 	var acc: Array = look.accessories
 	if kid and h / 97 % 5 < 3:
-		look.shirt_override = Color("#f4f4f0")
-		look.pants_override = Color("#5d6066")
-		look.tie_color = Color("#7a1f2e")
+		# Three schools, three uniforms: white and grey with a maroon tie, pale blue and navy, green and khaki.
+		var school: Array = [[Color("#f4f4f0"), Color("#5d6066"), Color("#7a1f2e")],
+			[Color("#bcd6ea"), Color("#26365a"), Color("#26365a")],
+			[Color("#f1eed8"), Color("#8a7a52"), Color("#1f6a4a")]][h / 109 % 3]
+		look.shirt_override = school[0]
+		look.pants_override = school[1]
+		look.tie_color = school[2]
 		look.sole_color = Color("#1d1b24")
 		look.pants_style = ""
 		acc.append("tie")
 		acc.append("backpack")   # the school bag
 		look.pack_color = [Color("#2f3f6a"), Color("#3a3d46"), Color("#7a1f2e"), Color("#1f6a58")][h / 101 % 4]
+	elif (kid or (role == "resident" and not woman and not grey)) and h / 113 % 9 == 0:
+		# A football kit: a team shirt, black shorts' colour trousers, boots' soles.
+		look.shirt_override = [Color("#c0392b"), Color("#f2c43a"), Color("#2e86c1"), Color("#27ae60")][h / 127 % 4]
+		look.pants_override = Color("#1d1b24")
+		look.pants_style = ""
+		look.sole_color = Color("#f4f4f0")
 	elif role == "resident" and not woman and not grey and not kid and h / 97 % 6 == 0:
 		var c: Color = [Color("#2f4f8a"), Color("#d35400"), Color("#3d5a3a")][h / 101 % 3]
 		look.pants_override = c
@@ -180,6 +190,10 @@ func _aunty_look(look: Dictionary, h: int) -> void:
 	elif h / 29 % 5 < 3:
 		look.hair_style = "doek"
 		look.hair_color = Color(DOEKS[h / 31 % DOEKS.size()])
+	if h / 67 % 8 == 0 and dress != 1:   # church clothes: a smart solid dress and a cardigan
+		look.print = "solid"
+		acc.append("cardigan")
+		look.cardigan_color = Color(["#f4f4f0", "#1d1b24", "#5b7097", "#8c6044"][h / 71 % 4])
 	if h / 59 % 5 < 2 and not acc.has("curlers"):   # a headscarf (the suburb has mosques in Westridge, Rocklands and the Town Centre)
 		look.hair_style = "hijab"
 		look.hair_color = Color(HIJABS[h / 61 % HIJABS.size()])

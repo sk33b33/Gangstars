@@ -69,6 +69,13 @@ static func daylight(h: float) -> float:
 	return sin((h - 6.0) / 13.0 * PI)
 
 
+## How hot and still it is (0..1): drives the shimmer over the horizon on a clear midday.
+func heat() -> float:
+	if clock == null:
+		return 0.0
+	return smoothstep(0.6, 0.95, daylight(clock.hour())) * (1.0 - overcast) * (1.0 - clampf(wind, 0.0, 1.0) * 0.7) * (1.0 - clampf(wet, 0.0, 1.0))
+
+
 ## 0 by day, 1 at night (the same number apply() uses).
 func night_amount() -> float:
 	return 1.0 - smoothstep(0.0, 0.3, daylight(clock.hour())) if clock else 0.0

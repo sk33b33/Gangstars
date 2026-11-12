@@ -5,6 +5,8 @@ extends RefCounted
 ## (Xbox-style labels; other pads map to the same positions).
 
 static var gamepad := false
+## Keyboard/mouse names after the player re-binds keys (InputRebinder): action -> label.
+static var custom: Dictionary = {}
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
@@ -37,10 +39,14 @@ static func note_event(event: InputEvent) -> bool:
 
 
 static func key(action: String) -> String:
+	if not gamepad and custom.has(action):
+		return str(custom[action])
 	return str((PAD if gamepad else KEYBOARD).get(action, action))
 
 
 static func help_line() -> String:
 	if gamepad:
 		return "Left stick move · L3 sprint · A interact · LT aim · RT shoot · D-pad up phone · Y whistle · View turf map · Menu pause"
-	return "WASD move · Shift sprint · E interact · RMB aim · LMB shoot · P phone · Q whistle · M turf map · F3 debug · F7 +1h · Esc mouse"
+	var move := "WASD" if not custom.has("move_forward") else "%s%s%s%s" % [key("move_forward"), key("move_left"), key("move_backward"), key("move_right")]
+	return "%s move · %s sprint · %s interact · %s aim · %s shoot · %s phone · %s whistle · %s turf map · F3 debug · F7 +1h · Esc mouse" % [
+		move, key("sprint"), key("interact"), key("aim"), key("fire"), key("phone"), key("shout"), key("turf_map")]

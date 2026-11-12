@@ -31,6 +31,8 @@ static func get_stream(stream_name: String) -> AudioStreamWAV:
 		"music_plain": s = _music("plain")
 		"music_jazz": s = _music("jazz")
 		"music_gospel": s = _music("gospel")
+		"music_ghoema": s = _music("ghoema")
+		"music_kasi": s = _music("kasi")
 		"mumble0": s = _mumble(0)
 		"mumble1": s = _mumble(1)
 		"mumble2": s = _mumble(2)
@@ -303,15 +305,18 @@ static func _crickets() -> AudioStreamWAV:
 ##   plain  - a kwaito/house groove: four-on-the-floor kick, offbeat hats, a bass line, stabs
 ##   jazz   - Cape-jazz flavour: walking bass, soft brushes, mellow electric-piano chords
 ##   gospel - organ chords, claps on 2 and 4, a root bass
+##   ghoema - a parade: the ghoema drum's 3+3+2 pattern, a bass, brass stabs, rim clicks
 static func _music(style: String) -> AudioStreamWAV:
-	var bpm: float = {"plain": 112.0, "jazz": 96.0, "gospel": 84.0}[style]
+	var bpm: float = {"plain": 112.0, "jazz": 96.0, "gospel": 84.0, "ghoema": 104.0, "kasi": 112.0}[style]
 	var beat: float = 60.0 / bpm
 	var n := int(16 * beat * RATE)
 	var out := PackedFloat32Array()
 	out.resize(n)
 	var chords: Array = {"plain": [[57, 60, 64], [53, 57, 60], [48, 52, 55], [55, 59, 62]],
 		"jazz": [[50, 53, 57, 60], [55, 59, 62, 65], [48, 52, 55, 59], [57, 61, 64, 67]],
-		"gospel": [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]]}[style]
+		"gospel": [[48, 52, 55], [53, 57, 60], [55, 59, 62], [48, 52, 55]],
+		"ghoema": [[57, 61, 64], [62, 66, 69], [64, 68, 71], [57, 61, 64]],
+		"kasi": [[57, 60, 64], [55, 59, 62], [53, 57, 60], [55, 59, 62]]}[style]
 	var rng := RandomNumberGenerator.new()
 	rng.seed = style.hash()
 	for bar in 4:
@@ -342,6 +347,30 @@ static func _music(style: String) -> AudioStreamWAV:
 						_note(out, t, beat * 3.8, _hz(int(chord[0]) - 12), 0.3, "bass")
 					if b % 2 == 1:
 						_clap(out, t, 0.3, rng)
+				"kasi":   # a log-drum bass that slides down, shakers, a soft pad, a sparse bell tune
+					for e in 2:
+						var te: float = t + e * beat * 0.5
+						_hat(out, te, 0.06 if e == 0 else 0.09, rng)
+						if (b * 2 + e) in [0, 3, 6]:
+							_logdrum(out, te, _hz(int(chord[0]) - 24), 0.5)
+					if b == 0:
+						_chord(out, t, beat * 4.0, chord, 0.05, "keys")
+					if b == 2:
+						_note(out, t + beat * 0.5, beat * 0.5, _hz(int(chord[2]) + 12), 0.1, "keys")
+				"ghoema":
+					for e in 2:
+						var eighth := b * 2 + e   # 0..7 in the bar: the drum accents 0, 3 and 6
+						var te: float = t + e * beat * 0.5
+						if eighth in [0, 3, 6]:
+							_kick(out, te, 0.6)
+						if eighth in [2, 5, 7]:
+							_clap(out, te, 0.12, rng)   # rim click
+						_hat(out, te, 0.05, rng)
+						if eighth in [0, 6]:
+							_note(out, te, beat * 0.9, _hz(int(chord[0]) - 24), 0.3, "bass")
+						if eighth in [0, 2, 3, 6]:   # brass stabs on the chord
+							var tone: int = int(chord[[0, 1, 2, 1][eighth % 4]]) + (12 if eighth == 3 else 0)
+							_note(out, te, beat * 0.4, _hz(tone), 0.17, "brass")
 	for i in n:   # gentle limiter
 		out[i] = tanh(out[i] * 1.2) * 0.8
 	return _wav(_crossfade_loop(out, int(0.02 * RATE)), true)
@@ -371,12 +400,26 @@ static func _note(out: PackedFloat32Array, t: float, length: float, f: float, am
 				v = (sin(ph) + 0.3 * sin(ph * 3.0)) * exp(-tt * 1.5) * (1.0 + 0.15 * sin(TAU * 5.0 * tt))
 			"organ":
 				v = (sin(ph) + 0.5 * sin(ph * 2.0) + 0.3 * sin(ph * 3.0) + 0.2 * sin(ph * 4.0)) * 0.6
+			"brass":   # a bright, slightly buzzy horn
+				v = (sin(ph) + 0.55 * sin(ph * 2.0) + 0.35 * sin(ph * 3.0) + 0.18 * sin(ph * 5.0)) * (1.0 + 0.04 * sin(TAU * 6.0 * tt)) * exp(-tt * 3.5)
 		out[i] += v * amp * _env(tt, length, 0.008, 0.05)
 
 
 static func _chord(out: PackedFloat32Array, t: float, length: float, chord: Array, amp: float, kind: String) -> void:
 	for m in chord:
 		_note(out, t, length, _hz(int(m)), amp, kind)
+
+
+## The pitched, sliding drum at the heart of the kasi groove.
+static func _logdrum(out: PackedFloat32Array, t: float, f: float, amp: float) -> void:
+	var i0 := int(t * RATE)
+	var ph := 0.0
+	for k in int(0.35 * RATE):
+		if i0 + k >= out.size():
+			return
+		var tt := float(k) / RATE
+		ph += TAU * f * lerpf(1.7, 1.0, minf(tt / 0.06, 1.0)) / RATE
+		out[i0 + k] += (sin(ph) + 0.3 * sin(ph * 2.0)) * exp(-tt * 7.0) * amp
 
 
 static func _kick(out: PackedFloat32Array, t: float, amp: float) -> void:

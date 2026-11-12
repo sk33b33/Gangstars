@@ -248,6 +248,59 @@
           "reply": "Spider: \"Oh, I will.\""
         }
       ]
+    },
+    "plain_ending": {
+      "speaker": "Boeta",
+      "lines": [
+        "Westridge, Lentegeur, Rocklands, the Promenade, Tafelsig. Ten corners. Look at that map.",
+        "My mother raised us here when they moved her out of District Six. She said a place is only as good as the people who stay.",
+        "So. What do we do with it?"
+      ],
+      "choices": [
+        {
+          "text": "We rule it. The Plain is ours.",
+          "effects": {
+            "flags": [
+              "ending_crown",
+              "game_finished"
+            ],
+            "reputation": 30,
+            "banner": "THE PLAIN IS YOURS"
+          },
+          "reply": "Boeta: \"Then we'd better be better at it than the people before us.\""
+        },
+        {
+          "text": "We share it. One table, every crew.",
+          "effects": {
+            "flags": [
+              "ending_council",
+              "game_finished"
+            ],
+            "reputation": 40,
+            "turf_allies": [
+              "tortel_crew",
+              "vlakte_vipers",
+              "duin_boys",
+              "klipspringers"
+            ],
+            "banner": "A COUNCIL OF CREWS"
+          },
+          "reply": "Boeta: \"A table. I never thought I'd see it. Let's keep it from tipping.\""
+        },
+        {
+          "text": "We hand the corners back and walk away.",
+          "effects": {
+            "flags": [
+              "ending_exit",
+              "game_finished"
+            ],
+            "reputation": 50,
+            "turf_release": true,
+            "banner": "YOU WALKED AWAY"
+          },
+          "reply": "Boeta: \"Then the Plain is theirs again. Maybe that was the point.\""
+        }
+      ]
     }
   }
 }

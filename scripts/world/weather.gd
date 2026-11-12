@@ -25,6 +25,8 @@ var _rng := RandomNumberGenerator.new()
 var _next_change := 0.0
 var _particles: CPUParticles3D
 var _drop_mat: StandardMaterial3D
+var _ripples: CPUParticles3D
+var _litter: CPUParticles3D
 var _clouds: Array[Decal] = []
 const CLOUD_SIZE := 70.0
 
@@ -61,6 +63,8 @@ func setup(p_district: District, p_clock: SimClock, p_day_night: DayNight) -> vo
 	_particles.emitting = false
 	add_child(_particles)
 	_make_cloud_shadows()
+	_make_ripples()
+	_make_litter()
 
 
 ## Cloud shadows: a few big soft dark decals drifting downwind over the streets near the
@@ -92,6 +96,79 @@ func _make_cloud_shadows() -> void:
 		d.set_meta("offset", Vector2(-CLOUD_SIZE + i * CLOUD_SIZE, (i - 1) * CLOUD_SIZE * 0.6))
 		add_child(d)
 		_clouds.append(d)
+
+
+## Rings spreading on the wet ground around you while it rains.
+func _make_ripples() -> void:
+	var img := Image.create(32, 32, false, Image.FORMAT_RGBA8)
+	for y in 32:
+		for x in 32:
+			var r := Vector2(x - 15.5, y - 15.5).length() / 15.5
+			img.set_pixel(x, y, Color(1, 1, 1, clampf(1.0 - absf(r - 0.8) * 7.0, 0.0, 1.0) * 0.8))
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_texture = ImageTexture.create_from_image(img)
+	mat.vertex_color_use_as_albedo = true
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(0.6, 0.6)
+	plane.material = mat
+	_ripples = CPUParticles3D.new()
+	_ripples.name = "Ripples"
+	_ripples.amount = 110
+	_ripples.lifetime = 0.6
+	_ripples.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	_ripples.emission_box_extents = Vector3(9, 0.01, 9)
+	_ripples.direction = Vector3.ZERO
+	_ripples.spread = 0.0
+	_ripples.gravity = Vector3.ZERO
+	_ripples.initial_velocity_min = 0.0
+	_ripples.initial_velocity_max = 0.0
+	_ripples.scale_amount_min = 0.4
+	_ripples.scale_amount_max = 0.7
+	var grow := Curve.new()
+	grow.add_point(Vector2(0, 0.2))
+	grow.add_point(Vector2(1, 1.8))
+	_ripples.scale_amount_curve = grow
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 0.9))
+	fade.set_color(1, Color(1, 1, 1, 0.0))
+	_ripples.color_ramp = fade
+	_ripples.mesh = plane
+	_ripples.local_coords = false
+	_ripples.emitting = false
+	_ripples.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_ripples)
+
+
+## Paper and plastic tumbling along in a south-easter.
+func _make_litter() -> void:
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.2, 0.2)
+	var mat := PixelMaterials.panel("litter_paper", Color.WHITE, true)
+	var bb := mat.duplicate() as StandardMaterial3D
+	bb.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	bb.billboard_keep_scale = true
+	bb.particles_anim_h_frames = 1
+	quad.material = bb
+	_litter = CPUParticles3D.new()
+	_litter.name = "WindLitter"
+	_litter.amount = 36
+	_litter.lifetime = 5.0
+	_litter.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	_litter.emission_box_extents = Vector3(3, 0.6, 14)
+	_litter.direction = Vector3(1, 0.12, 0.25)
+	_litter.spread = 18.0
+	_litter.gravity = Vector3(0, -0.4, 0)
+	_litter.initial_velocity_min = 3.0
+	_litter.initial_velocity_max = 7.0
+	_litter.angular_velocity_min = 120.0
+	_litter.angular_velocity_max = 420.0
+	_litter.mesh = quad
+	_litter.local_coords = false
+	_litter.emitting = false
+	_litter.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_litter)
 
 
 func _move_clouds(delta: float) -> void:
@@ -147,7 +224,11 @@ func _process(delta: float) -> void:
 	_particles.emitting = rain > 0.15
 	_drop_mat.albedo_color.a = 0.45 * clampf(rain, 0.0, 1.0)
 	_move_clouds(delta)
+	_ripples.emitting = rain > 0.35
+	_litter.emitting = wind > 0.55 and rain < 0.4
 	if follow:
+		_ripples.global_position = follow.global_position + Vector3(0, 0.035, 0)
+		_litter.global_position = follow.global_position + Vector3(-12, 0.8, 0)
 		_particles.global_position = follow.global_position + Vector3(0, 12, 0)
 	# The ground stays wet for a while after the rain stops, drying in the sun and wind.
 	wet = clampf(wet + (rain * 0.1 - (0.004 + wind * 0.004)) * delta * (0.25 if rain < 0.2 else 1.0), 0.0, 1.0) if enabled else 0.0

@@ -59,10 +59,24 @@ func _build() -> void:
 	_slider("Stick sensitivity", "controls/stick_sensitivity", 1.0, 6.0, 0.2)
 	_check("Controller vibration", "controls/vibration")
 	_check("Invert camera Y", "controls/invert_y")
+	_heading("Keys (click one, then press the new key; Esc cancels)", 16)
+	for a in InputRebinder.ACTIONS:
+		_bind_row(str(a[0]), str(a[1]))
+	var reset := Button.new()
+	reset.name = "ResetKeys"
+	reset.text = "Reset keys to default"
+	reset.pressed.connect(func():
+		settings.reset_bindings()
+		_refresh_binds())
+	_rows.add_child(reset)
+	_heading("Accessibility", 20)
+	_check("Sound captions (e.g. [Gunshot], [Taxi hooter])", "access/captions")
+	_check("Speech bubbles over people who talk", "access/speech_bubbles")
 	_heading("Video", 20)
 	_slider("Field of view", "video/fov", 55.0, 95.0, 1.0)
 	_slider("Render scale", "video/render_scale", 0.5, 1.0, 0.05)
 	_slider("Anti-aliasing (MSAA 0-3)", "video/msaa", 0, 3, 1)
+	_slider("Crowd simulation range (0 near, 1 wide, 2 everywhere)", "video/crowd_range", 0, 2, 1)
 	_check("Shadows", "video/shadows")
 	_check("Lighting effects (ambient occlusion, bloom)", "video/effects")
 	_check("Distance fog", "video/fog")
@@ -72,10 +86,53 @@ func _build() -> void:
 	_heading("Gameplay", 20)
 	_check("Weather (rain and wind)", "gameplay/weather")
 	_check("Traffic", "gameplay/traffic")
+	_check("Autosave (after missions and each new day)", "gameplay/autosave")
 	var quit := Button.new()
 	quit.text = "Quit to desktop"
 	quit.pressed.connect(func(): quit_requested.emit())
 	_rows.add_child(quit)
+
+
+var _capturing := ""
+var _bind_buttons: Dictionary = {}   # action -> Button
+
+
+func _bind_row(action: String, label: String) -> void:
+	var row := HBoxContainer.new()
+	var l := Label.new()
+	l.text = label
+	l.custom_minimum_size = Vector2(240, 0)
+	row.add_child(l)
+	var b := Button.new()
+	b.name = "bind_" + action
+	b.custom_minimum_size = Vector2(300, 0)
+	b.text = InputRebinder.label(action)
+	b.pressed.connect(func():
+		_capturing = action
+		b.text = "Press a key…")
+	row.add_child(b)
+	_bind_buttons[action] = b
+	_rows.add_child(row)
+
+
+func _refresh_binds() -> void:
+	_capturing = ""
+	for action in _bind_buttons:
+		(_bind_buttons[action] as Button).text = InputRebinder.label(action)
+
+
+## While a key button waits for input, the next key or mouse button is taken before anything else sees it.
+func _input(event: InputEvent) -> void:
+	if _capturing.is_empty() or not visible:
+		return
+	if not (event is InputEventKey or event is InputEventMouseButton) or not event.pressed:
+		return
+	get_viewport().set_input_as_handled()
+	if event is InputEventKey and event.keycode == KEY_ESCAPE:
+		_refresh_binds()
+		return
+	settings.note_bindings(InputRebinder.bind(_capturing, event))
+	_refresh_binds()
 
 
 func _heading(text: String, size: int) -> void:

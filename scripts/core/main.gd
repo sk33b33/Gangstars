@@ -40,6 +40,7 @@ func _ready() -> void:
 	session.save_path = _args.get("load", save_path)
 	add_child(session)
 	settings.load_settings()
+	InputRebinder.apply(settings.bindings)
 	pause_menu = PauseMenu.new()
 	pause_menu.name = "PauseMenu"
 	hud.add_child(pause_menu)
@@ -54,6 +55,8 @@ func _ready() -> void:
 	if not district.is_navigation_ready:
 		await district.navigation_ready
 	session.setup(district, player, hud)
+	if session.audio:
+		session.audio.sound_heard.connect(_on_sound_heard)
 	apply_settings()
 	hud.show_message("Welcome to Westridge. You've just moved into 13 AZ Berman Drive.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
@@ -72,11 +75,19 @@ func _ready() -> void:
 		_run_profile.call_deferred()
 
 
+func _on_sound_heard(label: String, pos: Vector3) -> void:
+	if not bool(settings.get_value("access/captions")):
+		return
+	var to := (pos - player.camera.global_position).normalized()
+	hud.show_caption(label, to.dot(player.camera.global_transform.basis.x))
+
+
 func _process(_delta: float) -> void:
 	hud.set_clock(district.director.clock)
 	var look := -player.camera.global_transform.basis.z
 	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)))
 	hud.set_night(district.day_night.night_amount())
+	hud.set_weather(district.weather.rain if district.weather.enabled else 0.0, district.day_night.heat())
 	if session.police:
 		hud.set_combat(player.health.fraction(), session.police.heat.level(), player.aiming)
 
@@ -84,6 +95,9 @@ func _process(_delta: float) -> void:
 ## Pushes settings into the engine and game objects (called at start and on every change).
 func apply_settings() -> void:
 	settings.apply_engine()
+	session.autosave_user = bool(settings.get_value("gameplay/autosave"))
+	district.director.dormant_distance = [150.0, 320.0, INF][int(settings.get_value("video/crowd_range"))]
+	Resident.bubbles_on = bool(settings.get_value("access/speech_bubbles"))
 	player.mouse_sensitivity = float(settings.get_value("controls/mouse_sensitivity"))
 	player.invert_y = bool(settings.get_value("controls/invert_y"))
 	player.stick_sensitivity = float(settings.get_value("controls/stick_sensitivity"))

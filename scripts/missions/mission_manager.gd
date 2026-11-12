@@ -14,6 +14,8 @@ signal mission_updated(mission: MissionData)
 signal mission_completed(mission: MissionData, rewards_granted: bool)
 signal mission_failed(mission: MissionData, reason: String)
 signal message(text: String)
+## An objective just became the current one (a follow objective sends its person off).
+signal objective_started(mission_id: String, objective: Dictionary)
 ## A "dialogue" objective was reached: the session shows the scene, then calls finish_dialogue.
 signal dialogue_requested(mission_id: String, scene_id: String, npc_id: String)
 
@@ -30,6 +32,8 @@ var crew_near: Callable
 var driving_vehicle: Callable
 ## stat_value(name) -> int, for "stat" objectives (counters such as drinks_sold, contacts).
 var stat_value: Callable
+## npc_position(npc_id) -> Vector3 or null, for "follow" objectives.
+var npc_position: Callable
 var event_active: Callable
 var _last_position_minutes := -1.0
 
@@ -143,6 +147,8 @@ func objective_text(id: String) -> String:
 				text += " (%d/%d)" % [mini(int(stat_value.call(str(o.get("stat", "")))), int(o.get("value", 1))), int(o.get("value", 1))]
 		"hold":
 			text += " (%d/%d min)" % [int(active[id].count), int(o.get("minutes", 1))]
+		"follow":
+			text += " (stay within %d m)" % int(o.get("max_distance", 30.0))
 	var m: MissionData = catalog[id]
 	if m.time_limit_minutes > 0.0:
 		var left := m.time_limit_minutes - (absolute_minutes() - float(active[id].started))
@@ -159,6 +165,7 @@ func start(id: String) -> bool:
 	if m.auto_start and not m.intro_for(progression.crew_id, progression.flags).is_empty():
 		message.emit(m.intro_for(progression.crew_id, progression.flags))
 	message.emit("Mission started: %s — %s" % [m.title, objective_text(id)])
+	_announce(id)
 	_check_stat_objectives()
 	return true
 
@@ -229,6 +236,9 @@ func on_player_position(pos: Vector3) -> void:
 		if kind == "hold":
 			_update_hold(id, o, pos, elapsed)
 			continue
+		if kind == "follow":
+			_update_follow(id, o, pos, elapsed)
+			continue
 		if kind == "drive_to":
 			var driving: String = driving_vehicle.call() if driving_vehicle.is_valid() else ""
 			if driving.is_empty() or (o.has("vehicle") and driving != str(o.vehicle)):
@@ -275,6 +285,53 @@ func _update_hold(id: String, o: Dictionary, pos: Vector3, elapsed: float) -> vo
 			else "Your crew isn't with you. Start again.")
 
 
+## A new objective is current. A follow objective sends its person off, but only inside its time
+## window (people at home asleep don't set off at night); tick() tries again later.
+func _announce(id: String) -> void:
+	var o := current_objective(id)
+	if str(o.get("type", "")) != "follow":
+		objective_started.emit(id, o)
+		return
+	if o.has("window") and not SimClock.in_window(clock.hour(), float(o.window[0]), float(o.window[1])):
+		return
+	if not bool(active[id].get("sent", false)):
+		active[id].sent = true
+		active[id].sent_at = absolute_minutes()
+		objective_started.emit(id, o)
+
+
+## Follow: someone heads for a place; stay close enough (max_distance) until they arrive, but
+## don't walk right up to them (min_distance keeps it a tail, not a chat). Fall behind for too
+## long and you lose them: the mission fails and can be tried again.
+func _update_follow(id: String, o: Dictionary, pos: Vector3, elapsed: float) -> void:
+	if not npc_position.is_valid() or not anchor_position.is_valid():
+		return
+	if o.has("window") and not SimClock.in_window(clock.hour(), float(o.window[0]), float(o.window[1])):
+		return
+	if not bool(active[id].get("sent", false)):
+		_announce(id)
+	var who: Variant = npc_position.call(str(o.target))
+	var goal: Variant = anchor_position.call(str(o.destination))
+	if who == null or goal == null:
+		return
+	var gap := Vector2(pos.x - who.x, pos.z - who.z).length()
+	var arrived := Vector2(who.x - goal.x, who.z - goal.z).length() <= float(o.get("radius", 4.0))
+	# Someone busy elsewhere (a push, a fight) is told again every quarter of an hour until they set off.
+	if not arrived and bool(active[id].get("sent", false)) and absolute_minutes() - float(active[id].get("sent_at", 0.0)) > 15.0:
+		active[id].sent = false
+		_announce(id)
+	if arrived and gap <= float(o.get("max_distance", 30.0)):
+		message.emit(_advance(id))
+	elif gap > float(o.get("max_distance", 30.0)):
+		active[id].count += elapsed
+		if active[id].count > float(o.get("lose_minutes", 12.0)):
+			fail(id, "You lost them.")
+	else:
+		active[id].count = maxf(0.0, active[id].count - elapsed)
+		if not arrived and gap < float(o.get("min_distance", 0.0)) and not bool(o.get("allow_close", true)):
+			active[id].count += elapsed
+
+
 func _event_ok(o: Dictionary) -> bool:
 	if not o.has("event"):
 		return true
@@ -295,6 +352,9 @@ func tick() -> void:
 		var m: MissionData = catalog[id]
 		if m.time_limit_minutes > 0.0 and absolute_minutes() - float(active[id].started) > m.time_limit_minutes:
 			fail(id, m.fail_text if not m.fail_text.is_empty() else "Out of time.")
+	for id in active.keys():
+		if str(current_objective(id).get("type", "")) == "follow":
+			_announce(id)
 	_check_stat_objectives()
 	check_auto_start()
 
@@ -330,7 +390,9 @@ func _advance(id: String) -> String:
 	active[id].seen = []
 	if active[id].objective >= m.objectives.size():
 		return _complete(id)
+	active[id].sent = false
 	mission_updated.emit(m)
+	_announce(id)
 	_check_stat_objectives.call_deferred()
 	return "Objective done. Next: " + objective_text(id)
 

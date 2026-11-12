@@ -169,6 +169,17 @@
       ],
       "radius": 2.0,
       "map_label": "square"
+    },
+    {
+      "id": "tc_mosque",
+      "name": "the mosque",
+      "kind": "gathering",
+      "position": [
+        367.0,
+        -28
+      ],
+      "radius": 2.5,
+      "map_label": "mosque"
     }
   ],
   "patrol_routes": {

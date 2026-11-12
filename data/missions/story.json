@@ -266,6 +266,42 @@
       "rewards": {
         "reputation": 5
       }
+    },
+    {
+      "id": "the_long_view",
+      "title": "The Long View",
+      "giver": "npc_boeta",
+      "prerequisites": {
+        "missions": [
+          "kings_of_the_plain"
+        ],
+        "districts": [
+          "district_tafelsig"
+        ]
+      },
+      "intro": "Boeta: \"Five suburbs. Westridge to Tafelsig. Nobody has held this much of the Plain. Hold ten corners and come and tell me what it was all for.\"",
+      "description": "Hold ten corners across Mitchells Plain, then decide what the Plain becomes.",
+      "objectives": [
+        {
+          "id": "ten",
+          "type": "stat",
+          "stat": "corners",
+          "value": 10,
+          "text": "Hold ten corners across Mitchells Plain"
+        },
+        {
+          "id": "ending",
+          "type": "dialogue",
+          "target": "npc_boeta",
+          "scene": "plain_ending",
+          "text": "Decide with Boeta what the Plain becomes"
+        }
+      ],
+      "rewards": {
+        "cash": 2000,
+        "reputation": 100,
+        "crew_influence": 25
+      }
     }
   ]
 }

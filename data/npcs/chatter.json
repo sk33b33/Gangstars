@@ -1,9 +1,42 @@
 {
-  "social": ["Did you hear about the Davids' laaitie?", "Ag, this wind again.", "Is the café still open?",
-    "My cousin is coming on Sunday.", "Eish, prices these days.", "Hey! Long time, hoe gaan dit?",
-    "Who's that new face on the block?", "The bus never comes on time."],
-  "crew": ["Keep an eye on the lane.", "Nobody moves on our corner.", "Quiet night, hey.", "Stay sharp."],
-  "investigate": ["What's going on there?", "Ey! What's all the noise?", "Let me see..."],
-  "flee": ["Hai, I'm going inside!", "Not again...", "Lock the gate!"],
-  "report": ["Did you see that out there?", "There's trouble on the street!"]
+  "social": [
+    "Did you hear about the Davids' laaitie?",
+    "Ag, this wind again.",
+    "Is the café still open?",
+    "My cousin is coming on Sunday.",
+    "Eish, prices these days.",
+    "Hey! Long time, hoe gaan dit?",
+    "Who's that new face on the block?",
+    "The bus never comes on time.",
+    "Ja nee, dis warm vandag.",
+    "Hoezit, my bra? Long time.",
+    "Eish, die wind blaas my wasgoed weg.",
+    "Ag nee, kyk net die prys van brood.",
+    "Jy lyk goed, hey!",
+    "Ek sê vir jou, die kinders groei so vinnig.",
+    "Sharp, ek sien jou Sondag.",
+    "Haai, wat maak jy hier?",
+    "Ons gaan braai vanaand, kom saam.",
+    "Dis nou 'n lekker koesister."
+  ],
+  "crew": [
+    "Keep an eye on the lane.",
+    "Nobody moves on our corner.",
+    "Quiet night, hey.",
+    "Stay sharp."
+  ],
+  "investigate": [
+    "What's going on there?",
+    "Ey! What's all the noise?",
+    "Let me see..."
+  ],
+  "flee": [
+    "Hai, I'm going inside!",
+    "Not again...",
+    "Lock the gate!"
+  ],
+  "report": [
+    "Did you see that out there?",
+    "There's trouble on the street!"
+  ]
 }

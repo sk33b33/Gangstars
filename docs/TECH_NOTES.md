@@ -487,3 +487,25 @@ entry in `data/districts/districts.json` carries the unlock requirements.
   renderer ignores them); `DayNight` sets the fog density from dusk and dust.
 - `Hud.panel_style()` is the one panel look; `set_heading()` drives the compass (Main computes the
   camera heading), `set_night()` the vignette strength.
+
+## Missions, accessibility and tooling (2026-11-12)
+
+- **Follow objective:** `MissionManager` emits `objective_started`; `GameSession` then gives the person a
+  `pending_event` to walk to the destination. Each tick `_update_follow()` completes it when they are
+  at the goal and you are within `max_distance`, and fails the mission after `lose_minutes` spent too far
+  behind. `npc_position` and `anchor_position` are injected callables.
+- **Effects** in `scenes.json` choices: `retaliation`, `turf_allies`, `turf_release`, `banner`.
+- **Re-binding:** `InputRebinder` swaps keyboard/mouse events on the InputMap (gamepad untouched), keeps a
+  snapshot of the defaults, saves to the `bindings` section of `settings.cfg`; `InputHints.custom` holds
+  the new key names for the prompts.
+- **Captions:** `AudioDirector.sound_heard(label, pos)` for the sounds in `CAPTIONS` within 45 m; `Main`
+  turns it into `Hud.show_caption()` with a left/right arrow from the camera.
+- **Autosave:** `GameSession.autosave()` after `mission_completed` and `day_changed`; `autosave_enabled`
+  is for tests, `autosave_user` is the player's setting.
+- **Crowd range:** `SimulationDirector.dormant_distance`; `Resident.set_dormant()` hides it and stops
+  `_process`/`_physics_process`. Not dormant: crew, anyone mid-incident, on an errand or inside.
+- **Screen effects:** two canvas shaders on the HUD (`hint_screen_texture`); they are only visible while
+  there is rain or heat, so they cost nothing the rest of the time.
+- **Playtest bot:** `tests/playbot.gd` (`--crew=`, `--choice=`). It cheats on district unlocks, crew
+  nearness and stats, takes one dialogue choice throughout, and skips what needs another crew or
+  branch. `tests/playbot.sh` runs four crew/branch combinations.

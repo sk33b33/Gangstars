@@ -113,6 +113,16 @@
         516.0,
         -30
       ]
+    },
+    {
+      "type": "container_shop",
+      "position": [
+        460,
+        -10
+      ],
+      "facing": "south",
+      "sign": "sign_fish",
+      "color": "#3d6e8f"
     }
   ],
   "pois": [
@@ -170,6 +180,17 @@
       ],
       "radius": 2.5,
       "map_label": "yard"
+    },
+    {
+      "id": "taf_fish_den",
+      "name": "Dune Fish Den",
+      "kind": "shop",
+      "position": [
+        460,
+        -7.4
+      ],
+      "radius": 1.0,
+      "map_label": "fish den"
     }
   ],
   "patrol_routes": {

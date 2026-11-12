@@ -25,6 +25,7 @@ var interiors: InteriorSystem
 var pushers: Dictionary = {}     # corner id -> Array[Resident]
 var allies: Array = []           # crews that never push on your corners (story choices)
 var tags: Dictionary = {}        # corner id -> {decal, interactable, crew}
+var flags: Dictionary = {}       # corner id -> Node3D: your crew's flag on corners you hold
 
 var _rng := RandomNumberGenerator.new()
 var _tick := 0.0
@@ -51,6 +52,7 @@ func setup(p_district: District, p_player: Player, p_progression: ProgressionSta
 	state.push_ended.connect(_on_push_ended)
 	state.next_push = 360.0   # played minutes until the first push
 	_refresh_tags.call_deferred()
+	_refresh_flags.call_deferred()
 
 
 func minutes() -> float:
@@ -215,7 +217,38 @@ func _on_push_ended(id: String, held: bool) -> void:
 	_refresh_tags()
 
 
+## Your crew's flag flies on every corner you hold (and comes down when you lose it), so the map
+## of your territory can be read in the street.
+func _refresh_flags() -> void:
+	for id in state.order:
+		var mine := state.is_players(id)
+		if mine and not flags.has(id):
+			flags[id] = _make_flag(id)
+		elif not mine and flags.has(id):
+			if is_instance_valid(flags[id]):
+				flags[id].queue_free()
+			flags.erase(id)
+
+
+func _make_flag(id: String) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Flag_" + id
+	district.add_child(root)
+	root.global_position = anchor(id) + Vector3(1.4, 0, 1.4)
+	var pole := PixelMaterials.flat(Color("#c9c9c4"))
+	Geo.box(root, Vector3(0.07, 3.4, 0.07), Vector3(0, 1.7, 0), pole, false)
+	var cloth := PixelMaterials.flat(district.crews.colour(progression.crew_id))
+	Geo.box(root, Vector3(1.0, 0.62, 0.03), Vector3(0.55, 3.0, 0), cloth, false)
+	Geo.box(root, Vector3(1.0, 0.1, 0.035), Vector3(0.55, 3.26, 0), PixelMaterials.flat(Color("#f4f1ea")), false)
+	return root
+
+
+func flag_count() -> int:
+	return flags.size()
+
+
 func _on_flipped(id: String, old_owner: String, new_owner: String) -> void:
+	_refresh_flags.call_deferred()
 	var area := area_of(id)
 	if new_owner == progression.crew_id:
 		progression.add_cash(100)
