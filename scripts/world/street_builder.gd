@@ -26,6 +26,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 		_build_streetlights(root, s, b)
 	_build_street_signs(root, streets)
 	StreetDetail.build(root, info)
+	GroundDetail.build(root, info)
 	for lm in info.get("landmarks", []):
 		var p := DataFiles.to_vec2(lm.get("position"))
 		var pos := Vector3(p.x, 0, p.y)
@@ -42,6 +43,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"market": _build_market(root, pos)
 			"courtyard": _build_courtyard(root, pos)
 			"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
+			"mosque": _build_mosque(root, pos, _facing_rot(lm))
 			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
 			"lookout": _build_lookout(root, pos, _facing_rot(lm))
 			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
@@ -519,6 +521,70 @@ static func _build_church_hall(root: Node3D, c: Vector3, rot_y: float) -> void:
 	for wx in [-4.0, 4.0]:
 		Geo.quad(pivot, Vector2(1.2, 1.8), Vector3(wx, 2.0, 4.53), PixelMaterials.panel("window_bars"))
 	Geo.box(pivot, Vector3(4.0, 0.25, 1.6), Vector3(0, 0.125, 5.3), stone, false)
+
+
+## A neighbourhood mosque (Westridge, Rocklands and the Town Centre all have one): a white
+## prayer hall with a green band, a dome on a drum, and a minaret with a balcony. Local +Z is the
+## entrance side. Fictional building, no name or lettering.
+static func _build_mosque(root: Node3D, c: Vector3, rot_y: float) -> void:
+	var pivot := Node3D.new()
+	pivot.position = c
+	pivot.rotation.y = rot_y
+	root.add_child(pivot)
+	var white := PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color("#f4f1e8"))
+	var green := PixelMaterials.flat(Color("#2f7d5b"))
+	var gold := PixelMaterials.flat(Color("#d4a63a"))
+	Geo.box(pivot, Vector3(9.0, 5.0, 8.0), Vector3(0, 2.5, 0), white)
+	Geo.box(pivot, Vector3(9.12, 0.45, 8.12), Vector3(0, 4.75, 0), green, false)
+	Geo.box(pivot, Vector3(9.3, 0.18, 8.3), Vector3(0, 5.05, 0), PixelMaterials.flat(Color("#e8e4d8")), false)
+	# Dome on a short drum.
+	_cyl(pivot, 2.9, 2.9, 0.7, Vector3(0, 5.4, 0), white)
+	var dome := MeshInstance3D.new()
+	var sph := SphereMesh.new()
+	sph.radius = 3.0
+	sph.height = 3.0
+	sph.is_hemisphere = true
+	dome.mesh = sph
+	dome.material_override = PixelMaterials.flat(Color("#3f9a82"))
+	dome.position = Vector3(0, 5.7, 0)
+	pivot.add_child(dome)
+	_cyl(pivot, 0.05, 0.05, 1.1, Vector3(0, 7.7, 0), gold)
+	# Minaret at the front corner: shaft, balcony, upper shaft, small dome.
+	var mx := 5.1
+	var mz := 3.2
+	_cyl(pivot, 0.62, 0.78, 9.0, Vector3(mx, 4.5, mz), white)
+	Geo.collider(pivot, Vector3(1.5, 9.0, 1.5), Vector3(mx, 4.5, mz))
+	_cyl(pivot, 0.98, 0.98, 0.22, Vector3(mx, 9.1, mz), green)
+	_cyl(pivot, 0.46, 0.5, 1.9, Vector3(mx, 10.2, mz), white)
+	var cap := MeshInstance3D.new()
+	var csph := SphereMesh.new()
+	csph.radius = 0.62
+	csph.height = 0.62
+	csph.is_hemisphere = true
+	cap.mesh = csph
+	cap.material_override = PixelMaterials.flat(Color("#3f9a82"))
+	cap.position = Vector3(mx, 11.15, mz)
+	pivot.add_child(cap)
+	_cyl(pivot, 0.04, 0.04, 0.9, Vector3(mx, 12.05, mz), gold)
+	# Entrance: an arched door and two windows, a low step.
+	Geo.quad(pivot, Vector2(2.2, 3.2), Vector3(0, 1.6, 4.03), PixelMaterials.flat(Color("#23332e")))
+	Geo.quad(pivot, Vector2(2.6, 0.5), Vector3(0, 3.35, 4.032), green)
+	for wx in [-3.0, 3.0]:
+		Geo.quad(pivot, Vector2(1.3, 2.1), Vector3(wx, 2.4, 4.03), PixelMaterials.panel("window_bars"))
+	Geo.box(pivot, Vector3(4.2, 0.2, 1.4), Vector3(0, 0.1, 4.7), white, false)
+
+
+static func _cyl(parent: Node3D, top: float, bottom: float, height: float, pos: Vector3, mat: Material) -> void:
+	var m := CylinderMesh.new()
+	m.top_radius = top
+	m.bottom_radius = bottom
+	m.height = height
+	m.radial_segments = 14
+	var mi := MeshInstance3D.new()
+	mi.mesh = m
+	mi.material_override = mat
+	mi.position = pos
+	parent.add_child(mi)
 
 
 ## Old limestone quarry: a stepped, cut cliff face (solid, unreachable), rock piles, a rusting

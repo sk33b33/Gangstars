@@ -8,9 +8,9 @@ extends Node3D
 
 const MODEL := preload("res://assets/models/characters/person.glb")
 const HAIR_STYLES: PackedStringArray = ["short", "doek", "beanie", "bald", "long", "afro", "ponytail",
-	"fade", "cornrows", "braids", "curls", "bun"]
+	"fade", "cornrows", "braids", "curls", "bun", "hijab"]
 const ACCESSORIES: PackedStringArray = ["glasses", "sunglasses", "beard", "moustache", "collar", "chain", "apron",
-	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood", "tie", "overall", "phone", "shopbag"]
+	"police_cap", "police_vest", "dutybelt", "hoops", "curlers", "handbag", "cardigan", "hood", "tie", "overall", "phone", "shopbag", "backpack"]
 ## Painted face overlays (pxl textures); "none" hides the face paint.
 const FACES: PackedStringArray = ["face_m", "face_f", "face_old_m", "face_old_f", "face_stubble"]
 ## Cloth slots: matte with a sheen (CharacterModel._recolour).
@@ -44,6 +44,8 @@ var _holster: BoneAttachment3D
 var _chest: BoneAttachment3D
 var _gun: MeshInstance3D
 var _root: Node3D
+var _sway_t := 0.0
+static var _blob_mat: StandardMaterial3D
 var _skeleton: Skeleton3D
 var _tree: AnimationTree
 var _head_bone := -1
@@ -106,6 +108,7 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 	scale = Vector3(width, height, width)
 	_root = MODEL.instantiate()
 	add_child(_root)
+	_make_blob()
 	_skeleton = _root.find_child("Skeleton3D", true, false)
 	_head_bone = _skeleton.find_bone("head")
 	_head_scale = 1.3 if child else 1.0
@@ -140,7 +143,7 @@ func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 
 		"forearm": cardigan if extras.has("cardigan") else (fabric if opts.get("sleeves", "long") == "long" else PixelMaterials.skin(skin)),
 		"face_paint": PixelMaterials.face(face, skin) if FACES.has(face) else null,
 		"soles": opts.get("sole_color", Color("#ece8dc")),
-		"tie": opts.get("tie_color", Color("#7a1f2e")), "overall": opts.get("overall_color", pants),
+		"tie": opts.get("tie_color", Color("#7a1f2e")), "pack": opts.get("pack_color", Color("#2f3f6a")), "overall": opts.get("overall_color", pants),
 		"bag_red": Color("#c0392b"), "phone_screen": Color("#1f3a4f"),
 		"dress": fabric, "cardigan": cardigan, "bag": opts.get("bag_color", Color("#7a2e2a")), "acc_pink": Color("#f29bbd"),
 		"shoes": opts.get("shoe_color", Color("#1d1b24")), "hair": hair_color, "hat": hat if hat.a > 0.0 else Color("#1d1b24"),
@@ -272,8 +275,48 @@ func animate(delta: float, speed: float) -> void:
 	_tree.set("parameters/aim_long_mix/blend_amount", _aim if long_gun else 0.0)
 	_tree.set("parameters/down_mix/blend_amount", _down)
 	_tree.advance(delta)
+	_apply_sway(delta)
 	_apply_look(delta)
 	_apply_face(delta)
+
+
+## A little body roll and bounce in time with the stride, so walkers don't glide.
+func _apply_sway(delta: float) -> void:
+	var grounded := clampf(1.0 - _sit - _down - _lean, 0.0, 1.0)
+	_sway_t += delta * _speed * 3.4
+	var amount := clampf(_amp, 0.0, 1.2) * grounded
+	_root.rotation.z = lerpf(_root.rotation.z, sin(_sway_t) * 0.024 * amount, clampf(delta * 12.0, 0.0, 1.0))
+	_root.position.y = absf(sin(_sway_t)) * 0.012 * amount
+
+
+## A soft dark disc under each person: reads at a distance and at night, where the sun's shadow doesn't.
+func _make_blob() -> void:
+	if _blob_mat == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(0, 0, 0, 0.5))
+		g.set_color(1, Color(0, 0, 0, 0.0))
+		var tex := GradientTexture2D.new()
+		tex.gradient = g
+		tex.fill = GradientTexture2D.FILL_RADIAL
+		tex.fill_from = Vector2(0.5, 0.5)
+		tex.fill_to = Vector2(1.0, 0.5)
+		tex.width = 32
+		tex.height = 32
+		_blob_mat = StandardMaterial3D.new()
+		_blob_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_blob_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_blob_mat.albedo_texture = tex
+		_blob_mat.no_depth_test = false
+	var blob := MeshInstance3D.new()
+	blob.name = "BlobShadow"
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(0.95, 0.95)
+	blob.mesh = plane
+	blob.material_override = _blob_mat
+	blob.position = Vector3(0, 0.025, 0)
+	blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	blob.visibility_range_end = 40.0
+	add_child(blob)
 
 
 ## Blinks every few seconds; the mouth moves while talking. Older people stoop.

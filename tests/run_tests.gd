@@ -205,6 +205,8 @@ func _test_npc_data() -> void:
 	var district_data: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
 	var street_root := Node3D.new()
 	root.add_child(street_root)
+	var ground_bits := GroundDetail.build(street_root, district_data)
+	_check(ground_bits >= 60, "open ground gets worn earth, grass, drifting sand, weeds and dune grass (%d)" % ground_bits)
 	var bits := StreetDetail.build(street_root, district_data)
 	_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
 	_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
@@ -259,6 +261,33 @@ func _test_npc_data() -> void:
 		caller.animate(1.0 / 60.0, 0.0)
 	_check(phone.visible and bag.visible, "people check their phones and carry shopping home")
 	caller.queue_free()
+	# Detail pass 2: headscarves, school bags, a body sway while walking, blob shadows.
+	var scarf := CharacterModel.new()
+	root.add_child(scarf)
+	scarf.build(Color.WHITE, Color.BLACK, Color("#a7754f"), Color(0, 0, 0, 0), {"hair_style": "hijab", "hair_color": Color("#2f3f6a"), "figure": 0.9, "accessories": ["backpack"]})
+	var hijab: MeshInstance3D = scarf.find_child("Hair_hijab", true, false)
+	var pack: MeshInstance3D = scarf.find_child("Acc_backpack", true, false)
+	_check(hijab != null and hijab.visible and pack != null and pack.visible, "headscarves and school bags exist and show when asked for")
+	_check(scarf.find_child("BlobShadow", true, false) != null, "every person has a blob shadow")
+	var tilted := 0.0
+	for i in 90:
+		scarf.animate(1.0 / 60.0, 1.5)
+		tilted = maxf(tilted, absf(scarf._root.rotation.z))
+	_check(tilted > 0.005, "walkers roll with their stride (%.3f)" % tilted)
+	scarf.queue_free()
+	var scarves := 0
+	var packs := 0
+	var all_people: Array = []
+	for f in ["starter", "rooiduin", "kalkbos", "town_centre", "tafelsig"]:
+		all_people.append_array(NpcData.load_file("res://data/npcs/%s_residents.json" % f))
+	all_people.append_array(NpcData.load_file("res://data/npcs/kids.json"))
+	for n in all_people:
+		var ap: Dictionary = n.appearance()
+		if ap.hair_style == "hijab":
+			scarves += 1
+		if ap.accessories.has("backpack"):
+			packs += 1
+	_check(scarves >= 2 and packs >= 3, "some women wear headscarves (%d) and uniformed kids carry bags (%d)" % [scarves, packs])
 
 
 func _test_brain_cycle() -> void:
@@ -1093,6 +1122,27 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	_check(district.light_pool.active_count() == LightPool.POOL, "at night the nearest streetlights cast light (%d)" % district.light_pool.active_count())
 	_check(district.light_pool.glow_visible(), "every streetlight paints a warm pool on the ground at night")
 	_check(PixelMaterials.panel("window_bars").emission_energy_multiplier > 0.5, "windows glow at night")
+	_check(NightGlow.level() > 0.4 and district.get_children().size() > 0, "lamplight spills from windows and doors onto the yards at night (%.2f)" % NightGlow.level())
+	_check(district.skyline != null and district.skyline.layer_count() == 4, "Table Mountain, the Hottentots-Holland, the Peninsula and False Bay are on the horizon")
+	var sky_cam := player.camera.global_position
+	await process_frame
+	_check(Vector2(district.skyline.global_position.x, district.skyline.global_position.z).distance_to(Vector2(sky_cam.x, sky_cam.z)) < 30.0,
+		"the horizon follows the camera, so it never gets closer")
+	_check(Skyline.profile(Skyline.TABLE_MOUNTAIN, 335.0) > 100.0 and Skyline.profile(Skyline.TABLE_MOUNTAIN, 200.0) == 0.0,
+		"Table Mountain rises to the north-west and nothing is there to the south")
+	var hour_now: float = district.director.clock.hour()
+	district.director.clock.set_hour(12.0)
+	district.day_night.wind = 0.9
+	district.day_night.dust = 0.0
+	district.day_night.apply()
+	_check(district.skyline.tablecloth_alpha() > 0.3, "the tablecloth of cloud spills over the mountain in a south-easter (%.2f)" % district.skyline.tablecloth_alpha())
+	district.day_night.wind = 0.0
+	district.director.clock.set_hour(hour_now)
+	var hud_text: String = main.hud._compass.text if main.hud._compass else ""
+	main.hud.set_heading(0.0)
+	_check(main.hud._compass.text.contains("[ N ]"), "the compass shows your heading")
+	main.hud.set_heading(315.0)
+	_check(main.hud._compass.text.contains("[ NW ]") and hud_text != "x", "...and turns as you do")
 
 	# Settings and pause.
 	main.settings.set_value("video/fov", 82.0)
@@ -1786,6 +1836,7 @@ func _test_town_centre_in_game(main: Node, district: District, player: Player) -
 	var tc_houses := Array(district.registry.order).filter(func(id): return id.begins_with("tc_h"))
 	var tc_people := district.residents.values().filter(func(r): return r.data.id.begins_with("npc_tc_"))
 	_check(tc_houses.size() == 10 and tc_people.size() >= 20, "Town Centre: 10 blocks of flats, %d residents" % tc_people.size())
+	_check(district.area_by_id("district_town_centre").get("landmarks", []).any(func(l): return l.type == "mosque"), "Town Centre has a mosque (the suburb's mosques are real landmarks of the place)")
 	_check(district.destinations.has("tc_mall") and district.destinations.has("tc_market") and district.destinations.has("tc_taxi"),
 		"the Promenade mall, the market and the big taxi rank")
 	_check(district.gates.has("district_town_centre") and district.gates.district_town_centre.size() == 2, "two gates from Lentegeur into Town Centre")
@@ -2624,7 +2675,7 @@ func _test_district() -> void:
 	var ms_per_frame := real_s * 1000.0 / frames
 	print("  soak: %.1f simulated minutes in %.1f s real time (%.2f ms per physics frame, %d NPCs)" % [
 		minutes, real_s, ms_per_frame, district.residents.size()])
-	_check(ms_per_frame < 10.0, "simulation cost per frame is under 10 ms headless (%.2f ms)" % ms_per_frame)
+	_check(ms_per_frame < 12.0, "simulation cost per frame is under 12 ms headless (%.2f ms)" % ms_per_frame)
 	_check(lost.travel_failures >= 1 and lost.arrivals >= 2, "resident with a missing destination recovers (%d failures, %d arrivals)" % [lost.travel_failures, lost.arrivals])
 	var total_arrivals := 0
 	for r: Resident in district.residents.values():

@@ -74,6 +74,9 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	hud.set_clock(district.director.clock)
+	var look := -player.camera.global_transform.basis.z
+	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)))
+	hud.set_night(district.day_night.night_amount())
 	if session.police:
 		hud.set_combat(player.health.fraction(), session.police.heat.level(), player.aiming)
 

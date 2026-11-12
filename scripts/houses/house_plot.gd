@@ -89,6 +89,12 @@ func build(house: HouseData, closing_fence := false) -> void:
 		Geo.box(self, Vector3(0.85, 0.12, 0.85), Vector3(float(kit.x) + float(kit.chimney.x), h + ch - 0.24, front_z - float(kit.d) * 0.5),
 			PixelMaterials.flat(Color("#3d3d42")), false)
 	_build_props(kit, h, front_z)
+	_build_owner_additions(kit, h, front_z, face)
+	if data.occupancy != "vacant":   # lamplight on the yard from the front windows and the door
+		for win in kit.windows:
+			if float(win[1]) < 2.0:
+				NightGlow.add(self, Vector3(win[0], 0.04, face + 1.7), Vector2(3.4, 2.6))
+		NightGlow.add(self, Vector3(kit.door_x, 0.045, face + 1.1), Vector2(2.4, 2.0))
 
 	door_interactable = Interactable.new()
 	door_interactable.name = "Door"
@@ -146,6 +152,86 @@ func _build_facade_details(kit: Dictionary, h: float, front_z: float, face: floa
 		panel.rotation.x = slope
 		Geo.box(self, Vector3(1.6, 0.4, 0.4), Vector3(float(kit.x) - side * 1.6, h + roof_h * 0.8 + 0.3, front_z - float(kit.d) * 0.4),
 			PixelMaterials.flat(Color("#d8dadf")), false)
+
+
+## What owners add to the plain council house over the years (docs/MITCHELLS_PLAIN_REFERENCE.md):
+## a front hedge or flower bed, a satellite dish, a lean-to room at the side, a corrugated-iron
+## room or a Wendy house in the back yard, and a mural on the flats' blank wall. All visual only
+## (no colliders), so paths and reachability never change.
+func _build_owner_additions(kit: Dictionary, h: float, front_z: float, face: float) -> void:
+	var roll := absi(hash(data.id + ":owner"))
+	var half_w := data.plot_size.x * 0.5
+	var depth := data.plot_size.y
+	var body_x: float = kit.x
+	var body_w: float = kit.w
+	var door_x: float = kit.door_x
+	var back_z: float = front_z - float(kit.d)
+	if str(data.kit) == "flats":
+		if roll % 3 == 0:
+			Geo.quad(self, Vector2(6.0, 2.5), Vector3(body_x - 4.2, 1.75, face + 0.014), PixelMaterials.panel("mural_plain"))
+		return
+	var single := int(kit.storeys) == 1
+	var pick := roll % 100
+	# Front hedge (or a flowering shrub) beside the stoep, below the window sills.
+	if single and pick < 35:
+		var dir := 1.0 if door_x + 3.6 < body_x + body_w * 0.5 else -1.0
+		var hx := door_x + dir * 2.4
+		if absf(hx - body_x) < body_w * 0.5 - 1.0:
+			var leaf := PixelMaterials.flat(Color("#4d7a3c") if roll / 7 % 2 == 0 else Color("#5f8a3a"))
+			Geo.box(self, Vector3(2.2, 0.55, 0.65), Vector3(hx, 0.28, face + 0.5), leaf, false)
+			if roll / 11 % 2 == 0:   # roses in bloom
+				var bloom := PixelMaterials.flat(Color("#d6403e") if roll / 13 % 2 == 0 else Color("#f0a8c0"))
+				for k in 4:
+					Geo.box(self, Vector3(0.12, 0.12, 0.12), Vector3(hx - 0.8 + k * 0.5, 0.6, face + 0.82), bloom, false)
+	# Satellite dish on the front wall.
+	if roll / 3 % 100 < 30:
+		var dx := body_x + (body_w * 0.5 - 0.7) * (1.0 if roll % 2 else -1.0)
+		var dy := h - 0.75
+		var dish := MeshInstance3D.new()
+		var cone := CylinderMesh.new()
+		cone.top_radius = 0.34
+		cone.bottom_radius = 0.04
+		cone.height = 0.16
+		cone.radial_segments = 10
+		dish.mesh = cone
+		dish.material_override = PixelMaterials.flat(Color("#d8dadf"))
+		dish.position = Vector3(dx, dy, face + 0.34)
+		dish.rotation.x = PI * 0.5
+		dish.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(dish)
+		Geo.box(self, Vector3(0.05, 0.05, 0.32), Vector3(dx, dy, face + 0.16), PixelMaterials.flat(Color("#8a8f99")), false)
+	if not single or kit.has("garage"):
+		return
+	var back_ok := back_z - 3.4 > -depth + 0.3
+	var kind := (roll / 5) % 100
+	if kind < 26:   # a lean-to room added at the side, on the side with space
+		var room_w := 2.6
+		var left := body_x - body_w * 0.5 - room_w * 0.5
+		var right := body_x + body_w * 0.5 + room_w * 0.5
+		var ex := right if half_w - absf(right) > half_w - absf(left) else left
+		if absf(ex) + room_w * 0.5 < half_w - 0.3:
+			var paint: Color = [Color("#e9d7b8"), Color("#cfe0d0"), Color("#d9c4d8"), Color("#f2e4b8")][roll / 17 % 4]
+			var ez := front_z - float(kit.d) * 0.68
+			Geo.box(self, Vector3(room_w, 2.3, float(kit.d) * 0.55), Vector3(ex, 1.15, ez),
+				PixelMaterials.surface("wall_plaster", Vector2(2, 2), paint), false)
+			var lean := Geo.box(self, Vector3(room_w + 0.3, 0.08, float(kit.d) * 0.55 + 0.3), Vector3(ex, 2.42, ez),
+				PixelMaterials.surface("roof_ibr", Vector2(2, 2), Color("#9aa3ab")), false)
+			lean.rotation.z = 0.08 * (1.0 if ex > body_x else -1.0)
+	elif kind < 52 and back_ok:   # a corrugated-iron room in the back yard (shared yards are common)
+		var bx := (half_w - 1.9) * (1.0 if roll % 2 else -1.0)
+		var bz := back_z - 2.2
+		var iron := PixelMaterials.surface("roof_ibr", Vector2(1, 1), Color("#b7bcc2") if roll / 19 % 2 == 0 else Color("#c9b9a0"))
+		Geo.box(self, Vector3(2.5, 2.1, 2.6), Vector3(bx, 1.05, bz), iron, false)
+		var tin := Geo.box(self, Vector3(2.8, 0.07, 3.0), Vector3(bx, 2.2, bz), PixelMaterials.flat(Color("#7d828c")), false)
+		tin.rotation.z = 0.1
+		Geo.box(self, Vector3(0.8, 1.7, 0.06), Vector3(bx, 0.85, bz + 1.32), PixelMaterials.flat(Color("#3a4a5a")), false)
+	elif kind < 64 and back_ok:   # a timber Wendy house, painted
+		var wx := (half_w - 1.8) * (-1.0 if roll % 2 else 1.0)
+		var wz := back_z - 2.0
+		var paint: Color = [Color("#8fb8d8"), Color("#f2e4b8"), Color("#9fd8b8"), Color("#e8967a")][roll / 23 % 4]
+		Geo.box(self, Vector3(2.0, 1.9, 2.0), Vector3(wx, 0.95, wz), PixelMaterials.flat(paint), false)
+		Geo.box(self, Vector3(2.3, 0.08, 2.3), Vector3(wx, 1.98, wz), PixelMaterials.flat(Color("#6b4630")), false)
+		Geo.box(self, Vector3(0.6, 1.2, 0.05), Vector3(wx, 0.62, wz + 1.03), PixelMaterials.flat(Color("#f4f1ea")), false)
 
 
 ## Front yard side that is free of the garden path and the garage/driveway.

@@ -467,3 +467,23 @@ objectives).
 `tools/specs/tafelsig.json` + `data/districts/tafelsig.json`; `tools/generate_district.py` then
 writes the houses and residents. Town Centre names it as its east neighbour (gates), the catalog
 entry in `data/districts/districts.json` carries the unlock requirements.
+
+## The look pass (2026-11-12)
+
+- `Skyline` is a Node3D under the district that copies the camera's X/Z every frame. Its layers are
+  ArrayMesh ribbons around a 900 m circle (bearing = compass degrees, 0 = north = -Z), heights from
+  control-point tables scaled by `HEIGHT_SCALE`; vertex-colour unshaded materials with
+  `disable_fog`, tinted by `DayNight.apply()` through `set_atmosphere(horizon, night, overcast,
+  dust, wind)`. The base is 140 m below ground so it never floats at low angles.
+- `GroundDetail` and `StreetDetail` add only plain meshes with shared `PixelMaterials.panel`
+  materials: MeshMerger batches them, and there are no colliders (navigation is unchanged).
+- `HousePlot._build_owner_additions()` is deterministic from the house id and visual only; rear
+  rooms are skipped if the plot is too shallow. `NightGlow` is one shared additive material whose
+  alpha `DayNight` sets (night x power), so load-shedding darkens the yards too.
+- Characters: `Hair_hijab` and `Acc_backpack` come from `tools/blender/build_character.py`
+  (`make_hijab`, `make_backpack`); `CharacterModel._apply_sway()` rolls the model root with the
+  stride; `BlobShadow` is a shared-material disc.
+- `RenderQuality.apply()` adds SSR and volumetric fog on Forward+ only (the web/Compatibility
+  renderer ignores them); `DayNight` sets the fog density from dusk and dust.
+- `Hud.panel_style()` is the one panel look; `set_heading()` drives the compass (Main computes the
+  camera heading), `set_night()` the vignette strength.

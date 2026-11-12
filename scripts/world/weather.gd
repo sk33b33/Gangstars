@@ -154,6 +154,7 @@ func _process(delta: float) -> void:
 	StreetDetail.puddle_material().albedo_color.a = smoothstep(0.25, 0.8, wet) * 0.9
 	if day_night:
 		day_night.overcast = overcast
+		day_night.wind = wind
 		day_night.dust = smoothstep(0.5, 0.9, wind) * (1.0 - rain)
 		day_night.wet = wet
 		day_night.cloud_cover = clampf(overcast * 1.6, 0.0, 1.0) * (1.0 - smoothstep(0.6, 0.85, overcast))

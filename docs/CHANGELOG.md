@@ -4,6 +4,33 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### The look of the Plain: skyline, ground, houses, people, light (2026-11-12)
+Researched first: `docs/MITCHELLS_PLAIN_REFERENCE.md` (what is confirmed by sources and what is general
+knowledge, plus how each finding shows up in the game).
+- **Table Mountain on the horizon** (`scripts/world/skyline.gd`): a far-off, pale-blue plateau to
+  the north-west, seen *side on* as it is from the Flats (not the postcard profile), with Devil's
+  Peak and Lion's Head at the ends. Also the jagged Hottentots-Holland range to the east, the low
+  Peninsula ridge to the west and False Bay to the south. It follows the camera like a skybox,
+  ignores fog, turns violet at dusk, goes dark at night, hides in dust haze, and in a south-easter
+  the "tablecloth" of cloud spills over the plateau.
+- **Ground** (`ground_detail.gd`): worn earth and grass patches, wind ripples, sand drifting over
+  pavement edges, weeds at the foot of walls, dune-grass tufts. No colliders.
+- **Houses:** owners' additions on the plain council houses: front hedges with roses, satellite
+  dishes, lean-to rooms, corrugated-iron back-yard rooms and painted Wendy houses; a community
+  mural on some flats. Visual only.
+- **A mosque** in the Town Centre (white prayer hall, green band, dome, minaret): a fictional building
+  with no name or lettering. The research found mosques at Westridge, Rocklands and the Town Centre;
+  the others can follow when there is a lot for them.
+- **People:** headscarves (hijab) on some women, school bags on uniformed kids, a body roll and
+  bounce while walking, soft blob shadows.
+- **Light:** warm lamplight spills from windows and doors onto the yards at night; on desktop,
+  screen-space reflections (wet roads, car paint) and thin volumetric haze that shows sunset
+  shafts and thickens in dust.
+- **HUD:** one glass-panel style, a compass (look north-west for Table Mountain) and a night
+  vignette.
+- **Tests:** skyline, tablecloth, camera-following horizon, ground detail, window glow, compass,
+  headscarves, bags, sway, blob shadows.
+
 ### Tafelsig, grudges and a calmer HUD (2026-11-12)
 - **Tafelsig, the fifth area** (east of Town Centre, "out towards the dunes"): 20 houses (flats
   on the main roads, row-house courts on Court Lane), 25 residents, a sand court, a courtyard, a
@@ -28,7 +55,7 @@ All notable development milestones should be recorded here.
   longer clipped ("ROCKLANDS · LOCKED").
 - **Tests:** `tests/run.sh` wrapper (see TECH_NOTES for why), `--units-only`, Tafelsig and
   consequence tests, puddles; 149 simulated NPCs now cost about 8 ms per physics frame headless,
-  so that budget is 10 ms.
+  so that budget is 10 ms (12 ms after the look pass: the same code measured 7.9 to 10.1 ms between runs, so the check has noise).
 
 ### More detail: streets, houses, characters, vehicles, light (2026-11-12)
 - **Streets:** litter on pavements and in gutters, potholes and tar patches, storm drains at

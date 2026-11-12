@@ -10,6 +10,10 @@ var shadows_allowed := true
 var overcast := 0.0
 ## 0..1 from Weather: wind lifts Cape Flats sand into a tan haze.
 var dust := 0.0
+## 0..1 from Weather: the south-easter (pulls the tablecloth over Table Mountain).
+var wind := 0.0
+## The far horizon (Table Mountain and friends); tinted with the sky.
+var skyline: Skyline
 ## 0..1 from Weather: wet ground after rain (shiny, darker), dries off slowly.
 var wet := 0.0
 ## Patchy cloud passing over the sun on cloudy days (0 = clear).
@@ -65,6 +69,11 @@ static func daylight(h: float) -> float:
 	return sin((h - 6.0) / 13.0 * PI)
 
 
+## 0 by day, 1 at night (the same number apply() uses).
+func night_amount() -> float:
+	return 1.0 - smoothstep(0.0, 0.3, daylight(clock.hour())) if clock else 0.0
+
+
 func apply() -> void:
 	var h := clock.hour()
 	var light := daylight(h)
@@ -94,6 +103,11 @@ func apply() -> void:
 		environment.fog_light_color = horizon.lerp(DUST_FOG.darkened(night * 0.8), dust * 0.7)
 		environment.fog_depth_begin = lerpf(80.0, 10.0, maxf(overcast * 0.45, dust))
 		environment.fog_depth_end = lerpf(320.0, 110.0, dust)
+		if environment.volumetric_fog_enabled:   # Forward+ only: thin haze that shows the sun's shafts, thicker at dusk and in dust
+			environment.volumetric_fog_density = (0.0012 + dusk * 0.006 + dust * 0.012) * (1.0 - night * 0.8)
+			environment.volumetric_fog_albedo = horizon.lerp(Color.WHITE, 0.35)
+		if skyline:
+			skyline.set_atmosphere(horizon, night, overcast, dust, wind)
 	var power := 1.0 if power_on else 0.0
 	PixelMaterials.lamp().emission_energy_multiplier = lerpf(0.3, 4.0, night) * power
 	VehicleLibrary.night = night
@@ -103,6 +117,7 @@ func apply() -> void:
 		win.emission_texture = win.albedo_texture
 		win.emission = Color("#ffcf7a")
 	win.emission_energy_multiplier = night * 0.8 * power
+	NightGlow.set_level(night * power * 0.85)
 	is_lit = night > 0.5 and power_on
 	if absf(wet - _applied_wet) > 0.02:
 		_applied_wet = wet

@@ -23,6 +23,15 @@ static func apply(env: Environment, sun: DirectionalLight3D, effects: bool) -> v
 	env.ssil_enabled = on
 	env.ssil_radius = 4.0
 	env.ssil_intensity = 0.7
+	env.ssr_enabled = on   # wet roads, car paint and windows pick up the sky and lamps
+	env.ssr_max_steps = 48
+	env.ssr_fade_in = 0.15
+	env.ssr_fade_out = 2.0
+	env.ssr_depth_tolerance = 0.25
+	env.volumetric_fog_enabled = on   # dust shafts at sunset; DayNight sets the density
+	env.volumetric_fog_density = 0.0
+	env.volumetric_fog_length = 90.0
+	env.volumetric_fog_anisotropy = 0.5
 	env.glow_enabled = on
 	env.glow_intensity = 0.6
 	env.glow_bloom = 0.04

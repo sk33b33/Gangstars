@@ -126,6 +126,8 @@ func _outfit(look: Dictionary, h: int, woman: bool, grey: bool, kid: bool) -> vo
 		look.sole_color = Color("#1d1b24")
 		look.pants_style = ""
 		acc.append("tie")
+		acc.append("backpack")   # the school bag
+		look.pack_color = [Color("#2f3f6a"), Color("#3a3d46"), Color("#7a1f2e"), Color("#1f6a58")][h / 101 % 4]
 	elif role == "resident" and not woman and not grey and not kid and h / 97 % 6 == 0:
 		var c: Color = [Color("#2f4f8a"), Color("#d35400"), Color("#3d5a3a")][h / 101 % 3]
 		look.pants_override = c
@@ -146,6 +148,7 @@ func _outfit(look: Dictionary, h: int, woman: bool, grey: bool, kid: bool) -> vo
 const SLIPPERS := ["#f29bbd", "#7fc3e8", "#1d1b24", "#f4f4f0", "#c8a27a", "#e2585e"]
 const CARDIGANS := ["#d8cbb0", "#f4f4f0", "#a7c0d6", "#c98aa5", "#8c6044", "#5b7097"]
 const BAGS := ["#7a2e2a", "#1d1b24", "#c8a27a", "#e2585e", "#f2b632", "#f4f4f0"]
+const HIJABS := ["#1d1b24", "#2f3f6a", "#6a2f4a", "#1f6a58", "#e8e2d0", "#7a6a8a"]
 const DOEKS := ["#d9442e", "#2f6db8", "#9a6cc4", "#e86a8a", "#159a8c", "#f2b632"]
 
 
@@ -177,6 +180,9 @@ func _aunty_look(look: Dictionary, h: int) -> void:
 	elif h / 29 % 5 < 3:
 		look.hair_style = "doek"
 		look.hair_color = Color(DOEKS[h / 31 % DOEKS.size()])
+	if h / 59 % 5 < 2 and not acc.has("curlers"):   # a headscarf (the suburb has mosques in Westridge, Rocklands and the Town Centre)
+		look.hair_style = "hijab"
+		look.hair_color = Color(HIJABS[h / 61 % HIJABS.size()])
 
 
 static func from_dict(d: Dictionary) -> NpcData:

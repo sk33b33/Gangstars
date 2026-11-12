@@ -522,3 +522,32 @@ sprite("van_bakery", { w: 64, h: 26 },
   ellipse(10, 9, 7, 5, "#c98a3d"), ellipse(10, 8, 6, 3, "#e0a95a"), line(6, 8, 8, 6, "#8a5a24"), line(10, 8, 12, 6, "#8a5a24"), line(14, 9, 15, 7, "#8a5a24"),
   text(40, 2, "OUMA'S", "#c0392b", { align: "c" }), text(40, 9, "BAKERY", "#1d1b24", { align: "c" }),
   text(32, 17, "FRESH DAILY", "#f4f1ea", { align: "c" }))
+
+// ---- Ground detail (Cape Flats: wind-blown sand, worn earth, tough grass, dune strandveld) ----
+sprite("dirt_patch", { w: 32, h: 24 },
+  ellipse(16, 12, 15, 10, "#c9ad7c"), ellipse(15, 12, 12, 7, "#b99d6c"), ellipse(17, 13, 6, 3, "#a98e5e"),
+  px(8, 8, "#8a8578"), px(22, 16, "#8a8578"), px(12, 17, "#a8a296"), px(25, 9, "#a8a296"))
+sprite("grass_patch", { w: 32, h: 24 },
+  ellipse(16, 12, 15, 10, "#98ad5c"), ellipse(16, 12, 11, 7, "#86a04f"),
+  line(6, 14, 7, 11, "#c9b66a"), line(11, 16, 12, 12, "#6f8a3f"), line(16, 9, 17, 6, "#c9b66a"), line(20, 15, 21, 11, "#6f8a3f"),
+  line(24, 11, 25, 8, "#c9b66a"), line(14, 18, 15, 15, "#6f8a3f"))
+sprite("sand_ripple", { w: 32, h: 16 },
+  line(2, 3, 12, 2, "#e6d3a0"), line(14, 2, 26, 4, "#e6d3a0"), line(0, 8, 9, 9, "#cdb67d"), line(11, 9, 22, 8, "#e6d3a0"),
+  line(23, 8, 31, 9, "#cdb67d"), line(4, 13, 16, 12, "#e6d3a0"), line(18, 12, 28, 13, "#cdb67d"))
+sprite("sand_drift", { w: 32, h: 12 },
+  poly([0, 11, 4, 5, 12, 2, 22, 3, 30, 7, 32, 11], "#d9c590"), poly([2, 11, 6, 6, 13, 4, 21, 5, 28, 8, 30, 11], "#e6d6a8"),
+  poly([6, 11, 10, 8, 16, 6, 22, 8, 26, 11], "#f0e3bc"))
+sprite("weed_tuft", { w: 12, h: 12 },
+  line(5, 11, 3, 4, "#6f8a3f"), line(6, 11, 6, 2, "#86a04f"), line(7, 11, 9, 4, "#6f8a3f"), line(4, 11, 1, 6, "#c9b66a"),
+  line(8, 11, 11, 7, "#c9b66a"), line(6, 11, 5, 5, "#98ad5c"))
+sprite("dune_grass", { w: 16, h: 22 },
+  line(8, 21, 3, 5, "#8a9a6a"), line(8, 21, 6, 2, "#a8b480"), line(8, 21, 9, 1, "#8a9a6a"), line(8, 21, 12, 4, "#a8b480"),
+  line(8, 21, 14, 9, "#d4c98a"), line(8, 21, 1, 11, "#d4c98a"), line(8, 21, 10, 7, "#6a7a52"), line(8, 21, 5, 8, "#6a7a52"))
+
+// A community mural for the flats' walls (made up: sun, hills, hands and a heart; no names or words).
+sprite("mural_plain", { w: 48, h: 20 },
+  rect(0, 0, 48, 20, "#4aa3d8"), rect(0, 13, 48, 7, "#5da04a"), poly([0, 13, 10, 6, 20, 13], "#3f8a3f"), poly([14, 13, 28, 4, 44, 13], "#4a9a4a"),
+  circ(38, 5, 4, "#f7d23a"), circ(38, 5, 3, "#ffe26a"),
+  poly([10, 16, 6, 12, 8, 10, 10, 12, 12, 10, 14, 12], "#d6403e"),
+  rect(20, 14, 3, 5, "#6b4430"), circ(21, 12, 2, "#a7754f"), rect(26, 15, 3, 4, "#2c3e50"), circ(27, 13, 2, "#8d5a3b"),
+  hline(0, 0, 48, "#1d1b24"), hline(0, 19, 48, "#1d1b24"), vline(0, 0, 20, "#1d1b24"), vline(47, 0, 20, "#1d1b24"))

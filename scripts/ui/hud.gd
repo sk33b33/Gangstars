@@ -50,6 +50,17 @@ func _ready() -> void:
 	_crosshair.text = "+"
 	_crosshair.visible = false
 	_tracker.add_theme_color_override("font_color", Color("#ffd75e"))
+	# Panels behind the info labels (the label's own background), a compass and a vignette.
+	_title.add_theme_stylebox_override("normal", panel_style(Color("#9fd8b8")))
+	_clock.add_theme_stylebox_override("normal", panel_style(Color("#5dade2")))
+	_stats.add_theme_stylebox_override("normal", panel_style(Color("#27ae60")))
+	_tracker.add_theme_stylebox_override("normal", panel_style(Color("#ffd75e"), 0.62))
+	_title.position = Vector2(12, 8)
+	_clock.position = Vector2(12, 78)
+	_stats.position = Vector2(12, 120)
+	_tracker.position = Vector2(12, 164)
+	_build_compass()
+	_build_vignette()
 	_build_menu()
 	_fps = _label(Vector2.ZERO, 16)
 	_fps.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
@@ -260,6 +271,8 @@ func set_fps_visible(v: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	for l: Label in [_tracker, _stats]:   # no empty glass panels
+		l.visible = not l.text.is_empty()
 	if _help_timer > 0.0:
 		_help_timer -= delta
 		if _help_timer <= 0.0:
@@ -274,6 +287,75 @@ func _process(delta: float) -> void:
 	if _message_timer > 0.0:
 		_message_timer -= delta
 		_message.modulate.a = clampf(_message_timer, 0.0, 1.0)
+
+
+## One look for every on-screen panel: dark glass, rounded corners, a thin gold edge on the left.
+static func panel_style(accent := Color("#ffd75e"), alpha := 0.55) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.05, 0.06, 0.09, alpha)
+	sb.set_corner_radius_all(8)
+	sb.border_width_left = 4
+	sb.border_color = accent
+	sb.content_margin_left = 12
+	sb.content_margin_right = 12
+	sb.content_margin_top = 5
+	sb.content_margin_bottom = 5
+	return sb
+
+
+const POINTS := ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
+var _compass: Label
+var _vignette: ColorRect
+
+
+func _build_compass() -> void:
+	_compass = _label(Vector2.ZERO, 20)
+	_compass.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_compass.offset_left = -190
+	_compass.offset_right = 190
+	_compass.offset_top = 76
+	_compass.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_compass.add_theme_stylebox_override("normal", panel_style(Color("#d9c49a"), 0.5))
+	_compass.add_theme_color_override("font_color", Color("#f4efe2"))
+
+
+## heading: compass degrees, 0 = north, 90 = east. Shows the eight points around you with yours
+## in the middle. (Table Mountain is to the north-west: look for it at about 330 degrees.)
+func set_heading(heading: float) -> void:
+	if _compass == null:
+		return
+	var i := int(round(fposmod(heading, 360.0) / 45.0)) % 8
+	var parts: PackedStringArray = []
+	for k in range(-2, 3):
+		var p: String = POINTS[(i + k + 16) % 8]
+		parts.append("[ %s ]" % p if k == 0 else p)
+	_compass.text = "   ".join(parts)
+
+
+## A soft dark edge to the screen (stronger at night), so the middle of the picture reads first.
+func _build_vignette() -> void:
+	var sh := Shader.new()
+	sh.code = """shader_type canvas_item;
+uniform float strength : hint_range(0.0, 1.0) = 0.25;
+void fragment() {
+	vec2 uv = UV - vec2(0.5);
+	float d = dot(uv, uv) * 2.4;
+	COLOR = vec4(0.0, 0.0, 0.02, clamp(d * d * strength * 2.6, 0.0, 0.8));
+}"""
+	var mat := ShaderMaterial.new()
+	mat.shader = sh
+	_vignette = ColorRect.new()
+	_vignette.name = "Vignette"
+	_vignette.material = mat
+	_vignette.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_vignette.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_vignette)
+	move_child(_vignette, 0)
+
+
+func set_night(night: float) -> void:
+	if _vignette:
+		(_vignette.material as ShaderMaterial).set_shader_parameter("strength", 0.22 + 0.3 * clampf(night, 0.0, 1.0))
 
 
 func _label(pos: Vector2, size: int) -> Label:

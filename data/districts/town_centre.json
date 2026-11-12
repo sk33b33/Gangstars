@@ -104,6 +104,14 @@
       "facing": "south",
       "sign": "sign_spaza",
       "color": "#8e44ad"
+    },
+    {
+      "type": "mosque",
+      "position": [
+        374,
+        -28
+      ],
+      "facing": "west"
     }
   ],
   "pois": [

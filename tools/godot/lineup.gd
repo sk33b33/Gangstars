@@ -101,11 +101,12 @@ func _run() -> void:
 				{"hair_style": styles[i], "figure": 0.95 if woman else 0.0, "face": "face_f" if woman else "face_m", "pants_style": "denim"}, "idle", 0.0, styles[i]])
 	if args.has("outfits"):
 		looks = [
-			[Color("#3f5874"), Color("#29384a"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"height": 0.72, "shirt_override": Color("#f4f4f0"), "pants_override": Color("#5d6066"), "accessories": ["tie"], "tie_color": Color("#7a1f2e"), "hair_style": "fade"}, "idle", 0.0, "uniform"],
+			[Color("#3f5874"), Color("#29384a"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"height": 0.72, "shirt_override": Color("#f4f4f0"), "pants_override": Color("#5d6066"), "accessories": ["tie", "backpack"], "tie_color": Color("#7a1f2e"), "pack_color": Color("#2f3f6a"), "hair_style": "fade"}, "idle", 0.0, "uniform"],
 			[Color("#3f5874"), Color("#29384a"), Color("#6b4430"), Color(0, 0, 0, 0), {"pants_override": Color("#2f4f8a"), "overall_color": Color("#2f4f8a"), "accessories": ["overall"], "hair_style": "short"}, "idle", 0.0, "overall"],
 			[Color("#3f5874"), Color("#29384a"), Color("#a7754f"), Color(0, 0, 0, 0), {"shirt_override": Color("#f4f4f0"), "pants_override": Color("#26262e"), "cardigan_color": Color("#2c2c34"), "accessories": ["cardigan", "tie"], "hair_style": "short", "hair_color": Color("#a7a39a"), "stoop": 0.6}, "idle", 0.0, "sunday"],
 			[Color("#e84393"), Color("#29384a"), Color("#8d5a3b"), Color(0, 0, 0, 0), {"figure": 0.9, "hair_style": "braids", "face": "face_f"}, "phone", 0.0, "phone"],
 			[Color("#27ae60"), Color("#29384a"), Color("#6b4430"), Color(0, 0, 0, 0), {"hair_style": "cornrows", "accessories": ["shopbag"], "pants_style": "denim"}, "idle", 1.4, "shopping"],
+			[Color("#e8e2d0"), Color("#3b2f4a"), Color("#a7754f"), Color(0, 0, 0, 0), {"figure": 0.9, "dress": true, "print": "solid", "hair_style": "hijab", "hair_color": Color("#2f3f6a"), "face": "face_f", "accessories": ["handbag"]}, "idle", 0.0, "hijab"],
 		]
 	if args.has("aunties"):
 		# The Mitchells Plain aunty look: prints, doeks, curlers, hoops, handbags, cardigans, slippers.

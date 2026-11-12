@@ -86,7 +86,7 @@ MATS = {n: mat(n, c) for n, c in {
     "hat": (0.6, 0.2, 0.25), "skirt": (0.5, 0.25, 0.4),
     "acc_frame": (0.03, 0.03, 0.035), "acc_lens": (0.02, 0.02, 0.03), "acc_gold": (0.8, 0.6, 0.2),
     "acc_white": (0.95, 0.95, 0.93), "apron": (0.9, 0.9, 0.88),
-    "face_paint": (1.0, 1.0, 1.0), "tie": (0.45, 0.1, 0.15), "overall": (0.18, 0.3, 0.55), "bag_red": (0.75, 0.12, 0.12),
+    "face_paint": (1.0, 1.0, 1.0), "tie": (0.45, 0.1, 0.15), "pack": (0.16, 0.2, 0.35), "overall": (0.18, 0.3, 0.55), "bag_red": (0.75, 0.12, 0.12),
     "phone_screen": (0.1, 0.2, 0.3), "soles": (0.92, 0.9, 0.86), "cap_logo": (1.0, 1.0, 1.0),
     "dress": (0.9, 0.4, 0.55), "cardigan": (0.85, 0.8, 0.7), "bag": (0.5, 0.2, 0.15), "acc_pink": (0.95, 0.55, 0.7),
     "uniform": (0.03, 0.05, 0.12), "vest": (0.02, 0.025, 0.04), "badge": (0.9, 0.7, 0.05), "belt": (0.015, 0.015, 0.018),
@@ -433,6 +433,7 @@ def make_hair_pieces():
     cut_below(doek, HEAD_C.z + 0.012, slope=0.3)
     knot = prim("sphere", "doek_knot", HEAD_C + Vector((0, 0.07, 0.14)), (0.06, 0.05, 0.045), "hair", seg=12, rings=8)
     out.append(join([doek, knot], "Hair_doek"))
+    out.append(make_hijab())
     beanie = prim("sphere", "beanie_top", HEAD_C + Vector((0, 0.005, 0.03)), (0.108, 0.118, 0.13), "hair", seg=20, rings=14)
     cut_below(beanie, HEAD_C.z + 0.03)
     rim = prim("cyl", "beanie_rim", HEAD_C + Vector((0, 0.005, 0.045)), (0.111, 0.121, 0.022), "hair", seg=20)
@@ -462,6 +463,34 @@ def make_hair_pieces():
     out.append(join([pony_top, tie, tail], "Hair_ponytail"))
     out += make_more_hair()
     return out
+
+
+def make_hijab():
+    """A headscarf: wraps the head and neck with an oval face opening, and drapes over the
+    shoulders. Coloured like the other hair pieces (the scarf colour)."""
+    wrap = prim("sphere", "hijab_wrap", HEAD_C + Vector((0, 0.014, -0.012)), (0.117, 0.128, 0.15), "hair", seg=32, rings=22)
+    bm = bmesh.new()
+    bm.from_mesh(wrap.data)
+    doomed = []
+    for f in bm.faces:
+        c = f.calc_center_median()
+        ex = (c.x / 0.066) ** 2
+        ez = ((c.z - (HEAD_C.z - 0.045)) / 0.098) ** 2
+        if c.y < HEAD_C.y - 0.03 and ex + ez < 1.0:
+            doomed.append(f)
+    bmesh.ops.delete(bm, geom=doomed, context='FACES')
+    bm.to_mesh(wrap.data)
+    bm.free()
+    cape = prim("cone", "hijab_cape", (0, 0.02, 1.44), (0.19, 0.15, 0.065), "hair", seg=24, r2=0.6)
+    return join([wrap, cape], "Hair_hijab")
+
+
+def make_backpack():
+    """A school bag on the back, with shoulder straps (bound by height with the torso)."""
+    pack = prim("cube", "pack", (0, 0.165, 1.2), (0.12, 0.05, 0.16), "pack", smooth=False)
+    pocket = prim("cube", "pack_pocket", (0, 0.222, 1.1), (0.085, 0.018, 0.065), "pack", smooth=False)
+    straps = [prim("cube", "pack_strap", (s * 0.085, 0.01, 1.36), (0.018, 0.13, 0.012), "pack", smooth=False) for s in (1, -1)]
+    return join([pack, pocket] + straps, "Acc_backpack")
 
 
 def _on_skull(x, theta, lift):
@@ -1082,7 +1111,7 @@ for piece in make_hair_pieces() + make_accessories():
 everyday_torso, everyday_hands = make_everyday_pieces()
 for piece, bone in everyday_hands:
     bind_rigid(piece, rig, bone)
-for piece in make_body_accessories() + make_hoodie() + everyday_torso:
+for piece in make_body_accessories() + make_hoodie() + everyday_torso + [make_backpack()]:
     bind_by_height(piece, rig)
 aunty_head, aunty_other = make_aunty_pieces()
 for piece in aunty_head:

@@ -29,6 +29,7 @@ var gates: Dictionary = {}       # neighbouring district id -> [DistrictGate]
 var vehicles: Dictionary = {}    # drivable car id -> DrivableCar
 var traffic: TrafficSystem
 var weather: Weather
+var skyline: Skyline
 var light_pool: LightPool
 ## Set false before adding to the tree to skip LOD ranges (profiling A/B).
 var use_lod := true
@@ -87,6 +88,9 @@ func _ready() -> void:
 	day_night.name = "DayNight"
 	add_child(day_night)
 	day_night.setup(director.clock, $Sun, $WorldEnvironment.environment)
+	skyline = Skyline.new()
+	add_child(skyline)
+	day_night.skyline = skyline
 	weather = Weather.new()
 	weather.name = "Weather"
 	add_child(weather)
