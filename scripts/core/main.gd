@@ -101,7 +101,8 @@ func _on_sound_heard(label: String, pos: Vector3) -> void:
 func _update_waypoint() -> void:
 	if waypoint == null or session == null:
 		return
-	var info: Dictionary = session.waypoint_info() if session.missions != null and bool(settings.get_value("gameplay/waypoint")) else {}
+	var picking := session.crew_picker != null and session.crew_picker.visible   # nothing over the crew choice
+	var info: Dictionary = session.waypoint_info() if session.missions != null and bool(settings.get_value("gameplay/waypoint")) and not picking else {}
 	if info.is_empty():
 		waypoint.set_target(null)
 		hud.set_waypoint("", Vector2.ZERO)
