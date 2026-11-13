@@ -4,6 +4,31 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Vehicles: a worn, personalised, lived-in fleet (2026-11-13)
+- **Wear by age** (`scripts/vehicles/vehicle_detail.gd`): paint fades and loses colour with age, rust
+  at the wheel arches, dents in the doors, a mismatched replacement door, bumper stickers. The police
+  are the newest, the skorokoro the oldest.
+- **The minibus taxi:** roof sign, yellow side stripe, a number ("No. 42"), a slogan across the rear
+  window ("ALLES SAL REG KOM"), bags or a tied-down mattress on the roof, a conductor leaning out of
+  the sliding door. Ranks now have two parked taxis waiting for a full load.
+- **Rain and night on the cars:** wipers that sweep in rain, drops on the windscreen, a dash that
+  glows amber at night, brake lights that glow on the road behind in the dark or on wet ground.
+- **Motion effects:** exhaust puffs when pulling away (old engines smoke more), dust behind fast cars
+  on dusty days, skid marks that fade after about half a minute, headlight beams that show in dust
+  and rain (volumetric fog energy).
+- **Visible driving:** the steering wheel turns with the steering. Hits dent the car; hard hits
+  crack the windscreen (the player's car).
+- **New vehicles:** a commuter bus (route board), a refuse truck, a scooter with a rider; a bakkie
+  carries a canopy or a tied-down load. They drive in the traffic loops (27 vehicles now).
+- **Parked cars aren't identical:** some under a cover, some on bricks without wheels, some with a
+  flat tyre.
+- **Cheaper far away:** every small detail has a visibility range, and cars more than 100 m away
+  update their detail every fourth frame.
+- **Not done:** bicycles and delivery tricycles (they need rider animation), a damage model that
+  actually bends the mesh, and a library of paint jobs beyond the age-fade.
+- **Tests:** wipers, drops, dash glow, exhaust, brake glow, volumetric beams, skid marks, dents and
+  cracks, taxi extras, the new models and a scooter's wheels, parked-car variety.
+
 ### Missions, daily life, accessibility, weather, music, tooling (2026-11-12)
 - **New missions** (`data/missions/life.json`):
   - *Where's Piet?* (Auntie Faiza): ask around, check the court and the Lentegeur field.

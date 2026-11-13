@@ -509,3 +509,18 @@ entry in `data/districts/districts.json` carries the unlock requirements.
 - **Playtest bot:** `tests/playbot.gd` (`--crew=`, `--choice=`). It cheats on district unlocks, crew
   nearness and stats, takes one dialogue choice throughout, and skips what needs another crew or
   branch. `tests/playbot.sh` runs four crew/branch combinations.
+
+## Vehicle detail (2026-11-13)
+
+- `VehicleDetail.dress()` runs at the end of `VehicleLibrary.build()`; positions are in the body's
+  Tilt space (front +Z, left +X). `DIMS` holds each model's width, half length, sill, roof, windscreen
+  corners and wheelbase (copied from `tools/blender/build_vehicles.py`; keep them in step).
+- The Blender script now exports marker empties `<model>_steer`, `_dash` and `_wiper_N` instead of
+  baking the wheel and wipers into the mesh; Godot builds the turning wheel and sweeping blades.
+- Shared materials (`VehicleLibrary.drops_material()`, `dash_material()`) change alpha with `rain` and
+  `night`; `Weather` sets `VehicleLibrary.rain`, `DayNight` sets `dust`, `wet`, `haze`.
+- `VehicleLibrary._animate_detail()` is the per-frame part (steering ring, wipers, exhaust, dust, brake
+  glow, skid marks); `hit()` adds dents and a cracked windscreen; `dress_parked()` is the parked-car
+  variety (cover, bricks, flat tyre).
+- Scooters have two wheels: `front` is set for the front half of the wheel list, not `k < 2`.
+- `tools/godot/lineup.gd --cars [--only=<model> --dist=8]` renders the fleet or one vehicle.

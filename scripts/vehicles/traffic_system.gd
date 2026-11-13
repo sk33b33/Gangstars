@@ -48,6 +48,7 @@ func _setup_area(spec: Dictionary) -> void:
 			var start := int(float(c.get("start", 0.0)) * route.size()) % route.size()
 			var taxi := bool(c.get("taxi", false))
 			car.model = str(c.get("model", ""))
+			car.cruise_speed = float(c.get("speed", car.cruise_speed))
 			car.setup(str(c.id), route, built.curves, stops if taxi else {}, DataFiles.to_color(c.get("color"), Color.GRAY), taxi, start)
 			car.honked.connect(_on_honk)
 			cars.append(car)

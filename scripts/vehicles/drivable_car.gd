@@ -92,6 +92,7 @@ func _physics_process(delta: float) -> void:
 	if get_slide_collision_count() > 0 and absf(speed) > 2.0:
 		for i in get_slide_collision_count():
 			if absf(get_slide_collision(i).get_normal().y) < 0.5:
+				VehicleLibrary.hit(body, clampf(absf(speed) / 4.0, 0.3, 3.0))   # dents, and a cracked screen after a hard one
 				speed *= 0.35
 				bumped.emit(self)
 				break

@@ -289,6 +289,13 @@
             "id": "tc_traffic_1",
             "color": "#f1c40f",
             "start": 0.6
+          },
+          {
+            "id": "tc_bus_1",
+            "model": "bus",
+            "color": "#2f7d6d",
+            "start": 0.8,
+            "speed": 7.0
           }
         ]
       },

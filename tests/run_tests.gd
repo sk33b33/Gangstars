@@ -202,6 +202,53 @@ func _test_npc_data() -> void:
 		_check(VehicleLibrary.CIVILIAN.has(vm) and v.get_meta("wheels", []).size() == 4, "the %s is on the road" % vm)
 	var van := garage.get_children().back() as Node3D
 	_check(van.find_children("BakeryPanel*", "MeshInstance3D", true, false).size() == 2, "the bakery van has its (made-up) sign on both sides")
+	# Vehicle look pass: wear, taxi extras, rain and night details, damage, new types.
+	var dressed := VehicleLibrary.build(garage, "sedan", Color("#2e86c1"), Vector3(60, 0, 0))
+	_check(dressed.get_meta("wipers", []).size() == 2 and dressed.has_meta("steer_ring") and dressed.find_child("ScreenDrops", true, false) != null and dressed.find_child("DashGlow", true, false) != null,
+		"cars have wipers, a turning steering wheel, a windscreen for the rain and a dash that can glow")
+	VehicleLibrary.add_headlights(dressed, "sedan")
+	VehicleLibrary.rain = 1.0
+	VehicleLibrary.animate(dressed, 8.0, 0.0, 0.0, 0, 0.5, 1.0)
+	var wiper_turn := absf((dressed.get_meta("wipers")[0] as Node3D).rotation.z)
+	_check(wiper_turn > 0.05 and VehicleLibrary.drops_material().albedo_color.a > 0.5, "in rain the wipers sweep and drops show on the glass (%.2f)" % wiper_turn)
+	VehicleLibrary.rain = 0.0
+	VehicleLibrary.night = 1.0
+	VehicleLibrary.animate(dressed, 8.0, 0.8, 0.0, 0, 0.5, 2.0)
+	_check(VehicleLibrary.dash_material().albedo_color.a > 0.5 and absf((dressed.get_meta("steer_ring") as Node3D).rotation.y) > 0.05, "the dash glows at night and the wheel turns with the steering")
+	VehicleLibrary.animate(dressed, 8.0, 0.0, 2.0, 0, 0.1, 3.0)
+	_check((dressed.get_meta("exhaust") as CPUParticles3D).emitting, "the exhaust puffs when pulling away")
+	VehicleLibrary.animate(dressed, 8.0, 0.0, -3.0, 0, 0.1, 4.0)
+	_check((dressed.get_meta("brake_glow") as MeshInstance3D).visible, "brake lights glow on the road behind at night")
+	VehicleLibrary.night = 0.0
+	VehicleLibrary.haze = 1.0
+	VehicleLibrary.animate(dressed, 8.0, 0.0, 0.0, 0, 0.1, 5.0)
+	_check((dressed.get_meta("beams")[0] as SpotLight3D).light_volumetric_fog_energy > 1.0, "headlight beams show in dust and rain")
+	VehicleLibrary.haze = 0.0
+	var skids0 := VehicleLibrary._skids.size()
+	VehicleLibrary.animate(dressed, 9.0, 0.0, -8.0, 0, 0.1, 6.0)
+	_check(VehicleLibrary._skids.size() == skids0 + 1, "hard braking leaves skid marks")
+	VehicleLibrary.hit(dressed, 1.0)
+	_check(float(dressed.get_meta("damage")) >= 1.0 and not dressed.has_meta("cracked"), "a knock dents the car")
+	VehicleLibrary.hit(dressed, 2.0)
+	_check(dressed.has_meta("cracked"), "a hard hit cracks the windscreen")
+	_check(VehicleDetail.age_for("skoro", 5) > VehicleDetail.age_for("police", 5) + 0.4, "the skorokoro is far more worn than a police bakkie")
+	var taxi_d := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(70, 0, 0))
+	_check(taxi_d.has_meta("conductor") and taxi_d.find_children("*", "Label3D", true, false).any(func(l): return l.text.begins_with("No. ")),
+		"a minibus taxi has its number, roof sign, stripe and a conductor at the sliding door")
+	var wheel_counts := {}
+	for nm in ["bus", "refuse", "scooter"]:
+		var v := VehicleLibrary.build(garage, nm, Color.WHITE, Vector3(80 + wheel_counts.size() * 12, 0, 0))
+		wheel_counts[nm] = v.get_meta("wheels", []).size()
+	_check(wheel_counts.bus == 4 and wheel_counts.refuse == 4 and wheel_counts.scooter == 2, "a bus, a refuse truck and a scooter are in the garage (%s)" % [wheel_counts])
+	var scoot := VehicleLibrary.build(garage, "scooter", Color.RED, Vector3(130, 0, 0))
+	_check(scoot.get_meta("wheels")[0].get_meta("front") != scoot.get_meta("wheels")[1].get_meta("front"), "a scooter has one steering wheel and one rear wheel")
+	var bricks := 0
+	for k in 80:
+		var pk := VehicleLibrary.build(garage, "hatch", Color.WHITE, Vector3(140 + k * 7, 0, 3))
+		VehicleLibrary.dress_parked(pk)
+		if not pk.get_node("Wheels").visible:
+			bricks += 1
+	_check(bricks >= 1, "some parked cars are up on bricks (%d of 80)" % bricks)
 	garage.queue_free()
 	# Detail pass: litter, potholes, drains, bins along the streets.
 	var district_data: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
@@ -933,7 +980,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 23, "23 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
+	_check(traffic.cars.size() == 27, "27 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
 	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
 	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
 	player.global_position = Vector3(0, 0.1, -30)
@@ -1437,7 +1484,7 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	var rival: Resident = null
 	var tried: Array = []
 	var last: Resident = null
-	for attempt in 3:   # a rival may head indoors mid-check: try another
+	for attempt in 5:   # a rival may head indoors mid-check: try another (the same one again once all have been tried)
 		last = rival if rival else last
 		rival = null
 		for i in 60 * 120:
@@ -1449,6 +1496,10 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 			if rival:
 				break
 			await physics_frame
+		if rival == null and attempt < 4 and not tried.is_empty():
+			tried.clear()   # everyone has had a go: let them try again
+			rival = last
+			continue
 		if rival == null:
 			rival = last   # nobody else about: judge the last try
 			break

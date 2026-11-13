@@ -385,6 +385,13 @@
             "model": "bakkie",
             "color": "#b5651d",
             "start": 0.2
+          },
+          {
+            "id": "kalk_scooter_1",
+            "model": "scooter",
+            "color": "#2e86c1",
+            "start": 0.1,
+            "speed": 9.0
           }
         ]
       }

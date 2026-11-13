@@ -7,10 +7,10 @@ extends RefCounted
 ## material per vehicle so its lights can flash (see set_lights()).
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
-const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van"]
+const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter"]
 const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
@@ -20,6 +20,17 @@ static var _meshes: Dictionary = {}
 static var _markers: Dictionary = {}   # model -> {"wheels": [Vector3], "plate_front": Vector3, "plate_rear": Vector3}
 ## 0 by day, 1 at night; DayNight sets it. Moving cars switch their headlight beams on at night.
 static var night := 0.0
+## Set by Weather/DayNight: 0..1 rain, haze (dust, wet air: beams show in it), wet ground, dust.
+static var rain := 0.0
+static var haze := 0.0
+static var wet := 0.0
+static var dust := 0.0
+static var _drops_mat: StandardMaterial3D
+static var _dash_mat: StandardMaterial3D
+static var _brake_glow_mat: StandardMaterial3D
+static var _skid_mat: StandardMaterial3D
+static var _skids: Array = []
+static var _skid_next := 0
 static var _glass: StandardMaterial3D
 static var _tint: StandardMaterial3D
 
@@ -38,11 +49,15 @@ static func _load() -> void:
 	# Marker empties under each body: <model>_axle_0..3 (front pair first), <model>_plate_*.
 	for model in MODELS:
 		var body := root.find_child(model, true, false) as Node3D
-		var m := {"wheels": [], "seats": []}
+		var m := {"wheels": [], "seats": [], "wipers": []}
 		if body:
 			for c in body.get_children():
 				var n := str(c.name)
-				if n.begins_with(model + "_axle_"):
+				if n == model + "_steer" or n == model + "_dash":
+					m[n.trim_prefix(model + "_")] = (c as Node3D).position
+				elif n.begins_with(model + "_wiper_"):
+					m.wipers.append((c as Node3D).position)
+				elif n.begins_with(model + "_axle_"):
 					m.wheels.append([n, (c as Node3D).position])
 				elif n.begins_with(model + "_seat_"):
 					m.seats.append([n, (c as Node3D).position])
@@ -75,6 +90,9 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 		push_warning("Unknown vehicle model: " + model)
 		return pivot
 	var seed := absi(("%s|%s|%s" % [model, color, center]).hash())
+	var age := VehicleDetail.age_for(model, seed)
+	if model not in ["police", "taxi", "bus", "refuse"]:
+		color = VehicleDetail.weathered(color, age)
 	# Some cars are dusty from the roads; the skorokoro always is.
 	var dirty := model == "skoro" or seed % 20 < 7
 	pivot.set_meta("model", model)
@@ -150,7 +168,7 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 			w.visibility_range_end = 90.0
 			# The mesh's rim faces +X: wheels on the -X side are turned round.
 			w.set_meta("flip", 0.0 if w.position.x > 0.0 else PI)
-			w.set_meta("front", k < 2)
+			w.set_meta("front", k < marks.wheels.size() / 2)
 			w.rotation.y = w.get_meta("flip")
 			set.add_child(w)
 			wheels.append(w)
@@ -176,7 +194,31 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 		_police_markings(pivot)
 	elif model == "panel_van":
 		_bakery_panels(tilt)
+	VehicleDetail.dress(pivot, tilt, model, color, seed, age, marks)
 	return pivot
+
+
+## Shared "rain on the glass" material: its alpha follows the rain.
+static func drops_material() -> StandardMaterial3D:
+	if _drops_mat == null:
+		_drops_mat = PixelMaterials.panel("rain_drops", Color.WHITE, true).duplicate() as StandardMaterial3D
+		_drops_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_drops_mat.albedo_color = Color(1, 1, 1, 0)
+	return _drops_mat
+
+
+## Shared dashboard glow (amber instruments): emission follows the night.
+static func dash_material() -> StandardMaterial3D:
+	if _dash_mat == null:
+		_dash_mat = StandardMaterial3D.new()
+		_dash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_dash_mat.albedo_color = Color(1.0, 0.62, 0.2, 0.0)
+		_dash_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	return _dash_mat
+
+
+static func dress_occupant(mi: MeshInstance3D, seed: int, shirt: Color) -> void:
+	_dress(mi, shirt, SKINS[seed % SKINS.size()], Color("#1d1b24"))
 
 
 ## The made-up bakery's painted side panels on the delivery van (Tilt space: front is -Z... the
@@ -309,6 +351,147 @@ static func animate(pivot: Node3D, speed: float, steer: float, accel: float, ind
 	var beams: Array = pivot.get_meta("beams", [])
 	for b: SpotLight3D in beams:
 		b.visible = night > 0.4
+		b.light_volumetric_fog_energy = clampf(haze * 2.2 + rain * 1.2, 0.0, 3.0)   # beams show in dust and rain
+	_animate_detail(pivot, speed, steer, accel, delta, time)
+
+
+## The moving parts of the detail: steering wheel, wipers, glass drops, dash glow, exhaust, dust,
+## brake glow on the road, skid marks.
+static func _animate_detail(pivot: Node3D, speed: float, steer: float, accel: float, delta: float, time: float) -> void:
+	_drops_mat_update()
+	var ring: Node3D = pivot.get_meta("steer_ring", null)
+	if ring:
+		ring.rotation.y = lerpf(ring.rotation.y, -steer * 1.4, clampf(delta * 8.0, 0.0, 1.0))
+	var wipers: Array = pivot.get_meta("wipers", [])
+	var sweeping := rain > 0.35
+	for i in wipers.size():
+		var piv: Node3D = wipers[i]
+		var target := (0.5 - 0.5 * cos(time * 5.0 + i * 0.3)) * 1.25 if sweeping else 0.0
+		piv.rotation.z = lerpf(piv.rotation.z, target, clampf(delta * 14.0, 0.0, 1.0))
+	var tilt: Node3D = pivot.get_meta("tilt")
+	var ex: CPUParticles3D = pivot.get_meta("exhaust", null)
+	if ex:
+		var age: float = pivot.get_meta("age", 0.3)
+		ex.emitting = (accel > 0.7 and speed > 0.2) or (age > 0.7 and speed > 0.3 and fmod(time, 3.0) < 0.5)
+	var dust_fx: CPUParticles3D = pivot.get_meta("dust_fx", null)
+	if dust_fx:
+		dust_fx.emitting = dust > 0.25 and speed > 5.0
+	var glow: MeshInstance3D = pivot.get_meta("brake_glow", null)
+	if glow:
+		glow.visible = (accel < -0.5 or (absf(speed) < 0.3 and accel < 0.0)) and (night > 0.35 or wet > 0.3)
+	if accel < -6.0 and speed > 5.0:
+		_skid(pivot)
+
+
+static func _drops_mat_update() -> void:
+	if _drops_mat:
+		_drops_mat.albedo_color.a = clampf((rain - 0.3) / 0.5, 0.0, 1.0)
+	if _dash_mat:
+		_dash_mat.albedo_color.a = clampf(night * 0.9, 0.0, 0.9)
+
+
+## Two dark streaks on the road behind the rear wheels; they fade over about half a minute.
+static func _skid(pivot: Node3D) -> void:
+	var last: float = pivot.get_meta("last_skid", -10.0)
+	var now := Time.get_ticks_msec() / 1000.0
+	if now - last < 0.35 or not pivot.is_inside_tree():
+		return
+	pivot.set_meta("last_skid", now)
+	if _skid_mat == null:
+		_skid_mat = PixelMaterials.panel("skid_mark", Color.WHITE, true).duplicate() as StandardMaterial3D
+		_skid_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	var dims: Dictionary = pivot.get_meta("dims", {})
+	var back: float = float(dims.get("h", 2.0)) * 0.7
+	var f := pivot.global_basis.x
+	f.y = 0.0
+	f = f.normalized()
+	var mark: MeshInstance3D
+	if _skids.size() < 36:
+		mark = MeshInstance3D.new()
+		var plane := PlaneMesh.new()
+		plane.size = Vector2(float(dims.get("w", 1.7)) * 0.75, 1.8)
+		mark.mesh = plane
+		mark.material_override = _skid_mat
+		mark.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mark.visibility_range_end = 70.0
+		pivot.get_tree().root.add_child(mark)
+		_skids.append(mark)
+	else:
+		mark = _skids[_skid_next]
+		_skid_next = (_skid_next + 1) % _skids.size()
+	if not is_instance_valid(mark):
+		_skids.clear()
+		return
+	mark.global_position = pivot.global_position - f * back + Vector3(0, 0.02, 0)
+	mark.rotation = Vector3(0, atan2(f.x, f.z), 0)
+	mark.transparency = 0.0
+	mark.visible = true
+	var tw := mark.create_tween()
+	tw.tween_property(mark, "transparency", 1.0, 28.0)
+
+
+## Impact: dents, then (hard hits) a cracked windscreen. `strength` roughly 0..3 per knock.
+static func hit(pivot: Node3D, strength: float) -> void:
+	if not pivot.has_meta("tilt") or strength < 0.3:
+		return
+	var tilt: Node3D = pivot.get_meta("tilt")
+	var dims: Dictionary = pivot.get_meta("dims", {})
+	if dims.is_empty():
+		return
+	var dmg: float = float(pivot.get_meta("damage", 0.0)) + strength
+	pivot.set_meta("damage", dmg)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(dmg * 1000.0) + hash(pivot.name)
+	var side := 1.0 if rng.randf() < 0.5 else -1.0
+	if rng.randf() < 0.4:   # front or rear
+		var z := (float(dims.h) + 0.01) * (1.0 if rng.randf() < 0.5 else -1.0)
+		VehicleDetail._quad(tilt, "dent", Vector2(0.9, 0.5), Vector3(rng.randf_range(-0.4, 0.4), 0.6, z), 0.0 if z > 0.0 else PI, 60.0)
+	else:
+		VehicleDetail._quad(tilt, "dent", Vector2(0.8, 0.55), Vector3(side * (float(dims.w) * 0.5 + 0.01), float(dims.belt) - 0.25, rng.randf_range(-1.0, 1.0)), PI * 0.5 * side, 60.0)
+	if dmg >= 2.0 and not pivot.has_meta("cracked") and dims.ws.size() == 4:
+		pivot.set_meta("cracked", true)
+		var ws: Array = dims.ws
+		var dz: float = float(ws[0]) - float(ws[2])
+		var dy: float = float(ws[3]) - float(ws[1])
+		var l := Vector2(dz, dy).length()
+		var crack := VehicleDetail._quad(tilt, "crack_a", Vector2(0.9, 0.7), Vector3(0.25, (float(ws[1]) + float(ws[3])) * 0.5, (float(ws[0]) + float(ws[2])) * 0.5) + Vector3(0, dz, dy) / l * 0.014, 0.0, 40.0)
+		crack.rotation.x = -atan2(dz, dy)
+
+
+## Parked cars aren't all alike: some under a cover, some on bricks without their wheels, some with
+## a flat tyre. Deterministic from the car; only for cars that stand still.
+static func dress_parked(pivot: Node3D) -> void:
+	if not pivot.has_meta("tilt"):
+		return
+	var model: String = pivot.get_meta("model", "")
+	var dims: Dictionary = pivot.get_meta("dims", {})
+	if dims.is_empty() or model in ["police", "taxi", "bus", "refuse", "scooter"]:
+		return
+	var tilt: Node3D = pivot.get_meta("tilt")
+	var seed: int = int(pivot.get_meta("seed", 0))
+	var roll := (seed / 13) % 100
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed
+	if roll < 12:   # a cover
+		var cover := Color(["#9aa3ab", "#8a7f6a", "#6a7f94"][seed % 3])
+		VehicleDetail._box(tilt, Vector3(float(dims.w) + 0.08, 0.9, float(dims.h) * 2.0 - 0.3), Vector3(0, float(dims.belt) * 0.75 + 0.2, 0), cover, 70.0)
+		VehicleDetail._box(tilt, Vector3(float(dims.w) - 0.35, 0.5, float(dims.h) * 1.1), Vector3(0, float(dims.belt) + 0.55, -0.1), cover, 70.0)
+	elif roll < 20:   # on bricks, wheels off
+		var wheels_node: Node3D = pivot.get_node_or_null("Wheels")
+		if wheels_node:
+			wheels_node.visible = false
+		tilt.position.y += 0.3
+		var brick := Color("#a8553a")
+		for sx in [1.0, -1.0]:
+			for sz in [1.0, -1.0]:
+				VehicleDetail._box(pivot, Vector3(0.4, 0.3, 0.4), Vector3(sz * float(dims.wb) * 0.5, 0.15, sx * float(dims.w) * 0.36), brick, 60.0)
+	elif roll < 32:   # a flat tyre
+		var ws: Array = pivot.get_meta("wheels", [])
+		if not ws.is_empty():
+			var flat: MeshInstance3D = ws[rng.randi() % ws.size()]
+			flat.scale.y = 0.72
+			flat.position.y *= 0.86
+			tilt.rotation.x = 0.012 * (1.0 if flat.position.z > 0.0 else -1.0)
 
 
 ## Two headlight beams for a car that drives (traffic, police, the player's car); on at night.
@@ -328,6 +511,7 @@ static func add_headlights(pivot: Node3D, model: String) -> void:
 		s.visible = night > 0.4
 		pivot.add_child(s)
 		beams.append(s)
+	VehicleDetail.add_motion_fx(pivot, model)
 	pivot.set_meta("beams", beams)
 
 

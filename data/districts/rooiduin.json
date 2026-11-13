@@ -366,6 +366,13 @@
             "model": "combi",
             "color": "#c0392b",
             "start": 0.1
+          },
+          {
+            "id": "rooi_scooter_1",
+            "model": "scooter",
+            "color": "#c0392b",
+            "start": 0.4,
+            "speed": 9.0
           }
         ]
       }

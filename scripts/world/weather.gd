@@ -224,6 +224,7 @@ func _process(delta: float) -> void:
 	_particles.emitting = rain > 0.15
 	_drop_mat.albedo_color.a = 0.45 * clampf(rain, 0.0, 1.0)
 	_move_clouds(delta)
+	VehicleLibrary.rain = rain if enabled else 0.0
 	_ripples.emitting = rain > 0.35
 	_litter.emitting = wind > 0.55 and rain < 0.4
 	if follow:

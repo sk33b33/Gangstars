@@ -551,3 +551,22 @@ sprite("mural_plain", { w: 48, h: 20 },
   poly([10, 16, 6, 12, 8, 10, 10, 12, 12, 10, 14, 12], "#d6403e"),
   rect(20, 14, 3, 5, "#6b4430"), circ(21, 12, 2, "#a7754f"), rect(26, 15, 3, 4, "#2c3e50"), circ(27, 13, 2, "#8d5a3b"),
   hline(0, 0, 48, "#1d1b24"), hline(0, 19, 48, "#1d1b24"), vline(0, 0, 20, "#1d1b24"), vline(47, 0, 20, "#1d1b24"))
+
+// ---- Vehicle detail: dents, stickers, slogans, rain on the glass, skid marks ----
+sprite("dent", { w: 16, h: 12 },
+  ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
+sprite("sticker_a", { w: 14, h: 6 },
+  rect(0, 0, 14, 6, "#f2c43a"), box(0, 0, 14, 6, "#1d1b24"), text(7, 1, "SKOON", "#1d1b24", { align: "c" }))
+sprite("sticker_b", { w: 14, h: 6 },
+  rect(0, 0, 14, 6, "#2e86c1"), box(0, 0, 14, 6, "#f4f1ea"), text(7, 1, "CAPE", "#f4f1ea", { align: "c" }))
+sprite("sticker_c", { w: 14, h: 6 },
+  rect(0, 0, 14, 6, "#c0392b"), box(0, 0, 14, 6, "#f4f1ea"), text(7, 1, "BRA", "#f4f1ea", { align: "c" }))
+sprite("taxi_slogan_a", { w: 40, h: 8 },
+  rect(0, 0, 40, 8, "#1d1b2488"), text(20, 1, "ALLES SAL REG KOM", "#f4f1ea", { align: "c" }))
+sprite("taxi_slogan_b", { w: 40, h: 8 },
+  rect(0, 0, 40, 8, "#1d1b2488"), text(20, 1, "SLOW AND EASY", "#f2c43a", { align: "c" }))
+sprite("rain_drops", { w: 32, h: 16 },
+  circ(4, 3, 1, "#cfe3f2aa"), circ(14, 9, 1, "#cfe3f2aa"), circ(24, 4, 1, "#cfe3f2aa"), circ(9, 13, 1, "#cfe3f2aa"), circ(28, 12, 1, "#cfe3f2aa"),
+  circ(19, 1, 1, "#cfe3f2aa"), line(14, 10, 14, 14, "#cfe3f288"), line(4, 4, 4, 7, "#cfe3f288"), line(24, 5, 24, 9, "#cfe3f288"), px(2, 9, "#ffffffaa"), px(21, 7, "#ffffffaa"))
+sprite("skid_mark", { w: 8, h: 32 },
+  rect(1, 0, 2, 32, "#15151888"), rect(5, 0, 2, 32, "#15151888"), rect(1, 0, 2, 4, "#15151833"), rect(5, 0, 2, 4, "#15151833"))

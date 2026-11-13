@@ -38,7 +38,9 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 			"corner": _build_corner(root, pos)
 			"container_shop": _build_container_shop(root, pos, _facing_rot(lm), str(lm.get("sign", "sign_spaza")), DataFiles.to_color(lm.get("color"), Color("#2b6fb5")))
 			"soccer_field": _build_soccer_field(root, pos)
-			"taxi_rank": _build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
+			"taxi_rank":
+				_build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
+				_build_rank_taxis(root, pos, lm)
 			"mall": _build_mall(root, pos, _facing_rot(lm))
 			"market": _build_market(root, pos)
 			"courtyard": _build_courtyard(root, pos)
@@ -288,9 +290,20 @@ static func _build_car(root: Node3D, c: Vector3, rot_y: float, color: Color, sol
 		model = "taxi" if length > 5.0 else VehicleLibrary.civilian_for("%.1f,%.1f" % [c.x, c.z])
 	var pivot := VehicleLibrary.build(root, model, color, c, rot_y)
 	if solid:
+		VehicleLibrary.dress_parked(pivot)
 		var l: float = VehicleLibrary.LENGTH.get(model, 4.0)
 		Geo.collider(pivot, Vector3(l, 1.4, 1.8), Vector3(0, 0.7, 0))
 	return pivot
+
+
+## Minibus taxis waiting for a full load at the rank: two parked in a row, nose to tail, on the lot
+## beside the shelter (not in the traffic lanes), each with a passenger or two inside.
+static func _build_rank_taxis(root: Node3D, rank: Vector3, lm: Dictionary) -> void:
+	var inward := 1.0 if str(lm.get("facing", "south")) == "north" else -1.0   # the lot is on the shelter's open side
+	for k in 2:
+		var at := rank + Vector3(-5.5 + k * 6.2, 0, inward * 3.6 * -1.0)
+		var taxi := _build_car(root, at, 0.0 if k == 0 else PI, Color("#f1eee8"), true, 5.2, "taxi")
+		VehicleLibrary.add_occupants(taxi, 1 + k)
 
 
 ## A name sign where each cross street meets an east-west street.

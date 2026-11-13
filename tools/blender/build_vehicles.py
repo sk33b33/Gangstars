@@ -57,11 +57,11 @@ M = {
     "tint": mat("tint", "#1b232c", 0.1), "white": mat("white", "#f2f0ea", 0.4), "sign_panel": mat("sign_panel", "#f2f0ea", 0.6), "seat": mat("seat", "#2c2c31", 0.9), "rust": mat("rust", "#7a3f22", 0.95),
     "paint2": mat("paint2", "#8f949a", 0.6), "occ_shirt": mat("occ_shirt", "#3f5874", 0.9),
     "occ_skin": mat("occ_skin", "#8d5a3b", 0.6), "occ_hair": mat("occ_hair", "#1d1b24", 0.9),
-    "indicator_L": mat("indicator_L", "#e8901c", 0.3), "indicator_R": mat("indicator_R", "#e8901c", 0.3),
+    "bin_green": mat("bin_green", "#2f6a4a", 0.6), "indicator_L": mat("indicator_L", "#e8901c", 0.3), "indicator_R": mat("indicator_R", "#e8901c", 0.3),
 }
 # Filled while a vehicle is built, turned into marker empties by finish():
 # wheels (x, y, radius, width) and plates (name, (x, y, z)).
-PENDING = {"wheels": [], "plates": [], "seats": []}
+PENDING = {"wheels": [], "plates": [], "seats": [], "steer": None, "dash": None, "wipers": []}
 
 
 def assign(o, name):
@@ -251,11 +251,8 @@ def interior(parts, W, dash_y, belt, rows, ws_top=None, roof=None):
     headrests, a rear-view mirror; records seat markers (driver first) for occupants."""
     parts.append(box((0, dash_y, belt - 0.02), (W - 0.2, 0.32, 0.14), "trim", 0.03))
     wx, wy, wz = -0.37, dash_y + 0.3, belt + 0.1          # driver sits on the right (Blender -X)
-    bpy.ops.mesh.primitive_torus_add(major_segments=20, minor_segments=6, major_radius=0.16, minor_radius=0.018,
-                                     location=(wx, wy, wz), rotation=(1.15, 0, 0))
-    ring = bpy.context.active_object
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    parts.append(assign(ring, "trim"))
+    PENDING["steer"] = (wx, wy, wz)   # Godot builds the wheel itself so it can turn
+    PENDING["dash"] = (0.0, dash_y, belt)
     parts.append(cyl((wx, (wy + dash_y) / 2, wz - 0.04), 0.025, 0.3, "trim", axis="Y", seg=8))
     if ws_top and roof:
         parts.append(box((0, ws_top[0] + 0.12, ws_top[1] - 0.07), (0.2, 0.03, 0.06), "trim", 0.01))
@@ -275,14 +272,9 @@ def handles(parts, ys, z, W):
 
 
 def wipers(parts, y, z):
+    """Wiper pivots only: Godot builds the blades so they can sweep in the rain."""
     for x in (-0.28, 0.2):
-        w = box((0, 0, 0), (0.5, 0.018, 0.014), "trim")
-        w.rotation_euler = (0, 0, 0.12)
-        bpy.context.view_layer.objects.active = w
-        bpy.ops.object.transform_apply(rotation=True)
-        w.location = (x, y, z)
-        bpy.ops.object.transform_apply(location=True)
-        parts.append(w)
+        PENDING["wipers"].append((x, y, z))
 
 
 def extras(parts, F, R, W, belt, light_z, exhaust_z=0.3, flaps=False, wheelbase=0.0):
@@ -342,6 +334,19 @@ def finish(parts, name, offset_x):
         e.parent = o
         e.location = at
     PENDING["seats"] = []
+    for key in ("steer", "dash"):
+        if PENDING[key]:
+            e = bpy.data.objects.new("%s_%s" % (name, key), None)
+            scene.collection.objects.link(e)
+            e.parent = o
+            e.location = PENDING[key]
+    for i, at in enumerate(PENDING["wipers"]):
+        e = bpy.data.objects.new("%s_wiper_%d" % (name, i), None)
+        scene.collection.objects.link(e)
+        e.parent = o
+        e.location = at
+    PENDING["steer"] = PENDING["dash"] = None
+    PENDING["wipers"] = []
     dirt(o, 1.6 if name == "skoro" else 1.0)
     if ws:
         w = wheel_mesh(name + "_tyre", ws[0][2], ws[0][3])
@@ -553,6 +558,62 @@ def skoro():
     return finish(p, "skoro", 30)
 
 
+def bus():
+    """A single-deck commuter bus (fictional livery, no operator marks): long glass cabin, white
+    and green, doors midway."""
+    W, F, R = 2.4, -4.4, 4.4
+    p = [prism([(F, 0.45), (F - 0.05, 0.95), (F + 0.2, 1.12), (R, 1.12), (R, 0.45)], W, "paint", 0.06)]
+    cabin(p, [(F + 0.22, 1.14), (F + 0.4, 2.7), (R - 0.3, 2.74), (R - 0.05, 1.14)], W - 0.1, F + 0.4, R - 0.3, 2.76,
+          [(F + 0.22, 1.15, F + 0.4, 2.7)] + [(y, 1.16, y, 2.72) for y in (-3.2, -2.0, -0.8, 0.4, 1.6, 2.8)] + [(R - 0.05, 1.15, R - 0.3, 2.72)])
+    band(p[0], 0.62, 0.95, "white")
+    wheels(p, 5.6, 2.0, 0.5, 0.3)
+    lights_and_plates(p, F, R, W, 0.85, 0.55)
+    bumpers(p, F, R, W, 0.5)
+    mirrors(p, -3.9, 1.5, W)
+    interior(p, W, -4.0, 1.12, [-3.55, -2.4, -1.2, 0.0, 1.2, 2.4, 3.4], (F + 0.4, 2.7), 2.76)
+    wipers(p, F + 0.3, 1.22)
+    for s_ in (1, -1):   # doors midway
+        p.append(box((s_ * (W / 2 + 0.01), -1.9, 1.7), (0.02, 1.1, 1.9), "tint"))
+    extras(p, F, R, W, 1.12, 0.85, 0.45, False, 5.6)
+    return finish(p, "bus", 60)
+
+
+def refuse():
+    """A refuse truck: short cab and a tall rear body (green)."""
+    W, F, R = 2.3, -3.3, 3.3
+    p = [prism([(F, 0.5), (F - 0.04, 1.0), (F + 0.15, 1.3), (-1.5, 1.4), (-1.5, 0.5)], W, "paint", 0.06)]
+    cabin(p, [(F + 0.17, 1.32), (F + 0.35, 2.4), (-1.6, 2.45), (-1.55, 1.4)], W - 0.1, F + 0.35, -1.6, 2.46,
+          [(F + 0.17, 1.33, F + 0.35, 2.4), (-1.55, 1.4, -1.6, 2.44)])
+    p.append(box((0, 0.9, 1.5), (W, 4.4, 2.2), "bin_green", 0.08))      # the body
+    p.append(box((0, 3.15, 1.2), (W - 0.2, 0.3, 0.9), "trim", 0.04))    # the lifting gear at the back
+    p.append(box((0, -1.4, 2.6), (W - 0.1, 0.5, 0.1), "trim", 0.02))
+    wheels(p, 4.4, 1.9, 0.5, 0.3)
+    lights_and_plates(p, F, R, W, 0.85, 0.6)
+    bumpers(p, F, R, W, 0.5)
+    mirrors(p, -2.9, 1.7, W)
+    interior(p, W, -2.9, 1.4, [-2.1], (F + 0.35, 2.4), 2.46)
+    wipers(p, F + 0.3, 1.5)
+    extras(p, F, R, W, 1.3, 0.85, 0.4, False, 4.4)
+    return finish(p, "refuse", 74)
+
+
+def scooter():
+    """A small scooter: two wheels, a step-through frame, a seat, a handlebar and a front shield."""
+    F, R = -0.95, 0.95
+    p = [box((0, 0.1, 0.4), (0.3, 1.1, 0.24), "paint", 0.06)]                    # floor and frame
+    p.append(box((0, -0.62, 0.62), (0.3, 0.2, 0.5), "paint", 0.06))              # front shield
+    p.append(box((0, 0.55, 0.62), (0.34, 0.6, 0.26), "paint", 0.06))             # rear body
+    p.append(box((0, 0.5, 0.82), (0.3, 0.7, 0.08), "seat", 0.03))                # seat
+    p.append(box((0, -0.68, 0.98), (0.58, 0.05, 0.05), "trim", 0.01))            # handlebar
+    p.append(box((0, -0.82, 0.78), (0.18, 0.06, 0.16), "headlight", 0.02))
+    p.append(box((0, 0.95, 0.66), (0.16, 0.05, 0.08), "taillight", 0.02))
+    PENDING["wheels"].append((0.0, -0.62, 0.26, 0.12))
+    PENDING["wheels"].append((0.0, 0.62, 0.26, 0.12))
+    PENDING["plates"] += [("plate_front", (0, F + 0.02, 0.55)), ("plate_rear", (0, R + 0.02, 0.5))]
+    PENDING["seats"].append((0.0, 0.3, 0.48))
+    return finish(p, "scooter", 82)
+
+
 def occupants():
     """Drivers and passengers seen through the windows: a seated upper body (origin at the hip),
     arms to the wheel for the driver, in the lap for passengers. Godot recolours occ_*."""
@@ -598,7 +659,7 @@ def _sphere(at, r):
     return bpy.context.active_object
 
 
-for build in (hatch, sedan, bakkie, police, taxi, skoro, combi, panel_van):
+for build in (hatch, sedan, bakkie, police, taxi, skoro, combi, panel_van, bus, refuse, scooter):
     build()
 occupants()
 for o in scene.objects:

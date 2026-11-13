@@ -489,6 +489,13 @@
             "model": "panel_van",
             "color": "#f2f0ea",
             "start": 0.05
+          },
+          {
+            "id": "refuse_vlei",
+            "model": "refuse",
+            "color": "#2f6a4a",
+            "start": 0.5,
+            "speed": 6.0
           }
         ]
       }

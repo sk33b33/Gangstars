@@ -62,10 +62,15 @@ func _run() -> void:
 				if not n.id.get_slice("_", n.id.get_slice_count("_") - 1).is_valid_int():
 					looks.append([n.shirt_color, n.pants_color, n.skin_color, Color(0, 0, 0, 0), n.appearance(), "idle", 0.0, n.display_name])
 	if args.has("cars"):
-		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea"), Color("#b5651d"), Color("#2f7d6d"), Color.WHITE]
+		var paints := [Color("#c0392b"), Color("#2e86c1"), Color("#ecf0f1"), Color.WHITE, Color("#f4f1ea"), Color("#b5651d"), Color("#2f7d6d"), Color.WHITE, Color("#2f7d6d"), Color("#f2f0ea"), Color("#c0392b")]
 		for i in VehicleLibrary.MODELS.size():
 			var m: String = VehicleLibrary.MODELS[i]
-			var car := VehicleLibrary.build(world, m, paints[i], Vector3(-6.0 + (i % 3) * 5.6, 0, -3.2 + (i / 3) * 4.6), deg_to_rad(-30.0))
+			var at := Vector3(-8.5 + (i % 4) * 6.4, 0, -6.0 + (i / 4) * 6.4)
+			if args.has("only"):   # --only=taxi: just that model, at the origin, for a close look
+				if m != str(args.only):
+					continue
+				at = Vector3.ZERO
+			var car := VehicleLibrary.build(world, m, paints[i], at, deg_to_rad(-30.0))
 			VehicleLibrary.set_lights(car, m == "police", 0.1)
 			VehicleLibrary.add_occupants(car)
 	if args.has("dogs"):
@@ -164,9 +169,13 @@ func _run() -> void:
 		models.append([m, float(l[6])])
 	var cam := Camera3D.new()
 	world.add_child(cam)
-	if args.has("cars"):
-		cam.position = Vector3(0.0, 5.6, 12.5)
-		cam.look_at(Vector3(-0.5, 0.6, 1.0))
+	if args.has("cars") and args.has("only"):
+		var d := float(args.get("dist", "7"))
+		cam.position = Vector3(d * 0.6, d * 0.3, d * 0.8)
+		cam.look_at(Vector3(0.0, 1.0, 0.0))
+	elif args.has("cars"):
+		cam.position = Vector3(0.0, 8.5, 17.0)
+		cam.look_at(Vector3(0.0, 0.6, 0.0))
 	elif args.has("dogs"):
 		cam.position = Vector3(0.2, 1.1, 3.6)
 		cam.look_at(Vector3(-0.3, 0.45, 1.2))

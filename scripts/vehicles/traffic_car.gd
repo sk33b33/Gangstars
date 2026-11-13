@@ -36,6 +36,7 @@ var _served_stop := -1
 var _was_blocked := false
 var candidates: Array = []   # filled by the TrafficSystem each frame
 var _anim_time := 0.0
+var _far_skip := 0
 var _stuck_time := 0.0
 var _clock := 0.0
 var _ignore_until := {}
@@ -65,10 +66,10 @@ func setup(id: String, p_route: PackedVector3Array, p_curves: Dictionary, p_stop
 	reset_physics_interpolation()
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 0
-	var length := 5.2 if taxi else 4.0
-	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length,
-		model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
-	VehicleLibrary.add_headlights(body, model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id)))
+	var mdl := model if not model.is_empty() else ("taxi" if taxi else VehicleLibrary.civilian_for(id))
+	var length: float = VehicleLibrary.LENGTH.get(mdl, 4.0)
+	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, length, mdl)
+	VehicleLibrary.add_headlights(body, mdl)
 	VehicleLibrary.add_occupants(body)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -146,6 +147,11 @@ func _physics_process(delta: float) -> void:
 ## Wheels, suspension, brake lights and indicators (a turn coming up in the next two points).
 func _animate_body(delta: float, speed_before: float, yaw_before: float) -> void:
 	if body == null or delta <= 0.0 or not visible:
+		return
+	# Far-off cars only update every fourth frame: nobody can see the wipers at 100 m.
+	var cam := get_viewport().get_camera_3d()
+	_far_skip += 1
+	if cam and cam.global_position.distance_squared_to(global_position) > 10000.0 and _far_skip % 4 != 0:
 		return
 	_anim_time += delta
 	var yaw_rate := angle_difference(yaw_before, rotation.y) / delta
