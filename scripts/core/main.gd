@@ -23,6 +23,7 @@ var session: GameSession
 var settings := SettingsStore.new()
 var pause_menu: PauseMenu
 var waypoint: Waypoint
+var touch: TouchControls
 var tutorial: Tutorial
 
 var _args := {}
@@ -41,6 +42,7 @@ func _ready() -> void:
 	session.name = "Session"
 	session.save_path = _args.get("load", save_path)
 	add_child(session)
+	var fresh_settings := not FileAccess.file_exists(settings.path)
 	settings.load_settings()
 	InputRebinder.apply(settings.bindings)
 	pause_menu = PauseMenu.new()
@@ -59,6 +61,17 @@ func _ready() -> void:
 	session.setup(district, player, hud)
 	if session.audio:
 		session.audio.sound_heard.connect(_on_sound_heard)
+	touch = TouchControls.new()
+	touch.name = "TouchControls"
+	add_child(touch)
+	touch.setup(player, _args.has("touch"))
+	InputHints.touch = touch.enabled
+	hud.refresh_hints()
+	if touch.enabled and fresh_settings:   # a phone's first start: lighter settings so it runs
+		var light: Dictionary = {"video/shadows": false, "video/effects": false, "video/msaa": 0, "video/render_scale": 0.7, "video/crowd_range": 0, "video/fog": true}
+		for key in light:
+			settings.set_value(key, light[key])
+		settings.save_settings()
 	waypoint = Waypoint.new()
 	district.add_child(waypoint)
 	tutorial = Tutorial.new()

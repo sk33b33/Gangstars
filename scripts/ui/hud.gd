@@ -222,6 +222,7 @@ func _input(event: InputEvent) -> void:
 
 
 signal hints_refreshed
+signal tip_tapped
 
 
 func refresh_hints() -> void:
@@ -399,6 +400,10 @@ func show_tip(title: String, text: String, footer: String) -> void:
 		_tip.offset_top = 64
 		_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_tip.add_theme_stylebox_override("normal", panel_style(Color("#9fd8b8"), 0.72))
+		_tip.mouse_filter = Control.MOUSE_FILTER_STOP   # a tap on the card skips the tips (touch)
+		_tip.gui_input.connect(func(e: InputEvent):
+			if (e is InputEventMouseButton or e is InputEventScreenTouch) and e.pressed:
+				tip_tapped.emit())
 	_tip.text = "%s\n%s%s" % [title, text, ("\n" + footer) if not footer.is_empty() else ""]
 	_tip.visible = true
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Touch controls (phones and tablets)
+- New `TouchControls` layer: left stick moves/drives, right stick looks, TALK / RUN / JUMP / AIM / FIRE buttons, and MENU / PHONE / MAP / HEY / RADIO on the right edge. Shown automatically on a touchscreen (or with `--touch` on a PC); hidden while a menu has the input.
+- Prompts, the help line and the tutorial name the on-screen buttons on touch; tapping a tutorial card skips the tips.
+- First start on a touch device uses lighter video settings (no shadows/effects, 70% render scale).
+- 6 new tests (stick, button, hide-in-menu, prompts).
+
 All notable development milestones should be recorded here.
 
 ## Unreleased

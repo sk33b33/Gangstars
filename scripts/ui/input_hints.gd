@@ -5,12 +5,19 @@ extends RefCounted
 ## (Xbox-style labels; other pads map to the same positions).
 
 static var gamepad := false
+## True on a phone or tablet: prompts name the on-screen buttons (TouchControls).
+static var touch := false
 ## Keyboard/mouse names after the player re-binds keys (InputRebinder): action -> label.
 static var custom: Dictionary = {}
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
 	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab",
+}
+const TOUCH := {
+	"interact": "TALK", "shout": "HEY", "turf_map": "MAP", "sprint": "RUN", "jump": "JUMP",
+	"pause": "MENU", "move": "the left stick", "look": "the right stick", "drive": "the left stick", "back": "MENU", "aim": "AIM", "fire": "FIRE",
+	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here",
 }
 const PAD := {
 	"interact": "A", "shout": "Y", "turf_map": "View", "sprint": "L3", "jump": "B",
@@ -39,12 +46,16 @@ static func note_event(event: InputEvent) -> bool:
 
 
 static func key(action: String) -> String:
+	if touch:
+		return str(TOUCH.get(action, action))
 	if not gamepad and custom.has(action):
 		return str(custom[action])
 	return str((PAD if gamepad else KEYBOARD).get(action, action))
 
 
 static func help_line() -> String:
+	if touch:
+		return "Left stick move · Right stick look · TALK to interact · AIM and FIRE · PHONE · MAP · HEY · MENU"
 	if gamepad:
 		return "Left stick move · L3 sprint · A interact · LT aim · RT shoot · D-pad up phone · Y whistle · View turf map · Menu pause"
 	var move := "WASD" if not custom.has("move_forward") else "%s%s%s%s" % [key("move_forward"), key("move_left"), key("move_backward"), key("move_right")]

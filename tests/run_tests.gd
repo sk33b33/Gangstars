@@ -2190,6 +2190,57 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 		session.missions.active.erase(started)
 
 
+func _test_touch_in_game(main: Node, district: District, player: Player) -> void:
+	var touch: TouchControls = main.touch
+	_check(touch != null and not touch.enabled and player.mouse_look_enabled, "touch controls are off on a PC")
+	touch.enabled = true
+	player.mouse_look_enabled = false
+	player.input_enabled = true
+	await process_frame
+	await process_frame
+	_check(touch.visible, "touch controls show on a touchscreen")
+	var c := touch._stick_centre("move")
+	var down := InputEventScreenTouch.new()
+	down.index = 0
+	down.pressed = true
+	down.position = c + Vector2(80, 0)
+	touch._input(down)   # straight to the handler: the viewport routing is the engine's job
+	await process_frame
+	await process_frame
+	_check(Input.get_axis("move_left", "move_right") > 0.4, "the left stick moves you (%.2f)" % Input.get_axis("move_left", "move_right"))
+	var up := InputEventScreenTouch.new()
+	up.index = 0
+	up.pressed = false
+	up.position = down.position
+	touch._input(up)
+	await process_frame
+	await process_frame
+	_check(absf(Input.get_axis("move_left", "move_right")) < 0.05, "letting go stops you")
+	var talk: Dictionary = touch._button("interact")
+	var tap := InputEventScreenTouch.new()
+	tap.index = 1
+	tap.pressed = true
+	tap.position = touch._button_centre(talk)
+	touch._input(tap)
+	await process_frame
+	_check(Input.is_action_pressed("interact"), "the TALK button presses interact")
+	tap.pressed = false
+	touch._input(tap)
+	await process_frame
+	_check(not Input.is_action_pressed("interact"), "...and lets go")
+	InputHints.touch = true
+	_check(InputHints.key("interact") == "TALK" and InputHints.help_line().contains("Left stick"), "prompts name the on-screen buttons")
+	InputHints.touch = false
+	player.input_enabled = false
+	await process_frame
+	await process_frame
+	_check(not touch.visible, "the controls hide while a menu has the input")
+	player.input_enabled = true
+	touch.enabled = false
+	player.mouse_look_enabled = true
+	await process_frame
+
+
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var missions := session.missions
@@ -3077,6 +3128,7 @@ func _test_district() -> void:
 	await _test_town_centre_in_game(main, district, player)
 	await _test_tafelsig_in_game(main, district, player)
 	await _test_guidance_in_game(main, district, player)
+	await _test_touch_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
 	await _test_dormant_in_game(main, district, player)
 	await _test_consequences_in_game(main, district, player)

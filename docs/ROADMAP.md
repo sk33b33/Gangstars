@@ -1,4 +1,6 @@
 # Development Roadmap
+- [x] Touch controls for Android/iOS testing (best-effort; keyboard/mouse/controller remain primary).
+
 
 The roadmap is intentionally ordered around playable milestones. Do not skip ahead because a later feature sounds exciting.
 

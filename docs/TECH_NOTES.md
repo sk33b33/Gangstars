@@ -1,4 +1,7 @@
 # Technical Notes
+## Touch controls
+`scripts/ui/touch_controls.gd` feeds the normal input actions via `Input.parse_input_event(InputEventAction)`. Test on a PC with `-- --touch` (screenshots: `--touch`). `InputHints.touch` swaps prompt text. Tests call the handler directly because viewport routing of synthetic touches is engine behaviour.
+
 
 ## Engine
 

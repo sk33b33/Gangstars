@@ -88,8 +88,12 @@ func snap_camera() -> void:
 	pivot.global_position = global_position + Vector3(0, CAMERA_HEIGHT, 0)
 
 
+## False on a touchscreen: dragging a finger must not turn the camera (the look stick does that).
+var mouse_look_enabled := true
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and mouse_look_enabled:
 		_look(Vector2(event.relative.x, event.relative.y) * mouse_sensitivity)
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

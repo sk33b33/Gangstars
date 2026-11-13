@@ -1,4 +1,6 @@
 # Gangstars — Claude Code Development Kit
+**Phones/tablets:** on-screen controls appear automatically on a touchscreen (left stick move, right stick look, TALK/RUN/JUMP/AIM/FIRE buttons, MENU/PHONE/MAP/HEY/RADIO on the right edge).
+
 
 > **Current state:** playable. Set in Mitchells Plain on the Cape Flats: the starter suburb, Westridge, has 30 houses
 > on 4 streets, 28 residents with day/night routines, social groups, reactions to incidents, and a

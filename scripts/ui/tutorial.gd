@@ -39,6 +39,7 @@ func setup(p_hud: Hud, p_player: Player, p_session: GameSession) -> void:
 	session = p_session
 	player.interacted.connect(func(_m): _seen["talk"] = true)
 	player.shouted.connect(func(_p): _seen["whistle"] = true)
+	hud.tip_tapped.connect(skip)
 
 
 ## Starts the tips if this save hasn't had them and tips are on.
@@ -122,8 +123,8 @@ func _show() -> void:
 		hud.show_tip("TIPS", END_TEXT, "")
 		return
 	var step: Dictionary = STEPS[index]
-	var keys: Array = step.keys.map(func(k): return "[%s]" % InputHints.key(k))
-	hud.show_tip("HOW TO PLAY  %d/%d" % [index + 1, STEPS.size()], str(step.text) % keys[0], "Skip tips: [%s]" % InputHints.key("skip_tips"))
+	var keys: Array = step.keys.map(func(k): return InputHints.key(k) if InputHints.touch else "[%s]" % InputHints.key(k))
+	hud.show_tip("HOW TO PLAY  %d/%d" % [index + 1, STEPS.size()], str(step.text) % keys[0], ("Skip tips: tap this card" if InputHints.touch else "Skip tips: [%s]" % InputHints.key("skip_tips")))
 
 
 ## The device changed (keyboard <-> pad): show the same step with the new key names.
