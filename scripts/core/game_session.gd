@@ -249,6 +249,8 @@ func toggle_phone() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if hud == null or player == null or missions == null:   # keys pressed while the world is still loading
+		return
 	if event.is_action_pressed("radio") and player.is_driving():
 		hud.show_message(audio.next_station())
 		get_viewport().set_input_as_handled()
@@ -556,6 +558,70 @@ func choose(mission_id: String, choice: Dictionary) -> void:
 	if choice.has("reply"):
 		hud.show_message(str(choice.reply))
 	missions.finish_dialogue(mission_id)
+
+
+## Where an objective points the player (for the gold marker), or null when it points nowhere
+## in particular (reputation, a number of contacts, ...).
+func objective_position(o: Dictionary) -> Variant:
+	match str(o.get("type", "")):
+		"talk_to", "dialogue", "follow":
+			return _person_position(str(o.get("target", "")))
+		"knock":
+			var plot: HousePlot = district.plots.get(str(o.get("target", "")))
+			return plot.door_position() if plot else null
+		"visit", "hold", "drive_to":
+			return district.anchor_or_null(str(o.get("target", "")))
+		"stat":
+			if str(o.get("stat", "")) == "corners":   # the nearest corner you don't hold yet
+				var best: Variant = null
+				var best_d := INF
+				for id in turf.state.order:
+					if turf.state.is_players(id):
+						continue
+					var d := player.global_position.distance_to(turf.anchor(id))
+					if d < best_d:
+						best_d = d
+						best = turf.anchor(id)
+				return best
+	return null
+
+
+## A person's position; if they are indoors, their front door.
+func _person_position(npc_id: String) -> Variant:
+	var r: Resident = district.residents.get(npc_id)
+	if r == null or not is_instance_valid(r):
+		return null
+	if r.is_inside:
+		var plot: HousePlot = district.plots.get(r.data.home_id)
+		return plot.door_position() if plot else r.global_position
+	return r.global_position
+
+
+## {pos, text} for the gold marker: the current objective of the tracked mission, or, with none
+## running, whoever has the next mission to give.
+func waypoint_info() -> Dictionary:
+	if missions == null:
+		return {}
+	var m := missions.tracked_mission()
+	if m != null:
+		var o := missions.current_objective(m.id)
+		var pos: Variant = objective_position(o)
+		if pos != null:
+			var who := str(o.get("target", ""))
+			return {"pos": pos, "text": _short_name(who) if district.residents.has(who) else m.title}
+		return {}
+	for id in missions.order:
+		if not missions.active.has(id) and missions.is_available(id):
+			var giver := str(missions.get_mission(id).giver)
+			var gp: Variant = _person_position(giver)
+			if gp != null:
+				return {"pos": gp, "text": _short_name(giver)}
+	return {}
+
+
+func _short_name(npc_id: String) -> String:
+	var r: Resident = district.residents.get(npc_id)
+	return r.data.display_name if r else npc_id
 
 
 ## A "follow" objective: the person sets off for their destination now.

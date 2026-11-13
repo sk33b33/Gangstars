@@ -4,6 +4,19 @@ All notable development milestones should be recorded here.
 
 ## Unreleased
 
+### Tutorial and the gold waypoint (2026-11-13)
+- **Gold waypoint:** a soft gold beam and a spinning diamond mark where the current mission needs you
+  (the person to talk to, the place to visit, the door to knock on, the nearest corner you don't hold).
+  With no mission running it points at whoever has the next one to give. On screen a label shows
+  "◆ Boeta Daniels  42 m"; when the target is off screen an arrow at the screen edge points the
+  way. It fades when you get close. Switch it off in the pause menu.
+- **Tutorial:** seven short tips for a new game (move, look, sprint, talk to someone, the turf map,
+  the phone, whistle), one at a time, each ticking over when you do it. Tab (D-pad left on a pad)
+  skips them. They show once per save, never block anything, follow your key bindings and your device
+  (keyboard or pad). The pause menu can turn tips off or replay them.
+- **Tests:** marker targets for each objective type, the marker on and off, the tutorial stepping
+  through, skipping, not repeating, and switching off.
+
 ### Vehicles: a worn, personalised, lived-in fleet (2026-11-13)
 - **Wear by age** (`scripts/vehicles/vehicle_detail.gd`): paint fades and loses colour with age, rust
   at the wheel arches, dents in the doors, a mismatched replacement door, bumper stickers. The police

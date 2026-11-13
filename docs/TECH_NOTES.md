@@ -524,3 +524,17 @@ entry in `data/districts/districts.json` carries the unlock requirements.
   variety (cover, bricks, flat tyre).
 - Scooters have two wheels: `front` is set for the front half of the wheel list, not `k < 2`.
 - `tools/godot/lineup.gd --cars [--only=<model> --dist=8]` renders the fleet or one vehicle.
+
+## Tutorial and waypoint (2026-11-13)
+
+- `GameSession.objective_position(o)` maps an objective to a world position (people indoors point at
+  their front door; `stat corners` points at the nearest corner you don't hold; reputation and
+  similar point nowhere). `waypoint_info()` picks the tracked mission's objective, or the next
+  available mission's giver.
+- `Waypoint` is a Node3D under the district (additive beam + gem, fades within about 14 m).
+  `Main._update_waypoint()` projects the target, falls back to an edge arrow when it is off screen or
+  behind the camera, and calls `Hud.set_waypoint()`.
+- `Tutorial` (scripts/ui/tutorial.gd) polls simple conditions (distance moved, camera turned, sprint
+  held, `interacted`/`shouted` signals, map/phone visible). It waits for the crew choice, then starts
+  if the save has no `tutorial_done` flag and no completed missions. `skip_tips` is a new input action
+  (Tab, D-pad left). Settings: `gameplay/tips`, `gameplay/waypoint`.

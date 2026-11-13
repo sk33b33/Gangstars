@@ -49,6 +49,7 @@ func _run() -> void:
 	_test_turf_units()
 	_test_hustle_units()
 	_test_access_units()
+	_test_loading_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
 		print("== district (integration)")
@@ -1825,6 +1826,17 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 	interiors.leave()
 
 
+func _test_loading_units() -> void:
+	print("== keys pressed while loading")
+	var raw := GameSession.new()
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_M
+	key.pressed = true
+	raw._unhandled_input(key)   # used to fail: "Invalid call. Nonexistent function 'is_menu_open' in base 'Nil'"
+	_check(raw.hud == null, "a key pressed before the world has loaded is ignored, not an error")
+	raw.free()
+
+
 func _test_access_units() -> void:
 	print("== accessibility units (re-binding, captions, autosave)")
 	InputRebinder.snapshot_defaults()
@@ -2088,6 +2100,9 @@ func _test_consequences_in_game(main: Node, district: District, player: Player) 
 
 func _test_dormant_in_game(main: Node, district: District, player: Player) -> void:
 	var dir := district.director
+	var teleports_before := 0
+	for r: Resident in district.residents.values():
+		teleports_before += r.teleport_violations
 	_check(is_inf(dir.dormant_distance), "by default everyone is simulated all the time")
 	player.global_position = Vector3(0, 0.1, -30)
 	main.settings.set_value("video/crowd_range", 0)
@@ -2110,7 +2125,69 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	var teleports := 0
 	for r: Resident in district.residents.values():
 		teleports += r.teleport_violations
-	_check(teleports == 0, "nobody teleported while sleeping or waking (%d)" % teleports)
+	_check(teleports == teleports_before, "nobody teleported while sleeping or waking (%d new)" % (teleports - teleports_before))
+
+
+func _test_guidance_in_game(main: Node, district: District, player: Player) -> void:
+	var session: GameSession = main.session
+	var tut: Tutorial = main.tutorial
+	_check(InputHints.key("skip_tips") == "Tab" and Tutorial.STEPS.size() == 7, "the tutorial has seven tips and Tab skips them")
+	# The gold marker: points at the person or place the current mission needs.
+	var started := ""
+	if session.missions.tracked_mission() == null:   # by now the early missions may all be done: start any that is open
+		for id in session.missions.order:
+			if session.missions.is_available(id) and session.missions.start(id):
+				started = id
+				break
+	var m := session.missions.tracked_mission()
+	var info := session.waypoint_info()
+	var points_somewhere := m != null and session.objective_position(session.missions.current_objective(m.id)) != null
+	_check(m == null or points_somewhere == not info.is_empty(), "there is a gold marker when the current objective has a place (%s)" % [info.get("text", "nowhere to point")])
+	var visit := {"type": "visit", "target": "poi_shop"}
+	_check(session.objective_position(visit).distance_to(district.destinations.anchor_position("poi_shop")) < 0.1, "a 'go to' objective points at that place")
+	_check(session.objective_position({"type": "talk_to", "target": "npc_boeta"}) != null and session.objective_position({"type": "reputation", "value": 10}) == null,
+		"a 'talk to' objective points at the person; one with no place points nowhere")
+	player.global_position = Vector3(0, 0.1, -30)
+	await process_frame
+	await process_frame
+	_check(main.waypoint.visible == (not session.waypoint_info().is_empty()), "the marker beam shows in the world")
+	main.settings.set_value("gameplay/waypoint", false)
+	await process_frame
+	_check(not main.waypoint.visible and main.hud.waypoint_text().is_empty(), "the marker can be switched off")
+	main.settings.set_value("gameplay/waypoint", true)
+	await process_frame
+	await process_frame
+	_check(not main.hud.waypoint_text().is_empty() or main.waypoint.target == null or player.global_position.distance_to(main.waypoint.target) < 6.0, "...and back on")
+	# The tutorial: asks for one thing at a time and ticks over when you do it.
+	session.progression.flags.erase("tutorial_done")
+	tut.restart()
+	_check(tut.active and main.hud.tip_text().contains("1/7") and main.hud.tip_text().contains("Move around"), "the tutorial starts with 'move around'")
+	player.global_position += Vector3(6, 0, 0)
+	for i in 3:
+		await process_frame
+	_check(tut.current_id() == "look", "moving on makes it ask for the next thing (%s)" % tut.current_id())
+	player.pivot.rotation.y += 1.4
+	for i in 3:
+		await process_frame
+	_check(tut.current_id() == "sprint", "turning the camera is noticed (%s)" % tut.current_id())
+	tut.index = 3
+	tut._seen["talk"] = true
+	for i in 3:
+		await process_frame
+	_check(tut.current_id() == "map", "talking to someone ticks the 'talk' tip (%s)" % tut.current_id())
+	tut.skip()
+	_check(not tut.active and main.hud.tip_text().is_empty() and session.progression.flags.has("tutorial_done"), "Tab skips the tutorial and it won't come back")
+	tut.maybe_start()
+	_check(not tut.active, "a save that has had the tutorial doesn't get it again")
+	main.settings.set_value("gameplay/tips", false)
+	tut.restart()
+	await process_frame
+	_check(not tut.active or not tut.enabled, "tips can be switched off in the settings")
+	main.settings.set_value("gameplay/tips", true)
+	tut.skip()
+	session.progression.flags["tutorial_done"] = true
+	if not started.is_empty():
+		session.missions.active.erase(started)
 
 
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
@@ -2230,7 +2307,7 @@ func _test_sound_in_game(main: Node, district: District, player: Player) -> void
 	district.director.clock.day = 20
 	district.director.clock.set_hour(12.0)
 	player.global_position = district.destinations.anchor_position("poi_park") + Vector3(0, 0.1, 6)
-	for i in 30:
+	for i in 150:   # the calendar ticks once a second of game time
 		await physics_frame
 	_check(cal.is_active("klopse_parade") and audio.venues_playing() >= 1, "the Tweede Nuwe Jaar parade plays its band at the park")
 	district.director.clock.day = day_keep
@@ -2999,6 +3076,7 @@ func _test_district() -> void:
 	await _test_hustle_in_game(main, district, player)
 	await _test_town_centre_in_game(main, district, player)
 	await _test_tafelsig_in_game(main, district, player)
+	await _test_guidance_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
 	await _test_dormant_in_game(main, district, player)
 	await _test_consequences_in_game(main, district, player)

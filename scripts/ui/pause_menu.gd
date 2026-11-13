@@ -4,6 +4,7 @@ extends Control
 
 signal resumed
 signal quit_requested
+signal replay_tutorial
 
 var settings: SettingsStore
 var _rows: VBoxContainer
@@ -87,6 +88,13 @@ func _build() -> void:
 	_check("Weather (rain and wind)", "gameplay/weather")
 	_check("Traffic", "gameplay/traffic")
 	_check("Autosave (after missions and each new day)", "gameplay/autosave")
+	_check("Gold waypoint marker for the current mission", "gameplay/waypoint")
+	_check("Show tips for new players", "gameplay/tips")
+	var replay := Button.new()
+	replay.name = "ReplayTutorial"
+	replay.text = "Replay the tutorial"
+	replay.pressed.connect(func(): replay_tutorial.emit())
+	_rows.add_child(replay)
 	var quit := Button.new()
 	quit.text = "Quit to desktop"
 	quit.pressed.connect(func(): quit_requested.emit())

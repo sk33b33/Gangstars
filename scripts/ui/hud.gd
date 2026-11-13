@@ -221,7 +221,11 @@ func _input(event: InputEvent) -> void:
 		refresh_hints()
 
 
+signal hints_refreshed
+
+
 func refresh_hints() -> void:
+	hints_refreshed.emit()
 	_help_timer = 40.0 if _help_timer > 0.0 else 10.0
 	_show_title()
 	set_prompt(_prompt_target if is_instance_valid(_prompt_target) else null)
@@ -378,6 +382,51 @@ func show_caption(text: String, side: float) -> void:
 
 func caption_text() -> String:
 	return _caption.text if _caption and _caption.visible else ""
+
+
+var _tip: Label
+var _waypoint: Label
+
+
+## The tutorial card (top centre, under the compass): a heading, one instruction, how to skip.
+func show_tip(title: String, text: String, footer: String) -> void:
+	if _tip == null:
+		_tip = _label(Vector2.ZERO, 20)
+		_tip.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		_tip.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_tip.offset_left = -560
+		_tip.offset_right = -16
+		_tip.offset_top = 64
+		_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_tip.add_theme_stylebox_override("normal", panel_style(Color("#9fd8b8"), 0.72))
+	_tip.text = "%s\n%s%s" % [title, text, ("\n" + footer) if not footer.is_empty() else ""]
+	_tip.visible = true
+
+
+func hide_tip() -> void:
+	if _tip:
+		_tip.visible = false
+
+
+func tip_text() -> String:
+	return _tip.text if _tip and _tip.visible else ""
+
+
+## The gold marker's label: "◆ 42 m" where the target is on screen, an arrow with the distance
+## at the screen edge when it isn't. pos in pixels; text empty = hide.
+func set_waypoint(text: String, pos: Vector2) -> void:
+	if _waypoint == null:
+		_waypoint = _label(Vector2.ZERO, 20)
+		_waypoint.add_theme_color_override("font_color", Color("#ffd75e"))
+		_waypoint.add_theme_stylebox_override("normal", panel_style(Color("#ffd75e"), 0.6))
+	_waypoint.visible = not text.is_empty()
+	if _waypoint.visible:
+		_waypoint.text = text
+		_waypoint.position = pos - _waypoint.size * 0.5
+
+
+func waypoint_text() -> String:
+	return _waypoint.text if _waypoint and _waypoint.visible else ""
 
 
 var _rain_fx: ColorRect

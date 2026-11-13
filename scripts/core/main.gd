@@ -22,6 +22,8 @@ extends Node
 var session: GameSession
 var settings := SettingsStore.new()
 var pause_menu: PauseMenu
+var waypoint: Waypoint
+var tutorial: Tutorial
 
 var _args := {}
 
@@ -57,6 +59,18 @@ func _ready() -> void:
 	session.setup(district, player, hud)
 	if session.audio:
 		session.audio.sound_heard.connect(_on_sound_heard)
+	waypoint = Waypoint.new()
+	district.add_child(waypoint)
+	tutorial = Tutorial.new()
+	tutorial.name = "Tutorial"
+	add_child(tutorial)
+	tutorial.setup(hud, player, session)
+	hud.hints_refreshed.connect(tutorial.refresh)
+	pause_menu.replay_tutorial.connect(func():
+		pause_menu.close()
+		settings.set_value("gameplay/tips", true)   # replaying them means you want them
+		settings.save_settings()
+		tutorial.restart())
 	apply_settings()
 	hud.show_message("Welcome to Westridge. You've just moved into 13 AZ Berman Drive.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
@@ -82,7 +96,44 @@ func _on_sound_heard(label: String, pos: Vector3) -> void:
 	hud.show_caption(label, to.dot(player.camera.global_transform.basis.x))
 
 
+## The gold marker in the world and its label on screen: "◆ Name 42 m" when the target is in view,
+## an arrow at the screen edge pointing the way when it isn't.
+func _update_waypoint() -> void:
+	if waypoint == null or session == null:
+		return
+	var info: Dictionary = session.waypoint_info() if session.missions != null and bool(settings.get_value("gameplay/waypoint")) else {}
+	if info.is_empty():
+		waypoint.set_target(null)
+		hud.set_waypoint("", Vector2.ZERO)
+		return
+	waypoint.set_target(info.pos)
+	var dist := int(player.global_position.distance_to(info.pos))
+	if dist < 6:
+		hud.set_waypoint("", Vector2.ZERO)
+		return
+	var cam := player.camera
+	var p: Vector3 = info.pos + Vector3(0, 3.4, 0)
+	var size := get_viewport().get_visible_rect().size
+	var behind := cam.is_position_behind(p)
+	var sp := cam.unproject_position(p)
+	var margin := 80.0
+	var label := "%s  %d m" % [info.text, dist]
+	if not behind and sp.x > margin and sp.x < size.x - margin and sp.y > 130.0 and sp.y < size.y - margin:
+		hud.set_waypoint("◆ " + label, sp)
+		return
+	var centre := size * 0.5
+	var dir := sp - centre
+	if behind:
+		dir = -dir
+	dir = dir.normalized() if dir.length() > 1.0 else Vector2(0, -1)
+	var half := Vector2(size.x * 0.5 - margin * 2.0, size.y * 0.5 - margin)
+	var k := minf(half.x / maxf(absf(dir.x), 0.001), half.y / maxf(absf(dir.y), 0.001))
+	var arrow := ("▶" if dir.x > 0.0 else "◀") if absf(dir.x) > absf(dir.y) else ("▼" if dir.y > 0.0 else "▲")
+	hud.set_waypoint("%s %s" % [arrow, label], centre + dir * k)
+
+
 func _process(_delta: float) -> void:
+	_update_waypoint()
 	hud.set_clock(district.director.clock)
 	var look := -player.camera.global_transform.basis.z
 	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)))
@@ -95,6 +146,10 @@ func _process(_delta: float) -> void:
 ## Pushes settings into the engine and game objects (called at start and on every change).
 func apply_settings() -> void:
 	settings.apply_engine()
+	if tutorial:
+		tutorial.enabled = bool(settings.get_value("gameplay/tips"))
+		if not tutorial.enabled and tutorial.active:
+			tutorial.skip()
 	session.autosave_user = bool(settings.get_value("gameplay/autosave"))
 	district.director.dormant_distance = [150.0, 320.0, INF][int(settings.get_value("video/crowd_range"))]
 	Resident.bubbles_on = bool(settings.get_value("access/speech_bubbles"))
@@ -118,6 +173,8 @@ func apply_settings() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if session == null or session.turf_map == null:   # still loading (the navigation bake takes a while)
+		return
 	if event.is_action_pressed("pause") and not pause_menu.visible and not hud.is_menu_open() \
 			and not session.turf_map.visible:
 		pause_menu.open()

@@ -338,13 +338,13 @@ static func animate(pivot: Node3D, speed: float, steer: float, accel: float, ind
 	var roll := clampf(steer * absf(speed) * 0.002, -0.025, 0.025)
 	tilt.rotation.x = lerpf(tilt.rotation.x, pitch, clampf(delta * 6.0, 0.0, 1.0))
 	tilt.rotation.z = lerpf(tilt.rotation.z, -roll, clampf(delta * 6.0, 0.0, 1.0))
-	var tail: StandardMaterial3D = pivot.get_meta("taillight", null)
+	var tail: StandardMaterial3D = _opt_meta(pivot, "taillight")
 	if tail:
 		var braking := accel < -0.5 or (absf(speed) < 0.3 and accel < 0.0)
 		tail.emission_energy_multiplier = 3.0 if braking else night * 1.2
 	var blink := fmod(time, 0.8) < 0.4
 	for side in ["indicator_L", "indicator_R"]:
-		var ind: StandardMaterial3D = pivot.get_meta(side, null)
+		var ind: StandardMaterial3D = _opt_meta(pivot, side)
 		if ind:
 			var on: bool = blink and ((indicate < 0 and side == "indicator_L") or (indicate > 0 and side == "indicator_R"))
 			ind.emission_energy_multiplier = 4.0 if on else 0.0
@@ -359,7 +359,7 @@ static func animate(pivot: Node3D, speed: float, steer: float, accel: float, ind
 ## brake glow on the road, skid marks.
 static func _animate_detail(pivot: Node3D, speed: float, steer: float, accel: float, delta: float, time: float) -> void:
 	_drops_mat_update()
-	var ring: Node3D = pivot.get_meta("steer_ring", null)
+	var ring: Node3D = _opt_meta(pivot, "steer_ring")
 	if ring:
 		ring.rotation.y = lerpf(ring.rotation.y, -steer * 1.4, clampf(delta * 8.0, 0.0, 1.0))
 	var wipers: Array = pivot.get_meta("wipers", [])
@@ -369,18 +369,24 @@ static func _animate_detail(pivot: Node3D, speed: float, steer: float, accel: fl
 		var target := (0.5 - 0.5 * cos(time * 5.0 + i * 0.3)) * 1.25 if sweeping else 0.0
 		piv.rotation.z = lerpf(piv.rotation.z, target, clampf(delta * 14.0, 0.0, 1.0))
 	var tilt: Node3D = pivot.get_meta("tilt")
-	var ex: CPUParticles3D = pivot.get_meta("exhaust", null)
+	var ex: CPUParticles3D = _opt_meta(pivot, "exhaust")
 	if ex:
 		var age: float = pivot.get_meta("age", 0.3)
 		ex.emitting = (accel > 0.7 and speed > 0.2) or (age > 0.7 and speed > 0.3 and fmod(time, 3.0) < 0.5)
-	var dust_fx: CPUParticles3D = pivot.get_meta("dust_fx", null)
+	var dust_fx: CPUParticles3D = _opt_meta(pivot, "dust_fx")
 	if dust_fx:
 		dust_fx.emitting = dust > 0.25 and speed > 5.0
-	var glow: MeshInstance3D = pivot.get_meta("brake_glow", null)
+	var glow: MeshInstance3D = _opt_meta(pivot, "brake_glow")
 	if glow:
 		glow.visible = (accel < -0.5 or (absf(speed) < 0.3 and accel < 0.0)) and (night > 0.35 or wet > 0.3)
 	if accel < -6.0 and speed > 5.0:
 		_skid(pivot)
+
+
+## A meta value or null. (get_meta(key, null) logs an error for a missing key: the default null
+## counts as "no default", and with dozens of cars it floods the log every frame.)
+static func _opt_meta(node: Node, key: String) -> Variant:
+	return node.get_meta(key) if node.has_meta(key) else null
 
 
 static func _drops_mat_update() -> void:

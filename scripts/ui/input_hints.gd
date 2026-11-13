@@ -10,11 +10,11 @@ static var custom: Dictionary = {}
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
-	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R",
+	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab",
 }
 const PAD := {
 	"interact": "A", "shout": "Y", "turf_map": "View", "sprint": "L3", "jump": "B",
-	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B", "aim": "LT", "fire": "RT", "phone": "D-pad up", "radio": "D-pad down",
+	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B", "aim": "LT", "fire": "RT", "phone": "D-pad up", "radio": "D-pad down", "skip_tips": "D-pad left",
 }
 ## Stick movement below this doesn't count as switching to the gamepad (drift, resting thumbs).
 const STICK_SWITCH := 0.5

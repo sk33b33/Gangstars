@@ -11,7 +11,7 @@ const DEFAULTS := {
 	"controls/vibration": true,
 	"video/fov": 70.0, "video/shadows": true, "video/effects": true, "video/msaa": 2, "video/fog": true,
 	"video/render_scale": 1.0, "video/crowd_range": 2, "video/fullscreen": false, "video/vsync": true, "video/show_fps": false,
-	"gameplay/weather": true, "gameplay/traffic": true, "gameplay/autosave": true,
+	"gameplay/weather": true, "gameplay/traffic": true, "gameplay/autosave": true, "gameplay/waypoint": true, "gameplay/tips": true,
 	"access/captions": true, "access/speech_bubbles": true,
 }
 const RANGES := {

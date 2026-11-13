@@ -12,7 +12,9 @@ GODOT="${GODOT:-godot}"
 LOG="$(mktemp)"
 timeout "${TEST_TIMEOUT:-1500}" "$GODOT" --headless --path . --fixed-fps 60 -s tests/run_tests.gd -- "${@:---soak-minutes=2}" 2>&1 | tee "$LOG"
 SUMMARY="$(grep -E '^[0-9]+ passed, [0-9]+ failed' "$LOG" | tail -1)"
+ERRORS="$(grep -c 'SCRIPT ERROR' "$LOG" || true)"
 rm -f "$LOG"
+if [[ "${ERRORS:-0}" -gt 0 ]]; then echo "TESTS FAILED: $ERRORS script error(s) in the log (these freeze the game in the editor's debugger)"; exit 1; fi
 case "$SUMMARY" in
   *" 0 failed") echo "TESTS OK: $SUMMARY"; exit 0 ;;
   "") echo "TESTS DID NOT FINISH (no summary line)"; exit 2 ;;
