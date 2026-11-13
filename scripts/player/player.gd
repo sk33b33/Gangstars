@@ -54,6 +54,11 @@ var combat: CombatSystem
 var weapon := "pistol"
 var weapons: PackedStringArray = ["pistol"]
 var aiming := false
+## Touch auto-lock: while on, the weapon is raised and the camera swings onto the nearest armed
+## stranger in range (set by TouchControls' LOCK button).
+var auto_lock := false
+var lock_target: Node3D
+const LOCK_RANGE := 30.0
 var shots_fired := 0
 var _fire_cd := 0.0
 var _draw_timer := 0.0
@@ -219,7 +224,12 @@ func switch_weapon() -> void:
 
 ## Aim with RMB / LT (over-the-shoulder camera, slower walk), fire with LMB / RT.
 func _update_aim(delta: float) -> void:
-	aiming = input_enabled and not weapon.is_empty() and Input.is_action_pressed("aim")
+	var locking := input_enabled and auto_lock and not weapon.is_empty()
+	aiming = input_enabled and not weapon.is_empty() and (Input.is_action_pressed("aim") or locking)
+	if locking:
+		_lock_on(delta)
+	else:
+		lock_target = null
 	_draw_timer = 3.0 if aiming else maxf(0.0, _draw_timer - delta)
 	model.draw_weapon(_draw_timer > 0.0)
 	model.aiming = aiming
@@ -231,6 +241,34 @@ func _update_aim(delta: float) -> void:
 	_fire_cd = maxf(0.0, _fire_cd - delta)
 	if aiming and _fire_cd <= 0.0 and input_enabled and Input.is_action_just_pressed("fire"):
 		shoot()
+
+
+## Nearest armed, non-allied resident within range (or null).
+func find_lock_target() -> Node3D:
+	var best: Node3D = null
+	var best_d := LOCK_RANGE
+	for n in get_tree().get_nodes_in_group("residents"):
+		var r := n as Resident
+		if r == null or not r.visible or not r.can_fight() or r.is_ally():
+			continue
+		var d := global_position.distance_to(r.global_position)
+		if d < best_d:
+			best_d = d
+			best = r
+	return best
+
+
+func _lock_on(delta: float) -> void:
+	if lock_target == null or not is_instance_valid(lock_target) or (lock_target as Resident).health.down \
+			or global_position.distance_to(lock_target.global_position) > LOCK_RANGE + 5.0:
+		lock_target = find_lock_target()
+	if lock_target == null:
+		return
+	var chest: Vector3 = lock_target.global_position + Vector3(0, 1.3, 0)
+	var dir := (chest - camera.global_position).normalized()
+	var k := clampf(delta * 8.0, 0.0, 1.0)
+	pivot.rotation.y = lerp_angle(pivot.rotation.y, atan2(-dir.x, -dir.z), k)
+	pitch.rotation.x = clampf(lerpf(pitch.rotation.x, asin(dir.y), k), min_pitch, max_pitch)
 
 
 ## Fires the weapon at whatever is under the screen centre.

@@ -132,6 +132,7 @@ var settled_kinds := {}
 
 func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: float,
 		p_clock: SimClock = null, p_lookup: Callable = Callable()) -> void:
+	add_to_group("residents")
 	data = p_data
 	destinations = p_destinations
 	clock = p_clock

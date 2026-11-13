@@ -2228,6 +2228,37 @@ func _test_touch_in_game(main: Node, district: District, player: Player) -> void
 	touch._input(tap)
 	await process_frame
 	_check(not Input.is_action_pressed("interact"), "...and lets go")
+	var lockb: Dictionary = touch._button("lock")
+	var fireb: Dictionary = touch._button("fire")
+	_check(touch._button_centre(fireb).y < touch._stick_centre("move").y - 100.0 and absf(touch._button_centre(fireb).x - touch._stick_centre("move").x) < 40.0, "FIRE sits above the move stick")
+	var lt := InputEventScreenTouch.new()
+	lt.index = 2
+	lt.pressed = true
+	lt.position = touch._button_centre(lockb)
+	touch._input(lt)
+	_check(player.auto_lock, "LOCK turns auto-lock on")
+	var foe: Resident = null
+	for r in district.residents.values():
+		foe = r
+		break
+	var saved_w := player.weapon
+	player.weapon = "pistol"
+	foe.model.set_weapon("pistol")
+	foe.global_position = player.global_position + Vector3(0, 0, -10)
+	foe.visible = true
+	foe.is_inside = false
+	for i in 40:
+		await physics_frame
+	_check(player.aiming and player.lock_target is Resident and (player.lock_target as Resident).can_fight(), "auto-lock raises the weapon and picks the armed stranger")
+	foe.model.set_weapon("")
+	lt.pressed = false
+	touch._input(lt)
+	lt.pressed = true
+	touch._input(lt)
+	_check(not player.auto_lock, "LOCK again turns it off")
+	lt.pressed = false
+	touch._input(lt)
+	player.weapon = saved_w
 	InputHints.touch = true
 	_check(InputHints.key("interact") == "TALK" and InputHints.help_line().contains("Left stick"), "prompts name the on-screen buttons")
 	InputHints.touch = false

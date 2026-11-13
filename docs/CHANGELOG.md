@@ -1,5 +1,9 @@
 # Changelog
 
+## Touch: LOCK button and FIRE placement
+- New LOCK button (touch only): raises the weapon and swings the camera onto the nearest armed stranger within 30 m; tap again to turn off. Residents are now in the `residents` group.
+- FIRE moved above the move stick; HEY moved to a second column so it no longer covers the waypoint label.
+
 ## Touch controls (phones and tablets)
 - New `TouchControls` layer: left stick moves/drives, right stick looks, TALK / RUN / JUMP / AIM / FIRE buttons, and MENU / PHONE / MAP / HEY / RADIO on the right edge. Shown automatically on a touchscreen (or with `--touch` on a PC); hidden while a menu has the input.
 - Prompts, the help line and the tutorial name the on-screen buttons on touch; tapping a tutorial card skips the tips.

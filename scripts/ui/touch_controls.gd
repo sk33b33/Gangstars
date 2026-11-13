@@ -4,6 +4,7 @@ extends CanvasLayer
 ## --touch argument for testing on a PC):
 ##   left stick  - move (and steer/accelerate when driving)
 ##   right stick - look
+##   LOCK        - toggles auto-lock aim (raises the weapon and swings onto the nearest armed stranger)
 ##   buttons     - Talk/interact, Sprint (tap to toggle), Jump, Aim (hold), Shoot (hold), and a column on
 ##                 the right edge: Menu, Phone, Map, Whistle, Radio.
 ## Everything goes through the normal input actions (InputEventAction), so the game code doesn't know
@@ -28,11 +29,12 @@ var _buttons := [
 	{"id": "sprint", "action": "sprint", "label": "RUN", "hold": true, "toggle": true, "r": 46.0, "at": [470.0, 70.0]},
 	{"id": "jump", "action": "jump", "label": "JUMP", "hold": false, "r": 42.0, "at": [470.0, 200.0]},
 	{"id": "aim", "action": "aim", "label": "AIM", "hold": true, "r": 46.0, "at": [215.0, 330.0]},
-	{"id": "fire", "action": "fire", "label": "FIRE", "hold": true, "r": 52.0, "at": [90.0, 330.0]},
+	{"id": "lock", "action": "", "label": "LOCK", "hold": false, "toggle": true, "r": 46.0, "at": [90.0, 330.0]},
+	{"id": "fire", "action": "fire", "label": "FIRE", "hold": true, "r": 56.0, "at": [190.0, 345.0], "left": true},
 	{"id": "pause", "action": "pause", "label": "MENU", "hold": false, "r": 30.0, "at": [48.0, 115.0], "top": true},
 	{"id": "phone", "action": "phone", "label": "PHONE", "hold": false, "r": 30.0, "at": [48.0, 185.0], "top": true},
 	{"id": "turf_map", "action": "turf_map", "label": "MAP", "hold": false, "r": 30.0, "at": [48.0, 255.0], "top": true},
-	{"id": "shout", "action": "shout", "label": "HEY", "hold": false, "r": 30.0, "at": [48.0, 325.0], "top": true},
+	{"id": "shout", "action": "shout", "label": "HEY", "hold": false, "r": 30.0, "at": [120.0, 255.0], "top": true},
 	{"id": "radio", "action": "radio", "label": "RADIO", "hold": false, "r": 30.0, "at": [120.0, 185.0], "top": true},
 ]
 
@@ -64,6 +66,8 @@ func _stick_centre(id: String) -> Vector2:
 func _button_centre(b: Dictionary) -> Vector2:
 	var s := _size()
 	var at: Array = b.at
+	if b.get("left", false):   # from the left edge, above the move stick
+		return Vector2(float(at[0]), s.y - float(at[1]))
 	if b.get("top", false):
 		return Vector2(s.x - float(at[0]), float(at[1]))
 	return Vector2(s.x - float(at[0]), s.y - float(at[1]))
@@ -121,6 +125,9 @@ func _begin(id: String, p: Vector2) -> void:
 		_stick_pos[id] = _clamped(p - _stick_centre(id))
 		return
 	var b := _button(id)
+	if id == "lock":
+		player.auto_lock = not player.auto_lock
+		return
 	if bool(b.get("toggle", false)):
 		_sprint_on = not _sprint_on
 		_send(str(b.action), _sprint_on)
@@ -133,7 +140,7 @@ func _end(id: String) -> void:
 		_stick_pos[id] = Vector2.ZERO
 		return
 	var b := _button(id)
-	if not bool(b.get("toggle", false)):
+	if id != "lock" and not bool(b.get("toggle", false)):
 		_send(str(b.action), false)
 
 
@@ -183,9 +190,11 @@ func _release_all() -> void:
 	_stick_pos = {"move": Vector2.ZERO, "look": Vector2.ZERO}
 	_apply_sticks()
 	for b in _buttons:
-		if Input.is_action_pressed(str(b.action)) and b.action != "pause":
+		if str(b.action) != "" and Input.is_action_pressed(str(b.action)) and b.action != "pause":
 			_send(str(b.action), false)
 	_sprint_on = false
+	if player:
+		player.auto_lock = false
 
 
 func _on_draw() -> void:
@@ -199,7 +208,7 @@ func _on_draw() -> void:
 		_draw_node.draw_string(font, c + Vector2(-24, STICK_RADIUS + 24), name_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.55))
 	for b in _buttons:
 		var c2 := _button_centre(b)
-		var down: bool = _touches.values().has(b.id) or (b.id == "sprint" and _sprint_on)
+		var down: bool = _touches.values().has(b.id) or (b.id == "sprint" and _sprint_on) or (b.id == "lock" and player.auto_lock)
 		_draw_node.draw_circle(c2, float(b.r), Color(1.0, 0.85, 0.37, 0.5) if down else Color(0.05, 0.06, 0.09, 0.45))
 		_draw_node.draw_arc(c2, float(b.r), 0.0, TAU, 28, Color(1, 1, 1, 0.5), 2.5)
 		var w: float = font.get_string_size(str(b.label), HORIZONTAL_ALIGNMENT_LEFT, -1, 16).x
