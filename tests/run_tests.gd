@@ -2228,6 +2228,11 @@ func _test_touch_in_game(main: Node, district: District, player: Player) -> void
 	touch._input(tap)
 	await process_frame
 	_check(not Input.is_action_pressed("interact"), "...and lets go")
+	var removed: Array = touch.strip_mouse_bindings()
+	var left_over := InputMap.action_get_events("fire").filter(func(e): return e is InputEventMouseButton)
+	_check(not removed.is_empty() and left_over.is_empty(), "on touch, a tap's emulated left-click can't fire the weapon")
+	for r in removed:
+		InputMap.action_add_event(str(r[0]), r[1])
 	var lockb: Dictionary = touch._button("lock")
 	var fireb: Dictionary = touch._button("fire")
 	_check(touch._button_centre(fireb).y < touch._stick_centre("move").y - 100.0 and absf(touch._button_centre(fireb).x - touch._stick_centre("move").x) < 40.0, "FIRE sits above the move stick")

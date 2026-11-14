@@ -49,7 +49,22 @@ func setup(p_player: Player, force := false) -> void:
 	_draw_node.draw.connect(_on_draw)
 	add_child(_draw_node)
 	player.mouse_look_enabled = not enabled   # touch drags must not turn the camera by themselves
+	if enabled:
+		strip_mouse_bindings()
 	visible = false
+
+
+## A touch also arrives as an emulated left-click (that's how menus work with taps), and left-click is
+## bound to "fire": every tap on AIM or LOCK would shoot. So on a touchscreen the mouse buttons are
+## taken off the combat actions; the FIRE button sends "fire" itself. Returns what it removed.
+func strip_mouse_bindings() -> Array:
+	var removed: Array = []
+	for action in ["fire", "aim"]:
+		for e in InputMap.action_get_events(action):
+			if e is InputEventMouseButton:
+				removed.append([action, e])
+				InputMap.action_erase_event(action, e)
+	return removed
 
 
 func _size() -> Vector2:

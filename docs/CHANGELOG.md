@@ -1,5 +1,8 @@
 # Changelog
 
+## Fix: touch taps fired the weapon
+- A touch also arrives as an emulated left-click, which is bound to "fire", so tapping AIM or LOCK shot automatically. On a touchscreen the mouse buttons are now removed from the fire/aim actions; the FIRE button sends "fire" itself.
+
 ## Touch: LOCK button and FIRE placement
 - New LOCK button (touch only): raises the weapon and swings the camera onto the nearest armed stranger within 30 m; tap again to turn off. Residents are now in the `residents` group.
 - FIRE moved above the move stick; HEY moved to a second column so it no longer covers the waypoint label.
