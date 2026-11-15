@@ -7,12 +7,26 @@ extends Node3D
 
 signal chunk_loaded(key: Vector2i)
 signal chunk_unloaded(key: Vector2i)
+signal nav_ready(key: Vector2i)
+signal nav_removed(key: Vector2i)
 
 @export var load_radius := INF
 @export var unload_margin := 120.0
 ## Chunks built per frame while catching up (more = faster loading, bigger hitches).
 @export var builds_per_frame := 1
 
+## People and traffic only exist within this distance of the focus: chunks inside it get a
+## navigation mesh (baked in the background) and lose it again beyond `sim_radius + sim_margin`.
+@export var sim_radius := 300.0
+@export var sim_margin := 150.0
+## Tests: bake navigation on the spot instead of on a background thread.
+var sync_nav := false
+
+var places := DestinationRegistry.new()   # house doors ("<house id>:door") and landmarks ("lm_<n>")
+var graph := RealRoadGraph.new()
+var houses := {}            # chunk key -> [{id, door, area}]
+var nav_regions := {}       # chunk key -> NavigationRegion3D
+var _nav_baking := {}       # chunk key -> true while its bake runs
 var data: RealDistrictData
 var focus: Node3D
 var loaded := {}            # Vector2i -> Node3D
@@ -26,6 +40,24 @@ func setup(p_data: RealDistrictData, p_focus: Node3D) -> void:
 	data = p_data
 	focus = p_focus
 	_build_ground()
+	_register_landmarks()
+
+
+const LANDMARK_KINDS := {"park": "park", "playground": "park", "retail": "shop", "convenience": "shop", "fast_food": "shop", "fuel": "shop",
+	"community_centre": "gathering", "clinic": "gathering", "place_of_worship": "gathering", "church": "gathering", "library": "gathering",
+	"pitch": "court", "sports": "court", "pool": "court"}
+
+
+## Named real places people go to: parks, shops, the civic centre, churches and mosques, pitches.
+func _register_landmarks() -> void:
+	for i in data.landmarks.size():
+		var l: Dictionary = data.landmarks[i]
+		if LANDMARK_KINDS.has(l.kind):
+			places.register("lm_%d" % i, Vector3(l.at.x, 0.0, l.at.y), 3.0, LANDMARK_KINDS[l.kind], l.name)
+
+
+func _enter_tree() -> void:
+	places.navigation_map = get_world_3d().navigation_map
 
 
 ## One flat slab under everything (collision layer 1, like the old districts' ground).
@@ -54,10 +86,13 @@ func _process(delta: float) -> void:
 		return
 	_since_scan += delta
 	var pos := focus.global_position
-	if _since_scan >= 0.5 and (_last_scan_pos == Vector3.INF or pos.distance_to(_last_scan_pos) > 10.0 or not _queue.is_empty()):
+	if _since_scan >= 0.5:
 		_since_scan = 0.0
-		_last_scan_pos = pos
-		scan(pos)
+		if _last_scan_pos == Vector3.INF or pos.distance_to(_last_scan_pos) > 10.0 or not _queue.is_empty():
+			_last_scan_pos = pos
+			scan(pos)
+		else:
+			_scan_nav(pos)
 	for i in builds_per_frame:
 		if _queue.is_empty():
 			break
@@ -71,6 +106,7 @@ func scan(pos: Vector3) -> void:
 		for key in data.chunks_near(pos, 1e7):
 			if not loaded.has(key):
 				_queue.append(key)
+		_scan_nav(pos)
 		return
 	for key in data.chunks_near(pos, load_radius):
 		if not loaded.has(key):
@@ -79,13 +115,82 @@ func scan(pos: Vector3) -> void:
 	for key: Vector2i in loaded.keys():
 		if data.chunk_centre(key).distance_to(Vector3(pos.x, 0.0, pos.z)) > limit:
 			unload_chunk(key)
+	_scan_nav(pos)
+
+
+func _near(key: Vector2i, pos: Vector3, radius: float) -> bool:
+	return data.chunk_centre(key).distance_to(Vector3(pos.x, 0.0, pos.z)) <= radius + data.chunk_size * 0.71
+
+
+## Navigation follows the focus: bake the nearest loaded chunk that lacks it (one at a time),
+## and drop the meshes that are now far away.
+func _scan_nav(pos: Vector3) -> void:
+	for key: Vector2i in nav_regions.keys():
+		if not _near(key, pos, sim_radius + sim_margin):
+			_remove_nav(key)
+	if not _nav_baking.is_empty():
+		return
+	for key in data.chunks_near(pos, sim_radius):
+		if loaded.has(key) and not nav_regions.has(key):
+			_bake_nav(key)
+			if not sync_nav:
+				return
+
+
+func _bake_nav(key: Vector2i) -> void:
+	var rings := data.around(key, "outlines")
+	if sync_nav:
+		_on_nav_baked(RealNav.bake(key, data.chunk_size, rings), key)
+		return
+	_nav_baking[key] = true
+	RealNav.bake_async(key, data.chunk_size, rings, _on_nav_baked.bind(key))
+
+
+func _on_nav_baked(nm: NavigationMesh, key: Vector2i) -> void:
+	_nav_baking.erase(key)
+	if not is_inside_tree() or not loaded.has(key) or nav_regions.has(key):
+		return
+	var region := NavigationRegion3D.new()
+	region.name = "Nav_%d_%d" % [key.x, key.y]
+	region.navigation_mesh = nm
+	add_child(region)
+	nav_regions[key] = region
+	nav_ready.emit(key)
+
+
+func _remove_nav(key: Vector2i) -> void:
+	var region: NavigationRegion3D = nav_regions.get(key)
+	if region == null:
+		return
+	nav_regions.erase(key)
+	nav_removed.emit(key)
+	region.queue_free()
+
+
+## True once the navigation map has taken in the region under `pos` (regions are added to the
+## map on a later, background sync; until then queries answer with the origin).
+func nav_synced(pos: Vector3) -> bool:
+	if not has_nav(pos):
+		return false
+	var flat := Vector3(pos.x, 0.0, pos.z)
+	var on_map := NavigationServer3D.map_get_closest_point(get_world_3d().navigation_map, flat)
+	return Vector2(on_map.x - flat.x, on_map.z - flat.z).length() < 60.0
+
+
+func has_nav(pos: Vector3) -> bool:
+	return nav_regions.has(data.chunk_at(pos))
 
 
 func load_chunk(key: Vector2i) -> void:
 	if loaded.has(key) or not data.has_chunk(key):
 		return
 	var stats := {}
-	var node := RealChunkBuilder.build(key, data.load_chunk(key), stats)
+	var chunk := data.load_chunk(key)
+	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"))
+	houses[key] = stats.get("houses", [])
+	for h in houses[key]:
+		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")
+	graph.add_chunk(key, chunk.get("roads", []))
 	node.set_meta("buildings", int(stats.get("buildings", 0)))
 	add_child(node)
 	loaded[key] = node
@@ -98,6 +203,11 @@ func unload_chunk(key: Vector2i) -> void:
 	if node == null:
 		return
 	buildings_loaded -= int(node.get_meta("buildings", 0))
+	_remove_nav(key)
+	for h in houses.get(key, []):
+		places.remove(str(h.id) + ":door")
+	houses.erase(key)
+	graph.remove_chunk(key)
 	loaded.erase(key)
 	node.queue_free()
 	chunk_unloaded.emit(key)

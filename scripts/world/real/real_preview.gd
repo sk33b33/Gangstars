@@ -2,6 +2,7 @@ extends Node
 ## Walk-around preview of the real Westridge (work in progress: no missions or residents yet).
 ## Open from the pause menu ("Real Westridge preview") or run scenes/real/real_westridge.tscn.
 ## Desktop builds the whole suburb; a touchscreen loads only what is near you.
+##   -- --hour=<h> --wait=<s before the shot, so people and cars get going>
 ##   -- --shot=<png> --shot-delay=<s> --cam=x,y,z,tx,ty,tz --at=x,z --radius=<m> --touch --top-down
 ## Design: design/gdd/real_world.md.
 
@@ -14,6 +15,10 @@ var world: RealWorld
 var data: RealDistrictData
 var player: Player
 var touch: TouchControls
+var people: RealPopulation
+var traffic: RealTraffic
+var _message := ""
+var _message_time := 0.0
 var _label: Label
 var _args := {}
 
@@ -49,6 +54,22 @@ func _ready() -> void:
 		world.load_radius = float(_args.radius)
 	if _args.has("top-down"):
 		player.top_down = true
+	world.sim_radius = 220.0 if touch.enabled else 300.0
+	people = RealPopulation.new()
+	people.name = "People"
+	add_child(people)
+	people.setup(world, player)
+	traffic = RealTraffic.new()
+	traffic.name = "Traffic"
+	add_child(traffic)
+	traffic.setup(world, player, people)
+	if touch.enabled:   # a phone carries fewer people and cars
+		people.max_residents = 18
+		people.homes_per_chunk = 3
+		traffic.max_cars = 6
+	player.interacted.connect(func(text: String):
+		_message = text
+		_message_time = 5.0)
 	_build_hud()
 	if DisplayServer.get_name() != "headless" and not touch.enabled and not _args.has("shot"):
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -107,15 +128,21 @@ func status_text() -> String:
 	var heading := fposmod(rad_to_deg(atan2(look.x, -look.z)), 360.0)
 	var points := ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 	var street := world.street_near(player.global_position)
-	return "WESTRIDGE, real map (preview)   %s\n%s   ·   facing %s   ·   %d of %d pieces loaded, %d buildings%s   ·   %d fps\n%s" % [
-		"" if data.is_inside(player.global_position) else "(outside Westridge)",
+	return "WESTRIDGE, real map (preview)   %s   %s\n%s   ·   facing %s   ·   %d of %d pieces loaded, %d buildings%s   ·   %d fps\n%d residents nearby (%d out on the street)   ·   %d cars   ·   %s\n%s" % [
+		people.clock.label(), "" if data.is_inside(player.global_position) else "(outside Westridge)",
 		street if not street.is_empty() else "open ground", points[int(round(heading / 45.0)) % 8],
 		world.loaded.size(), data.chunk_keys.size(), world.buildings_loaded,
 		("  (loading %d)" % world.pending()) if world.pending() > 0 else "", Engine.get_frames_per_second(),
-		"MENU: back to the game" if touch.enabled else "Esc: back to the game   ·   V: top-down view"]
+		people.residents.size(), people.outdoors(), traffic.cars.size(),
+		"MENU: back to the game" if touch.enabled else "Esc: back to the game   ·   V: top-down view   ·   E: talk",
+		_message]
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _message_time > 0.0:
+		_message_time -= delta
+		if _message_time <= 0.0:
+			_message = ""
 	if _label and Engine.get_process_frames() % 10 == 0:
 		_label.text = status_text()
 
@@ -138,7 +165,19 @@ func _shoot() -> void:
 		cam.global_position = Vector3(float(c[0]), float(c[1]), float(c[2]))
 		cam.look_at(Vector3(float(c[3]), float(c[4]), float(c[5])))
 		cam.current = true
-	await get_tree().create_timer(float(_args.get("shot-delay", "2"))).timeout
+	if _args.has("hour"):
+		people.clock.set_hour(float(_args.hour))
+	await get_tree().create_timer(float(_args.get("wait", "0")) + float(_args.get("shot-delay", "2"))).timeout
+	if _args.has("cam-resident"):   # look at the first person out on the street, with the street behind them
+		for r: Resident in people.residents.values():
+			if not r.is_inside and r.visible:
+				var cam2 := Camera3D.new()
+				add_child(cam2)
+				cam2.global_position = r.global_position + Vector3(4.5, 2.2, 4.5)
+				cam2.look_at(r.global_position + Vector3(0, 1.2, 0))
+				cam2.current = true
+				await get_tree().process_frame
+				break
 	_label.text = status_text()
 	await RenderingServer.frame_post_draw
 	var path := str(_args.shot)

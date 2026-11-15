@@ -1,5 +1,17 @@
 # Changelog
 
+## Real Westridge, stage 2: people and traffic
+- **Navigation** on the real streets (`RealNav`): a navigation mesh per 200 m piece with every building outline cut out,
+  baked in the background near you; pieces join edge to edge, so walks cross the suburb and go round the real buildings.
+- **Homes**: houses now have a front door on the wall facing their street, and windows.
+- **Residents** (`RealPopulation`): the game's ordinary residents live in real houses, leave on a daily schedule, walk to
+  real places (the nearest shop, park, the civic centre or a church, a neighbour) and walk home. Up to 48 near you (18 on a phone).
+- **Traffic** (`RealRoadGraph`, `RealCar`, `RealTraffic`): cars drive the real street network on the left, turn at real
+  junctions, obey one-way carriageways, and stop for cars, people and you. Up to 14 near you (6 on a phone).
+- The map tool now cuts streets at their junctions and records one-way streets.
+- 18 new checks (`tests/run.sh --real-only` runs the real-world checks alone: 46/46).
+- Still preview only: no missions, crews, police or shops there yet; people may cross roads anywhere; no parked cars or fences.
+
 ## Real Westridge world, stage 1: real streets, real outlines, loading in pieces
 - New direction (design/gdd/real_world.md): one accurate district, the whole of real Westridge (about 1.6 by 2.5 km),
   replaces the five small made-up districts. Done in four stages; the existing game keeps running until stage 3 moves it over.

@@ -185,7 +185,8 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 
 ## Real Westridge (the new world; design/gdd/real_world.md) (requested 2026-11-15)
 - [x] Stage 1: real data (streets + building outlines), real-line street builder, loading in pieces, walk-around preview.
-- [ ] Stage 2: people: navigation on the real streets, residents in real houses, traffic on real roads; doors, windows, fences and yards on the houses.
+- [x] Stage 2: people: navigation on the real streets, residents in real houses, traffic on real roads; doors and windows on the houses.
+- [ ] Stage 2 follow-ups (with stage 3): fences and yards, parked cars, people keeping to pavements and crossings, street lights.
 - [ ] Stage 3: move the game in: safehouse, shops, missions (including those from the other districts, re-set in Westridge), crews, turf sectors inside Westridge in place of locked districts, police, survival spots, turf map, saves.
 - [ ] Stage 4: remove Lentegeur, Rocklands, Town Centre, Tafelsig, the old Westridge and their code and tests; phone tuning; Windows build.
 The "rebuild the other suburbs" items above are dropped: only Westridge is built from now on.

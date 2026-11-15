@@ -119,6 +119,13 @@ def densify(pts, step=20.0):
     return out
 
 
+def road_rec(tags, cls, width, pave, oneway, run):
+    rec = {"n": tags.get("name", ""), "c": cls, "w": width, "s": pave, "p": rnd(run)}
+    if oneway:
+        rec["o"] = 1
+    return rec
+
+
 def main(raw, ms_file):
     nodes, ways = {}, {}
     for f in sorted(glob.glob(raw + "/t_*.osm")):
@@ -130,15 +137,39 @@ def main(raw, ms_file):
     chunks = collections.defaultdict(lambda: {"roads": [], "buildings": [], "areas": []})
     counts = collections.Counter()
     landmarks, street_names, osm_buildings = [], set(), []
+    # Junctions: a node used by two road ways (or twice by one). Ways are cut there, so every
+    # junction is the end of a road piece and traffic can turn at it.
+    uses = collections.Counter()
+    for tags, refs in ways.values():
+        if tags.get("highway") in ROAD and ROAD[tags["highway"]][0] != "path":
+            for i, r in enumerate(refs):
+                uses[r] += 1 if 0 < i < len(refs) - 1 else 2   # an end always counts as a junction
+    sections = []   # (tags, [points])
     for wid, (tags, refs) in sorted(ways.items()):
-        pts = [nodes[r] for r in refs if r in nodes]
-        if len(pts) < 2:
-            continue
         hw = tags.get("highway")
-        if hw in ROAD:
+        if hw not in ROAD:
+            continue
+        refs = [r for r in refs if r in nodes]
+        if len(refs) < 2:
+            continue
+        if ROAD[hw][0] == "path":
+            sections.append((tags, [nodes[r] for r in refs]))
+            continue
+        run = [refs[0]]
+        for r in refs[1:]:
+            run.append(r)
+            if uses[r] >= 2:
+                sections.append((tags, [nodes[q] for q in run]))
+                run = [r]
+        if len(run) > 1:
+            sections.append((tags, [nodes[q] for q in run]))
+    for tags, pts in sections:
+        hw = tags.get("highway")
+        if True:
             if not any(near(p) for p in pts):
                 continue
             cls, width, pave = ROAD[hw]
+            oneway = tags.get("oneway") in ("yes", "1", "true") or tags.get("junction") == "roundabout"
             line = densify(simplify(pts, 0.6))
             run, run_chunk = [line[0]], None
             for a, b in zip(line, line[1:]):
@@ -147,17 +178,22 @@ def main(raw, ms_file):
                 keep = near(mid)
                 if run_chunk is not None and (c != run_chunk or not keep):
                     if len(run) > 1:
-                        chunks[run_chunk]["roads"].append({"n": tags.get("name", ""), "c": cls, "w": width, "s": pave, "p": rnd(run)})
+                        chunks[run_chunk]["roads"].append(road_rec(tags, cls, width, pave, oneway, run))
                     run = [a]
                 if keep:
                     run.append(b); run_chunk = c
                 else:
                     run = [b]; run_chunk = None
             if run_chunk is not None and len(run) > 1:
-                chunks[run_chunk]["roads"].append({"n": tags.get("name", ""), "c": cls, "w": width, "s": pave, "p": rnd(run)})
+                chunks[run_chunk]["roads"].append(road_rec(tags, cls, width, pave, oneway, run))
             counts["road_" + cls] += 1
             if tags.get("name") and cls != "path":
                 street_names.add(tags["name"])
+    for wid, (tags, refs) in sorted(ways.items()):
+        if tags.get("highway") in ROAD:
+            continue
+        pts = [nodes[r] for r in refs if r in nodes]
+        if len(pts) < 2:
             continue
         closed = refs[0] == refs[-1] and len(pts) >= 4
         if not closed:

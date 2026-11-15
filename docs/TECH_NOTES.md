@@ -561,3 +561,6 @@ in the repository). Output: `data/world/westridge/meta.json` and `c_<x>_<z>.json
 Run: `godot --path . res://scenes/real/real_westridge.tscn` (or the pause-menu button).
 Screenshots: `-- --shot=res://tests/output/x.png --cam=x,y,z,tx,ty,tz --at=x,z --radius=300 --touch --top-down`.
 Winding: `RealChunkBuilder._facing` picks the triangle order from the direction the face must look, so data ring order never matters.
+Real-world tests alone: `tests/run.sh --real-only`. The navigation map takes new regions in on a background thread
+(real time, not frames): wait for `RealWorld.nav_synced(pos)` before querying or spawning (`map_get_closest_point` answers
+with the origin until then). Screenshots with people: `--wait=100 --cam-resident`.

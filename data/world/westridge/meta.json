@@ -542,18 +542,18 @@
   ]
  ],
  "counts": {
-  "area_park": 23,
   "road_path": 678,
+  "road_lane": 160,
+  "road_main": 137,
+  "road_street": 715,
+  "road_collector": 88,
+  "area_park": 23,
   "area_pitch": 24,
   "area_dunes": 3,
   "area_sports": 2,
-  "road_lane": 113,
-  "road_main": 125,
-  "road_street": 408,
   "area_school": 13,
   "area_parking": 8,
   "area_playground": 3,
-  "road_collector": 41,
   "area_pool": 1,
   "area_retail": 1,
   "buildings": 5505

@@ -26,6 +26,15 @@ func _check(cond: bool, what: String) -> void:
 
 
 func _run() -> void:
+	if _args.has("real-only"):   # --real-only: just the real Westridge world (quick while working on it)
+		_test_real_world_units()
+		await _test_real_world_streaming()
+		await _test_real_people_and_traffic()
+		print("\n%d passed, %d failed" % [_passed, _failed.size()])
+		for f in _failed:
+			print("  failed: ", f)
+		quit(0 if _failed.is_empty() else 1)
+		return
 	print("== data")
 	_test_house_data()
 	_test_npc_data()
@@ -58,6 +67,7 @@ func _run() -> void:
 	_test_survival_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
+		await _test_real_people_and_traffic()
 		print("== district (integration)")
 		await _test_district()
 	print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -2510,6 +2520,224 @@ func _test_real_world_streaming() -> void:
 	world.queue_free()
 	focus.queue_free()
 	await process_frame
+
+
+static func _in_any_outline(p: Vector3, rings: Array, shrink := 0.0) -> bool:
+	var q := Vector2(p.x, p.z)
+	for ring: PackedVector2Array in rings:
+		if Geometry2D.is_point_in_polygon(q, ring):
+			if shrink <= 0.0:
+				return true
+			var edge := INF   # only count points well inside (people brush past walls)
+			for i in ring.size():
+				edge = minf(edge, q.distance_to(Geometry2D.get_closest_point_to_segment(q, ring[i], ring[(i + 1) % ring.size()])))
+			if edge > shrink:
+				return true
+	return false
+
+
+## Stage 2 of the real Westridge: navigation round the real buildings, residents living in real
+## houses and walking the real streets, and traffic on the real road network.
+func _test_real_people_and_traffic() -> void:
+	print("== real Westridge: people and traffic")
+	var data := RealDistrictData.new()
+	data.load_meta()
+	var focus := Node3D.new()
+	root.add_child(focus)
+	focus.global_position = Vector3(-150, 0, -128)   # Excelsior Street
+	var world := RealWorld.new()
+	root.add_child(world)
+	world.setup(data, focus)
+	world.load_radius = 260.0
+	world.sim_radius = 200.0
+	world.sync_nav = true
+	world.set_process(false)
+	world.scan(focus.global_position)
+	while world.pending() > 0:
+		world.load_chunk(world._queue.pop_front())
+	world.scan(focus.global_position)   # everything is loaded now: bake the navigation
+	var map := root.get_world_3d().navigation_map
+	var t_sync := Time.get_ticks_msec()   # the map takes the new regions in on a background thread: that needs real time, not frames
+	while not world.nav_synced(focus.global_position) and Time.get_ticks_msec() - t_sync < 60000:
+		await physics_frame
+		OS.delay_msec(5)
+	print("  (navigation map synced after %.1f s)" % ((Time.get_ticks_msec() - t_sync) / 1000.0))
+	_check(world.nav_synced(focus.global_position), "the navigation map takes in the new pieces")
+	_check(world.nav_regions.size() >= 4 and world.nav_regions.size() < world.loaded.size(), "navigation is baked only near you (%d of %d loaded pieces)" % [world.nav_regions.size(), world.loaded.size()])
+	# Homes: a door outside the walls for most houses.
+	var homes: Array = []
+	var rings: Array = []
+	for key: Vector2i in world.loaded:
+		homes.append_array(world.houses[key])
+		rings.append_array(data.outlines(key))
+	_check(homes.size() > 300, "the houses around you have front doors (%d)" % homes.size())
+	var blocked: Array = homes.filter(func(h): return _in_any_outline(h.door, rings))
+	_check(blocked.size() < homes.size() * 0.03, "front doors open onto open ground (%d of %d are hemmed in by an outline from the next piece)" % [blocked.size(), homes.size()])
+	_check(world.places.has(str(homes[0].id) + ":door") and world.places.ids_of_kind("park").size() >= 10 and world.places.ids_of_kind("shop").size() >= 3, "homes and real places are destinations (%d parks, %d shops, %d meeting places)" % [
+		world.places.ids_of_kind("park").size(), world.places.ids_of_kind("shop").size(), world.places.ids_of_kind("gathering").size()])
+	# A walk between two homes in different pieces goes round the buildings.
+	var sim_homes: Array = []
+	for key: Vector2i in world.nav_regions:
+		sim_homes.append_array(world.houses[key].filter(func(h): return not _in_any_outline(h.door, rings)))
+	var reached := 0
+	var tried := 0
+	var longest := 0.0
+	var through := 0
+	var pockets := 0
+	for start in range(0, sim_homes.size(), maxi(1, sim_homes.size() / 6)):   # a few starting homes: one may sit in a walled-in yard
+		var a: Vector3 = sim_homes[start].door
+		var got := 0
+		var n := 0
+		for k in range(1, sim_homes.size(), maxi(1, sim_homes.size() / 40)):
+			var b: Vector3 = sim_homes[k].door
+			n += 1
+			var path := NavigationServer3D.map_get_path(map, a, b, true)
+			if path.size() < 2 or path[path.size() - 1].distance_to(b) > 2.5:
+				continue
+			got += 1
+			longest = maxf(longest, a.distance_to(b))
+			for i in path.size() - 1:
+				for t in [0.25, 0.5, 0.75]:
+					if _in_any_outline(path[i].lerp(path[i + 1], t), rings, 0.5):   # a route may shave a sharp corner by a cell or so
+						through += 1
+		if got == 0:
+			pockets += 1
+		elif got > reached:
+			reached = got
+			tried = n
+	print("  (starting homes with no way out: %d)" % pockets)
+	_check(reached >= tried * 0.85 and longest > 250.0, "walking routes join the homes, across several pieces (%d of %d reached, the furthest %.0f m away)" % [reached, tried, longest])
+	_check(through == 0, "the routes go round the buildings, never through one (%d bad points)" % through)
+	# Residents.
+	var people := RealPopulation.new()
+	root.add_child(people)
+	people.setup(world, focus)
+	people.max_residents = 30
+	for key: Vector2i in world.nav_regions.keys():
+		people.spawn_chunk(key)
+	_check(people.residents.size() >= 20 and people.residents.size() <= 30, "residents move into real houses, up to the cap (%d)" % people.residents.size())
+	var first: Resident = people.residents.values()[0]
+	_check(first.is_inside and first.global_position.distance_to(world.places.anchor_position(first.home_door_id)) < 0.5 and first.data.display_name.contains(" "), "a resident starts at home, at their own front door (%s)" % first.data.display_name)
+	var same: bool = people.make_person(homes[0]).display_name == people.make_person(homes[0]).display_name
+	_check(same, "the same house always gets the same person")
+	var missing_dest := 0
+	for r: Resident in people.residents.values():
+		for e in r.data.schedule:
+			if str(e.destination) != "home" and not world.places.has(str(e.destination)):
+				missing_dest += 1
+	_check(missing_dest == 0, "every stop in every resident's day is a real place or a neighbour's door")
+	# Traffic.
+	var g := world.graph
+	var dangling := 0
+	for id in g.edges:
+		if not g.nodes.has(g.edges[id].a) or not g.nodes.has(g.edges[id].b):
+			dangling += 1
+	_check(g.edges.size() > 100 and g.junctions().size() > 40 and dangling == 0, "the streets form a network (%d pieces, %d junctions)" % [g.edges.size(), g.junctions().size()])
+	var oneway: Array = g.edges.values().filter(func(e): return e.oneway)
+	_check(not oneway.is_empty() and not g.can_enter(g.edges.find_key(oneway[0]), oneway[0].b) and g.can_enter(g.edges.find_key(oneway[0]), oneway[0].a), "one-way carriageways are only entered the right way")
+	var traffic := RealTraffic.new()
+	root.add_child(traffic)
+	traffic.setup(world, focus, people)
+	traffic.max_cars = 8
+	# Let it all run for a minute and a half.
+	var last := {}
+	var max_person_step := 0.0
+	var max_car_step := 0.0
+	var went_out := {}
+	var arrived := {}
+	var inside_building := 0
+	var off_road := 0
+	var left_votes := 0
+	var right_votes := 0
+	for i in 60 * 90:
+		await physics_frame
+		for r: Resident in people.residents.values():
+			if r.is_inside:
+				last.erase(r.data.id)
+				continue
+			went_out[r.data.id] = true
+			if r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.RETURNING_HOME]:
+				arrived[r.data.id] = true
+			if last.has(r.data.id):
+				max_person_step = maxf(max_person_step, r.global_position.distance_to(last[r.data.id]))
+			last[r.data.id] = r.global_position
+			if i % 30 == 0 and _in_any_outline(r.global_position, rings, 0.45):
+				inside_building += 1
+		for c: RealCar in traffic.cars:
+			if c.lost or not g.has_edge(c.edge):
+				last.erase(c)
+				continue
+			if last.has(c):
+				max_car_step = maxf(max_car_step, c.global_position.distance_to(last[c]))
+			last[c] = c.global_position
+			if i % 20 == 0:
+				var e: Dictionary = g.edges[c.edge]
+				var here := Vector2(c.global_position.x, c.global_position.z)
+				var lines: Array = [c.pts]
+				if not c.next_pts.is_empty():
+					lines.append(c.next_pts)
+				if RealChunkBuilder._distance_to_lines(here, lines) > float(e.w) * 0.5 + 1.5:
+					off_road += 1
+				if not bool(e.oneway) and c.s > 8.0 and c.s < c.length - 8.0 and c.speed > 2.0:
+					var fwd := Vector2(sin(c.rotation.y), cos(c.rotation.y))
+					var mid := Geometry2D.get_closest_point_to_segment(here, c.pts[0], c.pts[c.pts.size() - 1])
+					for k in c.pts.size() - 1:
+						var q := Geometry2D.get_closest_point_to_segment(here, c.pts[k], c.pts[k + 1])
+						if q.distance_to(here) < mid.distance_to(here):
+							mid = q
+					if fwd.cross(here - mid) < -0.3:     # x east, z south: the left of forward has a negative cross
+						left_votes += 1
+					elif fwd.cross(here - mid) > 0.3:
+						right_votes += 1
+	_check(went_out.size() >= 8, "residents leave home and walk the streets (%d went out)" % went_out.size())
+	_check(arrived.size() >= 2, "some reach where they were going (%d)" % arrived.size())
+	_check(max_person_step < 0.3, "nobody teleports: the biggest step in one frame is %.2f m" % max_person_step)
+	_check(inside_building == 0, "nobody walks through a building (%d sightings inside an outline)" % inside_building)
+	_check(traffic.cars.size() >= 5 and traffic.spawned_total >= 8, "cars drive the real streets (%d now, %d started)" % [traffic.cars.size(), traffic.spawned_total])
+	_check(max_car_step < 0.35, "cars never jump: the biggest step in one frame is %.2f m" % max_car_step)
+	_check(off_road == 0, "cars stay on the road (%d sightings off it)" % off_road)
+	_check(left_votes > 20 and left_votes > right_votes * 8, "cars keep left, as in South Africa (%d left, %d right)" % [left_votes, right_votes])
+	var started_near: Array = traffic.cars.filter(func(c: RealCar): return c.global_position.distance_to(focus.global_position) < 20.0 and c.s < 3.0)
+	_check(started_near.is_empty(), "no car appears right beside you")
+	# A car stops for something in its way and goes again when it is clear.
+	var car: RealCar = null
+	for c: RealCar in traffic.cars:
+		if not c.lost and c.speed > 3.0 and c.s < c.length - 20.0:
+			car = c
+			break
+	if car != null:
+		traffic.set_physics_process(false)   # keep our blocker list
+		var block := Node3D.new()
+		root.add_child(block)
+		var ahead := car.lane_point(car.s + 9.0)
+		block.global_position = Vector3(ahead.x, 0, ahead.y)
+		car.blockers = [block]
+		for i in 150:
+			await physics_frame
+		var stopped := car.speed < 0.1 and car.global_position.distance_to(block.global_position) > 1.5
+		car.blockers = []
+		for i in 120:
+			await physics_frame
+		_check(stopped and car.speed > 1.0, "a car stops for someone in the road and drives on when it is clear")
+		block.queue_free()
+		traffic.set_physics_process(true)
+	else:
+		_check(false, "a car stops for someone in the road (no moving car to try it on)")
+	# Leaving: homes, people and street pieces go with the piece.
+	var gone_key: Vector2i = people.by_chunk.keys()[0]
+	var gone_ids: Array = people.by_chunk[gone_key].duplicate()
+	var gone_home := str(world.houses[gone_key][0].id) + ":door"
+	var edges_before := g.edges.size()
+	world.unload_chunk(gone_key)
+	await process_frame
+	_check(not world.places.has(gone_home) and not world.nav_regions.has(gone_key) and g.edges.size() < edges_before
+		and gone_ids.all(func(id): return not people.residents.has(id)), "when a piece is freed its homes, navigation, streets and residents go with it")
+	traffic.queue_free()
+	people.queue_free()
+	world.queue_free()
+	focus.queue_free()
+	for i in 5:
+		await process_frame
 
 
 ## A district rebuilt on real streets: every street name exists in the OpenStreetMap data within

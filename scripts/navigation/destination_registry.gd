@@ -12,6 +12,10 @@ func register(id: String, position: Vector3, radius: float, kind: String, displa
 	_anchors[id] = {"position": position, "radius": radius, "kind": kind, "name": display_name, "enabled": true}
 
 
+func remove(id: String) -> void:
+	_anchors.erase(id)
+
+
 func has(id: String) -> bool:
 	return _anchors.has(id)
 

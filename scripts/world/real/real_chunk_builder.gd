@@ -17,7 +17,9 @@ const PUBLIC_WALL := "#d9d4c8"
 
 
 ## Builds the chunk's node. `stats` (optional) receives counts for tests and the debug line.
-static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}) -> Node3D:
+## `near_roads`: street centre lines around the chunk (houses put their door on the wall nearest a
+## street). `stats.houses` lists the homes: {id, door: Vector3 (1.2 m outside the door), area}.
+static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = []) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Chunk_%d_%d" % [key.x, key.y]
 	var surfaces := {}      # material key -> SurfaceTool
@@ -28,9 +30,16 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}) -> N
 		_road(r, surfaces, materials, root)
 	var collision := PackedVector3Array()
 	var n := 0
+	var houses: Array = []
+	var rings: Array = []
 	for b in chunk.get("buildings", []):
-		_building(b, surfaces, materials, collision, root)
+		rings.append(_line(b.p))
+	for b in chunk.get("buildings", []):
+		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings)
+		if door != null:
+			houses.append({"id": "h_%d_%d_%d" % [key.x, key.y, n], "door": door.at, "area": door.area})
 		n += 1
+	stats["houses"] = houses
 	for k in surfaces:
 		var st: SurfaceTool = surfaces[k]
 		var mesh_instance := MeshInstance3D.new()
@@ -186,10 +195,11 @@ static func _v(p: Vector2, y: float) -> Vector3:
 ## A building on its real outline: walls up to its height, and a roof (a low hip for house-sized
 ## convex outlines, flat otherwise). Paint and roof are picked from the outline's position, so a
 ## house always looks the same.
-static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D) -> void:
+## Returns {at, area} for a home (its door anchor), or null for other buildings.
+static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D, near_roads: Array = [], rings: Array = []) -> Variant:
 	var ring := _line(b.p)
 	if ring.size() < 3:
-		return
+		return null
 	var h := float(b.get("h", 3.0))
 	var centre := Vector2.ZERO
 	for p in ring:
@@ -223,6 +233,11 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 		var idx := Geometry2D.triangulate_polygon(ring)
 		for i in range(0, idx.size(), 3):
 			_up(roof, _v(ring[idx[i]], h + 0.05), _v(ring[idx[i + 1]], h + 0.05), _v(ring[idx[i + 2]], h + 0.05))
+	var home: Variant = null
+	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
+		home = _front(ring, centre, h, near_roads, surfaces, materials, rings)
+		if home != null:
+			home["area"] = area
 	var building_name := str(b.get("n", ""))
 	if not building_name.is_empty():
 		var label := Label3D.new()
@@ -237,6 +252,92 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 		label.visibility_range_end = 160.0
 		label.set_meta("landmark", building_name)
 		root.add_child(label)
+	return home
+
+
+const HOME_MIN_AREA := 30.0
+const HOME_MAX_AREA := 450.0
+const DOOR_OUT := 1.2
+
+
+## The house's front: a door in the middle of the wall nearest a street, windows beside it and on
+## the other long walls. Returns {at: the point 1.2 m outside the door}, or null if no wall fits.
+## A wall whose doorstep would be inside another outline (a neighbour built right up against it) is skipped.
+static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roads: Array, surfaces: Dictionary, materials: Dictionary, rings: Array = []) -> Variant:
+	var best := -1
+	var best_d := INF
+	for i in ring.size():
+		var p0 := ring[i]
+		var p1 := ring[(i + 1) % ring.size()]
+		if p0.distance_to(p1) < 2.2:
+			continue
+		var mid := (p0 + p1) * 0.5
+		var d := -mid.distance_to(centre) if near_roads.is_empty() else _distance_to_lines(mid, near_roads)
+		if d >= best_d:
+			continue
+		var tangent0 := (p1 - p0).normalized()
+		var normal0 := Vector2(-tangent0.y, tangent0.x)
+		if normal0.dot(mid - centre) < 0.0:
+			normal0 = -normal0
+		var step := mid + normal0 * DOOR_OUT
+		var hemmed := false
+		for other: PackedVector2Array in rings:
+			if Geometry2D.is_point_in_polygon(step, other):
+				hemmed = true
+				break
+		if not hemmed:
+			best_d = d
+			best = i
+	if best < 0:
+		return null
+	var door := _tool("panel_door", surfaces, materials, PixelMaterials.panel("door_gate"))
+	var window := _tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
+	var anchor := Vector3.ZERO
+	for i in ring.size():
+		var p0 := ring[i]
+		var p1 := ring[(i + 1) % ring.size()]
+		var length := p0.distance_to(p1)
+		var mid := (p0 + p1) * 0.5
+		var tangent := (p1 - p0) / maxf(length, 0.001)
+		var normal := Vector2(-tangent.y, tangent.x)
+		if normal.dot(mid - centre) < 0.0:
+			normal = -normal
+		var top := minf(2.15, h - 0.4)
+		if i == best:
+			_panel(door, mid, tangent, normal, 1.0, 0.0, minf(2.0, h - 0.3))
+			anchor = Vector3(mid.x + normal.x * DOOR_OUT, 0.0, mid.y + normal.y * DOOR_OUT)
+			if length > 5.0:
+				for side in [-1.0, 1.0]:
+					_panel(window, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, 1.4, 1.0, top)
+		elif length > 3.2:
+			_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+	return {"at": anchor}
+
+
+static func _distance_to_lines(p: Vector2, lines: Array) -> float:
+	var best := INF
+	for line: PackedVector2Array in lines:
+		for i in line.size() - 1:
+			best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, line[i], line[i + 1])))
+	return best
+
+
+## A textured rectangle on a wall: centred on `mid`, `width` along the wall, from y0 to y1, just proud of it.
+static func _panel(st: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, width: float, y0: float, y1: float) -> void:
+	var out := Vector3(normal.x, 0, normal.y)
+	var a2 := mid - tangent * width * 0.5 + normal * 0.04
+	var b2 := mid + tangent * width * 0.5 + normal * 0.04
+	var corners := [Vector3(a2.x, y0, a2.y), Vector3(b2.x, y0, b2.y), Vector3(b2.x, y1, b2.y), Vector3(a2.x, y1, a2.y)]
+	# Seen from outside, the wall runs right to left when the tangent is the outward normal turned left.
+	var flip := tangent.x * normal.y - tangent.y * normal.x > 0.0
+	var uvs := [Vector2(1, 1), Vector2(0, 1), Vector2(0, 0), Vector2(1, 0)] if flip else [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+	for tri in [[0, 1, 2], [0, 2, 3]]:
+		var order: Array = tri
+		if (corners[order[2]] - corners[order[0]]).cross(corners[order[1]] - corners[order[0]]).dot(out) < 0.0:
+			order = [tri[0], tri[2], tri[1]]
+		for k in order:
+			st.set_uv(uvs[k])
+			st.add_vertex(corners[k])
 
 
 static func _signed_area(ring: PackedVector2Array) -> float:

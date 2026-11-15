@@ -1,6 +1,6 @@
 # Real Westridge world
 
-Status: stage 1 of 4 done (2026-11-15). Code: `scripts/world/real/`. Data: `data/world/westridge/`.
+Status: stages 1 and 2 of 4 done (2026-11-15). Code: `scripts/world/real/`. Data: `data/world/westridge/`.
 Tool: `tools/osm/build_westridge.py`. Preview scene: `scenes/real/real_westridge.tscn`.
 
 ## 1. Overview
@@ -13,8 +13,8 @@ near and freed when you leave; a desktop builds all of them, a phone only those 
 | Stage | What | State |
 |---|---|---|
 | 1 | Real data, the new builder, loading in pieces, a walk-around preview | done |
-| 2 | People: navigation on the real streets, residents living in real houses, traffic on real roads | next |
-| 3 | The game moves in: safehouse, shops, missions, crews, turf, police, survival spots, saves; turf sectors inside Westridge replace the locked districts | |
+| 2 | People: navigation on the real streets, residents living in real houses, traffic on real roads, doors and windows | done |
+| 3 | The game moves in: safehouse, shops, missions, crews, turf, police, survival spots, saves; turf sectors inside Westridge replace the locked districts | next |
 | 4 | The old districts (Lentegeur, Rocklands, Town Centre, Tafelsig, old Westridge) and their code are removed; phone tuning; Windows build | |
 
 Until stage 3 is finished the existing game keeps running unchanged, and the real Westridge is a preview you
@@ -54,6 +54,41 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 - Chunks further than `load_radius + unload_margin` are freed.
 - `load_radius` infinite means the whole suburb is built and kept (desktop). On a touchscreen it is 320 m.
 
+### Navigation (`RealNav`, in `RealWorld`)
+- Chunks within `sim_radius` of you get a navigation mesh: the chunk's ground with every building outline of the chunk
+  and its eight neighbours cut out. It is baked on a background thread, one chunk at a time, nearest first.
+- All chunks share one cell grid and are baked with a 1 m border, so neighbouring meshes meet edge to edge and a route
+  can cross any number of chunks. The mesh is dropped beyond `sim_radius + sim_margin`.
+- People may walk anywhere that is not a building (streets, pavements, open ground, parks). Keeping them to pavements
+  and crossings is stage 3 work.
+
+### Homes and places
+- A building that is not public and is 30 to 450 m2 is a home. Its front door is in the middle of the wall nearest a
+  street, skipping a wall whose doorstep would be inside another outline. The door gets a door panel; long walls get windows.
+- Each home's doorstep (1.2 m outside the door) is a destination, `<house id>:door`. House ids are
+  `h_<chunk x>_<chunk z>_<index>` and never change while the data stays the same.
+- Named real places are destinations too: parks and playgrounds, shops (the shopping centre, mini mart, garages, KFC),
+  meeting places (civic centre, clinic, churches and mosques) and pitches.
+
+### Residents (`RealPopulation`)
+- When a chunk's navigation is ready and the navigation map has taken it in, up to `homes_per_chunk` of its homes get
+  a resident, always the same homes and the same person (name, look and day come from the house id).
+- A resident is the game's ordinary `Resident`: it starts indoors at its own door, leaves on its schedule, walks with
+  `NavigationAgent3D`, stays a while, and walks home. Its day is built from what is near: the nearest shop (within 700 m),
+  park (500 m), meeting place (700 m) and one fixed neighbour 25 to 120 m away.
+- Residents are removed when their chunk's navigation is dropped (they are at least `sim_radius + sim_margin` away then).
+- At most `max_residents` exist at once.
+
+### Traffic (`RealRoadGraph`, `RealCar`, `RealTraffic`)
+- The map tool cuts every street at its junctions, so road pieces are the edges of a network and their ends the nodes.
+  One-way carriageways (Wespoort Drive, Eisleben Road...) are only entered at their start.
+- A car drives along its street's centre line on the **left** lane, steering towards a point 5 m ahead, so it turns
+  into the next street instead of jumping. It slows into junctions, stops for a car, the player or a person in its lane,
+  and at each junction picks any street it may enter except the one it came from (unless it is a dead end).
+- If two cars have waited for each other for 5 s, one creeps through.
+- Cars start at the beginning of a street at least `spawn_min` from you and are removed beyond `far_distance` or when
+  they run off the loaded network. Up to `max_cars` at once.
+
 ## 4. Formulas
 
 - Chunk of a point: `(floor(x / 200), floor(z / 200))`.
@@ -68,6 +103,12 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 
 - A chunk with no data file (outside the suburb): nothing is built; the ground slab still carries you.
 - You walk outside the boundary: allowed in the preview (the HUD says "outside Westridge"); stage 3 decides the edge.
+- A home whose every wall is hemmed in by other outlines has no door and no resident.
+- A resident whose destination cannot be reached (a walled-in yard, a place whose chunk has no navigation) skips it
+  and takes the next stop in their day (the ordinary `Resident` recovery).
+- The navigation map takes new regions in on a background thread; until it has, a query answers with the map origin.
+  Residents are only moved in after `RealWorld.nav_synced` says the map knows their chunk.
+- A car that reaches the edge of the loaded network with nowhere to go is marked lost and removed.
 - An outline that cannot be cut into triangles (self-crossing): its roof is skipped, the walls are still built.
 - Two outlines that overlap (merged or doubled houses in the source): both are built; they intersect harmlessly.
 - Moving faster than chunks build (driving): the queue is re-sorted from your new position every half second,
@@ -93,6 +134,13 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | `unload_margin` | `RealWorld` | 120 m | 50 to 300 | How soon far pieces are freed (too small = pieces flicker at the edge) |
 | `builds_per_frame` | `RealWorld` | 2 (desktop), 1 (touch) | 1 to 4 | Loading speed against hitches |
 | sign and label ranges | builder | 70 m, 160 m | | How far names are readable |
+| `sim_radius` / `sim_margin` | `RealWorld` | 300 m (desktop), 220 m (touch) / 150 m | 150 to 500 / 60 to 300 | Where people and navigation exist; bake load |
+| `RealNav.CELL`, `AGENT_RADIUS`, `BORDER` | `RealNav` | 0.25, 0.5, 1.0 m | | Navigation detail and the gap people keep from walls |
+| `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
+| `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
+| `max_cars` / `spawn_min` / `far_distance` | `RealTraffic` | 14 (touch: 6) / 70 m / 380 m | 0 to 40 | Traffic density |
+| `RealCar.SPEEDS` | `RealCar` | 12 / 9.5 / 7 m/s (main / collector / street) | | Driving speeds |
+| names, shirts, lines | `data/world/westridge/people.json` | | | Who the residents are |
 
 ## 8. Acceptance Criteria
 
@@ -106,3 +154,11 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
 6. With a limited radius only nearby chunks are built; moving away frees them and builds the new ones.
 7. With an unlimited radius the whole suburb is queued.
 8. Both data sources are credited on screen and in `docs/THIRD_PARTY.md`.
+9. Navigation is baked only near you; the map takes it in; routes join homes across several chunks and go round buildings.
+10. Homes have front doors on open ground; homes and real places are destinations.
+11. Residents move into real houses up to the cap, start at their own door, and every stop in their day exists.
+12. Over a minute and a half residents leave, walk and arrive; nobody moves more than 0.3 m in a frame or stands inside an outline.
+13. The streets form a network with junctions; one-way streets are entered only the right way.
+14. Cars drive, never jump, stay on the road, keep left, never appear beside you, and stop for something in their lane.
+15. Freeing a chunk removes its homes, navigation, streets and residents.
+(`_test_real_people_and_traffic`; run just these with `tests/run.sh --real-only`.)

@@ -16,6 +16,8 @@ var landmarks: Array = []      # {name, kind, at: Vector2}
 var counts: Dictionary = {}
 var bounds := Rect2()
 var _has := {}
+var _outlines := {}
+var _road_lines := {}
 
 
 func load_meta() -> bool:
@@ -60,6 +62,36 @@ func load_chunk(key: Vector2i) -> Dictionary:
 		return {}
 	var d: Variant = DataFiles.load_json("%sc_%d_%d.json" % [DIR, key.x, key.y])
 	return d if d is Dictionary else {}
+
+
+## Building outlines of a chunk (cached): the navigation bake needs a chunk's neighbours too.
+func outlines(key: Vector2i) -> Array:
+	if not _outlines.has(key):
+		var rings: Array = []
+		for b in load_chunk(key).get("buildings", []):
+			rings.append(RealChunkBuilder._line(b.p))
+		_outlines[key] = rings
+	return _outlines[key]
+
+
+## Centre lines of a chunk's streets (not footpaths), cached: houses face the nearest one.
+func road_lines(key: Vector2i) -> Array:
+	if not _road_lines.has(key):
+		var lines: Array = []
+		for r in load_chunk(key).get("roads", []):
+			if str(r.c) != "path":
+				lines.append(RealChunkBuilder._line(r.p))
+		_road_lines[key] = lines
+	return _road_lines[key]
+
+
+## `what` ("outlines" or "road_lines") of the chunk and its eight neighbours.
+func around(key: Vector2i, what: String) -> Array:
+	var out: Array = []
+	for dx in [-1, 0, 1]:
+		for dz in [-1, 0, 1]:
+			out.append_array(call(what, key + Vector2i(dx, dz)))
+	return out
 
 
 func is_inside(pos: Vector3) -> bool:
