@@ -2190,6 +2190,27 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 		session.missions.active.erase(started)
 
 
+func _test_view_in_game(main: Node, player: Player) -> void:
+	_check(InputMap.has_action("camera_mode") and not player.top_down, "third-person is the default view")
+	var arm := player.spring_arm.spring_length
+	var ev := InputEventAction.new()
+	ev.action = "camera_mode"
+	ev.pressed = true
+	player.input_enabled = true
+	player._unhandled_input(ev)
+	_check(player.top_down, "the view button switches to top-down")
+	for i in 90:
+		await process_frame
+	_check(player.spring_arm.spring_length > arm + 3.0 and player.pitch.rotation.x < -0.8, "top-down: the camera rises and looks down (arm %.1f, pitch %.2f)" % [player.spring_arm.spring_length, player.pitch.rotation.x])
+	var before := player.pitch.rotation.x
+	player._look(Vector2(0.0, 0.4))
+	_check(is_equal_approx(player.pitch.rotation.x, before), "top-down: looking up/down is locked")
+	_check(bool(main.settings.get_value("controls/top_down")), "the view choice is remembered in the settings")
+	player._unhandled_input(ev)
+	_check(not player.top_down and player.pitch.rotation.x > -0.5, "pressing it again returns to third-person")
+	main.settings.set_value("controls/top_down", false)
+
+
 func _test_touch_in_game(main: Node, district: District, player: Player) -> void:
 	var touch: TouchControls = main.touch
 	_check(touch != null and not touch.enabled and player.mouse_look_enabled, "touch controls are off on a PC")
@@ -3164,6 +3185,7 @@ func _test_district() -> void:
 	await _test_town_centre_in_game(main, district, player)
 	await _test_tafelsig_in_game(main, district, player)
 	await _test_guidance_in_game(main, district, player)
+	await _test_view_in_game(main, player)
 	await _test_touch_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
 	await _test_dormant_in_game(main, district, player)

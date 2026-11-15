@@ -60,6 +60,7 @@ func _build() -> void:
 	_slider("Stick sensitivity", "controls/stick_sensitivity", 1.0, 6.0, 0.2)
 	_check("Controller vibration", "controls/vibration")
 	_check("Invert camera Y", "controls/invert_y")
+	_check("Top-down camera", "controls/top_down")
 	_heading("Keys (click one, then press the new key; Esc cancels)", 16)
 	for a in InputRebinder.ACTIONS:
 		_bind_row(str(a[0]), str(a[1]))

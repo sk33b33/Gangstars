@@ -168,3 +168,12 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 | — | Done (2026-11-12) | Gameplay and polish batch: follow missions, an ending, reputation reactions, corner flags, daily-life events and a parade, Westridge Gardens, rebinding/captions/autosave, weather effects, outfits, two radio stations, crowd range setting, playtest bot (`tests/playbot.sh`). |
 | — | Done (2026-11-13) | Vehicle look pass: age wear, taxi extras and rank, wipers/rain/dash/brake glow, exhaust, dust, skid marks, volumetric beams, turning steering wheel, dents and cracks, bus/refuse truck/scooter, bakkie loads, parked-car variety, far-car cost cut. |
 | — | Done (2026-11-13) | Tutorial (seven tips, skippable, once per save, replayable) and a gold waypoint beam with on-screen label and edge arrow for the current mission. |
+
+## Next: survival layer and the real map (requested 2026-11-15)
+- [x] Top-down camera option (third-person stays the default).
+- [ ] Needs: hunger, thirst, sleep.
+- [ ] Looting and inventory.
+- [ ] Injuries and health care.
+- [ ] Skills that level up.
+- [ ] Real Mitchells Plain roads from OpenStreetMap (inside the KnoxMap outline): main roads first, then suburbs one at a time starting with Westridge.
+- [ ] Adopt Claude-Code-Game-Studios rules, playtest/polish routines and design-doc format where they fit.

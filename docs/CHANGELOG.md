@@ -1,5 +1,9 @@
 # Changelog
 
+## Top-down camera option
+- New `camera_mode` action (V, R3, or the VIEW touch button; also Settings > "Top-down camera"): a high, angled Zomboid-style view. Look only turns the camera; shots go flat along the facing (or at the locked target). The choice is saved.
+- `--top-down` argument for screenshots; 6 new tests.
+
 ## Fix: touch taps fired the weapon
 - A touch also arrives as an emulated left-click, which is bound to "fire", so tapping AIM or LOCK shot automatically. On a touchscreen the mouse buttons are now removed from the fire/aim actions; the FIRE button sends "fire" itself.
 

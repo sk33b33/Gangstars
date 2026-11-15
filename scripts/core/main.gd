@@ -61,6 +61,10 @@ func _ready() -> void:
 	session.setup(district, player, hud)
 	if session.audio:
 		session.audio.sound_heard.connect(_on_sound_heard)
+	player.view_changed.connect(func(on: bool):   # the V key / VIEW button: remember the choice
+		if bool(settings.get_value("controls/top_down")) != on:
+			settings.set_value("controls/top_down", on)
+			settings.save_settings())
 	touch = TouchControls.new()
 	touch.name = "TouchControls"
 	add_child(touch)
@@ -171,6 +175,7 @@ func apply_settings() -> void:
 	player.invert_y = bool(settings.get_value("controls/invert_y"))
 	player.stick_sensitivity = float(settings.get_value("controls/stick_sensitivity"))
 	player.vibration = bool(settings.get_value("controls/vibration"))
+	player.top_down = bool(settings.get_value("controls/top_down"))
 	player.camera.fov = float(settings.get_value("video/fov"))
 	var vp := get_viewport()
 	vp.msaa_3d = int(settings.get_value("video/msaa")) as Viewport.MSAA
@@ -216,6 +221,8 @@ func _run_screenshot() -> void:
 		player.snap_camera()
 	if _args.has("yaw"):
 		player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
+	if _args.has("top-down"):
+		player.top_down = true
 	if _args.has("pitch"):
 		player.pitch.rotation.x = deg_to_rad(float(_args.pitch))
 	if _args.has("cam"):

@@ -60,6 +60,20 @@ var auto_lock := false
 var lock_target: Node3D
 const LOCK_RANGE := 30.0
 var shots_fired := 0
+## Top-down view (Zomboid-style): the camera sits high above and looks down; look only turns it.
+## Shots then go flat along the way the character faces instead of through the screen centre.
+signal view_changed(top_down: bool)
+const TOP_ARM := 15.0
+const TOP_PITCH := -1.0
+var top_down := false:
+	set(v):
+		if v == top_down:
+			return
+		top_down = v
+		if not v and is_node_ready():
+			spring_arm.spring_length = _arm_length
+			pitch.rotation.x = -0.3
+		view_changed.emit(v)
 var _fire_cd := 0.0
 var _draw_timer := 0.0
 var _arm_length := 0.0
@@ -85,6 +99,11 @@ func _process(delta: float) -> void:
 	p.z = target.z
 	p.y = lerpf(p.y, target.y, clampf(delta * CAMERA_FOLLOW, 0.0, 1.0))
 	pivot.global_position = p
+	if top_down:
+		var k := clampf(delta * 6.0, 0.0, 1.0)
+		spring_arm.spring_length = lerpf(spring_arm.spring_length, TOP_ARM, k)
+		spring_arm.position.x = lerpf(spring_arm.position.x, 0.0, k)
+		pitch.rotation.x = lerpf(pitch.rotation.x, TOP_PITCH, k)
 
 
 ## Call after moving the player directly (spawn, load, debug teleport).
@@ -104,6 +123,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("pause"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif event.is_action_pressed("camera_mode") and input_enabled:
+		top_down = not top_down
 
 
 func is_driving() -> bool:
@@ -234,8 +255,9 @@ func _update_aim(delta: float) -> void:
 	model.draw_weapon(_draw_timer > 0.0)
 	model.aiming = aiming
 	var k := clampf(delta * 10.0, 0.0, 1.0)
-	spring_arm.spring_length = lerpf(spring_arm.spring_length, AIM_ARM_LENGTH if aiming else _arm_length, k)
-	spring_arm.position.x = lerpf(spring_arm.position.x, AIM_SHOULDER if aiming else 0.0, k)
+	if not top_down:
+		spring_arm.spring_length = lerpf(spring_arm.spring_length, AIM_ARM_LENGTH if aiming else _arm_length, k)
+		spring_arm.position.x = lerpf(spring_arm.position.x, AIM_SHOULDER if aiming else 0.0, k)
 	if _pressed("switch_weapon"):
 		switch_weapon()
 	_fire_cd = maxf(0.0, _fire_cd - delta)
@@ -268,7 +290,8 @@ func _lock_on(delta: float) -> void:
 	var dir := (chest - camera.global_position).normalized()
 	var k := clampf(delta * 8.0, 0.0, 1.0)
 	pivot.rotation.y = lerp_angle(pivot.rotation.y, atan2(-dir.x, -dir.z), k)
-	pitch.rotation.x = clampf(lerpf(pitch.rotation.x, asin(dir.y), k), min_pitch, max_pitch)
+	if not top_down:
+		pitch.rotation.x = clampf(lerpf(pitch.rotation.x, asin(dir.y), k), min_pitch, max_pitch)
 
 
 ## Fires the weapon at whatever is under the screen centre.
@@ -279,6 +302,13 @@ func shoot() -> bool:
 	_fire_cd = 1.0 / float(st.rate)
 	var from := camera.global_position
 	var dir := -camera.global_basis.z
+	if top_down:   # from the chest, flat along the facing (or at the locked target)
+		from = global_position + Vector3(0, 1.25, 0)
+		dir = -pivot.global_basis.z
+		dir.y = 0.0
+		dir = dir.normalized()
+		if lock_target and is_instance_valid(lock_target):
+			dir = (lock_target.global_position + Vector3(0, 1.25, 0) - from).normalized()
 	var q := PhysicsRayQueryParameters3D.create(from, from + dir * 80.0, CombatSystem.SHOT_MASK)
 	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
@@ -326,6 +356,8 @@ func facing_dir() -> Vector3:
 
 func _look(delta_look: Vector2) -> void:
 	pivot.rotate_y(-delta_look.x)
+	if top_down:
+		return
 	var dy := -delta_look.y if invert_y else delta_look.y
 	pitch.rotation.x = clampf(pitch.rotation.x - dy, min_pitch, max_pitch)
 

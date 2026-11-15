@@ -35,6 +35,7 @@ var _buttons := [
 	{"id": "phone", "action": "phone", "label": "PHONE", "hold": false, "r": 30.0, "at": [48.0, 185.0], "top": true},
 	{"id": "turf_map", "action": "turf_map", "label": "MAP", "hold": false, "r": 30.0, "at": [48.0, 255.0], "top": true},
 	{"id": "shout", "action": "shout", "label": "HEY", "hold": false, "r": 30.0, "at": [120.0, 255.0], "top": true},
+	{"id": "camera_mode", "action": "camera_mode", "label": "VIEW", "hold": false, "r": 30.0, "at": [120.0, 115.0], "top": true},
 	{"id": "radio", "action": "radio", "label": "RADIO", "hold": false, "r": 30.0, "at": [120.0, 185.0], "top": true},
 ]
 
