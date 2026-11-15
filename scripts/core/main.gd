@@ -62,6 +62,8 @@ func _ready() -> void:
 	if session.audio:
 		session.audio.sound_heard.connect(_on_sound_heard)
 	player.view_changed.connect(func(on: bool):   # the V key / VIEW button: remember the choice
+		if _args.has("top-down"):
+			return   # a screenshot switch, not the player's choice
 		if bool(settings.get_value("controls/top_down")) != on:
 			settings.set_value("controls/top_down", on)
 			settings.save_settings())

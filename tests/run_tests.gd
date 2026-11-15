@@ -2333,6 +2333,8 @@ func _test_survival_in_game(main: Node, district: District, player: Player) -> v
 	for i in 3:
 		await physics_frame
 	_check(player.health.regen_blocked and player.health.hp < 100.0 and player.health.hp >= sv.config.num("starve_floor"), "starving stops healing and lowers health, but not below the floor (%.0f)" % player.health.hp)
+	for i in 35:
+		await physics_frame
 	_check(session.hud.stats_text().contains("Hungry"), "the HUD shows what needs attention")
 	sv.needs.food = 100.0
 	sv.needs.rest = 0.0
@@ -2456,7 +2458,8 @@ func _test_city_map_in_game(main: Node, player: Player) -> void:
 
 
 func _test_view_in_game(main: Node, player: Player) -> void:
-	_check(InputMap.has_action("camera_mode") and not player.top_down, "third-person is the default view")
+	main.settings.set_value("controls/top_down", false)   # whatever this machine's settings file says
+	_check(InputMap.has_action("camera_mode") and not player.top_down and not bool(SettingsStore.DEFAULTS["controls/top_down"]), "third-person is the default view")
 	var arm := player.spring_arm.spring_length
 	var ev := InputEventAction.new()
 	ev.action = "camera_mode"
