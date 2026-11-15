@@ -76,6 +76,24 @@ behind the wall. Every area's block was deepened from 56 to 70 m so the two link
 The migration is recorded in `tools/world/rebuild_westridge_real.py`. `tools/generate_starter_data.py` is the
 original Phase 2 generator and no longer matches the data: do not run it.
 
+## As built: Lentegeur on its real streets (2026-11-15)
+
+Lentegeur is the real Hyacinth Avenue crescent between the railway and A.Z. Berman Drive, from OpenStreetMap,
+on the same 22-degree turn as Westridge (`real` in `data/districts/rooiduin.json`).
+
+| Street (real name) | Where | Real size | Houses | Notes |
+|---|---|---|---|---|
+| Hyacinth Avenue, south leg (`duif_r`) | east-west, z = 0 | 114 m from Firethorn Road to the bend (game: 108 m) | 10 south side (h01–h10), 3 north side (h18–h20) | Shops, taxi rank and the soccer field on the inside |
+| Hyacinth Avenue, north leg (`hyacinth_n`) | east-west, z = −44.6 | 44.6 m from the south leg (exact) | 3 south side (h15–h17) | |
+| Hyacinth Avenue, bend (`hyacinth_bend`) | north-south, x = 222 | joins the two legs | | |
+| Firethorn Road (`firethorn`) | north-south, x = 114 | runs along the railway | | Links the crescent to Marguerite Road |
+| Marguerite Road (`mossie_r`) | east-west, z = −70 | 76 m north of the south leg (game: 70 m) | 4 blocks of flats (h11–h14) | Really runs east to A.Z. Berman Drive |
+
+Not real yet: Hyacinth Avenue and Marguerite Road beyond the area's edges are link roads to Westridge and the Town
+Centre; the soccer field, shops, taxi rank and families are the game's own (the real crescent is all houses);
+the railway and Lentegeur station (60 m west of Firethorn Road) and the neighbouring crescents (Crocus Street,
+Narcissus) are not built. Migration record: `tools/world/rebuild_lentegeur_real.py`.
+
 ## As built (Phase 2, superseded)
 
 

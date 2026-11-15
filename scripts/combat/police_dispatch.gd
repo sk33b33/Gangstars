@@ -30,6 +30,8 @@ var player: Player
 var progression: ProgressionState
 var audio: AudioDirector
 var safehouse_id := ""
+## Rival crews warn you off their turf and fight if you linger. Tests that time a quiet hold switch it off.
+var turf_provocation := true
 var responding := false
 var police_fights := 0
 var knockouts := 0
@@ -180,7 +182,7 @@ func _update_crews() -> void:
 ## Rival crews on their own turf: a warning first; standing in their face or pointing a gun at
 ## them starts a fight.
 func _turf_check(r: Resident) -> void:
-	if district.player_crew_id.is_empty() or player.is_down() or player.is_driving():
+	if not turf_provocation or district.player_crew_id.is_empty() or player.is_down() or player.is_driving():
 		return
 	var d := r.global_position.distance_to(player.global_position)
 	if d > AIM_PROVOKE_RANGE:

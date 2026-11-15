@@ -102,7 +102,7 @@
           "type": "talk_to",
           "target": "npc_rooi_spider",
           "allow_knock": true,
-          "text": "Talk to Spider at the Dune Cruisers' flats (8 Spine Road)"
+          "text": "Talk to Spider at the Dune Cruisers' flats (8 Marguerite Road)"
         },
         {
           "id": "hold",

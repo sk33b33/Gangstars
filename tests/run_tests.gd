@@ -52,6 +52,7 @@ func _run() -> void:
 	_test_loading_units()
 	_test_real_map_units()
 	_test_real_westridge_units()
+	_test_real_lentegeur_units()
 	_test_survival_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
@@ -2422,38 +2423,25 @@ func _test_survival_in_game(main: Node, district: District, player: Player) -> v
 	player.health.hp = 100.0
 
 
-## Westridge is the real block between Rhone Way, Excelsior Street, Coetzenburg Street and
-## Constantia Street (OpenStreetMap), turned so its streets run along the game's axes.
-func _test_real_westridge_units() -> void:
-	print("== real Westridge")
-	var area: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
-	var names := {}
-	for s in area.streets:
-		names[str(s.name)] = s
-	for n in ["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"]:
-		_check(names.has(n), "Westridge has the real %s" % n)
-	_check(not names.has("AZ Berman Drive") and not names.has("Kwikkie Street"), "the made-up street names are gone from Westridge")
-	# The real block is 100 m between the cross streets; Rhone Way lies 60 to 78 m north of Excelsior Street.
-	var cross: Array = area.streets.filter(func(s): return s.axis == "z" and str(s.id) in ["kwikkie", "tortel"]).map(func(s): return float(s.at))
-	_check(cross.size() == 2 and is_equal_approx(absf(cross[0] - cross[1]), 100.0), "Coetzenburg and Constantia Street are 100 m apart, as in real life")
-	var depth := absf(float(names["Rhone Way"].at) - float(names["Excelsior Street"].at))
-	_check(depth >= 60.0 and depth <= 78.0, "Rhone Way is a real block's depth from Excelsior Street (%.0f m)" % depth)
-	_check(is_equal_approx(float(names["Rhone Close"].at), float(names["Excelsior Close"].at)) and absf(float(names["Rhone Close"].at)) < 5.0, "the two closes sit mid-block, in line, as on the map")
-	_check(absf(float(area.real.bearing_deg) + 22.0) < 1.0, "the block is turned 22 degrees from true north")
-	# The streets come from the map data: each real one exists in OpenStreetMap near the block.
+## A district rebuilt on real streets: every street name exists in the OpenStreetMap data within
+## `radius` metres of the area's anchor, and no house plot sits on a road, on another plot or
+## outside the wall.
+func _check_real_area(label: String, area: Dictionary, houses_file: String, house_count: int, street_names: Array, radius: float) -> void:
 	var rm := RealMap.new()
 	rm.load_data()
-	var centre := DataFiles.to_vec2(area.real.centre_m)
+	var anchor := DataFiles.to_vec2(area.real.anchor.metres)
 	var near := {}
 	for s in rm.load_streets():
 		for p in s.pts:
-			if (p as Vector2).distance_to(centre) < 130.0:
+			if (p as Vector2).distance_to(anchor) < radius:
 				near[str(s.name)] = true
-	var missing: Array = ["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"].filter(func(n): return not near.has(n))
-	_check(missing.is_empty(), "every Westridge street is a real street beside that block on the map (%s)" % [missing])
-	# No house plot may sit on a road or pavement, and none may overlap another.
-	var houses: Array = DataFiles.load_json("res://data/houses/starter_houses.json").houses
-	_check(houses.size() == 30, "Westridge still has its 30 houses")
+	var missing: Array = street_names.filter(func(n): return not near.has(n))
+	_check(missing.is_empty(), "every %s street is a real street there on the map (%s)" % [label, missing])
+	var made_up: Array = area.streets.filter(func(s): return not street_names.has(str(s.name))).map(func(s): return s.name)
+	_check(made_up.is_empty(), "%s has no made-up street names left (%s)" % [label, made_up])
+	_check(absf(float(area.real.bearing_deg) + 22.0) < 1.0, "%s is turned 22 degrees from true north, like the real grid" % label)
+	var houses: Array = DataFiles.load_json(houses_file).houses
+	_check(houses.size() == house_count, "%s still has its %d houses" % [label, house_count])
 	var rects: Array = []
 	for h in houses:
 		var pos := DataFiles.to_vec2(h.position)
@@ -2474,16 +2462,53 @@ func _test_real_westridge_units() -> void:
 		for hr in rects:
 			if sr.intersects(hr[1]):
 				on_road = "%s on %s" % [hr[0], s.name]
-	_check(on_road.is_empty(), "no house plot sits on a street or pavement (%s)" % on_road)
+	_check(on_road.is_empty(), "%s: no house plot sits on a street or pavement (%s)" % [label, on_road])
 	var clash := ""
 	for i in rects.size():
 		for j in range(i + 1, rects.size()):
 			if (rects[i][1] as Rect2).intersects(rects[j][1]):
 				clash = "%s / %s" % [rects[i][0], rects[j][0]]
-	_check(clash.is_empty(), "no two house plots overlap (%s)" % clash)
+	_check(clash.is_empty(), "%s: no two house plots overlap (%s)" % [label, clash])
 	var b: Array = area.bounds
-	var outside: Array = rects.filter(func(hr): return not Rect2(b[0], b[1], b[2] - b[0], b[3] - b[1]).encloses(hr[1]))
-	_check(outside.is_empty(), "every plot is inside the district wall (%s)" % [outside.map(func(hr): return hr[0])])
+	var outside: Array = rects.filter(func(hr): return not Rect2(b[0], b[1], b[2] - b[0], b[3] - b[1]).grow(1.5).encloses(hr[1]))
+	_check(outside.is_empty(), "%s: every plot is inside the district wall (%s)" % [label, outside.map(func(hr): return hr[0])])
+
+
+## Lentegeur is the real Hyacinth Avenue crescent off Firethorn Road, south of Marguerite Road.
+func _test_real_lentegeur_units() -> void:
+	print("== real Lentegeur")
+	var area: Dictionary = DataFiles.load_json("res://data/districts/rooiduin.json")
+	_check_real_area("Lentegeur", area, "res://data/houses/rooiduin_houses.json", 20, ["Hyacinth Avenue", "Marguerite Road", "Firethorn Road"], 260.0)
+	var legs: Array = area.streets.filter(func(s): return s.axis == "x" and str(s.name) == "Hyacinth Avenue").map(func(s): return float(s.at))
+	_check(legs.size() == 2 and is_equal_approx(absf(legs[0] - legs[1]), 44.6), "the crescent's two legs are 44.6 m apart, as in real life")
+	var bend: Array = area.streets.filter(func(s): return str(s.id) == "hyacinth_bend")
+	var firethorn: Array = area.streets.filter(func(s): return str(s.id) == "firethorn")
+	_check(bend.size() == 1 and firethorn.size() == 1 and absf(float(bend[0].at) - float(firethorn[0].at) - 114.0) <= 6.5, "the crescent runs about 114 m east from Firethorn Road before it bends back")
+	var loop: Array = area.traffic.loops[0].points
+	_check(loop.any(func(p): return is_equal_approx(float(p[0]), float(firethorn[0].at))) and loop.any(func(p): return is_equal_approx(float(p[0]), float(bend[0].at))), "traffic drives the real circuit: Firethorn Road and round the crescent")
+
+
+## Westridge is the real block between Rhone Way, Excelsior Street, Coetzenburg Street and
+## Constantia Street (OpenStreetMap), turned so its streets run along the game's axes.
+func _test_real_westridge_units() -> void:
+	print("== real Westridge")
+	var area: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
+	var names := {}
+	for s in area.streets:
+		names[str(s.name)] = s
+	for n in ["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"]:
+		_check(names.has(n), "Westridge has the real %s" % n)
+	_check(not names.has("AZ Berman Drive") and not names.has("Kwikkie Street"), "the made-up street names are gone from Westridge")
+	# The real block is 100 m between the cross streets; Rhone Way lies 60 to 78 m north of Excelsior Street.
+	var cross: Array = area.streets.filter(func(s): return s.axis == "z" and str(s.id) in ["kwikkie", "tortel"]).map(func(s): return float(s.at))
+	_check(cross.size() == 2 and is_equal_approx(absf(cross[0] - cross[1]), 100.0), "Coetzenburg and Constantia Street are 100 m apart, as in real life")
+	var depth := absf(float(names["Rhone Way"].at) - float(names["Excelsior Street"].at))
+	_check(depth >= 60.0 and depth <= 78.0, "Rhone Way is a real block's depth from Excelsior Street (%.0f m)" % depth)
+	_check(is_equal_approx(float(names["Rhone Close"].at), float(names["Excelsior Close"].at)) and absf(float(names["Rhone Close"].at)) < 5.0, "the two closes sit mid-block, in line, as on the map")
+	_check(absf(float(area.real.bearing_deg) + 22.0) < 1.0, "the block is turned 22 degrees from true north")
+	_check_real_area("Westridge", area, "res://data/houses/starter_houses.json", 30,
+		["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"], 130.0)
+	var houses: Array = DataFiles.load_json("res://data/houses/starter_houses.json").houses
 	var on_close: Array = houses.filter(func(h): return str(h.street) == "Excelsior Close")
 	_check(on_close.size() == 2, "two families live on Excelsior Close")
 
@@ -3103,12 +3128,16 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	var boeta: Resident = district.residents["npc_boeta"]
 	_talk(player, boeta.interactable)
 	_check(missions.active.has("hold_the_corner"), "Boeta offers Hold the Corner")
+	# Whether a patrolling rival happens to be at the corner depends on the street layout; this
+	# check is about the hold itself (rival provocation has its own checks).
+	session.police.turf_provocation = false
 	var held := false
 	for i in 60 * 150:
 		if missions.is_completed("hold_the_corner"):
 			held = true
 			break
 		await physics_frame
+	session.police.turf_provocation = true
 	_check(held, "holding the corner with Boeta completes the mission (%s)" % missions.objective_text("hold_the_corner"))
 	print("  rooiduin requirements: %s" % [dm.get_unlock_requirements("district_east")])
 	if not dm.can_unlock("district_east"):

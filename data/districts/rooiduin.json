@@ -28,7 +28,7 @@
   "streets": [
     {
       "id": "duif_r",
-      "name": "AZ Berman Drive",
+      "name": "Hyacinth Avenue",
       "axis": "x",
       "at": 0,
       "from": 88,
@@ -38,7 +38,7 @@
     },
     {
       "id": "mossie_r",
-      "name": "Spine Road",
+      "name": "Marguerite Road",
       "axis": "x",
       "at": -70.0,
       "from": 88,
@@ -47,35 +47,47 @@
       "sidewalk": 2.5
     },
     {
-      "id": "duin",
-      "name": "Duin Road",
+      "id": "hyacinth_n",
+      "name": "Hyacinth Avenue",
+      "axis": "x",
+      "at": -44.6,
+      "from": 118,
+      "to": 219,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": 120.5,
+      "sidewalk_to": 217
+    },
+    {
+      "id": "firethorn",
+      "name": "Firethorn Road",
       "axis": "z",
-      "at": 168,
+      "at": 114,
       "from": -4,
       "to": -66.0,
       "half_width": 4.0,
-      "sidewalk": 2.5,
+      "sidewalk": 2.0,
       "sidewalk_from": -6.5,
       "sidewalk_to": -63.5
     },
     {
-      "id": "kers",
-      "name": "Kers Street",
+      "id": "hyacinth_bend",
+      "name": "Hyacinth Avenue",
       "axis": "z",
-      "at": 220,
+      "at": 222,
       "from": -4,
-      "to": -66.0,
+      "to": -47.6,
       "half_width": 3.0,
       "sidewalk": 2.0,
       "sidewalk_from": -6.5,
-      "sidewalk_to": -63.5
+      "sidewalk_to": -49.6
     }
   ],
   "landmarks": [
     {
       "type": "container_shop",
       "position": [
-        120,
+        190,
         -10
       ],
       "facing": "south",
@@ -85,7 +97,7 @@
     {
       "type": "container_shop",
       "position": [
-        200,
+        204,
         -10
       ],
       "facing": "south",
@@ -95,31 +107,31 @@
     {
       "type": "soccer_field",
       "position": [
-        130,
-        -34
+        136,
+        -23
       ]
     },
     {
       "type": "taxi_rank",
       "position": [
-        196,
-        -62.8
+        136,
+        -8.2
       ],
-      "facing": "north"
+      "facing": "south"
     },
     {
       "type": "courtyard",
       "position": [
-        204,
-        -30
+        200,
+        -27
       ]
     },
     {
       "type": "police_post",
       "id": "saps_rooi",
       "position": [
-        212,
-        -42
+        176,
+        -56.5
       ],
       "facing": "south"
     }
@@ -130,7 +142,7 @@
       "name": "Duin Spaza",
       "kind": "shop",
       "position": [
-        120,
+        190,
         -7.4
       ],
       "radius": 1.0,
@@ -141,7 +153,7 @@
       "name": "Kings Cuts",
       "kind": "shop",
       "position": [
-        200,
+        204,
         -7.4
       ],
       "radius": 1.0,
@@ -152,8 +164,8 @@
       "name": "the soccer field",
       "kind": "court",
       "position": [
-        130,
-        -34
+        136,
+        -23
       ],
       "radius": 4.0,
       "map_label": "field"
@@ -163,8 +175,8 @@
       "name": "the taxi rank",
       "kind": "transit",
       "position": [
-        196,
-        -64.7
+        136,
+        -5.3
       ],
       "radius": 1.0,
       "map_label": "taxi"
@@ -174,8 +186,8 @@
       "name": "the courtyard",
       "kind": "gathering",
       "position": [
-        204,
-        -30
+        200,
+        -27
       ],
       "radius": 2.5,
       "map_label": "yard"
@@ -188,24 +200,32 @@
         -5.4
       ],
       [
-        173,
+        214,
+        -5.4
+      ],
+      [
+        218,
         -12
       ],
       [
-        173,
-        -60.0
+        218,
+        -36
       ],
       [
-        150,
-        -64.8
+        200,
+        -40.6
       ],
       [
-        118,
-        -64.8
+        130,
+        -40.6
       ],
       [
-        118,
-        -5.4
+        119.3,
+        -36
+      ],
+      [
+        119.3,
+        -12
       ]
     ],
     "saps_rooi_beat": [
@@ -218,20 +238,28 @@
         -5.4
       ],
       [
-        173,
+        214,
+        -5.4
+      ],
+      [
+        218,
         -12
       ],
       [
-        173,
-        -60.0
+        218,
+        -36
       ],
       [
-        150,
-        -64.8
+        200,
+        -40.6
       ],
       [
         125,
-        -64.8
+        -40.6
+      ],
+      [
+        119.3,
+        -30
       ]
     ]
   },
@@ -283,7 +311,7 @@
     {
       "texture": "tag_duin",
       "position": [
-        199.0,
+        203.0,
         0.45,
         -8.78
       ],
@@ -305,20 +333,20 @@
       {
         "points": [
           [
-            168,
+            114,
             0
           ],
           [
-            220,
+            222,
             0
           ],
           [
-            220,
-            -70.0
+            222,
+            -44.6
           ],
           [
-            168,
-            -70.0
+            114,
+            -44.6
           ]
         ],
         "cars": [
@@ -339,19 +367,19 @@
       {
         "points": [
           [
-            168,
-            -70.0
+            114,
+            -44.6
           ],
           [
-            220,
-            -70.0
+            222,
+            -44.6
           ],
           [
-            220,
+            222,
             0
           ],
           [
-            168,
+            114,
             0
           ]
         ],
@@ -382,8 +410,8 @@
     {
       "poi": "rooi_field",
       "center": [
-        130,
-        -34
+        136,
+        -23
       ],
       "half": [
         12.0,
@@ -393,5 +421,19 @@
   ],
   "neighbours": {
     "east": "district_town_centre"
+  },
+  "real": {
+    "bearing_deg": -22.1,
+    "anchor": {
+      "local": [
+        114,
+        0
+      ],
+      "metres": [
+        -403.7,
+        -513.4
+      ]
+    },
+    "note": "The real Hyacinth Avenue crescent between Firethorn Road and Marguerite Road (OpenStreetMap), turned 22 degrees. The crescent legs are 108 m (real 114) and Marguerite Road is 70 m north of the south leg (real 76). Hyacinth Avenue and Marguerite Road beyond the area's edges are link roads to the neighbouring districts until those are rebuilt. The soccer field, shops and taxi rank are the game's own, placed inside the crescent."
   }
 }

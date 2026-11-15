@@ -579,10 +579,16 @@
   ],
   "real": {
     "bearing_deg": -22.1,
-    "centre_m": [
-      -1406.1,
-      1367.1
-    ],
-    "note": "The real block between Rhone Way, Excelsior Street, Coetzenburg Street and Constantia Street (OpenStreetMap), turned 22 degrees so its streets run along the game's axes. Rhone Way is drawn straight (the real one bends). The 40 m of Excelsior Street and Rhone Way beyond the cross streets are link roads to the neighbouring districts until those are rebuilt."
+    "note": "The real block between Rhone Way, Excelsior Street, Coetzenburg Street and Constantia Street (OpenStreetMap), turned 22 degrees so its streets run along the game's axes. Rhone Way is drawn straight (the real one bends). The 40 m of Excelsior Street and Rhone Way beyond the cross streets are link roads to the neighbouring districts until those are rebuilt.",
+    "anchor": {
+      "local": [
+        0,
+        0
+      ],
+      "metres": [
+        -1406.1,
+        1367.1
+      ]
+    }
   }
 }

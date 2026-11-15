@@ -1,5 +1,14 @@
 # Changelog
 
+## Lentegeur rebuilt on its real streets
+- Lentegeur is now the real **Hyacinth Avenue** crescent off **Firethorn Road**, with **Marguerite Road** to the north
+  (OpenStreetMap). The made-up Duin Road and Kers Street are gone; traffic drives the real circuit round the crescent.
+- All 20 homes keep their families and ids; the six row houses from Duin Road now stand back to back inside the crescent;
+  the soccer field, shops, courtyard, taxi rank and police post were re-placed.
+- A rebuilt area now carries a `real.anchor` (one local point and its spot on the real map), used by the city map.
+- Test fix: the "hold the corner" check no longer depends on whether a patrolling rival happens to be there
+  (`PoliceDispatch.turf_provocation`).
+
 ## Westridge rebuilt on its real streets
 - Westridge is now the real block around **Excelsior Street** (OpenStreetMap): Excelsior Street, Rhone Way,
   Coetzenburg Street and Constantia Street at their real spacing, with the real dead ends **Rhone Close** and
