@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SUPERSEDED: the original Phase 2 generator. Westridge was rebuilt on its real streets on 2026-11-15
+# (tools/world/rebuild_westridge_real.py); running this would overwrite that. Kept for reference only.
 """Generate the Westridge starter district data (30 houses + residents).
 
 Deterministic: every house/resident draws from its own RNG seeded by its stable id, so

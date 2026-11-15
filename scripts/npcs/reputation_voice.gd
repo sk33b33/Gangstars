@@ -5,7 +5,7 @@ extends RefCounted
 ## ("Hoezit", "ja nee", "my bru"); worth a read-through by someone from the Plain.
 
 const UNKNOWN := ["Howzit.", "Hoezit?", "Morning, neighbour.", "New face, hey."]
-const KNOWN := ["Ja, I know you, from 13 AZ Berman.", "Hoezit, neighbour!", "Ag, you're settling in nicely."]
+const KNOWN := ["Ja, I know you, from 13 Excelsior Street.", "Hoezit, neighbour!", "Ag, you're settling in nicely."]
 const RESPECTED := ["Respect, hey.", "People talk well of you.", "Ja nee, good to see you, boss.", "My bru, you've done a lot for this street."]
 const LEGEND := ["Is it really you? The whole Plain knows your name.", "Respect, boss. Respect.", "My kids point you out in the street."]
 const WARY := ["Mm. I've heard things about you.", "Keep walking, please.", "I don't want trouble."]

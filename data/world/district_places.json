@@ -1,7 +1,7 @@
 {
-  "note": "Where each game district sits on the real map: an OSM suburb name, a station name, or a lat/lon.",
+  "note": "Where each game district sits on the real map: an OSM suburb name, a station name, a lat/lon, or metres on the real map (a rebuilt block's centre).",
   "places": {
-    "starter": {"suburb": "Westridge"},
+    "starter": {"metres": [-1406.1, 1367.1]},
     "district_east": {"suburb": "Lentegeur"},
     "district_west": {"suburb": "Rocklands"},
     "district_town_centre": {"station": "Mitchell's Plain"},

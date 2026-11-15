@@ -358,7 +358,7 @@
       "kit": "double_semi",
       "position": [
         -120,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -393,7 +393,7 @@
       "kit": "single_gable",
       "position": [
         -132,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -428,7 +428,7 @@
       "kit": "single_gable",
       "position": [
         -144,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -463,7 +463,7 @@
       "kit": "cottage",
       "position": [
         -156,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -498,7 +498,7 @@
       "kit": "double_semi",
       "position": [
         -168,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -533,7 +533,7 @@
       "kit": "single_gable",
       "position": [
         -180,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -568,7 +568,7 @@
       "kit": "single_gable",
       "position": [
         -192,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [
@@ -603,7 +603,7 @@
       "kit": "cottage",
       "position": [
         -204,
-        -63.0
+        -77.0
       ],
       "facing": "south",
       "plot_size": [

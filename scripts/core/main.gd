@@ -91,7 +91,7 @@ func _ready() -> void:
 		settings.save_settings()
 		tutorial.restart())
 	apply_settings()
-	hud.show_message("Welcome to Westridge. You've just moved into 13 AZ Berman Drive.")
+	hud.show_message("Welcome to Westridge. You've just moved into 13 Excelsior Street.")
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if session.progression.crew_id.is_empty():
 		if _args.has("crew"):
@@ -156,7 +156,7 @@ func _process(_delta: float) -> void:
 	_update_waypoint()
 	hud.set_clock(district.director.clock)
 	var look := -player.camera.global_transform.basis.z
-	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)))
+	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)) + district.grid_bearing())
 	hud.set_night(district.day_night.night_amount())
 	hud.set_weather(district.weather.rain if district.weather.enabled else 0.0, district.day_night.heat())
 	if session.police:

@@ -5,13 +5,13 @@
       "id": "tortel_crew",
       "name": "Tortel Laaities",
       "home": "starter",
-      "home_name": "Westridge (Tortel Lane)",
+      "home_name": "Westridge (Constantia Street)",
       "colour": "#8b1e2a",
       "boss": "npc_h29_1",
       "perk": "home_turf",
       "perk_text": "Home turf: +R150 and a head start on Westridge influence.",
-      "pitch": "Born and raised on Tortel Lane. They look after their own street and the corner shop.",
-      "warning": "This is Tortel Lane, %s. Keep walking."
+      "pitch": "Born and raised on Constantia Street. They look after their own street and the corner shop.",
+      "warning": "This is Constantia Street, %s. Keep walking."
     },
     {
       "id": "vlakte_vipers",

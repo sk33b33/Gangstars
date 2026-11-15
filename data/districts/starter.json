@@ -5,18 +5,18 @@
   },
   "id": "starter",
   "display_name": "Westridge",
-  "street_name": "Starter district",
+  "street_name": "Westridge",
   "is_initially_unlocked": true,
   "bounds": [
     -72,
-    -78,
+    -92.0,
     72,
-    22
+    44
   ],
   "streets": [
     {
       "id": "duif",
-      "name": "AZ Berman Drive",
+      "name": "Excelsior Street",
       "axis": "x",
       "at": 0,
       "from": -90,
@@ -26,9 +26,9 @@
     },
     {
       "id": "mossie",
-      "name": "Spine Road",
+      "name": "Rhone Way",
       "axis": "x",
-      "at": -56,
+      "at": -70.0,
       "from": -90,
       "to": 90,
       "half_width": 4.0,
@@ -36,27 +36,75 @@
     },
     {
       "id": "kwikkie",
-      "name": "Kwikkie Street",
+      "name": "Coetzenburg Street",
       "axis": "z",
       "at": -50,
       "from": -4,
-      "to": -52,
+      "to": -66.0,
       "half_width": 4.0,
       "sidewalk": 2.5,
       "sidewalk_from": -6.5,
-      "sidewalk_to": -49.5
+      "sidewalk_to": -63.5
     },
     {
       "id": "tortel",
-      "name": "Tortel Lane",
+      "name": "Constantia Street",
       "axis": "z",
       "at": 50,
       "from": -4,
-      "to": -52,
+      "to": -66.0,
       "half_width": 3.0,
       "sidewalk": 2.0,
       "sidewalk_from": -6.5,
-      "sidewalk_to": -49.5
+      "sidewalk_to": -63.5
+    },
+    {
+      "id": "kwikkie_s",
+      "name": "Coetzenburg Street",
+      "axis": "z",
+      "at": -50,
+      "from": 4,
+      "to": 40,
+      "half_width": 4.0,
+      "sidewalk": 2.5,
+      "sidewalk_from": 6.5,
+      "sidewalk_to": 40
+    },
+    {
+      "id": "tortel_s",
+      "name": "Constantia Street",
+      "axis": "z",
+      "at": 50,
+      "from": 4,
+      "to": 40,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": 6.5,
+      "sidewalk_to": 40
+    },
+    {
+      "id": "rhone_close",
+      "name": "Rhone Close",
+      "axis": "z",
+      "at": -2,
+      "from": -66,
+      "to": -30,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": -63.5,
+      "sidewalk_to": -30
+    },
+    {
+      "id": "excelsior_close",
+      "name": "Excelsior Close",
+      "axis": "z",
+      "at": -2,
+      "from": 4,
+      "to": 38,
+      "half_width": 3.0,
+      "sidewalk": 2.0,
+      "sidewalk_from": 6.5,
+      "sidewalk_to": 38
     }
   ],
   "landmarks": [
@@ -78,8 +126,8 @@
     {
       "type": "bus_stop",
       "position": [
-        -20,
-        -48.8
+        -32,
+        -62.8
       ],
       "facing": "north"
     },
@@ -94,7 +142,7 @@
       "type": "park",
       "position": [
         -2,
-        -24
+        -17
       ]
     },
     {
@@ -143,11 +191,11 @@
         -8.4
       ],
       "radius": 1.2,
-      "map_label": "café"
+      "map_label": "caf\u00e9"
     },
     {
       "id": "poi_bus_stop",
-      "name": "the AZ Berman Drive bus stop",
+      "name": "the Excelsior Street bus stop",
       "kind": "transit",
       "position": [
         8,
@@ -158,11 +206,11 @@
     },
     {
       "id": "poi_bus_stop_mossie",
-      "name": "the Spine Road bus stop",
+      "name": "the Rhone Way bus stop",
       "kind": "transit",
       "position": [
-        -20,
-        -50.7
+        -32,
+        -64.7
       ],
       "radius": 1.0,
       "map_label": "bus"
@@ -195,7 +243,7 @@
       "kind": "park",
       "position": [
         -2,
-        -24
+        -17
       ],
       "radius": 3.0,
       "map_label": "park"
@@ -224,15 +272,15 @@
       ],
       [
         46,
-        -46
+        -60.0
       ],
       [
         30,
-        -50.7
+        -64.7
       ],
       [
         54,
-        -48
+        -62.0
       ],
       [
         54,
@@ -254,19 +302,19 @@
       ],
       [
         45.4,
-        -46
+        -60.0
       ],
       [
         30,
-        -50.7
+        -64.7
       ],
       [
         -30,
-        -50.7
+        -64.7
       ],
       [
         -44.6,
-        -46
+        -60.0
       ],
       [
         -44.6,
@@ -315,7 +363,7 @@
       "drivable": true,
       "position": [
         -38,
-        -52.6
+        -66.6
       ],
       "rot": 0,
       "color": "#f1c40f",
@@ -324,7 +372,7 @@
     {
       "position": [
         12,
-        -59.4
+        -73.4
       ],
       "rot": 180,
       "color": "#16a085"
@@ -332,7 +380,7 @@
     {
       "position": [
         36,
-        -52.6
+        -66.6
       ],
       "rot": 0,
       "color": "#8e44ad"
@@ -421,11 +469,11 @@
           ],
           [
             50,
-            -56
+            -70.0
           ],
           [
             -50,
-            -56
+            -70.0
           ]
         ],
         "cars": [
@@ -457,11 +505,11 @@
         "points": [
           [
             -50,
-            -56
+            -70.0
           ],
           [
             50,
-            -56
+            -70.0
           ],
           [
             50,
@@ -528,5 +576,13 @@
         3.6
       ]
     }
-  ]
+  ],
+  "real": {
+    "bearing_deg": -22.1,
+    "centre_m": [
+      -1406.1,
+      1367.1
+    ],
+    "note": "The real block between Rhone Way, Excelsior Street, Coetzenburg Street and Constantia Street (OpenStreetMap), turned 22 degrees so its streets run along the game's axes. Rhone Way is drawn straight (the real one bends). The 40 m of Excelsior Street and Rhone Way beyond the cross streets are link roads to the neighbouring districts until those are rebuilt."
+  }
 }

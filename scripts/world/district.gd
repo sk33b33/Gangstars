@@ -151,6 +151,12 @@ func _load_areas() -> void:
 
 
 ## Which area a world position is in ("" if outside every area, e.g. an approach street).
+## Degrees the game's grid is turned from true north (from the starter area's "real" block):
+## a compass heading is the grid heading plus this.
+func grid_bearing() -> float:
+	return float(info.get("real", {}).get("bearing_deg", 0.0))
+
+
 func area_at(pos: Vector3) -> String:
 	for area in areas:
 		var b: Array = area.get("bounds", [0, 0, 0, 0])

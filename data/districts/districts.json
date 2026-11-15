@@ -4,7 +4,7 @@
       "id": "starter",
       "display_name": "Westridge",
       "is_initially_unlocked": true,
-      "description": "Your home turf in Mitchells Plain: 30 houses between AZ Berman Drive and Spine Road.",
+      "description": "Your home turf in Mitchells Plain: 30 houses on the real block between Excelsior Street and Rhone Way.",
       "data": "res://data/districts/starter.json",
       "missions": "res://data/missions/intro.json"
     },

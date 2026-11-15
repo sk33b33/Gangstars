@@ -4,7 +4,7 @@
   "street_name": "Town Centre",
   "bounds": [
     264,
-    -78,
+    -92.0,
     384,
     22
   ],
@@ -40,7 +40,7 @@
       "id": "mossie_t",
       "name": "Spine Road",
       "axis": "x",
-      "at": -56,
+      "at": -70.0,
       "from": 252,
       "to": 396,
       "half_width": 4.0,
@@ -52,11 +52,11 @@
       "axis": "z",
       "at": 312,
       "from": -4,
-      "to": -52,
+      "to": -66.0,
       "half_width": 4.0,
       "sidewalk": 2.5,
       "sidewalk_from": -6.5,
-      "sidewalk_to": -49.5
+      "sidewalk_to": -63.5
     },
     {
       "id": "market_lane",
@@ -64,11 +64,11 @@
       "axis": "z",
       "at": 360,
       "from": -4,
-      "to": -52,
+      "to": -66.0,
       "half_width": 3.0,
       "sidewalk": 2.0,
       "sidewalk_from": -6.0,
-      "sidewalk_to": -50.0
+      "sidewalk_to": -64.0
     }
   ],
   "landmarks": [
@@ -91,7 +91,7 @@
       "type": "taxi_rank",
       "position": [
         372,
-        -48.8
+        -62.8
       ],
       "facing": "north"
     },
@@ -143,7 +143,7 @@
       "kind": "bus_stop",
       "position": [
         372,
-        -50.7
+        -64.7
       ],
       "radius": 1.2,
       "map_label": "rank"
@@ -190,11 +190,11 @@
       ],
       [
         316,
-        -50.8
+        -64.8
       ],
       [
         356,
-        -50.8
+        -64.8
       ],
       [
         356,
@@ -263,11 +263,11 @@
         "points": [
           [
             312,
-            -56
+            -70.0
           ],
           [
             360,
-            -56
+            -70.0
           ],
           [
             360,
@@ -311,11 +311,11 @@
           ],
           [
             360,
-            -56
+            -70.0
           ],
           [
             312,
-            -56
+            -70.0
           ]
         ],
         "cars": [

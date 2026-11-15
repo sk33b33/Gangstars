@@ -579,7 +579,7 @@ func open_safehouse_menu() -> void:
 	items.append({"text": "Leave", "action": _close_menu})
 	player.input_enabled = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	hud.open_menu("SAFEHOUSE — 13 AZ Berman Drive   (R%d)" % progression.cash, items)
+	hud.open_menu("SAFEHOUSE — 13 Excelsior Street   (R%d)" % progression.cash, items)
 
 
 func buy_upgrade(id: String) -> bool:

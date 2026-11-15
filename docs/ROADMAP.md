@@ -176,7 +176,8 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 - [x] Injuries and health care.
 - [x] Skills that level up.
 - [x] Real Mitchells Plain map data from OpenStreetMap (inside the KnoxMap outline) and a city view on the turf map.
-- [ ] Street builder that follows real street lines (the current one only builds straight east-west / north-south streets); then rebuild Westridge on its real streets, then the other suburbs one at a time.
+- [x] Westridge rebuilt on its real block (Excelsior Street / Rhone Way / Coetzenburg Street / Constantia Street + two closes).
+- [ ] Rebuild the other suburbs on real blocks one at a time (Lentegeur next), replacing the link roads with real connections; needs area placement by real position and a builder for bent streets (Rhone Way, Valencia Street).
 - [x] Adopt Claude-Code-Game-Studios rules and design-doc format (`.claude/rules/`, `design/gdd/`).
 - [ ] Run its playtest / balance / cut-and-polish routines on the survival layer once a person has played it.
 - [ ] Survival follow-ups: nicer bin/crate models, searchable cupboards indoors, missions that use items and skills.

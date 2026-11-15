@@ -63,6 +63,8 @@ func to_metres(lat: float, lon: float) -> Vector2:
 ## Where a game district sits on the real map (null if it has no place).
 func district_position(district_id: String) -> Variant:
 	var p: Dictionary = _places.get(district_id, {})
+	if p.has("metres"):
+		return DataFiles.to_vec2(p.metres)
 	if p.has("suburb"):
 		return _named(suburbs, str(p.suburb))
 	if p.has("station"):

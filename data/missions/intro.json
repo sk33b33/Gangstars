@@ -4,14 +4,14 @@
       "id": "new_face",
       "title": "New Face",
       "auto_start": true,
-      "description": "You've just moved into 13 AZ Berman Drive. Introduce yourself to the street.",
+      "description": "You've just moved into 13 Excelsior Street. Introduce yourself to the street.",
       "objectives": [
         {
           "id": "meet_boeta",
           "type": "talk_to",
           "target": "npc_boeta",
           "allow_knock": true,
-          "text": "Say hello to Boeta Daniels (5 AZ Berman Drive)"
+          "text": "Say hello to Boeta Daniels (5 Excelsior Street)"
         }
       ],
       "rewards": {
@@ -31,7 +31,7 @@
           "new_face"
         ]
       },
-      "intro": "Auntie Faiza: \"You're the new one at No. 13? Do me a favour, take this note to the Cupidos at 8 Spine Road. Before supper, hey!\"",
+      "intro": "Auntie Faiza: \"You're the new one at No. 13? Do me a favour, take this note to the Cupidos at 8 Rhone Way. Before supper, hey!\"",
       "description": "Deliver Auntie Faiza's note.",
       "time_limit_minutes": 240,
       "fail_text": "The note went stale. Auntie Faiza is not impressed.",
@@ -40,7 +40,7 @@
           "id": "deliver",
           "type": "knock",
           "target": "starter_h12",
-          "text": "Deliver the note: knock at 8 Spine Road"
+          "text": "Deliver the note: knock at 8 Rhone Way"
         },
         {
           "id": "return",
@@ -71,7 +71,7 @@
           "a_favour"
         ]
       },
-      "intro": "Lionel: \"If you want people to trust you, you must know the block. Check out the court, the park and the Spine Road bus stop.\"",
+      "intro": "Lionel: \"If you want people to trust you, you must know the block. Check out the court, the park and the Rhone Way bus stop.\"",
       "description": "Learn the neighbourhood.",
       "objectives": [
         {
@@ -93,7 +93,7 @@
           "type": "visit",
           "target": "poi_bus_stop_mossie",
           "radius": 3,
-          "text": "Visit the Spine Road bus stop"
+          "text": "Visit the Rhone Way bus stop"
         }
       ],
       "rewards": {
@@ -131,7 +131,7 @@
           "id": "show",
           "type": "knock",
           "target": "starter_h05",
-          "text": "Show Boeta your safehouse (13 AZ Berman Drive)"
+          "text": "Show Boeta your safehouse (13 Excelsior Street)"
         }
       ],
       "rewards": {
@@ -289,20 +289,20 @@
           "id": "kwikkie",
           "type": "knock",
           "target": "starter_h19",
-          "text": "Deliver to 5 Kwikkie Street"
+          "text": "Deliver to 5 Coetzenburg Street"
         },
         {
           "id": "tortel",
           "type": "knock",
           "target": "starter_h25",
-          "text": "Deliver to 5 Tortel Lane"
+          "text": "Deliver to 5 Constantia Street"
         },
         {
           "id": "back",
           "type": "talk_to",
           "target": "npc_h12_1",
           "allow_knock": true,
-          "text": "Tell Achmat it's done (8 Spine Road)"
+          "text": "Tell Achmat it's done (8 Rhone Way)"
         }
       ],
       "rewards": {
@@ -327,14 +327,14 @@
           "first_crew"
         ]
       },
-      "intro": "Tasneem: \"My cousin left his yellow Golf on Spine Road again. Bring it round to my house? Gently, hey.\"",
+      "intro": "Tasneem: \"My cousin left his yellow Golf on Rhone Way again. Bring it round to my house? Gently, hey.\"",
       "description": "Fetch Tasneem's cousin's car.",
       "objectives": [
         {
           "id": "get_in",
           "type": "enter_vehicle",
           "target": "car_mossie",
-          "text": "Find the yellow Golf on Spine Road and get in"
+          "text": "Find the yellow Golf on Rhone Way and get in"
         },
         {
           "id": "drive",
@@ -342,7 +342,7 @@
           "target": "starter_h04:gate",
           "radius": 8,
           "vehicle": "car_mossie",
-          "text": "Drive it to Tasneem's house (11 AZ Berman Drive)"
+          "text": "Drive it to Tasneem's house (11 Excelsior Street)"
         }
       ],
       "rewards": {

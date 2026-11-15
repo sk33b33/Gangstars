@@ -3,7 +3,7 @@
   "missions": [
     {
       "id": "tortel_business",
-      "title": "Tortel Lane Business",
+      "title": "Constantia Street Business",
       "giver": "npc_h29_1",
       "prerequisites": {
         "member_of": "tortel_crew",
@@ -128,7 +128,7 @@
         ],
         "reputation": 40
       },
-      "intro": "Slang: \"Two pickups, no noise. The café, then the Spine Road bus stop. Don't run, don't stare.\"",
+      "intro": "Slang: \"Two pickups, no noise. The café, then the Rhone Way bus stop. Don't run, don't stare.\"",
       "description": "Two quiet pickups for the Stylers.",
       "time_limit_minutes": 120,
       "fail_text": "Too slow. Slang shakes his head.",
@@ -145,7 +145,7 @@
           "type": "visit",
           "target": "poi_bus_stop_mossie",
           "radius": 3,
-          "text": "Pick up at the Spine Road bus stop"
+          "text": "Pick up at the Rhone Way bus stop"
         },
         {
           "id": "talk_slang",
@@ -263,7 +263,7 @@
           "type": "visit",
           "target": "poi_bus_stop",
           "radius": 3,
-          "text": "Wait at the AZ Berman Drive bus stop"
+          "text": "Wait at the Excelsior Street bus stop"
         },
         {
           "id": "rep",

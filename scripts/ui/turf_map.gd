@@ -239,7 +239,12 @@ func city_player_position() -> Variant:
 		return null
 	var ab: Array = area.bounds
 	var centre := Vector2((float(ab[0]) + float(ab[2])) * 0.5, (float(ab[1]) + float(ab[3])) * 0.5)
-	return (at as Vector2) + Vector2(player.global_position.x, player.global_position.z) - centre
+	var real: Dictionary = area.get("real", {})
+	if real.has("centre_m"):
+		at = DataFiles.to_vec2(real.centre_m)
+		centre = Vector2.ZERO   # the block's centre is the area's origin
+	var off := Vector2(player.global_position.x, player.global_position.z) - centre
+	return (at as Vector2) + off.rotated(deg_to_rad(district.grid_bearing()))
 
 
 func _draw_city() -> void:

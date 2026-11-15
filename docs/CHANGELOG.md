@@ -1,5 +1,16 @@
 # Changelog
 
+## Westridge rebuilt on its real streets
+- Westridge is now the real block around **Excelsior Street** (OpenStreetMap): Excelsior Street, Rhone Way,
+  Coetzenburg Street and Constantia Street at their real spacing, with the real dead ends **Rhone Close** and
+  **Excelsior Close**. The made-up names (AZ Berman Drive, Spine Road, Kwikkie Street, Tortel Lane) are gone from
+  Westridge: addresses, missions, dialogue and signs use the real names (your safehouse is 13 Excelsior Street).
+- The block is turned 22 degrees to fit the game's grid; the compass and the city map show true directions.
+- All 30 houses keep their families and ids; two families moved to Excelsior Close; the park moved to make room for Rhone Close.
+- Every area's block is 14 m deeper (56 to 70 m) so the roads between districts still line up.
+- New tests: every Westridge street exists in the map data beside that block; no plot overlaps a road or another plot.
+- Not real yet: the neighbouring districts, and the link roads to them (see `docs/WORLD_LAYOUT.md`).
+
 ## Survival layer (Zomboid-style), real map view, working rules
 - **Needs:** food, water and rest run down with game time (sprinting makes you thirstier). Empty food/water stops healing and
   lowers health to a floor; exhausted means no sprinting. Eat and drink from the bag; sleep at the safehouse.
