@@ -1,5 +1,19 @@
 # Changelog
 
+## Real Westridge world, stage 1: real streets, real outlines, loading in pieces
+- New direction (design/gdd/real_world.md): one accurate district, the whole of real Westridge (about 1.6 by 2.5 km),
+  replaces the five small made-up districts. Done in four stages; the existing game keeps running until stage 3 moves it over.
+- **Data** (`data/world/westridge/`, `tools/osm/build_westridge.py`): 323 named streets with their real lines, footpaths,
+  parks, pitches, school grounds and 60 landmarks from OpenStreetMap; 5,505 building outlines from Microsoft
+  GlobalMLBuildingFootprints (OpenStreetMap has only 65 public buildings there, none of the houses). True north; nothing turned.
+- **Builder** (`RealChunkBuilder`): roads as ribbons that follow any bend and angle, pavements, footpaths, coloured areas,
+  and a building with a roof on every outline; street signs and landmark labels.
+- **Loading in pieces** (`RealWorld`): 121 pieces of 200 m, built nearest-first as you move and freed behind you. A desktop
+  loads the whole suburb; a touchscreen loads 320 m around you. One piece builds in about 8 ms here.
+- **Preview**: pause menu > "Real Westridge preview" (or run `scenes/real/real_westridge.tscn`). Walk-around only:
+  no residents, traffic or missions there yet, and houses have no doors or windows yet.
+- Full suite before this change: 1518/1518 (Westridge and Lentegeur block rebuilds verified).
+
 ## Lentegeur rebuilt on its real streets
 - Lentegeur is now the real **Hyacinth Avenue** crescent off **Firethorn Road**, with **Marguerite Road** to the north
   (OpenStreetMap). The made-up Duin Road and Kers Street are gone; traffic drives the real circuit round the crescent.

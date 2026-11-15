@@ -97,6 +97,13 @@ func _build() -> void:
 	replay.text = "Replay the tutorial"
 	replay.pressed.connect(func(): replay_tutorial.emit())
 	_rows.add_child(replay)
+	var real := Button.new()
+	real.name = "RealWestridge"
+	real.text = "Real Westridge preview (walk the real streets; work in progress)"
+	real.pressed.connect(func():
+		get_tree().paused = false
+		get_tree().change_scene_to_file("res://scenes/real/real_westridge.tscn"))
+	_rows.add_child(real)
 	var quit := Button.new()
 	quit.text = "Quit to desktop"
 	quit.pressed.connect(func(): quit_requested.emit())

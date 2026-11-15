@@ -80,3 +80,6 @@ The game must become playable early. Build a small, complete vertical slice firs
 **New controls:** V (R3 / VIEW) switches to a top-down camera; I (D-pad right / BAG) opens your bag. You now get hungry,
 thirsty and tired: buy food at shops, search bins and crates, sleep at your safehouse, bandage wounds.
 The turf map (M) can show all of Mitchells Plain with its real main roads.
+
+**Real Westridge (preview):** pause (Esc / MENU) and choose "Real Westridge preview" to walk the real streets of Westridge
+with a building on every real outline. This is the world the game is moving into; it has no people or missions yet.

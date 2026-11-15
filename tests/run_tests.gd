@@ -53,6 +53,8 @@ func _run() -> void:
 	_test_real_map_units()
 	_test_real_westridge_units()
 	_test_real_lentegeur_units()
+	_test_real_world_units()
+	await _test_real_world_streaming()
 	_test_survival_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
@@ -2421,6 +2423,93 @@ func _test_survival_in_game(main: Node, district: District, player: Player) -> v
 	for i in 35:
 		await physics_frame
 	player.health.hp = 100.0
+
+
+## The whole real Westridge: data, the builder that follows real street lines and outlines, and
+## loading in pieces (design/gdd/real_world.md).
+func _test_real_world_units() -> void:
+	print("== real Westridge world")
+	var data := RealDistrictData.new()
+	_check(data.load_meta(), "the real Westridge data loads")
+	_check(data.bounds.size.x > 1500.0 and data.bounds.size.y > 2000.0, "it is the whole suburb (%.1f x %.1f km)" % [data.bounds.size.x / 1000.0, data.bounds.size.y / 1000.0])
+	_check(int(data.counts.get("buildings", 0)) > 5000, "it has the real building outlines (%d)" % int(data.counts.get("buildings", 0)))
+	for n in ["Excelsior Street", "Rhone Way", "Wespoort Drive", "Park Avenue", "De Duin Avenue", "Silverhurst Street"]:
+		_check(data.streets.has(n), "%s is on the map" % n)
+	_check(not data.landmark("Westridge Civic Centre").is_empty() and not data.landmark("Westridge Gardens").is_empty(), "real landmarks are there (Civic Centre, Gardens)")
+	_check(data.credit.contains("OpenStreetMap") and data.credit.contains("Microsoft"), "both data sources are credited")
+	# Every chunk file parses, and nothing is far outside the boundary.
+	var buildings := 0
+	var bad := ""
+	var bent := 0
+	var angles := {}
+	for key in data.chunk_keys:
+		var chunk := data.load_chunk(key)
+		if chunk.is_empty():
+			bad = "chunk %s missing" % key
+			continue
+		for b in chunk.buildings:
+			buildings += 1
+			if b.p.size() < 3 or float(b.h) < 2.0 or float(b.h) > 12.0:
+				bad = "bad building in %s" % key
+		for r in chunk.roads:
+			if r.p.size() > 2:
+				bent += 1
+			var d := Vector2(float(r.p[1][0]) - float(r.p[0][0]), float(r.p[1][1]) - float(r.p[0][1]))
+			angles[int(round(fposmod(rad_to_deg(d.angle()), 180.0) / 10.0))] = true
+	_check(bad.is_empty() and buildings == int(data.counts.buildings), "all %d chunks hold what the index says (%s)" % [data.chunk_keys.size(), bad])
+	_check(bent > 200 and angles.size() >= 12, "the streets bend and run at every angle (%d bent pieces, %d directions)" % [bent, angles.size()])
+	# The ribbon follows a bend: an L-shaped line gives geometry along both legs.
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	RealChunkBuilder.ribbon(st, PackedVector2Array([Vector2(0, 0), Vector2(20, 0), Vector2(20, 20)]), 6.0, 0.0)
+	st.generate_normals()
+	var aabb := st.commit().get_aabb()
+	_check(aabb.size.x > 22.0 and aabb.size.z > 22.0 and aabb.size.x < 30.0, "a road ribbon follows a bend (%.0f x %.0f m)" % [aabb.size.x, aabb.size.z])
+	# One chunk builds: meshes, a collision body, street signs.
+	var key := data.chunk_at(Vector3(-150, 0, -128))
+	var stats := {}
+	var t0 := Time.get_ticks_usec()
+	var node := RealChunkBuilder.build(key, data.load_chunk(key), stats)
+	var ms := (Time.get_ticks_usec() - t0) / 1000.0
+	_check(int(stats.buildings) > 20 and int(stats.roads) > 5 and node.get_node_or_null("Buildings") != null, "the Excelsior Street piece builds (%d buildings, %d road pieces, %.0f ms)" % [int(stats.buildings), int(stats.roads), ms])
+	var signs: Array = node.get_children().filter(func(c): return c.has_meta("street")).map(func(c): return str(c.get_meta("street")))
+	_check(signs.has("Excelsior Street"), "the piece has an Excelsior Street sign")
+	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
+	node.free()
+
+
+func _test_real_world_streaming() -> void:
+	var data := RealDistrictData.new()
+	data.load_meta()
+	var focus := Node3D.new()
+	root.add_child(focus)
+	focus.global_position = Vector3(-150, 0, -128)
+	var world := RealWorld.new()
+	root.add_child(world)
+	world.setup(data, focus)
+	world.load_radius = 250.0
+	world.set_process(false)   # driven by hand below
+	world.scan(focus.global_position)
+	var want := world.pending()
+	while world.pending() > 0:
+		world.load_chunk(world._queue.pop_front())
+	_check(want >= 4 and world.loaded.size() == want and world.loaded.size() < data.chunk_keys.size() / 3, "only the pieces near you are built (%d of %d)" % [world.loaded.size(), data.chunk_keys.size()])
+	_check(world.loaded.has(data.chunk_at(focus.global_position)) and world.buildings_loaded > 50, "the piece you stand in is one of them (%d buildings)" % world.buildings_loaded)
+	_check(world.street_near(focus.global_position) != "", "the street you are on is known (%s)" % world.street_near(focus.global_position))
+	var old_keys: Array = world.loaded.keys()
+	focus.global_position = Vector3(300, 0, 900)   # far across the suburb
+	world.scan(focus.global_position)
+	while world.pending() > 0:
+		world.load_chunk(world._queue.pop_front())
+	await process_frame
+	var kept: Array = old_keys.filter(func(k): return world.loaded.has(k))
+	_check(kept.is_empty() and world.loaded.has(data.chunk_at(focus.global_position)), "moving away frees the old pieces and builds the new ones")
+	world.load_radius = INF
+	world.scan(focus.global_position)
+	_check(world.pending() + world.loaded.size() == data.chunk_keys.size(), "on a desktop the whole suburb is queued to load")
+	world.queue_free()
+	focus.queue_free()
+	await process_frame
 
 
 ## A district rebuilt on real streets: every street name exists in the OpenStreetMap data within

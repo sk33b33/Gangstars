@@ -553,3 +553,11 @@ the Overpass mirrors were unreachable from the build container), then `python3 t
 writes `data/world/mitchells_plain_real.json` (main roads, rail, suburbs, stations) and `mitchells_plain_streets.json`.
 `RealMap` loads them; `data/world/district_places.json` says where each game district sits. Screenshot: `--city-map`.
 Top-down camera screenshot: `--top-down`.
+
+## Real Westridge world
+Data: `python3 tools/osm/build_westridge.py <raw_osm_dir> <sa.csv.gz>` (the second file is the Microsoft footprints tile
+RegionName=SouthAfrica, quadkey=300231032, from the dataset-links.csv of GlobalMLBuildingFootprints; about 110 MB, not stored
+in the repository). Output: `data/world/westridge/meta.json` and `c_<x>_<z>.json`.
+Run: `godot --path . res://scenes/real/real_westridge.tscn` (or the pause-menu button).
+Screenshots: `-- --shot=res://tests/output/x.png --cam=x,y,z,tx,ty,tz --at=x,z --radius=300 --touch --top-down`.
+Winding: `RealChunkBuilder._facing` picks the triangle order from the direction the face must look, so data ring order never matters.

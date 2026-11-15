@@ -1,0 +1,1368 @@
+{
+ "credit": "Streets and places (c) OpenStreetMap contributors, ODbL 1.0. House outlines: Microsoft GlobalMLBuildingFootprints, ODbL 1.0.",
+ "origin": {
+  "lat": -34.05175299130899,
+  "lon": 18.602759305311118
+ },
+ "chunk": 200.0,
+ "boundary": [
+  [
+   -862,
+   -962
+  ],
+  [
+   150,
+   -1187
+  ],
+  [
+   375,
+   -550
+  ],
+  [
+   425,
+   -212
+  ],
+  [
+   700,
+   500
+  ],
+  [
+   925,
+   1137
+  ],
+  [
+   575,
+   1312
+  ],
+  [
+   -150,
+   1560
+  ],
+  [
+   -1137,
+   475
+  ],
+  [
+   -637,
+   225
+  ],
+  [
+   -775,
+   100
+  ],
+  [
+   -925,
+   -500
+  ]
+ ],
+ "chunks": [
+  [
+   -6,
+   1
+  ],
+  [
+   -6,
+   2
+  ],
+  [
+   -6,
+   3
+  ],
+  [
+   -5,
+   -6
+  ],
+  [
+   -5,
+   -5
+  ],
+  [
+   -5,
+   -4
+  ],
+  [
+   -5,
+   -3
+  ],
+  [
+   -5,
+   -2
+  ],
+  [
+   -5,
+   -1
+  ],
+  [
+   -5,
+   1
+  ],
+  [
+   -5,
+   2
+  ],
+  [
+   -5,
+   3
+  ],
+  [
+   -5,
+   4
+  ],
+  [
+   -4,
+   -6
+  ],
+  [
+   -4,
+   -5
+  ],
+  [
+   -4,
+   -4
+  ],
+  [
+   -4,
+   -3
+  ],
+  [
+   -4,
+   -2
+  ],
+  [
+   -4,
+   -1
+  ],
+  [
+   -4,
+   0
+  ],
+  [
+   -4,
+   1
+  ],
+  [
+   -4,
+   2
+  ],
+  [
+   -4,
+   3
+  ],
+  [
+   -4,
+   4
+  ],
+  [
+   -4,
+   5
+  ],
+  [
+   -3,
+   -6
+  ],
+  [
+   -3,
+   -5
+  ],
+  [
+   -3,
+   -4
+  ],
+  [
+   -3,
+   -3
+  ],
+  [
+   -3,
+   -2
+  ],
+  [
+   -3,
+   -1
+  ],
+  [
+   -3,
+   0
+  ],
+  [
+   -3,
+   1
+  ],
+  [
+   -3,
+   2
+  ],
+  [
+   -3,
+   3
+  ],
+  [
+   -3,
+   4
+  ],
+  [
+   -3,
+   5
+  ],
+  [
+   -3,
+   6
+  ],
+  [
+   -2,
+   -6
+  ],
+  [
+   -2,
+   -5
+  ],
+  [
+   -2,
+   -4
+  ],
+  [
+   -2,
+   -3
+  ],
+  [
+   -2,
+   -2
+  ],
+  [
+   -2,
+   -1
+  ],
+  [
+   -2,
+   0
+  ],
+  [
+   -2,
+   1
+  ],
+  [
+   -2,
+   2
+  ],
+  [
+   -2,
+   3
+  ],
+  [
+   -2,
+   4
+  ],
+  [
+   -2,
+   5
+  ],
+  [
+   -2,
+   6
+  ],
+  [
+   -2,
+   7
+  ],
+  [
+   -1,
+   -7
+  ],
+  [
+   -1,
+   -6
+  ],
+  [
+   -1,
+   -5
+  ],
+  [
+   -1,
+   -4
+  ],
+  [
+   -1,
+   -3
+  ],
+  [
+   -1,
+   -2
+  ],
+  [
+   -1,
+   -1
+  ],
+  [
+   -1,
+   0
+  ],
+  [
+   -1,
+   1
+  ],
+  [
+   -1,
+   2
+  ],
+  [
+   -1,
+   3
+  ],
+  [
+   -1,
+   4
+  ],
+  [
+   -1,
+   5
+  ],
+  [
+   -1,
+   6
+  ],
+  [
+   -1,
+   7
+  ],
+  [
+   -1,
+   8
+  ],
+  [
+   0,
+   -7
+  ],
+  [
+   0,
+   -6
+  ],
+  [
+   0,
+   -5
+  ],
+  [
+   0,
+   -4
+  ],
+  [
+   0,
+   -3
+  ],
+  [
+   0,
+   -2
+  ],
+  [
+   0,
+   -1
+  ],
+  [
+   0,
+   0
+  ],
+  [
+   0,
+   1
+  ],
+  [
+   0,
+   2
+  ],
+  [
+   0,
+   3
+  ],
+  [
+   0,
+   4
+  ],
+  [
+   0,
+   5
+  ],
+  [
+   0,
+   6
+  ],
+  [
+   0,
+   7
+  ],
+  [
+   1,
+   -7
+  ],
+  [
+   1,
+   -6
+  ],
+  [
+   1,
+   -5
+  ],
+  [
+   1,
+   -4
+  ],
+  [
+   1,
+   -3
+  ],
+  [
+   1,
+   -2
+  ],
+  [
+   1,
+   -1
+  ],
+  [
+   1,
+   0
+  ],
+  [
+   1,
+   1
+  ],
+  [
+   1,
+   2
+  ],
+  [
+   1,
+   3
+  ],
+  [
+   1,
+   4
+  ],
+  [
+   1,
+   5
+  ],
+  [
+   1,
+   6
+  ],
+  [
+   1,
+   7
+  ],
+  [
+   2,
+   -4
+  ],
+  [
+   2,
+   -3
+  ],
+  [
+   2,
+   -2
+  ],
+  [
+   2,
+   -1
+  ],
+  [
+   2,
+   0
+  ],
+  [
+   2,
+   1
+  ],
+  [
+   2,
+   2
+  ],
+  [
+   2,
+   3
+  ],
+  [
+   2,
+   4
+  ],
+  [
+   2,
+   5
+  ],
+  [
+   2,
+   6
+  ],
+  [
+   2,
+   7
+  ],
+  [
+   3,
+   0
+  ],
+  [
+   3,
+   1
+  ],
+  [
+   3,
+   2
+  ],
+  [
+   3,
+   3
+  ],
+  [
+   3,
+   4
+  ],
+  [
+   3,
+   5
+  ],
+  [
+   3,
+   6
+  ],
+  [
+   4,
+   3
+  ],
+  [
+   4,
+   4
+  ],
+  [
+   4,
+   5
+  ],
+  [
+   4,
+   6
+  ]
+ ],
+ "counts": {
+  "area_park": 23,
+  "road_path": 678,
+  "area_pitch": 24,
+  "area_dunes": 3,
+  "area_sports": 2,
+  "road_lane": 113,
+  "road_main": 125,
+  "road_street": 408,
+  "area_school": 13,
+  "area_parking": 8,
+  "area_playground": 3,
+  "road_collector": 41,
+  "area_pool": 1,
+  "area_retail": 1,
+  "buildings": 5505
+ },
+ "streets": [
+  "Aarbei Close",
+  "Aegean",
+  "Albatross",
+  "Alphen Close",
+  "Alpine Crescent",
+  "Amandel Close",
+  "Amandel Street",
+  "Amandel Way",
+  "Andromeda",
+  "Angora Close",
+  "Angus Road",
+  "Apple Street",
+  "Apricot Close",
+  "Apricot Street",
+  "Apricot Way",
+  "Aquarius",
+  "Arabian Crescent",
+  "Argo Close",
+  "Aries Close",
+  "Avocado Close",
+  "Avocado Street",
+  "Avocado Way",
+  "Avon Road",
+  "Avontuur Close",
+  "Ayrshire Close",
+  "Baakens Way",
+  "Baker Close",
+  "Balearic",
+  "Bank Close",
+  "Barents Road",
+  "Bellingham Crescent",
+  "Benoni Close",
+  "Bergwagter Road",
+  "Bering",
+  "Bien Donne Close",
+  "Bien Donne Street",
+  "Blackberry Close",
+  "Bloemendal Close",
+  "Bloemendal Way",
+  "Blombos",
+  "Bluegum Close",
+  "Bluegum Grove Way",
+  "Bonfoi Way",
+  "Bordeaux Close",
+  "Bordeaux Way",
+  "Boschendal Close",
+  "Boschendal Way",
+  "Boschof Way",
+  "Bosduif Road",
+  "Bridle Way",
+  "Bristol Close",
+  "Broadlands Close",
+  "Burgundy Crescent",
+  "Burgundy Street",
+  "Buukbay Close",
+  "Buzzard Road",
+  "Canary Street",
+  "Capricorn Road",
+  "Caproni Close",
+  "Cavalry Way",
+  "Cedar Close",
+  "Celebes",
+  "Chalet Court",
+  "Chat Road",
+  "Childrens Close",
+  "Childrens Way",
+  "Clanwilliam Way",
+  "Cloetesdal Close",
+  "Clydesdale Crescent",
+  "Coetzenburg Street",
+  "Constantia Street",
+  "Coot Crescent",
+  "Coral Road",
+  "Cormorant Avenue",
+  "Cradock Street",
+  "Cranberry Way",
+  "Cuckoo Road",
+  "Culemborg Close",
+  "Cypress Way",
+  "Dagbreek Avenue",
+  "Daltondal Close",
+  "De Duin Avenue",
+  "De Gredel Close",
+  "De Hoek Close",
+  "De La Roche Close",
+  "Del Monte Close",
+  "Delheim Close",
+  "Denne Close",
+  "Dexter Close",
+  "Diemersdal Close",
+  "Dolphin Crescent",
+  "Dorper Way",
+  "Drover Street",
+  "Duiker Road",
+  "Eikerus Close",
+  "Eisleben Road",
+  "Elm Close",
+  "Envoy",
+  "Eshowe Close",
+  "Eureka Close",
+  "Excelsior Close",
+  "Excelsior Street",
+  "Falcon",
+  "Farrier Street",
+  "Finch",
+  "Fisant Street",
+  "Fisherman's Way",
+  "Forester Close",
+  "Friesland Street",
+  "Galaxy Close",
+  "Galloway Close",
+  "Glen Eagle Way",
+  "Glenbawn Close",
+  "Glenbawn Way",
+  "Grange Court",
+  "Grape Close",
+  "Groot Schuur Way",
+  "Guernsey Close",
+  "Gull Road",
+  "Haasendal Close",
+  "Hammerkop Road",
+  "Harvester Way",
+  "Hawk",
+  "Heron Way",
+  "High Street",
+  "Hoepoe Close",
+  "Holheim Close",
+  "Homestead Way",
+  "Hooggelegen Close",
+  "Horseshoe Close",
+  "Houtkloof Close",
+  "Hurricane Street",
+  "Ibis Road",
+  "Ionian Crescent",
+  "Irene Way",
+  "Jacaranda Close",
+  "Jersey Street",
+  "Jockey Close",
+  "Jockey Road",
+  "Jupiter",
+  "Kaapzicht Close",
+  "Karakul Crescent",
+  "Kiewiet Street",
+  "Kimberley Way",
+  "Kliprug Close",
+  "Knysna Close",
+  "Koelenhof Close",
+  "Koornhoop Road",
+  "Kraanvoel Street",
+  "Kransduiwen Close",
+  "Kronendal Road",
+  "Kweker Way",
+  "Kweper Close",
+  "Kweper Street",
+  "Kylemore Close",
+  "La Dauphne Close",
+  "La Provence Way",
+  "Langkloof Close",
+  "Lariat Close",
+  "Lelyfontein Close",
+  "Lemoenkloof Close",
+  "Libra Close",
+  "Lime Close",
+  "Limpopo Way",
+  "Loganberry Way",
+  "Loop Street",
+  "Lorraine Close",
+  "Lydenburg Street",
+  "Lynedoch Court",
+  "Mahogany Close",
+  "Makou Road",
+  "Malgas Street",
+  "Maple Close",
+  "Marilyn Street",
+  "Mars",
+  "Martingale Close",
+  "Meadow Court",
+  "Meerlust Close",
+  "Melk Road",
+  "Mercury",
+  "Merino Street",
+  "Michigan Way",
+  "Mimosa Close",
+  "Mitchell Avenue",
+  "Mitchell Close",
+  "Montagu Drive",
+  "Montagu Way",
+  "Morgenster Road",
+  "Motte Close",
+  "Muratie Close",
+  "Mustang Way",
+  "Naartjie Court",
+  "Nantes Close",
+  "Nebula Road",
+  "Nederburg Close",
+  "Neetlings Close",
+  "Neptune Crescent",
+  "Oak Close",
+  "Oatlands Close",
+  "Old Nectar Way",
+  "Ontario Way",
+  "Ospray",
+  "Oude Post Close",
+  "Oudebrug Close",
+  "Oyster Close",
+  "Paddock Crescent",
+  "Palomino Way",
+  "Papegaai Road",
+  "Park Avenue",
+  "Pasture Road",
+  "Peach Close",
+  "Peerhof Close",
+  "Pegasus Close",
+  "Persian Close",
+  "Piet My Vrou Road",
+  "Pikkewyn Road",
+  "Pluto Road",
+  "Polaris Street",
+  "Ponie Close",
+  "Prairie Court",
+  "Pruim Close",
+  "Pruim Street",
+  "Quiet Close",
+  "Ranch Court",
+  "Ranch Road",
+  "Ranger Close",
+  "Rapide",
+  "Rheezicht Close",
+  "Rhone Close",
+  "Rhone Way",
+  "Ribbokskloof Close",
+  "Ridge Court",
+  "Riethaan Road",
+  "Robin Court",
+  "Ross Sea",
+  "Rozendal Road",
+  "Saaier Close",
+  "Saddle Close",
+  "Salem Close",
+  "Saringa Road",
+  "Saturn",
+  "Sayed Abdul Ghak Road",
+  "Sayed Abdul Malik Road",
+  "Sayed Abdul Mutahliep Road",
+  "Sayed Abdul Samad Road",
+  "Sayed Johaar Road",
+  "Sayed Magmoed Road",
+  "Sayed Muturah Road",
+  "Sea Otter",
+  "Sheigh Abduragmaan Road",
+  "Sheigh Hassan Road",
+  "Sheigh Nurmubeen Road",
+  "Sheigh Yusuf Road",
+  "Shepherd Way",
+  "Shetland Close",
+  "Shetland Crescent",
+  "Shire Close",
+  "Siberian Road",
+  "Silvana Close",
+  "Silverhurst Close",
+  "Silverhurst Street",
+  "Silvermyn Close",
+  "Silversands Avenue",
+  "Simondium Close",
+  "Simonsig Avenue",
+  "Smid Road",
+  "Sonderend Street",
+  "Southern Cross",
+  "Sovereign Road",
+  "Sparrow Street",
+  "Spier Close",
+  "Spine Road",
+  "Spreeu Road",
+  "Stable Close",
+  "Stable Crescent",
+  "Stable Road",
+  "Stallion Way",
+  "Starfish Crescent",
+  "Stirrup Street",
+  "Stirrup Terrace",
+  "Strandloper Street",
+  "Summerfield Close",
+  "Swordfish Road",
+  "Tally Ho Road",
+  "Tana Street",
+  "Tarentaal Street",
+  "Tennessee Street",
+  "Tennessee Terrace",
+  "The Cedars Avenue",
+  "Trident",
+  "Trovato Close",
+  "Tugela Way",
+  "Uiterwyk Close",
+  "Uitsig Close",
+  "Uranus",
+  "Valencia Street",
+  "Valley Court",
+  "Veld Binnehof Road",
+  "Veld Close",
+  "Veld Court",
+  "Venus",
+  "Vergelegen Close",
+  "Vergelegen Road",
+  "Victory Drive",
+  "Victory Road",
+  "Vink Street",
+  "Vlakkeheuvel Close",
+  "Volstruis Road",
+  "Voorhoede Close",
+  "Waldheim Close",
+  "Walnut Way",
+  "Welbeloond",
+  "Welkom Street",
+  "Weltevreden Road",
+  "Wespoort Drive",
+  "Wilge Close",
+  "Wintervogel Close",
+  "Wittebomen Close",
+  "Woltenburg Close",
+  "Wuppertal Close",
+  "Yeoman Street",
+  "Zandvlei Close",
+  "Zoeteinval Close"
+ ],
+ "landmarks": [
+  {
+   "name": "AL Masjiduth Thanie Mosque",
+   "kind": "place_of_worship",
+   "at": [
+    558.5,
+    1251.2
+   ]
+  },
+  {
+   "name": "Angus Road Park",
+   "kind": "park",
+   "at": [
+    387.7,
+    24.5
+   ]
+  },
+  {
+   "name": "Apple Street Park",
+   "kind": "park",
+   "at": [
+    -743.3,
+    -359.4
+   ]
+  },
+  {
+   "name": "Apricot Close Park",
+   "kind": "park",
+   "at": [
+    -571.0,
+    -450.8
+   ]
+  },
+  {
+   "name": "Avocado Close park",
+   "kind": "park",
+   "at": [
+    -807.2,
+    -416.6
+   ]
+  },
+  {
+   "name": "BP Westridge",
+   "kind": "fuel",
+   "at": [
+    267.4,
+    709.6
+   ]
+  },
+  {
+   "name": "Barents Greenbelt",
+   "kind": "park",
+   "at": [
+    -139.1,
+    1112.0
+   ]
+  },
+  {
+   "name": "Beacon Skool",
+   "kind": "school",
+   "at": [
+    -461.7,
+    23.3
+   ]
+  },
+  {
+   "name": "Bonfoi Way park",
+   "kind": "park",
+   "at": [
+    87.8,
+    213.1
+   ]
+  },
+  {
+   "name": "Bordeaux Way Park",
+   "kind": "park",
+   "at": [
+    130.3,
+    355.3
+   ]
+  },
+  {
+   "name": "Caltex Silversands Service Station",
+   "kind": "fuel",
+   "at": [
+    -43.6,
+    -614.7
+   ]
+  },
+  {
+   "name": "Cedar High School",
+   "kind": "school",
+   "at": [
+    -120.2,
+    1407.7
+   ]
+  },
+  {
+   "name": "Christ the Redeemer Church",
+   "kind": "place_of_worship",
+   "at": [
+    -309.2,
+    -101.4
+   ]
+  },
+  {
+   "name": "Constantia Street Park",
+   "kind": "park",
+   "at": [
+    -119.3,
+    -224.3
+   ]
+  },
+  {
+   "name": "Cranberry Way Park",
+   "kind": "park",
+   "at": [
+    -726.3,
+    -453.4
+   ]
+  },
+  {
+   "name": "Darul Hikma Pre-School and Creche",
+   "kind": "kindergarten",
+   "at": [
+    615.7,
+    1232.7
+   ]
+  },
+  {
+   "name": "Duneside Primary School",
+   "kind": "school",
+   "at": [
+    480.7,
+    177.7
+   ]
+  },
+  {
+   "name": "Galaxy Gym Park",
+   "kind": "park",
+   "at": [
+    505.6,
+    1046.0
+   ]
+  },
+  {
+   "name": "Galaxy Park",
+   "kind": "park",
+   "at": [
+    656.7,
+    1201.6
+   ]
+  },
+  {
+   "name": "Hamerkop Park",
+   "kind": "park",
+   "at": [
+    -94.8,
+    1250.0
+   ]
+  },
+  {
+   "name": "Harvester Primary School",
+   "kind": "school",
+   "at": [
+    171.2,
+    -607.3
+   ]
+  },
+  {
+   "name": "Harvester Way Park",
+   "kind": "park",
+   "at": [
+    257.5,
+    -427.1
+   ]
+  },
+  {
+   "name": "Heron Park",
+   "kind": "park",
+   "at": [
+    -217.4,
+    1142.8
+   ]
+  },
+  {
+   "name": "Jehovah's Witnesses Church",
+   "kind": "place_of_worship",
+   "at": [
+    -92.8,
+    915.8
+   ]
+  },
+  {
+   "name": "KFC",
+   "kind": "fast_food",
+   "at": [
+    -85.1,
+    87.9
+   ]
+  },
+  {
+   "name": "Karakul Crescent Sensitive Natural Area",
+   "kind": "dunes",
+   "at": [
+    458.4,
+    303.8
+   ]
+  },
+  {
+   "name": "Metropolitan African Methodist Episcopal Church Mitchells Plain",
+   "kind": "place_of_worship",
+   "at": [
+    87.7,
+    890.0
+   ]
+  },
+  {
+   "name": "Mitchell's Plain Primary School",
+   "kind": "school",
+   "at": [
+    -857.1,
+    -608.4
+   ]
+  },
+  {
+   "name": "Mitchell's Plain School of Skills",
+   "kind": "school",
+   "at": [
+    -492.7,
+    1060.2
+   ]
+  },
+  {
+   "name": "Mitchells Plain United Church",
+   "kind": "place_of_worship",
+   "at": [
+    -93.5,
+    583.9
+   ]
+  },
+  {
+   "name": "Morgenster Road Sensitive Natural Area",
+   "kind": "dunes",
+   "at": [
+    -303.2,
+    -502.2
+   ]
+  },
+  {
+   "name": "Naartjie Park",
+   "kind": "park",
+   "at": [
+    -465.5,
+    -50.4
+   ]
+  },
+  {
+   "name": "New Apostolic Church",
+   "kind": "place_of_worship",
+   "at": [
+    -175.4,
+    978.6
+   ]
+  },
+  {
+   "name": "Old Nectar Way park",
+   "kind": "park",
+   "at": [
+    207.7,
+    578.5
+   ]
+  },
+  {
+   "name": "Park Avenue Methodist Church",
+   "kind": "place_of_worship",
+   "at": [
+    -101.8,
+    410.1
+   ]
+  },
+  {
+   "name": "Parkhurst Primary School",
+   "kind": "school",
+   "at": [
+    -306.3,
+    -299.2
+   ]
+  },
+  {
+   "name": "Parklane Playground",
+   "kind": "playground",
+   "at": [
+    -68.6,
+    656.2
+   ]
+  },
+  {
+   "name": "Peach Close park",
+   "kind": "park",
+   "at": [
+    -665.0,
+    -413.9
+   ]
+  },
+  {
+   "name": "Ridgeville Primary School",
+   "kind": "school",
+   "at": [
+    -283.5,
+    352.9
+   ]
+  },
+  {
+   "name": "Rocklands Primary School",
+   "kind": "school",
+   "at": [
+    196.1,
+    956.4
+   ]
+  },
+  {
+   "name": "Rocklands Secondary School",
+   "kind": "school",
+   "at": [
+    606.8,
+    678.1
+   ]
+  },
+  {
+   "name": "Rocklands Urban Abundance Centre",
+   "kind": "park",
+   "at": [
+    136.0,
+    961.7
+   ]
+  },
+  {
+   "name": "Shell Garage",
+   "kind": "garage",
+   "at": [
+    -217.1,
+    143.7
+   ]
+  },
+  {
+   "name": "Siberian Park",
+   "kind": "park",
+   "at": [
+    -90.9,
+    1042.4
+   ]
+  },
+  {
+   "name": "Spineview Primary",
+   "kind": "school",
+   "at": [
+    360.1,
+    1280.8
+   ]
+  },
+  {
+   "name": "St John Bosco Cath. Church",
+   "kind": "place_of_worship",
+   "at": [
+    -693.3,
+    -533.4
+   ]
+  },
+  {
+   "name": "St Stephen's Cath. Church",
+   "kind": "place_of_worship",
+   "at": [
+    234.4,
+    1125.1
+   ]
+  },
+  {
+   "name": "Stephen Reagan Sports Ground",
+   "kind": "sports",
+   "at": [
+    -502.6,
+    -643.1
+   ]
+  },
+  {
+   "name": "V.G.K Gemeente Mitchells Plain",
+   "kind": "place_of_worship",
+   "at": [
+    -278.4,
+    150.7
+   ]
+  },
+  {
+   "name": "Veregende Gereformde Kerk",
+   "kind": "place_of_worship",
+   "at": [
+    -271.9,
+    1379.3
+   ]
+  },
+  {
+   "name": "Weltevreden Road Park",
+   "kind": "park",
+   "at": [
+    -687.2,
+    909.4
+   ]
+  },
+  {
+   "name": "Westridge Civic Centre",
+   "kind": "community_centre",
+   "at": [
+    70.8,
+    -24.5
+   ]
+  },
+  {
+   "name": "Westridge Clinic",
+   "kind": "clinic",
+   "at": [
+    115.3,
+    -9.1
+   ]
+  },
+  {
+   "name": "Westridge Dunes",
+   "kind": "dunes",
+   "at": [
+    126.6,
+    1239.1
+   ]
+  },
+  {
+   "name": "Westridge Gardens",
+   "kind": "park",
+   "at": [
+    -324.1,
+    -761.5
+   ]
+  },
+  {
+   "name": "Westridge Mini Mart",
+   "kind": "convenience",
+   "at": [
+    262.6,
+    678.8
+   ]
+  },
+  {
+   "name": "Westridge Secondary School",
+   "kind": "school",
+   "at": [
+    -613.3,
+    -21.3
+   ]
+  },
+  {
+   "name": "Westridge Shopping Centre",
+   "kind": "retail",
+   "at": [
+    -143.3,
+    70.3
+   ]
+  },
+  {
+   "name": "Westridge Swimming Pool",
+   "kind": "sports",
+   "at": [
+    -251.9,
+    -557.6
+   ]
+  },
+  {
+   "name": "Westville Primary School",
+   "kind": "school",
+   "at": [
+    355.4,
+    596.0
+   ]
+  }
+ ]
+}
