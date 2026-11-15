@@ -29,30 +29,7 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 	GroundDetail.build(root, info)
 	for lm in info.get("landmarks", []):
 		var p := DataFiles.to_vec2(lm.get("position"))
-		var pos := Vector3(p.x, 0, p.y)
-		match str(lm.get("type", "")):
-			"cafe": _build_cafe(root, pos)
-			"bus_stop": _build_bus_stop(root, pos, PI if lm.get("facing", "south") == "north" else 0.0)
-			"court": _build_court(root, pos)
-			"park": _build_park(root, pos)
-			"corner": _build_corner(root, pos)
-			"container_shop": _build_container_shop(root, pos, _facing_rot(lm), str(lm.get("sign", "sign_spaza")), DataFiles.to_color(lm.get("color"), Color("#2b6fb5")))
-			"soccer_field": _build_soccer_field(root, pos)
-			"taxi_rank":
-				_build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
-				_build_rank_taxis(root, pos, lm)
-			"mall": _build_mall(root, pos, _facing_rot(lm))
-			"market": _build_market(root, pos)
-			"courtyard": _build_courtyard(root, pos)
-			"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
-			"mosque": _build_mosque(root, pos, _facing_rot(lm))
-			"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
-			"lookout": _build_lookout(root, pos, _facing_rot(lm))
-			"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
-			"police_post": _build_police_post(root, pos, _facing_rot(lm), str(lm.get("id", "saps")), destinations)
-			"shebeen": _build_shebeen(root, pos, _facing_rot(lm), str(lm.get("id", "shebeen")), destinations)
-			"crew_den": _build_crew_den(root, pos, _facing_rot(lm), str(lm.get("id", "den")), str(lm.get("tag", "")), destinations)
-			var other: push_warning("Unknown landmark type '%s'" % other)
+		_build_landmark(root, lm, Vector3(p.x, 0, p.y), destinations)
 	var gates := _build_boundary(root, b, streets, info.get("locked_neighbours", []), destinations, info.get("open_sides", []))
 	_build_backdrop(root, b, streets, info.get("backdrop_skip", []))
 	for car in info.get("parked_cars", []):
@@ -70,6 +47,73 @@ static func build(root: Node3D, info: Dictionary, destinations: DestinationRegis
 		destinations.register(str(poi.id), Vector3(p.x, 0, p.y), float(poi.get("radius", 1.0)),
 			str(poi.get("kind", "poi")), str(poi.get("name", poi.id)))
 	return gates
+
+
+## One landmark at `pos` (its own facing comes from the data).
+static func _build_landmark(root: Node3D, lm: Dictionary, pos: Vector3, destinations: DestinationRegistry) -> void:
+	match str(lm.get("type", "")):
+		"cafe": _build_cafe(root, pos)
+		"bus_stop": _build_bus_stop(root, pos, PI if lm.get("facing", "south") == "north" else 0.0)
+		"court": _build_court(root, pos)
+		"park": _build_park(root, pos)
+		"corner": _build_corner(root, pos)
+		"container_shop": _build_container_shop(root, pos, _facing_rot(lm), str(lm.get("sign", "sign_spaza")), DataFiles.to_color(lm.get("color"), Color("#2b6fb5")))
+		"soccer_field": _build_soccer_field(root, pos)
+		"taxi_rank":
+			_build_bus_stop(root, pos, _facing_rot(lm), "sign_taxi", Color("#d9c49a"))
+			_build_rank_taxis(root, pos, lm)
+		"mall": _build_mall(root, pos, _facing_rot(lm))
+		"market": _build_market(root, pos)
+		"courtyard": _build_courtyard(root, pos)
+		"church_hall": _build_church_hall(root, pos, _facing_rot(lm))
+		"mosque": _build_mosque(root, pos, _facing_rot(lm))
+		"quarry_face": _build_quarry_face(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(34, 28)))
+		"lookout": _build_lookout(root, pos, _facing_rot(lm))
+		"kickabout": _build_kickabout(root, pos, DataFiles.to_vec2(lm.get("size"), Vector2(9, 9)))
+		"police_post": _build_police_post(root, pos, _facing_rot(lm), str(lm.get("id", "saps")), destinations)
+		"shebeen": _build_shebeen(root, pos, _facing_rot(lm), str(lm.get("id", "shebeen")), destinations)
+		"crew_den": _build_crew_den(root, pos, _facing_rot(lm), str(lm.get("id", "den")), str(lm.get("tag", "")), destinations)
+		var other: push_warning("Unknown landmark type '%s'" % other)
+
+
+## Real-world mode: no streets, walls or backdrop to build (the real map draws those). Landmarks
+## stand where the data says, turned by their `yaw` (degrees): each is built in its own frame, so
+## the anchors it registers are turned with it. Returns the outlines of everything solid that was
+## built (boxes), for the navigation to go round.
+static func build_real(root: Node3D, info: Dictionary, destinations: DestinationRegistry) -> Array:
+	var holder := Node3D.new()
+	holder.name = "Landmarks_" + str(info.get("id", ""))
+	root.add_child(holder)
+	for lm in info.get("landmarks", []):
+		var p := DataFiles.to_vec2(lm.get("position"))
+		var pivot := Node3D.new()
+		pivot.name = "%s_%s" % [str(lm.get("type", "landmark")), str(lm.get("id", holder.get_child_count()))]
+		pivot.position = Vector3(p.x, 0, p.y)
+		pivot.rotation.y = deg_to_rad(float(lm.get("yaw", 0.0)))
+		holder.add_child(pivot)
+		var local: Dictionary = lm.duplicate()
+		local.erase("facing")   # the pivot does the turning
+		_build_landmark(pivot, local, Vector3.ZERO, PivotRegistry.new(destinations, pivot))
+	for car in info.get("parked_cars", []):
+		if not car.get("drivable", false):
+			var cp := DataFiles.to_vec2(car.get("position"))
+			_build_car(holder, Vector3(cp.x, 0, cp.y), deg_to_rad(float(car.get("rot", 0))), DataFiles.to_color(car.get("color"), Color.GRAY))
+	for poi in info.get("pois", []):
+		var p := DataFiles.to_vec2(poi.get("position"))
+		destinations.register(str(poi.id), Vector3(p.x, 0, p.y), float(poi.get("radius", 1.0)),
+			str(poi.get("kind", "poi")), str(poi.get("name", poi.id)))
+	var outlines: Array = []
+	for shape: CollisionShape3D in holder.find_children("*", "CollisionShape3D", true, false):
+		var box := shape.shape as BoxShape3D
+		if box == null or box.size.y < 0.4:
+			continue
+		var t := shape.global_transform
+		var ring := PackedVector2Array()
+		for corner in [Vector3(-1, 0, -1), Vector3(1, 0, -1), Vector3(1, 0, 1), Vector3(-1, 0, 1)]:
+			var w: Vector3 = t * (corner * box.size * 0.5)
+			ring.append(Vector2(w.x, w.z))
+		outlines.append(ring)
+	return outlines
 
 
 ## Converts a street-local rect (along, across) to a world Rect2 on the XZ plane.

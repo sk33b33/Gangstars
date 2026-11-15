@@ -38,6 +38,46 @@ var _door_hinge: Node3D
 var _door_tween: Tween
 
 
+## Real-world mode: the home is a real building (drawn by the real map), so the plot adds only what
+## the game needs at its front door: a door that opens, the house number, the stoep, the light on the
+## step, and the door to knock on. The plot's origin is SETBACK in front of the door wall, +Z towards
+## the street, exactly as for a kit house, so everything that asks the plot for its door or gate works.
+var is_real := false
+
+
+func build_real(house: HouseData) -> void:
+	data = house
+	is_real = true
+	name = house.id
+	transform = house.plot_transform()
+	var front_z := -SETBACK
+	var face := front_z + 0.05
+	_door_local = Vector3(0.0, 0.0, front_z + 0.9)
+	Geo.quad(self, Vector2(1.0, 2.0), Vector3(0.0, 1.0, face - 0.01), PixelMaterials.flat(Color("#141218")))
+	_door_hinge = Node3D.new()
+	_door_hinge.name = "DoorHinge"
+	_door_hinge.position = Vector3(-0.5, 0.0, face + 0.01)
+	add_child(_door_hinge)
+	Geo.quad(_door_hinge, Vector2(1.0, 2.0), Vector3(0.5, 1.0, 0.0), PixelMaterials.panel("door_gate"))
+	Geo.box(self, Vector3(2.2, 0.1, 1.4), Vector3(0.0, 0.05, front_z + 0.7), PixelMaterials.surface("sidewalk", Vector2(2, 2)), false)
+	Geo.label(self, str(house.number), Vector3(0.85, 2.1, face + 0.01), 72, Color("#1d1b24"))
+	if data.occupancy != "vacant":
+		NightGlow.add(self, Vector3(0.0, 0.045, face + 1.1), Vector2(2.4, 2.0))
+	door_interactable = Interactable.new()
+	door_interactable.name = "Door"
+	door_interactable.position = _door_local + Vector3(0, 1.0, 0)
+	door_interactable.prompt = "Knock on %s" % house.address()
+	door_interactable.kind = "door"
+	door_interactable.target = house.id
+	if house.ownership == "player":
+		door_interactable.prompt = "Enter safehouse (%s)" % house.address()
+	add_child(door_interactable)
+
+
+func _door_x() -> float:
+	return 0.0 if is_real else float(KITS[data.kit].door_x)
+
+
 func build(house: HouseData, closing_fence := false) -> void:
 	data = house
 	name = house.id
@@ -302,6 +342,8 @@ func _build_props(kit: Dictionary, h: float, front_z: float) -> void:
 ## The open front yard between the fence and the house, in plot-local space (+Z = street side),
 ## kept clear of the fences. Yard dogs live here.
 func front_yard() -> Rect2:
+	if is_real:   # the strip in front of the door
+		return Rect2(-3.0, -SETBACK + 0.6, 6.0, SETBACK - 1.1)
 	var half_w := data.plot_size.x * 0.5
 	return Rect2(-half_w + 0.5, -SETBACK + 0.6, data.plot_size.x - 1.0, SETBACK - 1.1)
 
@@ -329,7 +371,7 @@ func show_upgrade(upgrade_id: String) -> void:
 	var root := Node3D.new()
 	root.name = "upgrade_" + upgrade_id
 	add_child(root)
-	var kit: Dictionary = KITS[data.kit]
+	var kit := {"door_x": _door_x()}
 	var front_z := -SETBACK
 	match upgrade_id:
 		"security_light":

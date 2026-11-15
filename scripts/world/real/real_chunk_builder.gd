@@ -19,7 +19,9 @@ const PUBLIC_WALL := "#d9d4c8"
 ## Builds the chunk's node. `stats` (optional) receives counts for tests and the debug line.
 ## `near_roads`: street centre lines around the chunk (houses put their door on the wall nearest a
 ## street). `stats.houses` lists the homes: {id, door: Vector3 (1.2 m outside the door), area}.
-static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = []) -> Node3D:
+## `story`: {house id: true} for homes that belong to the game's own families: they are built like
+## any house but hang their own front door and are not offered to passers-by residents.
+static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Chunk_%d_%d" % [key.x, key.y]
 	var surfaces := {}      # material key -> SurfaceTool
@@ -35,9 +37,10 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 	for b in chunk.get("buildings", []):
 		rings.append(_line(b.p))
 	for b in chunk.get("buildings", []):
-		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings)
-		if door != null:
-			houses.append({"id": "h_%d_%d_%d" % [key.x, key.y, n], "door": door.at, "area": door.area})
+		var hid := "h_%d_%d_%d" % [key.x, key.y, n]
+		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings, not story.has(hid))
+		if door != null and not story.has(hid):
+			houses.append({"id": hid, "door": door.at, "area": door.area})
 		n += 1
 	stats["houses"] = houses
 	for k in surfaces:
@@ -196,7 +199,7 @@ static func _v(p: Vector2, y: float) -> Vector3:
 ## convex outlines, flat otherwise). Paint and roof are picked from the outline's position, so a
 ## house always looks the same.
 ## Returns {at, area} for a home (its door anchor), or null for other buildings.
-static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D, near_roads: Array = [], rings: Array = []) -> Variant:
+static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D, near_roads: Array = [], rings: Array = [], own_door := true) -> Variant:
 	var ring := _line(b.p)
 	if ring.size() < 3:
 		return null
@@ -235,7 +238,7 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 			_up(roof, _v(ring[idx[i]], h + 0.05), _v(ring[idx[i + 1]], h + 0.05), _v(ring[idx[i + 2]], h + 0.05))
 	var home: Variant = null
 	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
-		home = _front(ring, centre, h, near_roads, surfaces, materials, rings)
+		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door)
 		if home != null:
 			home["area"] = area
 	var building_name := str(b.get("n", ""))
@@ -262,9 +265,14 @@ const DOOR_OUT := 1.2
 
 ## The house's front: a door in the middle of the wall nearest a street, windows beside it and on
 ## the other long walls. Returns {at: the point 1.2 m outside the door}, or null if no wall fits.
-## A wall whose doorstep would be inside another outline (a neighbour built right up against it) is skipped.
-static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roads: Array, surfaces: Dictionary, materials: Dictionary, rings: Array = []) -> Variant:
-	var best := -1
+## Which wall is the front: the one (at least 2.2 m long) nearest a street whose doorstep is not
+## inside another outline. Returns {index, mid: Vector2, normal: Vector2 (towards the street)} or {}.
+static func home_front(ring: PackedVector2Array, near_roads: Array, rings: Array) -> Dictionary:
+	var centre := Vector2.ZERO
+	for p in ring:
+		centre += p
+	centre /= ring.size()
+	var best := {}
 	var best_d := INF
 	for i in ring.size():
 		var p0 := ring[i]
@@ -275,21 +283,30 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 		var d := -mid.distance_to(centre) if near_roads.is_empty() else _distance_to_lines(mid, near_roads)
 		if d >= best_d:
 			continue
-		var tangent0 := (p1 - p0).normalized()
-		var normal0 := Vector2(-tangent0.y, tangent0.x)
-		if normal0.dot(mid - centre) < 0.0:
-			normal0 = -normal0
-		var step := mid + normal0 * DOOR_OUT
+		var tangent := (p1 - p0).normalized()
+		var normal := Vector2(-tangent.y, tangent.x)
+		if normal.dot(mid - centre) < 0.0:
+			normal = -normal
+		var step := mid + normal * DOOR_OUT
 		var hemmed := false
 		for other: PackedVector2Array in rings:
-			if Geometry2D.is_point_in_polygon(step, other):
+			if other != ring and Geometry2D.is_point_in_polygon(step, other):
 				hemmed = true
 				break
 		if not hemmed:
 			best_d = d
-			best = i
-	if best < 0:
+			best = {"index": i, "mid": mid, "normal": normal}
+	return best
+
+
+## The house's front: a door in the middle of the front wall (see home_front), windows beside it
+## and on the other long walls. `own_door` false leaves the doorway bare (a story home hangs its
+## own door there). Returns {at: the point 1.2 m outside the door}, or null if no wall fits.
+static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roads: Array, surfaces: Dictionary, materials: Dictionary, rings: Array = [], own_door := true) -> Variant:
+	var front := home_front(ring, near_roads, rings)
+	if front.is_empty():
 		return null
+	var best: int = front.index
 	var door := _tool("panel_door", surfaces, materials, PixelMaterials.panel("door_gate"))
 	var window := _tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
 	var anchor := Vector3.ZERO
@@ -304,7 +321,8 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 			normal = -normal
 		var top := minf(2.15, h - 0.4)
 		if i == best:
-			_panel(door, mid, tangent, normal, 1.0, 0.0, minf(2.0, h - 0.3))
+			if own_door:
+				_panel(door, mid, tangent, normal, 1.0, 0.0, minf(2.0, h - 0.3))
 			anchor = Vector3(mid.x + normal.x * DOOR_OUT, 0.0, mid.y + normal.y * DOOR_OUT)
 			if length > 5.0:
 				for side in [-1.0, 1.0]:

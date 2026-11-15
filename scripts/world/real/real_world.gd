@@ -23,6 +23,11 @@ signal nav_removed(key: Vector2i)
 var sync_nav := false
 
 var places := DestinationRegistry.new()   # house doors ("<house id>:door") and landmarks ("lm_<n>")
+## Chunks that always keep their navigation, wherever the focus is (the game's own places), baked
+## from the map data even when the chunk's buildings are not loaded.
+var keep_nav := {}          # chunk key -> true
+## Things the game built on top of the real map (landmark props): outlines the navigation must go round.
+var extra_obstacles: Array = []   # PackedVector2Array
 var graph := RealRoadGraph.new()
 var houses := {}            # chunk key -> [{id, door, area}]
 var nav_regions := {}       # chunk key -> NavigationRegion3D
@@ -126,10 +131,15 @@ func _near(key: Vector2i, pos: Vector3, radius: float) -> bool:
 ## and drop the meshes that are now far away.
 func _scan_nav(pos: Vector3) -> void:
 	for key: Vector2i in nav_regions.keys():
-		if not _near(key, pos, sim_radius + sim_margin):
+		if not keep_nav.has(key) and not _near(key, pos, sim_radius + sim_margin):
 			_remove_nav(key)
 	if not _nav_baking.is_empty():
 		return
+	for key: Vector2i in keep_nav:
+		if not nav_regions.has(key) and data.has_chunk(key):
+			_bake_nav(key)
+			if not sync_nav:
+				return
 	for key in data.chunks_near(pos, sim_radius):
 		if loaded.has(key) and not nav_regions.has(key):
 			_bake_nav(key)
@@ -139,6 +149,7 @@ func _scan_nav(pos: Vector3) -> void:
 
 func _bake_nav(key: Vector2i) -> void:
 	var rings := data.around(key, "outlines")
+	rings.append_array(extra_obstacles)
 	if sync_nav:
 		_on_nav_baked(RealNav.bake(key, data.chunk_size, rings), key)
 		return
@@ -148,7 +159,7 @@ func _bake_nav(key: Vector2i) -> void:
 
 func _on_nav_baked(nm: NavigationMesh, key: Vector2i) -> void:
 	_nav_baking.erase(key)
-	if not is_inside_tree() or not loaded.has(key) or nav_regions.has(key):
+	if not is_inside_tree() or not (loaded.has(key) or keep_nav.has(key)) or nav_regions.has(key):
 		return
 	var region := NavigationRegion3D.new()
 	region.name = "Nav_%d_%d" % [key.x, key.y]
@@ -165,6 +176,14 @@ func _remove_nav(key: Vector2i) -> void:
 	nav_regions.erase(key)
 	nav_removed.emit(key)
 	region.queue_free()
+
+
+## True once every kept chunk has its navigation and the map has taken it in.
+func keep_nav_ready() -> bool:
+	for key: Vector2i in keep_nav:
+		if data.has_chunk(key) and not nav_synced(data.chunk_centre(key)):
+			return false
+	return true
 
 
 ## True once the navigation map has taken in the region under `pos` (regions are added to the
@@ -186,7 +205,7 @@ func load_chunk(key: Vector2i) -> void:
 		return
 	var stats := {}
 	var chunk := data.load_chunk(key)
-	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"))
+	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story)
 	houses[key] = stats.get("houses", [])
 	for h in houses[key]:
 		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")
@@ -203,7 +222,8 @@ func unload_chunk(key: Vector2i) -> void:
 	if node == null:
 		return
 	buildings_loaded -= int(node.get_meta("buildings", 0))
-	_remove_nav(key)
+	if not keep_nav.has(key):
+		_remove_nav(key)
 	for h in houses.get(key, []):
 		places.remove(str(h.id) + ":door")
 	houses.erase(key)

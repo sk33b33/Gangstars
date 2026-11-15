@@ -18,6 +18,8 @@ const PEOPLE_FILE := "res://data/world/westridge/people.json"
 
 var world: RealWorld
 var clock := SimClock.new()
+## False when the clock belongs to someone else (the game's SimulationDirector advances it).
+var own_clock := true
 var player: Node3D
 var residents := {}        # resident id -> Resident
 var by_chunk := {}         # chunk key -> [resident ids]
@@ -33,15 +35,19 @@ func setup(p_world: RealWorld, p_player: Node3D) -> void:
 	player = p_player
 	var raw: Variant = DataFiles.load_json(PEOPLE_FILE)
 	_pools = raw if raw is Dictionary else {}
-	clock.set_hour(8.0)
+	if own_clock:
+		clock.set_hour(8.0)
 	world.nav_ready.connect(func(key: Vector2i): _spawn_queue.append(key))
+	for key: Vector2i in world.nav_regions:   # navigation that was ready before we were
+		_spawn_queue.append(key)
 	world.nav_removed.connect(_despawn_chunk)
 
 
 func _physics_process(delta: float) -> void:
 	if world == null:
 		return
-	clock.advance(delta)
+	if own_clock:
+		clock.advance(delta)
 	if not _spawn_queue.is_empty():
 		var key: Vector2i = _spawn_queue[0]
 		if not world.nav_regions.has(key):

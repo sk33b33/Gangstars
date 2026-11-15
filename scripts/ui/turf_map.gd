@@ -79,6 +79,8 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 		var ar := Rect2(ab[0], ab[1], ab[2] - ab[0], ab[3] - ab[1])
 		r = ar if i == 0 else r.merge(ar)
 	_world_rect = r.grow_individual(40.0, 6.0, 6.0, 6.0)
+	if district.is_real():   # the whole real suburb
+		_world_rect = district.real.data.bounds.grow(30.0)
 	_map_scale = minf(MAP_SIZE.x / _world_rect.size.x, MAP_SIZE.y / _world_rect.size.y)
 	_map_offset = (MAP_SIZE - _world_rect.size * _map_scale) * 0.5
 	real_map = RealMap.new()
@@ -232,6 +234,11 @@ func _city_to_map(p: Vector2) -> Vector2:
 func city_player_position() -> Variant:
 	if player == null:
 		return null
+	if district.is_real():   # the real map's own origin is the Westridge suburb point
+		for s in real_map.suburbs:
+			if s.name == "Westridge":
+				return (s.at as Vector2) + Vector2(player.global_position.x, player.global_position.z)
+		return null
 	var area_id := district.area_at(player.global_position)
 	var at: Variant = real_map.district_position(area_id)
 	var area := district.area_by_id(area_id)
@@ -311,9 +318,73 @@ func _draw_city() -> void:
 	_canvas.draw_string(font, Vector2(8, MAP_SIZE.y - 5), real_map.credit, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.7))
 
 
+## Real-world mode: the real suburb with its streets, the game's homes by turf state, the parts
+## of Westridge (locked ones tinted), places, corners, crew and you.
+func _draw_real() -> void:
+	var font := ThemeDB.fallback_font
+	var data := district.real.data
+	_canvas.draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#22303a"))
+	var land := PackedVector2Array()
+	for p in data.boundary:
+		land.append(_to_map(Vector3(p.x, 0, p.y)))
+	_canvas.draw_colored_polygon(land, Color("#3a3326"))
+	for key in data.chunk_keys:
+		for line: PackedVector2Array in data.road_lines(key):
+			var pts := PackedVector2Array()
+			for p in line:
+				pts.append(_to_map(Vector3(p.x, 0, p.y)))
+			_canvas.draw_polyline(pts, Color("#6b6b72"), 1.0)
+	# The parts of Westridge: a ring at each one's heart, in its state's colour.
+	var all: Array = [{"id": "starter", "display_name": district.info.get("display_name", "Westridge")}]
+	all.append_array(manager.neighbours())
+	for d in all:
+		var area := district.area_by_id(str(d.id))
+		if area.is_empty():
+			continue
+		var at := DataFiles.to_vec2(area.get("anchor"))
+		var m := _to_map(Vector3(at.x, 0, at.y))
+		var st := "controlled" if str(d.id) == "starter" else manager.state(str(d.id))
+		var col: Color = DISTRICT_COLORS.get(st, Color.GRAY)
+		_canvas.draw_circle(m, 26.0, Color(col, 0.16))
+		_canvas.draw_arc(m, 26.0, 0.0, TAU, 40, col, 2.0)
+		var text := "%s · %s" % [str(d.display_name).to_upper(), st.to_upper()]
+		var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		var pos := m + Vector2(-tw * 0.5, -31)
+		_canvas.draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, 4, Color("#1d1b24"))
+		_canvas.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, col)
+	for id in district.registry.order:
+		var house := district.registry.get_house(id)
+		var m := _to_map(Vector3(house.position.x, 0, house.position.y))
+		_canvas.draw_rect(Rect2(m - Vector2(2.5, 2.5), Vector2(5, 5)), STATE_COLORS.get(manager.house_state(house), Color.GRAY))
+	for area in district.areas:
+		for poi in area.get("pois", []):
+			var pp := DataFiles.to_vec2(poi.get("position"))
+			_canvas.draw_circle(_to_map(Vector3(pp.x, 0, pp.y)), 2.5, Color("#2e86c1"))
+	if turf:
+		for id in turf.state.order:
+			var c: Dictionary = turf.state.corners[id]
+			var m := _to_map(turf.anchor(id))
+			var col: Color = district.crews.colour(str(c.owner)) if not str(c.owner).is_empty() else Color("#f4f1ea")
+			_canvas.draw_arc(m, 6.0, 0.0, TAU * float(c.control) / 100.0, 20, col, 2.5)
+			if turf.state.pushed(id):
+				_canvas.draw_arc(m, 9.0, 0.0, TAU, 20, Color("#e2585e"), 2.0)
+	for r: Resident in district.residents.values():
+		if r.data.role == "player_crew" and not r.is_inside:
+			_canvas.draw_circle(_to_map(r.global_position), 3.0, Color("#e2585e"))
+	if player:
+		var p := _to_map(player.global_position)
+		_canvas.draw_circle(p, 4.0, Color.WHITE)
+		_canvas.draw_arc(p, 7.0, 0.0, TAU, 20, Color.WHITE, 1.5)
+	_canvas.draw_string(font, Vector2(8, 16), "N ↑   Westridge (real map)", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
+	_canvas.draw_string(font, Vector2(8, MAP_SIZE.y - 5), data.credit, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(1, 1, 1, 0.7))
+
+
 func _draw_map() -> void:
 	if city_view and real_map:
 		_draw_city()
+		return
+	if district.is_real():
+		_draw_real()
 		return
 	var font := ThemeDB.fallback_font
 	_canvas.draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#3a3326"))

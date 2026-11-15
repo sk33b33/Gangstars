@@ -1,0 +1,156 @@
+{
+ "id": "district_town_centre",
+ "display_name": "Westridge Centre",
+ "street_name": "Westridge Centre",
+ "bounds": [
+  -171,
+  -93,
+  114,
+  216
+ ],
+ "houses_file": "res://data/houses/town_centre_houses.json",
+ "residents_file": "res://data/npcs/town_centre_residents.json",
+ "dogs": {
+  "street": 2,
+  "yard": 2
+ },
+ "landmarks": [
+  {
+   "type": "mall",
+   "position": [
+    -45.83,
+    76.23
+   ],
+   "yaw": 21.91
+  },
+  {
+   "type": "market",
+   "position": [
+    74.4,
+    176.4
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "taxi_rank",
+   "position": [
+    12.54,
+    59.66
+   ],
+   "yaw": 21.8
+  },
+  {
+   "type": "container_shop",
+   "position": [
+    -9.7,
+    88.8
+   ],
+   "sign": "sign_spaza",
+   "color": "#8e44ad",
+   "yaw": -157.8
+  },
+  {
+   "type": "mosque",
+   "position": [
+    -9.91,
+    64.91
+   ],
+   "yaw": 21.91
+  }
+ ],
+ "pois": [
+  {
+   "id": "tc_mall",
+   "name": "the Promenade",
+   "kind": "shop",
+   "position": [
+    -96.59,
+    106.97
+   ],
+   "radius": 2.0,
+   "map_label": "mall"
+  },
+  {
+   "id": "tc_market",
+   "name": "the market",
+   "kind": "shop",
+   "position": [
+    74.4,
+    176.4
+   ],
+   "radius": 2.0,
+   "map_label": "market"
+  },
+  {
+   "id": "tc_taxi",
+   "name": "the big taxi rank",
+   "kind": "bus_stop",
+   "position": [
+    13.25,
+    61.43
+   ],
+   "radius": 1.2,
+   "map_label": "rank"
+  },
+  {
+   "id": "tc_spaza",
+   "name": "Promenade Spaza",
+   "kind": "shop",
+   "position": [
+    -10.68,
+    86.39
+   ],
+   "radius": 1.0,
+   "map_label": "spaza"
+  },
+  {
+   "id": "tc_square",
+   "name": "the Promenade square",
+   "kind": "square",
+   "position": [
+    -40.45,
+    99.62
+   ],
+   "radius": 2.0,
+   "map_label": "square"
+  },
+  {
+   "id": "tc_mosque",
+   "name": "the mosque",
+   "kind": "gathering",
+   "position": [
+    -7.3,
+    71.41
+   ],
+   "radius": 2.5,
+   "map_label": "mosque"
+  }
+ ],
+ "patrol_routes": {
+  "tc_loop": [
+   [
+    -183.7,
+    60.5
+   ],
+   [
+    -26.9,
+    -1.7
+   ],
+   [
+    1.2,
+    21.3
+   ],
+   [
+    33.8,
+    120.3
+   ]
+  ]
+ },
+ "parked_cars": [],
+ "kickabouts": [],
+ "streets": [],
+ "anchor": [
+  -60,
+  60
+ ]
+}

@@ -1,0 +1,109 @@
+{
+ "real_world": "res://data/world/westridge/",
+ "districts": [
+  {
+   "id": "starter",
+   "display_name": "Westridge",
+   "is_initially_unlocked": true,
+   "description": "Your home turf: the real streets around Excelsior Street, Rhone Way, Coetzenburg Street and Constantia Street.",
+   "data": "res://data/districts/starter.json",
+   "missions": "res://data/missions/intro.json",
+   "anchor": [
+    -167,
+    -141
+   ]
+  },
+  {
+   "id": "district_east",
+   "display_name": "Harvester",
+   "side": "east",
+   "is_initially_unlocked": false,
+   "description": "Flats, container shops and the soccer field around Harvester Way, in the north-east of Westridge.",
+   "unlock_requirements": {
+    "missions": [
+     "hold_the_corner"
+    ],
+    "reputation": 60,
+    "crew": 1,
+    "influence": {
+     "starter": 50
+    }
+   },
+   "data": "res://data/districts/rooiduin.json",
+   "missions": "res://data/missions/rooiduin.json",
+   "anchor": [
+    240,
+    -470
+   ]
+  },
+  {
+   "id": "district_west",
+   "display_name": "Rocklands",
+   "side": "south",
+   "is_initially_unlocked": false,
+   "description": "Stone cottages, the church hall and the dunes, south towards Spine Road.",
+   "unlock_requirements": {
+    "missions": [
+     "beyond_the_block"
+    ],
+    "reputation": 100,
+    "crew": 2,
+    "influence": {
+     "starter": 80
+    }
+   },
+   "data": "res://data/districts/kalkbos.json",
+   "missions": "res://data/missions/kalkbos.json",
+   "anchor": [
+    180,
+    980
+   ]
+  },
+  {
+   "id": "district_tafelsig",
+   "display_name": "Duneside",
+   "is_initially_unlocked": false,
+   "description": "Courts, flats and sand by the dunes, east towards Eisleben Road.",
+   "unlock_requirements": {
+    "missions": [
+     "market_day"
+    ],
+    "reputation": 200,
+    "crew": 3,
+    "influence": {
+     "district_town_centre": 40
+    }
+   },
+   "side": "east",
+   "data": "res://data/districts/tafelsig.json",
+   "missions": "res://data/missions/tafelsig.json",
+   "anchor": [
+    430,
+    160
+   ]
+  },
+  {
+   "id": "district_town_centre",
+   "display_name": "Westridge Centre",
+   "is_initially_unlocked": false,
+   "description": "The shopping centre, the taxi rank and the market on Wespoort Drive.",
+   "unlock_requirements": {
+    "missions": [
+     "dune_truce"
+    ],
+    "reputation": 150,
+    "crew": 3,
+    "influence": {
+     "district_east": 60
+    }
+   },
+   "side": "south",
+   "data": "res://data/districts/town_centre.json",
+   "missions": "res://data/missions/town_centre.json",
+   "anchor": [
+    -60,
+    60
+   ]
+  }
+ ]
+}

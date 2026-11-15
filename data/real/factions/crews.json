@@ -1,0 +1,53 @@
+{
+  "_comment": "Fictional crews (made-up names, colours and bosses; not real gangs). The player joins one at the start of a new game.",
+  "crews": [
+    {
+      "id": "tortel_crew",
+      "name": "Tortel Laaities",
+      "home": "starter",
+      "home_name": "Westridge (Constantia Street)",
+      "colour": "#8b1e2a",
+      "boss": "npc_h29_1",
+      "perk": "home_turf",
+      "perk_text": "Home turf: +R150 and a head start on Westridge influence.",
+      "pitch": "Born and raised on Constantia Street. They look after their own street and the corner shop.",
+      "warning": "This is Constantia Street, %s. Keep walking."
+    },
+    {
+      "id": "vlakte_vipers",
+      "name": "Spine Road Stylers",
+      "home": "starter",
+      "home_name": "Westridge (the den by the park)",
+      "colour": "#1f7a4c",
+      "boss": "npc_viper_slang",
+      "perk": "low_profile",
+      "perk_text": "Low profile: police heat builds 40% slower.",
+      "pitch": "Quiet, clever and patient. They'd rather not be seen than be feared.",
+      "warning": "Stylers' park, %s. Move along."
+    },
+    {
+      "id": "duin_boys",
+      "name": "Dune Cruisers",
+      "home": "district_east",
+      "home_name": "Harvester",
+      "colour": "#c99a1c",
+      "boss": "npc_rooi_spider",
+      "perk": "quick_hands",
+      "perk_text": "Quick hands: +25% cash from every mission. Harvester is cheaper to unlock.",
+      "pitch": "The flats and the field are theirs. Fast with money, faster on their feet.",
+      "warning": "Dune Cruisers' side, %s. Turn around."
+    },
+    {
+      "id": "klipspringers",
+      "name": "Rock Royals",
+      "home": "district_west",
+      "home_name": "Rocklands",
+      "colour": "#5e6672",
+      "boss": "npc_kalk_klip",
+      "perk": "stone_hard",
+      "perk_text": "Hard as stone: you start with a shotgun as well as the pistol. Rocklands is cheaper to unlock.",
+      "pitch": "Old quarry families. Slow to anger, impossible to move.",
+      "warning": "Rock Royals' rocks, %s. Go back."
+    }
+  ]
+}

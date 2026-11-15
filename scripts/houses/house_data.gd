@@ -17,6 +17,10 @@ const OWNERSHIP: PackedStringArray = ["neutral", "friendly", "hostile", "player"
 @export var position: Vector2 = Vector2.ZERO
 ## Direction the front door faces ("north" = towards -Z).
 @export var facing: String = "north"
+## Real-world mode: the real building this home is ("h_<chunk x>_<chunk z>_<index>") and the way its
+## front door faces (radians about Y; NAN = use `facing`). District fills in position and yaw.
+@export var real_id: String = ""
+@export var yaw: float = NAN
 @export var plot_size: Vector2 = Vector2(12, 14)
 @export var wall_color: Color = Color.WHITE
 @export var roof: String = "tiles"
@@ -38,7 +42,7 @@ func entrance_id() -> String:
 
 
 func plot_transform() -> Transform3D:
-	var basis := Basis(Vector3.UP, FACING_ROTATION.get(facing, 0.0))
+	var basis := Basis(Vector3.UP, FACING_ROTATION.get(facing, 0.0) if is_nan(yaw) else yaw)
 	return Transform3D(basis, Vector3(position.x, 0.0, position.y))
 
 
@@ -70,6 +74,7 @@ static func from_dict(d: Dictionary, default_district: String) -> HouseData:
 	h.kit = str(d.get("kit", "single_hip"))
 	h.position = DataFiles.to_vec2(d.get("position"))
 	h.facing = str(d.get("facing", "north"))
+	h.real_id = str(d.get("real_id", ""))
 	h.plot_size = DataFiles.to_vec2(d.get("plot_size"), Vector2(12, 14))
 	h.wall_color = DataFiles.to_color(d.get("wall_color"))
 	h.roof = str(d.get("roof", "tiles"))

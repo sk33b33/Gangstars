@@ -3,7 +3,39 @@ extends RefCounted
 ## Small helper for loading JSON data files with clear errors.
 
 
+## Real-world mode: the game's content re-placed on the real Westridge lives in data/real/ (written
+## by tools/world/relocate_to_real.py). With this on, a file there is read instead of its original.
+static var real_mode := _initial_real_mode()
+
+
+## Chosen before any scene loads: the --real / --old-world arguments, else the saved setting.
+static func _initial_real_mode() -> bool:
+	var args := OS.get_cmdline_user_args()
+	if args.has("--old-world"):
+		return false
+	if args.has("--real"):
+		return true
+	var cfg := ConfigFile.new()
+	if cfg.load("user://settings.cfg") == OK:
+		return bool(cfg.get_value("gameplay", "real_world", REAL_DEFAULT))
+	return REAL_DEFAULT
+
+
+## Which world a fresh install starts in.
+const REAL_DEFAULT := false
+const REAL_OVERLAY := "res://data/real/"
+
+
+static func resolve(path: String) -> String:
+	if real_mode and path.begins_with("res://data/") and not path.begins_with(REAL_OVERLAY):
+		var over := REAL_OVERLAY + path.trim_prefix("res://data/")
+		if FileAccess.file_exists(over):
+			return over
+	return path
+
+
 static func load_json(path: String) -> Variant:
+	path = resolve(path)
 	if not FileAccess.file_exists(path):
 		push_error("Data file missing: %s" % path)
 		return null

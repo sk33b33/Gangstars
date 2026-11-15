@@ -62,15 +62,38 @@ var dogs: DogPack
 ## Benches, chairs and walls residents settle into while dwelling (cosmetic).
 var spots := SpotRegistry.new()
 ## The player, so crew members can follow them ("@leader:player"). Set by the session.
-var player: Node3D
+var player: Node3D:
+	set(v):
+		player = v
+		if real:   # the real map loads and simulates around the player
+			real.focus = v
+		if real_people:
+			real_people.player = v
+		if real_traffic:
+			real_traffic.player = v
+
+
+## Real-world mode (design/gdd/real_world.md): the districts are parts of the real Westridge. The
+## real map draws the streets and buildings and bakes the navigation; this class places the game's
+## own homes, landmarks, people and cars on it. Null in the old made-up districts.
+var real: RealWorld
+var real_people: RealPopulation
+var real_traffic: RealTraffic
+
+
+func is_real() -> bool:
+	return real != null
 
 
 func _ready() -> void:
 	_load_areas()
-	for area in areas:
-		var built := StreetBuilder.build(nav_region, area, destinations)
-		for id in built:
-			gates.get_or_add(id, []).append_array(built[id])
+	if _real_dir().is_empty():
+		for area in areas:
+			var built := StreetBuilder.build(nav_region, area, destinations)
+			for id in built:
+				gates.get_or_add(id, []).append_array(built[id])
+	else:
+		_build_real_world()
 	_build_houses()
 	_register_patrol_routes()
 	events = NeighbourhoodEvents.new()
@@ -99,7 +122,104 @@ func _ready() -> void:
 	light_pool.name = "LightPool"
 	add_child(light_pool)
 	light_pool.setup(day_night, LightPool.collect_lamps(nav_region))
-	_bake_navigation()
+	if is_real():
+		_await_real_navigation()
+	else:
+		_bake_navigation()
+
+
+var _real_catalog_dir := ""
+
+
+func _real_dir() -> String:
+	return _real_catalog_dir
+
+
+## The real map under the game: every home of the game's families is a real house, landmarks stand
+## on real ground, and the chunks that hold any of them keep their navigation for good.
+func _build_real_world() -> void:
+	var data := RealDistrictData.new()
+	if not data.load_meta():
+		push_error("Real-world mode: map data missing")
+		return
+	for id in registry.order:
+		var h := registry.get_house(id)
+		if not h.real_id.is_empty():
+			data.story[h.real_id] = true
+	real = RealWorld.new()
+	real.name = "RealWestridge"
+	real.places = destinations
+	add_child(real)
+	real.setup(data, player if player else self)
+	for area in areas:
+		real.extra_obstacles.append_array(StreetBuilder.build_real(nav_region, area, destinations))
+	# Homes: stand each family's plot in its real house's doorway.
+	for id in registry.order:
+		var h := registry.get_house(id)
+		var front := data.house_front(h.real_id)
+		if front.is_empty():
+			push_error("Real-world mode: %s has no real front door (%s)" % [h.id, h.real_id])
+			continue
+		var mid: Vector2 = front.mid
+		var n: Vector2 = front.normal
+		h.position = mid + n * HousePlot.SETBACK
+		h.yaw = atan2(n.x, n.y)
+	# Navigation is kept wherever the game has a home, a place or a patrol point.
+	var points: Array = []
+	for id in registry.order:
+		var h := registry.get_house(id)
+		points.append(Vector3(h.position.x, 0, h.position.y))
+	for area in areas:
+		for key in ["pois", "landmarks"]:
+			for item in area.get(key, []):
+				var p := DataFiles.to_vec2(item.get("position"))
+				points.append(Vector3(p.x, 0, p.y))
+		for route in area.get("patrol_routes", {}).values():
+			for q in route:
+				points.append(Vector3(float(q[0]), 0, float(q[1])))
+	for p: Vector3 in points:
+		for dx in [-1, 0, 1]:
+			for dz in [-1, 0, 1]:
+				var near := p + Vector3(dx, 0, dz) * 25.0   # a place near a chunk edge needs the neighbour too
+				real.keep_nav[data.chunk_at(near)] = true
+
+
+## Waits for the kept navigation to be baked and taken in by the map, then brings the world to life.
+func _await_real_navigation() -> void:
+	var started := Time.get_ticks_msec()
+	while not real.keep_nav_ready() and Time.get_ticks_msec() - started < 180000:
+		real.scan(player.global_position if player else Vector3.ZERO)
+		await get_tree().physics_frame
+	if not real.keep_nav_ready():
+		push_error("Real-world navigation was not ready after 3 minutes; NPC movement may fail.")
+	destinations.navigation_map = get_world_3d().navigation_map
+	_spawn_residents()
+	_spawn_vehicles()
+	dogs = DogPack.new()
+	dogs.name = "Dogs"
+	add_child(dogs)
+	dogs.setup(self)
+	dogs.barked.connect(func(pos: Vector3, pitch: float): dog_barked.emit(pos, pitch))
+	for area in areas:
+		for k in area.get("kickabouts", []):
+			var game := KickAbout.new()
+			game.name = "KickAbout_" + str(k.poi)
+			add_child(game)
+			var c := DataFiles.to_vec2(k.get("center"))
+			game.setup(self, str(k.poi), Vector3(c.x, 0, c.y), DataFiles.to_vec2(k.get("half"), Vector2(4, 3)))
+			kickabouts.append(game)
+	real_people = RealPopulation.new()
+	real_people.name = "RealPeople"
+	real_people.clock = director.clock
+	real_people.own_clock = false
+	add_child(real_people)
+	real_people.setup(real, player if player else self)
+	real_traffic = RealTraffic.new()
+	real_traffic.name = "RealTraffic"
+	add_child(real_traffic)
+	real_traffic.setup(real, player if player else self, real_people)
+	is_navigation_ready = true
+	navigation_ready.emit()
 
 
 ## Data pipeline: the starter district file, then every catalog district with a `data` file.
@@ -142,6 +262,12 @@ func _load_areas() -> void:
 		info["residents_file"] = residents_file
 	areas = [info]
 	areas.append_array(extra)
+	if catalog is Dictionary and catalog.has("real_world"):
+		_real_catalog_dir = str(catalog.real_world)
+		for a in areas:   # a district's place on the real map (for area_at): from the catalog
+			for d in catalog.get("districts", []):
+				if d is Dictionary and str(d.id) == str(a.id) and d.has("anchor"):
+					a["anchor"] = d.anchor
 	registry = HouseRegistry.new()
 	for area in areas:
 		var reg := HouseRegistry.load_file(str(area.get("houses_file", "")))
@@ -154,10 +280,24 @@ func _load_areas() -> void:
 ## Degrees the game's grid is turned from true north (from the starter area's "real" block):
 ## a compass heading is the grid heading plus this.
 func grid_bearing() -> float:
+	if is_real():
+		return 0.0   # the real map is not turned
 	return float(info.get("real", {}).get("bearing_deg", 0.0))
 
 
 func area_at(pos: Vector3) -> String:
+	if is_real():   # the part of Westridge whose anchor is nearest ("" outside the suburb)
+		if not real.data.is_inside(pos):
+			return ""
+		var best := ""
+		var best_d := INF
+		for area in areas:
+			var a := DataFiles.to_vec2(area.get("anchor"))
+			var d := Vector2(pos.x, pos.z).distance_to(a)
+			if d < best_d:
+				best_d = d
+				best = str(area.id)
+		return best
 	for area in areas:
 		var b: Array = area.get("bounds", [0, 0, 0, 0])
 		if pos.x >= float(b[0]) and pos.x <= float(b[2]) and pos.z >= float(b[1]) and pos.z <= float(b[3]):
@@ -185,6 +325,8 @@ func display_name() -> String:
 	if registry:
 		for id in registry.order:
 			own += 1 if registry.get_house(id).district_id == info.id else 0
+	if is_real():
+		return "%s · %d of its families are your neighbours · %d real streets" % [info.get("display_name", "?"), own, real.data.streets.size()]
 	return "%s · %d houses · %d streets" % [info.get("display_name", "?"), own, info.get("streets", []).size()]
 
 
@@ -196,7 +338,10 @@ func _build_houses() -> void:
 		var house := registry.get_house(id)
 		var plot: HousePlot = HOUSE_SCENE.instantiate()
 		nav_region.add_child(plot)
-		plot.build(house, _needs_closing_fence(house, positions))
+		if is_real():
+			plot.build_real(house)
+		else:
+			plot.build(house, _needs_closing_fence(house, positions))
 		plots[id] = plot
 		destinations.register(house.entrance_id(), plot.door_position(), 0.1, "house_door",
 			"%s (%s)" % [house.address(), house.display_name])
@@ -293,6 +438,8 @@ func _spawn_vehicles() -> void:
 		car.rotation.y = deg_to_rad(float(c.get("rot", 0))) + PI * 0.5
 		car.reset_physics_interpolation()
 		vehicles[car.vehicle_id] = car
+	if is_real():
+		return   # the real street network carries its own traffic (RealTraffic)
 	traffic = TrafficSystem.new()
 	traffic.name = "Traffic"
 	add_child(traffic)
@@ -304,6 +451,10 @@ func _spawn_vehicles() -> void:
 ## (crew can follow the player across). Residents still keep to their own district because
 ## their schedules only point there. Emits navigation_rebaked when the map has the new mesh.
 func rebake_navigation() -> void:
+	if is_real():   # nothing to re-bake: there are no gates on the real map
+		rebake_count += 1
+		navigation_rebaked.emit()
+		return
 	if _rebaking:
 		return
 	_rebaking = true

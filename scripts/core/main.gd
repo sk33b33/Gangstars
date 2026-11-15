@@ -40,6 +40,14 @@ func _ready() -> void:
 	district.director.observer = player
 	session = GameSession.new()
 	session.name = "Session"
+	if DataFiles.real_mode and save_path == "user://savegame.json":
+		save_path = "user://savegame_real.json"   # the two worlds keep separate saves (positions differ)
+	if district.is_real():   # a new game starts at your own gate
+		var home: HousePlot = district.plots.get(GameSession.SAFEHOUSE_ID)
+		if home:
+			player.global_position = home.gate_position() + Vector3(0, 0.15, 0)
+			player.snap_camera()
+	district.player = player
 	session.save_path = _args.get("load", save_path)
 	add_child(session)
 	var fresh_settings := not FileAccess.file_exists(settings.path)
@@ -50,6 +58,12 @@ func _ready() -> void:
 	hud.add_child(pause_menu)
 	pause_menu.setup(settings)
 	pause_menu.quit_requested.connect(func(): get_tree().quit())
+	pause_menu.world_switch_requested.connect(func(to_real: bool):
+		settings.set_value("gameplay/real_world", to_real)
+		settings.save_settings()
+		DataFiles.real_mode = to_real
+		get_tree().paused = false
+		get_tree().reload_current_scene())
 	pause_menu.resumed.connect(func():
 		if DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)

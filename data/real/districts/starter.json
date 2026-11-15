@@ -1,0 +1,279 @@
+{
+ "dogs": {
+  "street": 4,
+  "yard": 7
+ },
+ "id": "starter",
+ "display_name": "Westridge",
+ "street_name": "Westridge",
+ "is_initially_unlocked": true,
+ "bounds": [
+  -306,
+  -279,
+  -55,
+  -25
+ ],
+ "landmarks": [
+  {
+   "type": "cafe",
+   "position": [
+    -195.86,
+    -65.4
+   ],
+   "yaw": 172.08
+  },
+  {
+   "type": "bus_stop",
+   "position": [
+    -158.64,
+    -109.72
+   ],
+   "yaw": 113.16
+  },
+  {
+   "type": "bus_stop",
+   "position": [
+    -221.92,
+    -175.24
+   ],
+   "yaw": -67.18
+  },
+  {
+   "type": "court",
+   "position": [
+    -95.0,
+    -160.2
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "park",
+   "position": [
+    -103.4,
+    -180.6
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "corner",
+   "position": [
+    -105.6,
+    -119.61
+   ],
+   "yaw": 113.2
+  },
+  {
+   "type": "police_post",
+   "id": "saps_vlei",
+   "position": [
+    -134.77,
+    -162.53
+   ],
+   "yaw": 20.71
+  },
+  {
+   "type": "crew_den",
+   "id": "vipers_den",
+   "position": [
+    -118.28,
+    -193.49
+   ],
+   "tag": "STYLERS",
+   "yaw": -67.76
+  },
+  {
+   "type": "shebeen",
+   "id": "shebeen",
+   "position": [
+    -96.93,
+    -144.47
+   ],
+   "yaw": -67.32
+  }
+ ],
+ "pois": [
+  {
+   "id": "poi_shop",
+   "name": "Westridge Cafe",
+   "kind": "shop",
+   "position": [
+    -195.09,
+    -70.95
+   ],
+   "radius": 1.2,
+   "map_label": "caf\u00e9"
+  },
+  {
+   "id": "poi_bus_stop",
+   "name": "the Excelsior Street bus stop",
+   "kind": "transit",
+   "position": [
+    -156.89,
+    -110.46
+   ],
+   "radius": 1.0,
+   "map_label": "bus"
+  },
+  {
+   "id": "poi_bus_stop_mossie",
+   "name": "the Rhone Way bus stop",
+   "kind": "transit",
+   "position": [
+    -223.67,
+    -174.5
+   ],
+   "radius": 1.0,
+   "map_label": "bus"
+  },
+  {
+   "id": "poi_corner",
+   "name": "the corner",
+   "kind": "gathering",
+   "position": [
+    -103.76,
+    -120.4
+   ],
+   "radius": 1.4,
+   "map_label": "corner"
+  },
+  {
+   "id": "poi_court",
+   "name": "the sand court",
+   "kind": "court",
+   "position": [
+    -95.0,
+    -160.2
+   ],
+   "radius": 2.5,
+   "map_label": "court"
+  },
+  {
+   "id": "poi_park",
+   "name": "the park",
+   "kind": "park",
+   "position": [
+    -103.4,
+    -180.6
+   ],
+   "radius": 3.0,
+   "map_label": "park"
+  },
+  {
+   "id": "poi_shebeen",
+   "name": "Aunty Mavis' smokkie",
+   "kind": "social",
+   "position": [
+    -101.36,
+    -142.62
+   ],
+   "radius": 2.5,
+   "map_label": "smokkie"
+  }
+ ],
+ "patrol_routes": {
+  "tortel_loop": [
+   [
+    -103.76,
+    -120.4
+   ],
+   [
+    -141.2,
+    -229.5
+   ],
+   [
+    -111.8,
+    -157.1
+   ],
+   [
+    -87.5,
+    -96.7
+   ],
+   [
+    -189.4,
+    -73.2
+   ],
+   [
+    -282.4,
+    -74.7
+   ]
+  ],
+  "saps_vlei_beat": [
+   [
+    -228.1,
+    -175.8
+   ],
+   [
+    -189.4,
+    -211.0
+   ],
+   [
+    -49.5,
+    -183.3
+   ],
+   [
+    -111.8,
+    -157.1
+   ],
+   [
+    -87.5,
+    -96.7
+   ],
+   [
+    -189.4,
+    -73.2
+   ],
+   [
+    -245.6,
+    -80.9
+   ],
+   [
+    -294.6,
+    -69.6
+   ]
+  ]
+ },
+ "parked_cars": [
+  {
+   "id": "car_player",
+   "drivable": true,
+   "position": [
+    -140.54,
+    -153.08
+   ],
+   "rot": 20.7,
+   "color": "#2e86c1",
+   "name": "your blue hatchback"
+  },
+  {
+   "id": "car_mossie",
+   "drivable": true,
+   "position": [
+    -216.42,
+    -199.97
+   ],
+   "rot": 49.5,
+   "color": "#f1c40f",
+   "name": "the yellow Golf"
+  }
+ ],
+ "houses_file": "res://data/houses/starter_houses.json",
+ "residents_file": "res://data/npcs/starter_residents.json",
+ "kickabouts": [
+  {
+   "poi": "poi_court",
+   "center": [
+    -95.0,
+    -160.2
+   ],
+   "half": [
+    5.2,
+    3.6
+   ]
+  }
+ ],
+ "streets": [],
+ "anchor": [
+  -167,
+  -141
+ ]
+}

@@ -1,0 +1,235 @@
+{
+ "dogs": {
+  "street": 3,
+  "yard": 4
+ },
+ "id": "district_west",
+ "display_name": "Rocklands",
+ "street_name": "Rocklands",
+ "bounds": [
+  65,
+  882,
+  298,
+  1099
+ ],
+ "houses_file": "res://data/houses/kalkbos_houses.json",
+ "residents_file": "res://data/npcs/kalkbos_residents.json",
+ "landmarks": [
+  {
+   "type": "container_shop",
+   "position": [
+    206.14,
+    1013.6
+   ],
+   "sign": "sign_fish",
+   "color": "#3d6e8f",
+   "yaw": 43.42
+  },
+  {
+   "type": "church_hall",
+   "position": [
+    192.15,
+    1021.28
+   ],
+   "yaw": 43.17
+  },
+  {
+   "type": "quarry_face",
+   "position": [
+    230.4,
+    958.4
+   ],
+   "size": [
+    34,
+    28
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "lookout",
+   "position": [
+    149.42,
+    1006.23
+   ],
+   "yaw": -39.89
+  },
+  {
+   "type": "courtyard",
+   "position": [
+    156.0,
+    978.8
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "bus_stop",
+   "position": [
+    115.79,
+    977.32
+   ],
+   "yaw": -44.54
+  },
+  {
+   "type": "kickabout",
+   "position": [
+    146.4,
+    959.6
+   ],
+   "size": [
+    9,
+    9
+   ],
+   "yaw": 0.0
+  },
+  {
+   "type": "police_post",
+   "id": "saps_kalk",
+   "position": [
+    257.74,
+    965.85
+   ],
+   "yaw": 33.52
+  }
+ ],
+ "pois": [
+  {
+   "id": "kalk_fish",
+   "name": "Vis en Tjips",
+   "kind": "shop",
+   "position": [
+    207.92,
+    1015.49
+   ],
+   "radius": 1.0,
+   "map_label": "fish"
+  },
+  {
+   "id": "kalk_hall",
+   "name": "Rocklands Hall",
+   "kind": "gathering",
+   "position": [
+    196.6,
+    1026.02
+   ],
+   "radius": 1.6,
+   "map_label": "hall"
+  },
+  {
+   "id": "kalk_lookout",
+   "name": "the quarry lookout",
+   "kind": "park",
+   "position": [
+    148.78,
+    1007.0
+   ],
+   "radius": 2.5,
+   "map_label": "lookout"
+  },
+  {
+   "id": "kalk_bus",
+   "name": "the Rocklands bus stop",
+   "kind": "transit",
+   "position": [
+    114.46,
+    978.68
+   ],
+   "radius": 1.0,
+   "map_label": "bus"
+  },
+  {
+   "id": "kalk_square",
+   "name": "the village square",
+   "kind": "gathering",
+   "position": [
+    156.0,
+    978.8
+   ],
+   "radius": 2.5,
+   "map_label": "square"
+  },
+  {
+   "id": "kalk_kickabout",
+   "name": "the kick-about lot",
+   "kind": "park",
+   "position": [
+    146.4,
+    959.6
+   ],
+   "radius": 3.0,
+   "map_label": "lot"
+  }
+ ],
+ "patrol_routes": {
+  "kalk_loop": [
+   [
+    126.2,
+    847.3
+   ],
+   [
+    313.2,
+    955.5
+   ],
+   [
+    232.6,
+    1007.4
+   ],
+   [
+    271.1,
+    1035.5
+   ],
+   [
+    187.6,
+    1049.7
+   ],
+   [
+    150.2,
+    1093.4
+   ]
+  ],
+  "saps_kalk_beat": [
+   [
+    126.2,
+    847.3
+   ],
+   [
+    313.2,
+    955.5
+   ],
+   [
+    232.6,
+    1007.4
+   ],
+   [
+    271.1,
+    1035.5
+   ],
+   [
+    187.6,
+    1049.7
+   ],
+   [
+    150.2,
+    1093.4
+   ]
+  ]
+ },
+ "parked_cars": [],
+ "kickabouts": [
+  {
+   "poi": "kalk_kickabout",
+   "center": [
+    146.4,
+    959.6
+   ],
+   "half": [
+    4.0,
+    3.8
+   ]
+  }
+ ],
+ "streets": [],
+ "anchor": [
+  180,
+  980
+ ]
+}

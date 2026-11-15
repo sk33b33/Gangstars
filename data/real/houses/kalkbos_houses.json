@@ -1,0 +1,797 @@
+{
+ "district_id": "district_west",
+ "houses": [
+  {
+   "id": "kalk_h01",
+   "number": 19,
+   "street": "Westridge",
+   "district_id": "district_west",
+   "display_name": "Willemse family",
+   "kit": "cottage",
+   "position": [
+    165.45,
+    987.92
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h01_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_4_30"
+  },
+  {
+   "id": "kalk_h02",
+   "number": 17,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Esau family",
+   "kit": "cottage",
+   "position": [
+    169.05,
+    1008.58
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#dfe8ee",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h02_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_0_5_45"
+  },
+  {
+   "id": "kalk_h03",
+   "number": 15,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "September family",
+   "kit": "cottage",
+   "position": [
+    149.25,
+    993.23
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#dfe8ee",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_gail"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": true,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_4_43"
+  },
+  {
+   "id": "kalk_h04",
+   "number": 13,
+   "street": "Westridge",
+   "district_id": "district_west",
+   "display_name": "Plaatjies family",
+   "kit": "cottage",
+   "position": [
+    148.45,
+    948.85
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#efe9dc",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h04_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": true,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_0_4_6"
+  },
+  {
+   "id": "kalk_h05",
+   "number": 11,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "Bailey family",
+   "kit": "cottage",
+   "position": [
+    235.25,
+    981.85
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#e9e4d6",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#e9e4d6",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_pastor"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_1_4_26"
+  },
+  {
+   "id": "kalk_h06",
+   "number": 9,
+   "street": "Westridge",
+   "district_id": "district_west",
+   "display_name": "Kleinsmidt family",
+   "kit": "cottage",
+   "position": [
+    176.97,
+    922.95
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#efe9dc",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h06_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": true,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_0_4_37"
+  },
+  {
+   "id": "kalk_h07",
+   "number": 7,
+   "street": "Westridge",
+   "district_id": "district_west",
+   "display_name": "Empty house",
+   "kit": "cottage",
+   "position": [
+    185.55,
+    922.2
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#f6f2e8",
+   "occupancy": "vacant",
+   "ownership": "neutral",
+   "occupant_ids": [],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_4_19"
+  },
+  {
+   "id": "kalk_h08",
+   "number": 5,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "Hendricks family",
+   "kit": "cottage",
+   "position": [
+    223.45,
+    1027.65
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#efe9dc",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h08_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": false,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_1_5_11"
+  },
+  {
+   "id": "kalk_h09",
+   "number": 3,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "Ontong family",
+   "kit": "cottage",
+   "position": [
+    238.0,
+    1013.85
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h09_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_1_5_8"
+  },
+  {
+   "id": "kalk_h10",
+   "number": 1,
+   "street": "Bering",
+   "district_id": "district_west",
+   "display_name": "Plaatjies family",
+   "kit": "cottage",
+   "position": [
+    124.33,
+    1019.58
+   ],
+   "facing": "north",
+   "plot_size": [
+    10,
+    14
+   ],
+   "wall_color": "#f2e6d2",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h10_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_0_5_28"
+  },
+  {
+   "id": "kalk_h11",
+   "number": 16,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "Rossouw family",
+   "kit": "double_semi",
+   "position": [
+    210.93,
+    1041.15
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#f4efe4",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h11_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_1_5_87"
+  },
+  {
+   "id": "kalk_h12",
+   "number": 14,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Bailey family",
+   "kit": "single_gable",
+   "position": [
+    115.97,
+    1010.98
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_riyaad"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_0_5_99"
+  },
+  {
+   "id": "kalk_h13",
+   "number": 12,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "Domingo family",
+   "kit": "single_gable",
+   "position": [
+    245.77,
+    1007.58
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#f4efe4",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h13_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": true,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_1_5_25"
+  },
+  {
+   "id": "kalk_h14",
+   "number": 10,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Kleinsmidt family",
+   "kit": "cottage",
+   "position": [
+    162.4,
+    1050.73
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#f6f2e8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h14_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_5_17"
+  },
+  {
+   "id": "kalk_h15",
+   "number": 8,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Hendricks family",
+   "kit": "double_semi",
+   "position": [
+    151.72,
+    1050.67
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#e9e4d6",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h15_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_5_97"
+  },
+  {
+   "id": "kalk_h16",
+   "number": 6,
+   "street": "Bering",
+   "district_id": "district_west",
+   "display_name": "Esau family",
+   "kit": "single_gable",
+   "position": [
+    112.83,
+    1020.08
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#e9e4d6",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h16_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_5_112"
+  },
+  {
+   "id": "kalk_h17",
+   "number": 4,
+   "street": "Bering",
+   "district_id": "district_west",
+   "display_name": "September family",
+   "kit": "single_gable",
+   "position": [
+    104.92,
+    1004.05
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#f6f2e8",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h17_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_0_5_24"
+  },
+  {
+   "id": "kalk_h18",
+   "number": 2,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Plaatjies family",
+   "kit": "cottage",
+   "position": [
+    120.99,
+    927.05
+   ],
+   "facing": "south",
+   "plot_size": [
+    12,
+    14
+   ],
+   "wall_color": "#dfe8ee",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "hostile",
+   "occupant_ids": [
+    "npc_kalk_klip",
+    "npc_kalk_spring_2",
+    "npc_kalk_spring_3"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_0_4_42"
+  },
+  {
+   "id": "kalk_h19",
+   "number": 12,
+   "street": "Park Avenue",
+   "district_id": "district_west",
+   "display_name": "Mentoor family",
+   "kit": "row_house",
+   "position": [
+    174.15,
+    1059.45
+   ],
+   "facing": "west",
+   "plot_size": [
+    8,
+    14
+   ],
+   "wall_color": "#f2e6d2",
+   "roof": "tiles",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h19_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_0_5_46"
+  },
+  {
+   "id": "kalk_h20",
+   "number": 6,
+   "street": "Libra Close",
+   "district_id": "district_west",
+   "display_name": "Ma Lena's smokkie",
+   "kit": "row_house",
+   "position": [
+    232.9,
+    1040.22
+   ],
+   "facing": "west",
+   "plot_size": [
+    8,
+    14
+   ],
+   "wall_color": "#f4efe4",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "friendly",
+   "occupant_ids": [
+    "npc_kalk_lena"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": true,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_1_5_48"
+  },
+  {
+   "id": "kalk_h21",
+   "number": 4,
+   "street": "Libra Close",
+   "district_id": "district_west",
+   "display_name": "Cloete family",
+   "kit": "row_house",
+   "position": [
+    228.43,
+    1044.58
+   ],
+   "facing": "west",
+   "plot_size": [
+    8,
+    14
+   ],
+   "wall_color": "#dfe8ee",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h21_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_1_5_60"
+  },
+  {
+   "id": "kalk_h22",
+   "number": 2,
+   "street": "Capricorn Road",
+   "district_id": "district_west",
+   "display_name": "January family",
+   "kit": "row_house",
+   "position": [
+    255.7,
+    1008.12
+   ],
+   "facing": "west",
+   "plot_size": [
+    8,
+    14
+   ],
+   "wall_color": "#dfe8ee",
+   "roof": "ibr",
+   "fence": "stone",
+   "fence_color": "#efe9dc",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_kalk_h22_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_1_5_52"
+  }
+ ]
+}

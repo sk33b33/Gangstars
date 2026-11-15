@@ -15,6 +15,8 @@ var streets: PackedStringArray = []
 var landmarks: Array = []      # {name, kind, at: Vector2}
 var counts: Dictionary = {}
 var bounds := Rect2()
+## Real houses that belong to the game's own families (house id -> true); set by District.
+var story := {}
 var _has := {}
 var _outlines := {}
 var _road_lines := {}
@@ -92,6 +94,20 @@ func around(key: Vector2i, what: String) -> Array:
 		for dz in [-1, 0, 1]:
 			out.append_array(call(what, key + Vector2i(dx, dz)))
 	return out
+
+
+## The front door of a real house: {mid: Vector2 (middle of the door wall), normal: Vector2 (towards
+## the street)}, or {} if the id is unknown or the house is hemmed in on every side.
+func house_front(house_id: String) -> Dictionary:
+	var parts := house_id.split("_")
+	if parts.size() != 4:
+		return {}
+	var key := Vector2i(int(parts[1]), int(parts[2]))
+	var rings := outlines(key)
+	var index := int(parts[3])
+	if index < 0 or index >= rings.size():
+		return {}
+	return RealChunkBuilder.home_front(rings[index], around(key, "road_lines"), rings)
 
 
 func is_inside(pos: Vector3) -> bool:
