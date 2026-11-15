@@ -79,7 +79,7 @@ func _physics_process(delta: float) -> void:
 		speed -= (BRAKE if speed > 0.0 else ACCEL * 0.6) * -throttle * delta
 	else:
 		speed = move_toward(speed, 0.0, DRAG * delta)
-	speed = clampf(speed, -REVERSE_SPEED, MAX_SPEED)
+	speed = clampf(speed, -REVERSE_SPEED, MAX_SPEED * (driver.drive_factor if driver is Player else 1.0))
 	_anim_time += delta
 	var braking := -1.0 if (throttle < 0.0 and speed > 0.2) or (throttle > 0.0 and speed < -0.2) else 0.0
 	VehicleLibrary.animate(body, speed, steer, braking * 4.0 + throttle * 2.0 * (1.0 + braking), 0, delta, _anim_time)

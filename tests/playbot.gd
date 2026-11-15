@@ -46,6 +46,8 @@ func _run() -> void:
 	await _frames(5)
 	_session = _main.session
 	_session.autosave_enabled = false
+	_session.survival.config.values["drain"] = {"food": 0.0, "water": 0.0, "rest": 0.0}   # the bot skips days; it isn't testing hunger
+	_session.survival.config.values["wound_chance"] = 0.0
 	_session.turf.state.next_push = 1e9
 	for i in 600:   # the crew picker opens a moment after the navigation is ready
 		if _session.crew_picker != null or not _session.progression.crew_id.is_empty():

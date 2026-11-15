@@ -60,6 +60,12 @@ var auto_lock := false
 var lock_target: Node3D
 const LOCK_RANGE := 30.0
 var shots_fired := 0
+## Set by the survival layer (wounds, tiredness, skills). 1.0 / true = no effect.
+var speed_factor := 1.0
+var sprint_allowed := true
+var sprint_factor := 1.0
+var spread_factor := 1.0
+var drive_factor := 1.0
 ## Top-down view (Zomboid-style): the camera sits high above and looks down; look only turns it.
 ## Shots then go flat along the way the character faces instead of through the screen centre.
 signal view_changed(top_down: bool)
@@ -192,7 +198,7 @@ func _physics_process(delta: float) -> void:
 	var dir := pivot.global_basis * Vector3(input.x, 0, input.y)
 	dir.y = 0.0
 	dir = dir.normalized() * minf(input.length(), 1.0)
-	var speed := AIM_SPEED if aiming else (sprint_speed if Input.is_action_pressed("sprint") else walk_speed)
+	var speed := (AIM_SPEED if aiming else (sprint_speed * sprint_factor if _wants_sprint() else walk_speed)) * speed_factor
 	var target := dir * speed
 	velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 	velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
@@ -219,6 +225,15 @@ func _physics_process(delta: float) -> void:
 		var msg := current_target.interact(self)
 		interacted_with.emit(current_target, msg)
 		interacted.emit(msg)
+
+
+func _wants_sprint() -> bool:
+	return sprint_allowed and input_enabled and Input.is_action_pressed("sprint")
+
+
+## Running flat out on foot (for thirst and the fitness skill).
+func is_sprinting() -> bool:
+	return vehicle == null and not aiming and _wants_sprint() and Vector2(velocity.x, velocity.z).length() > walk_speed + 0.5
 
 
 ## Dresses the player (crew colours: shirt and cap). Keeps the weapon.
@@ -313,7 +328,7 @@ func shoot() -> bool:
 	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	var aim_point: Vector3 = hit.position if not hit.is_empty() else from + dir * 80.0
-	combat.fire(self, weapon, model.muzzle_position(), aim_point, 0.5)
+	combat.fire(self, weapon, model.muzzle_position(), aim_point, 0.5 * spread_factor)
 	shots_fired += 1
 	rumble(0.2, 0.5, 0.12)
 	fired.emit(weapon)

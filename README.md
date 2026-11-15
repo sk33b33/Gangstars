@@ -76,3 +76,7 @@ Godot is recommended because it is free, open source, lightweight, and Claude ca
 ## Important scope rule
 
 The game must become playable early. Build a small, complete vertical slice first, then expand it to the full 30-house neighbourhood. Do not create 30 detailed interiors before the player can move, interact, and see NPCs moving around the block.
+
+**New controls:** V (R3 / VIEW) switches to a top-down camera; I (D-pad right / BAG) opens your bag. You now get hungry,
+thirsty and tired: buy food at shops, search bins and crates, sleep at your safehouse, bandage wounds.
+The turf map (M) can show all of Mitchells Plain with its real main roads.

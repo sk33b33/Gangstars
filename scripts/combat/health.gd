@@ -17,6 +17,8 @@ const REGEN_RATE := 4.0       # hp per second
 var hp := MAX_HP
 var down := false
 var times_down := 0
+## Set by the survival layer: bleeding or starving stops the slow regeneration.
+var regen_blocked := false
 var _down_timer := 0.0
 var _since_hit := 99.0
 
@@ -47,7 +49,7 @@ func tick(dt: float) -> void:
 			recovered.emit()
 		return
 	_since_hit += dt
-	if _since_hit > REGEN_DELAY and hp < MAX_HP:
+	if not regen_blocked and _since_hit > REGEN_DELAY and hp < MAX_HP:
 		hp = minf(MAX_HP, hp + REGEN_RATE * dt)
 
 

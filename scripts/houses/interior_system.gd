@@ -9,6 +9,7 @@ extends Node
 
 signal entered(place_id: String)
 signal left(place_id: String)
+signal raided(place_id: String)
 
 const DEPTH := -40.0
 const SHEBEEN := "shebeen"
@@ -317,6 +318,7 @@ func raid(place_id: String) -> String:
 	if int(_raided.get(place_id, -1)) == day:
 		return "Already cleaned out. Come back another day."
 	_raided[place_id] = day
+	raided.emit(place_id)
 	var crew := crew_of(place_id)
 	var cash := 150 + absi((place_id + str(day)).hash()) % 151
 	session.progression.add_cash(cash)

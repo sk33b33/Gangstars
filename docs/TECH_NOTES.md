@@ -541,3 +541,15 @@ entry in `data/districts/districts.json` carries the unlock requirements.
   held, `interacted`/`shouted` signals, map/phone visible). It waits for the crew choice, then starts
   if the save has no `tutorial_done` flag and no completed missions. `skip_tips` is a new input action
   (Tab, D-pad left). Settings: `gameplay/tips`, `gameplay/waypoint`.
+
+## Survival layer
+Pure logic in `scripts/survival/` (`Needs`, `Inventory`, `Wounds`, `Skills`, `Loot`, `SurvivalConfig`), run by
+`SurvivalController` (a child of the session); menus in `scripts/ui/survival_menus.gd`. The test harness sets the drain
+rates and wound chance to 0 so the other tests (which skip hours and days) are unaffected; the survival tests switch them on.
+
+## Real map
+`python3 tools/osm/fetch_osm.py <raw_dir>` downloads the OpenStreetMap tiles for the KnoxMap box (api.openstreetmap.org;
+the Overpass mirrors were unreachable from the build container), then `python3 tools/osm/build_real_map.py <raw_dir>`
+writes `data/world/mitchells_plain_real.json` (main roads, rail, suburbs, stations) and `mitchells_plain_streets.json`.
+`RealMap` loads them; `data/world/district_places.json` says where each game district sits. Screenshot: `--city-map`.
+Top-down camera screenshot: `--top-down`.

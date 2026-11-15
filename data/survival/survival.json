@@ -1,0 +1,31 @@
+{
+  "drain": {"food": 2.5, "water": 4.0, "rest": 4.0},
+  "warn_level": 25,
+  "starve_floor": 20,
+  "starve_per_minute": 0.5,
+  "wake_minimum": 30,
+  "tired_walk_factor": 0.85,
+  "sprint_water_factor": 2.0,
+  "sleep_hours": 8,
+  "bag_capacity": 10.0,
+  "stash_capacity": 60.0,
+  "search_seconds": 2.0,
+  "refill_days": 2,
+  "wound_chance": 0.35,
+  "max_wounds": 3,
+  "bleed_per_second": 0.15,
+  "bleed_floor": 15,
+  "limp_per_wound": 0.1,
+  "heal_hours": 6,
+  "xp_base": 100,
+  "xp_power": 1.5,
+  "max_level": 5,
+  "skills": {
+    "shooting": {"name": "Shooting", "bonus": 0.08, "xp": {"hit": 6}},
+    "driving": {"name": "Driving", "bonus": 0.03, "xp": {"per_100m": 1}},
+    "fitness": {"name": "Fitness", "bonus": 0.03, "rest_bonus": 0.05, "xp": {"per_50m": 1}},
+    "hustle": {"name": "Hustle", "bonus": 0.03, "xp": {"sale": 10}},
+    "scavenging": {"name": "Scavenging", "bonus": 0.1, "xp": {"search": 8}}
+  },
+  "starter_items": {"water_bottle": 1, "bread_roll": 1, "bandage": 1}
+}

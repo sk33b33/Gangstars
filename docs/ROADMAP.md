@@ -171,9 +171,12 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 
 ## Next: survival layer and the real map (requested 2026-11-15)
 - [x] Top-down camera option (third-person stays the default).
-- [ ] Needs: hunger, thirst, sleep.
-- [ ] Looting and inventory.
-- [ ] Injuries and health care.
-- [ ] Skills that level up.
-- [ ] Real Mitchells Plain roads from OpenStreetMap (inside the KnoxMap outline): main roads first, then suburbs one at a time starting with Westridge.
-- [ ] Adopt Claude-Code-Game-Studios rules, playtest/polish routines and design-doc format where they fit.
+- [x] Needs: hunger, thirst, sleep.
+- [x] Looting and inventory.
+- [x] Injuries and health care.
+- [x] Skills that level up.
+- [x] Real Mitchells Plain map data from OpenStreetMap (inside the KnoxMap outline) and a city view on the turf map.
+- [ ] Street builder that follows real street lines (the current one only builds straight east-west / north-south streets); then rebuild Westridge on its real streets, then the other suburbs one at a time.
+- [x] Adopt Claude-Code-Game-Studios rules and design-doc format (`.claude/rules/`, `design/gdd/`).
+- [ ] Run its playtest / balance / cut-and-polish routines on the survival layer once a person has played it.
+- [ ] Survival follow-ups: nicer bin/crate models, searchable cupboards indoors, missions that use items and skills.

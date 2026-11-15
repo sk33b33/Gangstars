@@ -12,16 +12,16 @@ static var custom: Dictionary = {}
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
-	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab", "camera_mode": "V",
+	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab", "camera_mode": "V", "bag": "I",
 }
 const TOUCH := {
 	"interact": "TALK", "shout": "HEY", "turf_map": "MAP", "sprint": "RUN", "jump": "JUMP",
 	"pause": "MENU", "move": "the left stick", "look": "the right stick", "drive": "the left stick", "back": "MENU", "aim": "AIM", "fire": "FIRE",
-	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here", "camera_mode": "VIEW",
+	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here", "camera_mode": "VIEW", "bag": "BAG",
 }
 const PAD := {
 	"interact": "A", "shout": "Y", "turf_map": "View", "sprint": "L3", "jump": "B",
-	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B", "aim": "LT", "fire": "RT", "phone": "D-pad up", "radio": "D-pad down", "skip_tips": "D-pad left", "camera_mode": "R3",
+	"pause": "Menu", "move": "Left stick", "look": "Right stick", "drive": "RT/LT", "back": "B", "aim": "LT", "fire": "RT", "phone": "D-pad up", "radio": "D-pad down", "skip_tips": "D-pad left", "camera_mode": "R3", "bag": "D-pad right",
 }
 ## Stick movement below this doesn't count as switching to the gamepad (drift, resting thumbs).
 const STICK_SWITCH := 0.5

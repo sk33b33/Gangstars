@@ -7,7 +7,7 @@ extends RefCounted
 const ACTIONS := [
 	["move_forward", "Move forward"], ["move_backward", "Move back"], ["move_left", "Move left"], ["move_right", "Move right"],
 	["sprint", "Sprint"], ["jump", "Jump"], ["interact", "Interact"], ["shout", "Whistle"], ["phone", "Phone"],
-	["turf_map", "Turf map"], ["radio", "Car radio"], ["switch_weapon", "Switch weapon"], ["aim", "Aim"], ["fire", "Shoot"], ["camera_mode", "Top-down view"],
+	["turf_map", "Turf map"], ["radio", "Car radio"], ["switch_weapon", "Switch weapon"], ["aim", "Aim"], ["fire", "Shoot"], ["camera_mode", "Top-down view"], ["bag", "Bag"],
 ]
 
 static var _defaults: Dictionary = {}   # action -> Array[InputEvent] (keyboard/mouse only), taken before any change

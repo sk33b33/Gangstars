@@ -1,5 +1,21 @@
 # Changelog
 
+## Survival layer (Zomboid-style), real map view, working rules
+- **Needs:** food, water and rest run down with game time (sprinting makes you thirstier). Empty food/water stops healing and
+  lowers health to a floor; exhausted means no sprinting. Eat and drink from the bag; sleep at the safehouse.
+  Can be switched off in Settings ("Survival needs").
+- **Bag and looting:** a 10 kg bag (I / D-pad right / BAG button), a 60 kg stash at the safehouse, 20 items
+  (`data/survival/items.json`). Shops sell food, drink and bandages and buy junk. A crate beside each shop and a bin at
+  each bus/taxi stop can be searched; raiding a crew den also gives loot. Spots refill after two game days.
+- **Wounds:** a gunshot can leave a bleeding wound (slower, no regeneration, health drains to a floor). Bandage it; it heals
+  with time or sleep.
+- **Skills:** shooting, driving, fitness, hustle and scavenging level up with use and give small bonuses (bag > Skills).
+- All tuning is in `data/survival/`; design in `design/gdd/survival.md`; saved in the `survival` section (old saves load fine).
+- **Real map:** the turf map has a "Show all of Mitchells Plain" view: the real main roads, railway, stations and suburbs
+  from OpenStreetMap inside the KnoxMap outline, with the game's districts placed at their real spots.
+  Data: `data/world/` (built by `tools/osm/`). Local streets are stored for the suburb rebuilds.
+- **Working rules** adapted from Claude Code Game Studios (MIT) in `.claude/rules/`; credits in `docs/THIRD_PARTY.md`.
+
 ## Top-down camera option
 - New `camera_mode` action (V, R3, or the VIEW touch button; also Settings > "Top-down camera"): a high, angled Zomboid-style view. Look only turns the camera; shots go flat along the facing (or at the locked target). The choice is saved.
 - `--top-down` argument for screenshots; 6 new tests.

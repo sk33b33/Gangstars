@@ -91,6 +91,7 @@ func _build() -> void:
 	_check("Autosave (after missions and each new day)", "gameplay/autosave")
 	_check("Gold waypoint marker for the current mission", "gameplay/waypoint")
 	_check("Show tips for new players", "gameplay/tips")
+	_check("Survival needs (hunger, thirst, sleep)", "gameplay/survival")
 	var replay := Button.new()
 	replay.name = "ReplayTutorial"
 	replay.text = "Replay the tutorial"

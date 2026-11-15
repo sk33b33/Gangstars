@@ -118,7 +118,7 @@ func _on_sound_heard(label: String, pos: Vector3) -> void:
 func _update_waypoint() -> void:
 	if waypoint == null or session == null:
 		return
-	var picking := session.crew_picker != null and session.crew_picker.visible   # nothing over the crew choice
+	var picking := (session.crew_picker != null and session.crew_picker.visible) or (session.turf_map != null and session.turf_map.visible)   # nothing over the crew choice or the map
 	var info: Dictionary = session.waypoint_info() if session.missions != null and bool(settings.get_value("gameplay/waypoint")) and not picking else {}
 	if info.is_empty():
 		waypoint.set_target(null)
@@ -169,6 +169,8 @@ func apply_settings() -> void:
 		if not tutorial.enabled and tutorial.active:
 			tutorial.skip()
 	session.autosave_user = bool(settings.get_value("gameplay/autosave"))
+	if session.survival:
+		session.survival.needs.enabled = bool(settings.get_value("gameplay/survival"))
 	district.director.dormant_distance = [150.0, 320.0, INF][int(settings.get_value("video/crowd_range"))]
 	Resident.bubbles_on = bool(settings.get_value("access/speech_bubbles"))
 	player.mouse_sensitivity = float(settings.get_value("controls/mouse_sensitivity"))
@@ -221,6 +223,9 @@ func _run_screenshot() -> void:
 		player.snap_camera()
 	if _args.has("yaw"):
 		player.pivot.rotation.y = deg_to_rad(float(_args.yaw))
+	if _args.has("city-map"):
+		session.turf_map.city_view = true
+		session.turf_map.open()
 	if _args.has("top-down"):
 		player.top_down = true
 	if _args.has("pitch"):

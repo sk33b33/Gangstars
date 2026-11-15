@@ -1,0 +1,14 @@
+{
+  "note": "Where each game district sits on the real map: an OSM suburb name, a station name, or a lat/lon.",
+  "places": {
+    "starter": {"suburb": "Westridge"},
+    "district_east": {"suburb": "Lentegeur"},
+    "district_west": {"suburb": "Rocklands"},
+    "district_town_centre": {"station": "Mitchell's Plain"},
+    "district_tafelsig": {"suburb": "Tafelsig"},
+    "district_beacon_valley": {"latlon": [-34.0407, 18.6240]},
+    "district_portlands": {"suburb": "Portland"},
+    "district_eastridge": {"suburb": "Eastridge"},
+    "district_strandfontein": {"latlon": [-34.0700, 18.5900]}
+  }
+}

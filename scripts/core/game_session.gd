@@ -24,6 +24,8 @@ var player: Player
 var hud: Hud
 var districts: DistrictManager
 var turf_map: TurfMap
+var survival: SurvivalController
+var survival_menus: SurvivalMenus
 var audio: AudioDirector
 var police: PoliceDispatch
 var crew_picker: CrewPicker
@@ -132,6 +134,7 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	turf_map.turf = turf
 	dealing.turf = turf
 	dealing.message.connect(hud.show_message)
+	_setup_survival()
 	phone = Phone.new()
 	phone.name = "Phone"
 	hud.add_child(phone)
@@ -237,6 +240,87 @@ func _physics_process(delta: float) -> void:
 		_refresh()
 
 
+## The survival layer (design/gdd/survival.md): needs, bag, wounds, skills, search spots, shops.
+func _setup_survival() -> void:
+	survival = SurvivalController.new()
+	survival.name = "Survival"
+	add_child(survival)
+	survival.setup(player, district.director.clock, progression)
+	survival.heat_level = func() -> int: return police.heat.level()
+	survival.message.connect(hud.show_message)
+	survival.banner.connect(func(t: String): hud.show_banner(t, 3.0))
+	survival.changed.connect(func():
+		hud.set_survival(survival.status_line())
+		dealing.price_bonus = survival.skills.bonus("hustle"))
+	survival_menus = SurvivalMenus.new(survival, hud, player, progression)
+	survival_menus.on_close = _close_menu
+	dealing.sold.connect(func(_id, _cash): survival.on_sale())
+	district.combat.target_hit.connect(func(target: Node3D, shooter: Node3D, _d, _k):
+		if shooter == player and target != player:
+			survival.on_player_hit_target())
+	interiors.raided.connect(func(place_id: String):
+		hud.show_message(survival.finish_search("den_" + place_id, "den")))
+	# Shops sell food and drink; a crate behind each shop and a bin at each stop can be searched.
+	for area in district.areas:
+		for poi in area.get("pois", []):
+			var at := DataFiles.to_vec2(poi.get("position"))
+			var pos := Vector3(at.x, 0.0, at.y)
+			var kind := str(poi.get("kind", ""))
+			if kind == "shop":
+				_add_shop_counter(str(poi.id), str(poi.get("name", "the shop")), pos)
+				_add_search_prop("crate_" + str(poi.id), "crate", pos + Vector3(2.6, 0, 0), "crate")
+			elif kind == "transit":
+				_add_search_prop("bin_" + str(poi.id), "bin", pos + Vector3(2.2, 0, 0), "bin")
+
+
+func _add_shop_counter(poi_id: String, shop_name: String, pos: Vector3) -> void:
+	var it := Interactable.new()
+	it.name = "Shop_" + poi_id
+	it.kind = "shop"
+	it.target = poi_id
+	it.radius = 1.6
+	it.prompt = "Buy food and drink at %s" % shop_name
+	it.on_interact = func() -> String:
+		survival_menus.open_shop.call_deferred(shop_name)
+		return ""
+	district.add_child(it)
+	it.global_position = pos + Vector3(0, 1.0, 0)
+
+
+## A small visible prop (no collision, so it never blocks the baked navigation) with a search spot.
+func _add_search_prop(spot_id: String, table: String, pos: Vector3, label: String) -> void:
+	var mesh := MeshInstance3D.new()
+	mesh.name = "Prop_" + spot_id
+	if table == "bin":
+		var cyl := CylinderMesh.new()
+		cyl.top_radius = 0.28
+		cyl.bottom_radius = 0.24
+		cyl.height = 0.85
+		mesh.mesh = cyl
+		mesh.position.y = 0.43
+	else:
+		var box := BoxMesh.new()
+		box.size = Vector3(0.9, 0.6, 0.7)
+		mesh.mesh = box
+		mesh.position.y = 0.3
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color("#3d5a45") if table == "bin" else Color("#8a6a45")
+	mat.roughness = 0.9
+	mesh.material_override = mat
+	var holder := Node3D.new()
+	holder.name = "SearchSpot_" + spot_id
+	district.add_child(holder)
+	holder.global_position = pos
+	holder.add_child(mesh)
+	survival.add_spot(spot_id, table, pos, label, holder)
+
+
+func open_bag() -> void:
+	if hud.is_menu_open() or turf_map.visible or (phone and phone.is_open()) or (crew_picker and crew_picker.visible) or player.is_down():
+		return
+	survival_menus.open_bag(interiors != null and interiors.current == SAFEHOUSE_ID)
+
+
 func toggle_phone() -> void:
 	if phone.is_open():
 		phone.close()
@@ -253,6 +337,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event.is_action_pressed("radio") and player.is_driving():
 		hud.show_message(audio.next_station())
+		get_viewport().set_input_as_handled()
+		return
+	if event.is_action_pressed("bag"):
+		open_bag()
 		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("phone"):
@@ -477,6 +565,13 @@ func open_safehouse_menu() -> void:
 				hud.show_message(("Ordered. Pick it up at %s in about %d minutes." % [district.destinations.display_name(dealing.drop_anchor()),
 					int(dealing.state.cfg.get("drops", {}).get("ready_minutes", 20))]) if dealing.buy_stock(idx) else "You can't afford that.")
 				open_safehouse_menu()})
+	var no_sleep := survival.why_not_sleep()
+	items.append({"text": "Sleep (%d hours)%s" % [roundi(survival.needs.sleep_length()), "" if no_sleep.is_empty() else "  [%s]" % no_sleep],
+		"disabled": not no_sleep.is_empty(), "action": func():
+			_close_menu()
+			hud.show_message(survival.sleep())})
+	items.append({"text": "Bag and stash  (%.1f kg carried, %.1f kg stashed)" % [survival.bag.weight(), survival.stash.weight()],
+		"action": func(): survival_menus.open_bag(true)})
 	items.append({"text": "Rest until morning (07:00)", "action": _rest})
 	items.append({"text": "Save game", "action": func(): _menu_feedback(save_game())})
 	items.append({"text": "Load last save", "disabled": not SaveSystem.exists(save_path),
@@ -738,6 +833,7 @@ func snapshot() -> Dictionary:
 		"vehicles": _vehicles_snapshot(),
 		"dealing": dealing.state.to_dict(),
 		"turf": turf.state.to_dict(),
+		"survival": survival.to_dict(),
 	}
 
 
@@ -834,6 +930,7 @@ func apply_snapshot(data: Dictionary) -> String:
 		turf._refresh_tags()
 		turf._refresh_flags()
 	_apply_story_state()
+	survival.load_dict(data.get("survival"))
 	var clock := district.director.clock
 	clock.minutes = clampf(float(c.minutes), 0.0, 1439.9)
 	clock.day = maxi(1, int(c.get("day", 1)))

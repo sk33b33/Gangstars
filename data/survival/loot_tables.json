@@ -1,0 +1,25 @@
+{
+  "tables": {
+    "bin": [
+      {"item": "empty_bottles", "chance": 0.55},
+      {"item": "scrap_metal", "chance": 0.2},
+      {"item": "chips_packet", "chance": 0.12},
+      {"item": "soccer_ball", "chance": 0.06},
+      {"item": "old_radio", "chance": 0.05}
+    ],
+    "crate": [
+      {"item": "tinned_fish", "chance": 0.35},
+      {"item": "water_bottle", "chance": 0.4},
+      {"item": "scrap_metal", "chance": 0.3},
+      {"item": "car_battery", "chance": 0.1},
+      {"item": "bandage", "chance": 0.15}
+    ],
+    "den": [
+      {"item": "bandage", "chance": 0.5},
+      {"item": "first_aid_kit", "chance": 0.2},
+      {"item": "energy_drink", "chance": 0.4},
+      {"item": "wrist_watch", "chance": 0.25},
+      {"item": "gold_chain", "chance": 0.08}
+    ]
+  }
+}

@@ -50,6 +50,8 @@ func _run() -> void:
 	_test_hustle_units()
 	_test_access_units()
 	_test_loading_units()
+	_test_real_map_units()
+	_test_survival_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
 		print("== district (integration)")
@@ -2190,6 +2192,269 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 		session.missions.active.erase(started)
 
 
+func _test_survival_units() -> void:
+	print("== survival units")
+	var cfg := SurvivalConfig.load_default()
+	_check(cfg.items.size() >= 15 and cfg.loot_tables.has("bin") and cfg.num("bag_capacity") > 0.0, "survival data loads (%d items)" % cfg.items.size())
+	var orphan := ""
+	for t in cfg.loot_tables:
+		for e in cfg.loot_tables[t]:
+			if cfg.item(str(e.item)).is_empty():
+				orphan = str(e.item)
+	for k in cfg.shop_stock:
+		for id in cfg.shop_stock[k]:
+			if cfg.item(str(id)).is_empty():
+				orphan = str(id)
+	for id in cfg.values.get("starter_items", {}):
+		if cfg.item(str(id)).is_empty():
+			orphan = str(id)
+	_check(orphan.is_empty(), "every loot, shop and starter entry is a real item (%s)" % orphan)
+	# Needs
+	var n := Needs.new(cfg)
+	n.drain(8.0)
+	_check(is_equal_approx(n.food, 100.0 - 8.0 * float(cfg.values.drain.food)) and n.water < n.food, "needs drain with game time at the data rates (food %.0f, water %.0f)" % [n.food, n.water])
+	var a := Needs.new(cfg)
+	var b := Needs.new(cfg)
+	a.drain(2.0, false)
+	b.drain(2.0, true)
+	_check(b.water < a.water and is_equal_approx(a.food, b.food), "sprinting drains water faster")
+	n.restore("food", 500.0)
+	_check(is_equal_approx(n.food, 100.0), "a need never rises above 100")
+	var warned: Array = []
+	var emptied: Array = []
+	n.warned.connect(func(x): warned.append(x))
+	n.emptied.connect(func(x): emptied.append(x))
+	n.drain(40.0)
+	_check(warned.has("water") and emptied.has("water") and n.starving() and n.exhausted(), "low and empty needs are announced once")
+	n.enabled = false
+	_check(not n.starving() and not n.exhausted() and not n.is_low("food"), "switched off, needs have no effect")
+	n.enabled = true
+	n.rest = 10.0
+	var slept := n.sleep()
+	_check(is_equal_approx(slept, cfg.num("sleep_hours")) and is_equal_approx(n.rest, 100.0), "a tired sleep is a full sleep and refills rest")
+	n.rest = 95.0
+	_check(is_equal_approx(n.sleep_length(), 1.0), "a nap when barely tired is one hour")
+	n.food = 0.0
+	n.wake_up()
+	_check(n.food >= cfg.num("wake_minimum"), "waking after a knock-out never leaves you starving")
+	# Bag
+	var bag := Inventory.new(cfg, 1.0)
+	_check(bag.add("water_bottle") and bag.add("bread_roll") and not bag.add("scrap_metal"), "the bag refuses what is too heavy")
+	_check(not bag.add("no_such_item") and is_equal_approx(bag.weight(), 0.7), "unknown items are refused; weight adds up (%.1f)" % bag.weight())
+	var stash := Inventory.new(cfg, 0.3)
+	_check(bag.move_to(stash, "bread_roll") and not bag.move_to(stash, "water_bottle") and bag.count("water_bottle") == 1, "moving to a full stash moves nothing")
+	_check(bag.remove("water_bottle") and not bag.remove("water_bottle") and bag.ids().is_empty(), "items are removed one at a time")
+	var back := Inventory.new(cfg, 5.0)
+	back.load_dict({"gatsby": 2, "junk_id": 4, "bandage": 0})
+	_check(back.count("gatsby") == 2 and back.ids().size() == 1, "a saved bag loads, dropping unknown items")
+	# Loot
+	var loot := Loot.new(cfg)
+	var first: Array = loot.contents("crate_x", "crate", 3)
+	_check(first == loot.contents("crate_x", "crate", 4), "a search spot holds the same things until it is emptied")
+	var differs := false
+	for i in 12:
+		if loot.contents("crate_%d" % i, "crate", 3) != first:
+			differs = true
+	_check(differs, "different spots hold different things")
+	loot.mark_searched("crate_x", 3)
+	_check(loot.is_empty("crate_x", 4) and loot.contents("crate_x", "crate", 4).is_empty() and not loot.is_empty("crate_x", 3 + int(cfg.num("refill_days"))), "a searched spot is empty until it refills")
+	# Wounds
+	var w := Wounds.new(cfg)
+	_check(not w.on_hit(0.99) and w.on_hit(0.0) and w.bleeding == 1, "a hit can leave a bleeding wound (by chance)")
+	w.on_hit(0.0)
+	w.on_hit(0.0)
+	_check(not w.on_hit(0.0) and w.bleeding == int(cfg.num("max_wounds")), "wounds are capped")
+	_check(w.blocks_sprint() and w.speed_factor() < 0.75, "bleeding wounds slow you and stop sprinting")
+	_check(w.bleed_damage(10.0, 100.0) > 0.0 and is_zero_approx(w.bleed_damage(10.0, cfg.num("bleed_floor"))), "bleeding stops at the health floor")
+	_check(w.bandage(1) == 1 and w.bleeding == 2 and w.bandaged.size() == 1, "a bandage treats one wound")
+	w.bandage_all()
+	_check(w.bleeding == 0 and is_equal_approx(w.speed_factor(), 1.0) and is_zero_approx(w.bleed_damage(10.0, 100.0)), "bandaged wounds neither bleed nor limp")
+	w.tick_hours(cfg.num("heal_hours") - 1.0)
+	var mid := w.bandaged.size()
+	w.tick_hours(1.5)
+	_check(mid == 3 and w.bandaged.is_empty(), "bandaged wounds heal with time")
+	# Skills
+	var sk := Skills.new(cfg)
+	_check(is_equal_approx(sk.threshold(1), 100.0) and absf(sk.threshold(2) - 282.8) < 0.5, "level thresholds follow the formula (100, 283)")
+	var ups: Array = []
+	sk.levelled.connect(func(id, lvl): ups.append([id, lvl]))
+	sk.add("hustle", "sale", 9.0)
+	_check(sk.level("hustle") == 0 and sk.progress("hustle") > 0.8, "XP builds towards a level")
+	sk.add("hustle", "sale", 1.0)
+	_check(sk.level("hustle") == 1 and ups == [["hustle", 1]] and is_equal_approx(sk.bonus("hustle"), 0.03), "a level-up is announced and gives its bonus")
+	sk.add("hustle", "sale", 1000.0)
+	_check(sk.level("hustle") == int(cfg.num("max_level")) and is_equal_approx(sk.progress("hustle"), 1.0), "skills stop at the top level")
+	sk.add("hustle", "no_such_event")
+	sk.add("no_such_skill", "sale")
+	var copy := Skills.new(cfg)
+	copy.load_dict(sk.to_dict())
+	_check(copy.level("hustle") == sk.level("hustle") and not copy.xp.has("no_such_skill"), "skills save and load")
+
+
+var _real_drain: Dictionary = {}
+
+
+func _test_survival_in_game(main: Node, district: District, player: Player) -> void:
+	print("== survival in game")
+	var session: GameSession = main.session
+	var sv: SurvivalController = session.survival
+	var clock := district.director.clock
+	sv.reset()
+	sv.config.values["drain"] = _real_drain
+	_check(sv.bag.count("bandage") == 1 and sv.bag.count("water_bottle") == 1, "a new game starts with a few things in the bag")
+	_check(sv.spot_ids().size() >= 8, "there are bins and crates to search (%d)" % sv.spot_ids().size())
+	_check(district.get_node_or_null("Shop_poi_shop") != null, "the cafe has a counter to buy from")
+	# Eating and drinking
+	sv.needs.food = 50.0
+	sv.needs.water = 100.0
+	_check(sv.use_item("water_bottle").begins_with("No need") and sv.bag.count("water_bottle") == 1, "an item you don't need is kept")
+	_check(sv.use_item("bread_roll").begins_with("Used") and is_equal_approx(sv.needs.food, 70.0) and sv.bag.count("bread_roll") == 0, "eating raises food and uses the item")
+	# Buying
+	var cash0 := session.progression.cash
+	session.progression.add_cash(100)
+	_check(sv.buy("vetkoek").begins_with("Bought") and session.progression.cash == cash0 + 85 and sv.bag.count("vetkoek") == 1, "buying takes the cash and fills the bag")
+	sv.bag.capacity = sv.bag.weight()
+	var cash1 := session.progression.cash
+	_check(sv.buy("gatsby").contains("full") and session.progression.cash == cash1, "a full bag refuses the sale and keeps your cash")
+	sv.bag.capacity = sv.config.num("bag_capacity")
+	sv.bag.add("empty_bottles")
+	_check(sv.sell("empty_bottles").begins_with("Sold") and session.progression.cash == cash1 + 6, "junk sells at shops")
+	session.progression.add_cash(cash0 - session.progression.cash)
+	# Needs over time, and their effects
+	var t0 := sv.needs.food
+	clock.advance(60.0 / clock.minutes_per_second)
+	for i in 3:
+		await physics_frame
+	_check(sv.needs.food < t0 and sv.needs.food > t0 - 4.0, "an hour of game time makes you hungrier (%.1f -> %.1f)" % [t0, sv.needs.food])
+	sv.needs.food = 0.0
+	player.health.hp = 100.0
+	player.health._since_hit = 99.0
+	clock.advance(90.0 / clock.minutes_per_second)
+	for i in 3:
+		await physics_frame
+	_check(player.health.regen_blocked and player.health.hp < 100.0 and player.health.hp >= sv.config.num("starve_floor"), "starving stops healing and lowers health, but not below the floor (%.0f)" % player.health.hp)
+	_check(session.hud.stats_text().contains("Hungry"), "the HUD shows what needs attention")
+	sv.needs.food = 100.0
+	sv.needs.rest = 0.0
+	for i in 3:
+		await physics_frame
+	_check(not player.sprint_allowed and player.speed_factor < 1.0, "exhausted: no sprinting and a slower walk")
+	# Sleep
+	session.police.heat.add(2.0)
+	_check(not sv.why_not_sleep().is_empty(), "no sleeping while SAPS is looking for you")
+	session.police.heat.clear()
+	var before := sv.total_minutes()
+	_check(sv.sleep().begins_with("You sleep") and is_equal_approx(sv.needs.rest, 100.0) and sv.total_minutes() - before > 400.0, "sleeping refills rest and moves the clock")
+	for i in 3:
+		await physics_frame
+	_check(player.sprint_allowed and sv.needs.food > 80.0, "after sleeping you can run again; sleep costs only a little food")
+	# Wounds
+	sv.config.values["wound_chance"] = 1.0
+	player.health.hp = 100.0
+	player.on_shot(10.0, null)
+	_check(sv.wounds.bleeding == 1, "a gunshot can leave you bleeding")
+	var hp0 := player.health.hp
+	for i in 120:
+		await physics_frame
+	_check(player.health.hp < hp0 and player.health.regen_blocked and player.speed_factor < 1.0, "bleeding lowers health and slows you")
+	_check(not sv.why_not_sleep().is_empty(), "no sleeping while bleeding")
+	_check(sv.use_item("bandage").begins_with("Used") and sv.wounds.bleeding == 0 and sv.wounds.bandaged.size() == 1, "a bandage stops the bleeding")
+	sv.config.values["wound_chance"] = 0.0
+	sv.sleep()
+	_check(sv.wounds.bandaged.is_empty(), "sleep heals bandaged wounds")
+	player.health.hp = 100.0
+	# Searching
+	var spot: String = sv.spot_ids()[0]
+	var it: Interactable = sv._spots[spot]
+	var table := "bin" if spot.begins_with("bin") else "crate"
+	var expect: Array = sv.loot.contents(spot, table, clock.day)
+	player.global_position = it.global_position + Vector3(0.8, 0, 0)
+	player.input_enabled = true
+	var weight0 := sv.bag.weight()
+	_check(it.interact(player) == "Searching..." and sv.is_searching(), "a search takes a moment")
+	for i in 200:
+		await physics_frame
+	_check(not sv.is_searching() and sv.loot.is_empty(spot, clock.day) and (expect.is_empty() or sv.bag.weight() > weight0), "the search finishes: the spot is emptied and the finds are in the bag")
+	_check(it.interact(player).begins_with("Nothing left"), "a searched spot has nothing until it refills")
+	_check(sv.skills.xp.get("scavenging", 0.0) > 0.0, "searching trains scavenging")
+	var spot2: String = sv.spot_ids()[1]
+	var it2: Interactable = sv._spots[spot2]
+	player.global_position = it2.global_position + Vector3(0.8, 0, 0)
+	it2.interact(player)
+	player.global_position += Vector3(12, 0, 0)
+	for i in 5:
+		await physics_frame
+	_check(not sv.is_searching() and not sv.loot.is_empty(spot2, clock.day), "walking away cancels a search and leaves the spot full")
+	# Skills in play
+	sv.skills.xp["shooting"] = sv.skills.threshold(2)
+	sv.skills.xp["fitness"] = sv.skills.threshold(1)
+	sv.skills.xp["driving"] = sv.skills.threshold(1)
+	sv.skills.xp["hustle"] = sv.skills.threshold(2)
+	for i in 35:
+		await physics_frame
+	_check(player.spread_factor < 0.9 and player.sprint_factor > 1.0 and player.drive_factor > 1.0 and session.dealing.price_bonus > 0.05, "skill levels give their bonuses (spread %.2f, sprint %.2f, drive %.2f, price +%.0f%%)" % [player.spread_factor, player.sprint_factor, player.drive_factor, session.dealing.price_bonus * 100.0])
+	# Bag screen
+	session.open_bag()
+	_check(session.hud.is_menu_open() and not player.input_enabled, "the bag opens as a menu")
+	session.survival_menus.close()
+	_check(not session.hud.is_menu_open() and player.input_enabled, "closing the bag gives the controls back")
+	_check(InputMap.has_action("bag") and main.touch._button("bag").size() > 0, "the bag has a key, a pad button and a touch button")
+	# Save and load
+	sv.needs.water = 42.0
+	sv.stash.add("tinned_fish")
+	sv.wounds.bleeding = 1
+	var snap: Dictionary = session.snapshot()
+	sv.reset()
+	_check(session.apply_snapshot(snap).is_empty() and is_equal_approx(sv.needs.water, 42.0) and sv.stash.count("tinned_fish") == 1 and sv.wounds.bleeding == 1
+		and sv.skills.level("hustle") == 2 and sv.loot.is_empty(spot, clock.day), "saving and loading keeps needs, stash, wounds, skills and searched spots")
+	snap.erase("survival")
+	_check(session.apply_snapshot(snap).is_empty() and is_equal_approx(sv.needs.water, 100.0) and sv.wounds.bleeding == 0 and sv.bag.count("bandage") == 1, "an old save without survival data loads with a fresh state")
+	main.settings.set_value("gameplay/survival", false)
+	_check(not sv.needs.enabled, "survival needs can be switched off in the settings")
+	main.settings.set_value("gameplay/survival", true)
+	sv.reset()
+	sv.config.values["drain"] = {"food": 0.0, "water": 0.0, "rest": 0.0}
+	for i in 35:
+		await physics_frame
+	player.health.hp = 100.0
+
+
+func _test_real_map_units() -> void:
+	var rm := RealMap.new()
+	_check(rm.load_data(), "the real Mitchells Plain map loads")
+	_check(rm.outline.size() >= 7 and rm.bounds.size.x > 6000.0 and rm.bounds.size.y > 6000.0, "the outline is the KnoxMap area (%.1f x %.1f km)" % [rm.bounds.size.x / 1000.0, rm.bounds.size.y / 1000.0])
+	var mains := rm.road_names("main")
+	_check(mains.has("A.Z. Berman Drive") and mains.has("Spine Road") and mains.has("Morgenster Road"), "the real main roads are there (AZ Berman, Spine, Morgenster)")
+	_check(rm.rail.size() > 0 and rm.stations.any(func(s): return str(s.name).begins_with("Mitchell")), "the railway and Mitchells Plain station are there")
+	_check(rm.credit.contains("OpenStreetMap"), "the map credits OpenStreetMap")
+	var placed := 0
+	for id in ["starter", "district_east", "district_west", "district_town_centre", "district_tafelsig", "district_beacon_valley", "district_portlands", "district_eastridge", "district_strandfontein"]:
+		var at: Variant = rm.district_position(id)
+		if at != null and rm.bounds.grow(200.0).has_point(at):
+			placed += 1
+	_check(placed == 9, "every game district has a spot on the real map (%d/9)" % placed)
+	var w: Vector2 = rm.district_position("starter")
+	var t: Vector2 = rm.district_position("district_tafelsig")
+	_check(t.x > w.x + 2000.0, "Tafelsig lies east of Westridge, as in real life")
+	_check(rm.load_streets().size() > 2000, "the local streets are stored for the suburb rebuilds")
+
+
+func _test_city_map_in_game(main: Node, player: Player) -> void:
+	var tm: TurfMap = main.session.turf_map
+	_check(tm.real_map != null and not tm.city_view, "the turf map opens on your turf")
+	tm.open()
+	var btn: Button = tm._side.get_node_or_null("ViewToggle")
+	_check(btn != null, "the map has a button for all of Mitchells Plain")
+	btn.pressed.emit()
+	await process_frame
+	await process_frame
+	var pp: Variant = tm.city_player_position()
+	var west: Vector2 = tm.real_map.district_position("starter")
+	_check(tm.city_view and pp != null and (pp as Vector2).distance_to(west) < 200.0, "the city view shows you in Westridge")
+	tm.city_view = false
+	tm.close()
+
+
 func _test_view_in_game(main: Node, player: Player) -> void:
 	_check(InputMap.has_action("camera_mode") and not player.top_down, "third-person is the default view")
 	var arm := player.spring_arm.spring_length
@@ -2937,6 +3202,9 @@ func _test_district() -> void:
 	# New game: the crew choice comes first. Join the Spine Road Stylers through the picker's button.
 	main.session.turf.state.next_push = 1e9   # no surprise rival pushes during the other tests
 	main.session.autosave_enabled = false     # a test's own save is never overwritten behind its back
+	_real_drain = main.session.survival.config.values.drain
+	main.session.survival.config.values["drain"] = {"food": 0.0, "water": 0.0, "rest": 0.0}   # the other tests skip hours and days: no hunger,
+	main.session.survival.config.values["wound_chance"] = 0.0   # and no bleeding (the survival tests switch them on)
 	var picker: CrewPicker = main.session.crew_picker
 	_check(picker != null and picker.visible and not player.input_enabled, "a new game opens the crew picker first")
 	_check(picker.button("tortel_crew") != null and picker.button("klipspringers") != null, "four crews to choose from")
@@ -3186,7 +3454,9 @@ func _test_district() -> void:
 	await _test_tafelsig_in_game(main, district, player)
 	await _test_guidance_in_game(main, district, player)
 	await _test_view_in_game(main, player)
+	await _test_city_map_in_game(main, player)
 	await _test_touch_in_game(main, district, player)
+	await _test_survival_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
 	await _test_dormant_in_game(main, district, player)
 	await _test_consequences_in_game(main, district, player)

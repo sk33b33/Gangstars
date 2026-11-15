@@ -17,6 +17,9 @@ extends Node
 
 signal ringing(call: Dictionary)
 signal message(text: String)
+signal sold(npc_id: String, cash: int)
+## Extra street price from the hustle skill (0.06 = +6%); set by the survival layer.
+var price_bonus := 0.0
 
 const POLICE_SEE_RANGE := 18.0
 const BAKKIE_SEE_RANGE := 25.0
@@ -163,8 +166,9 @@ func try_sell(npc_id: String) -> String:
 		state.bust(npc_id)
 		police.heat.add(2.0)
 		return "BUSTED! SAPS saw the hand-over. The %s is gone and %s is spooked." % [_plural(o.product, int(o.qty)), name]
-	var cash := state.complete(npc_id, minutes(), client_mult(npc_id))
+	var cash := state.complete(npc_id, minutes(), client_mult(npc_id) * (1.0 + price_bonus))
 	progression.add_cash(cash)
+	sold.emit(npc_id, cash)
 	missions._check_stat_objectives()
 	var r: Resident = district.residents.get(npc_id)
 	if r:

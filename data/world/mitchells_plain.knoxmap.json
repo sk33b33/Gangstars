@@ -1,0 +1,112 @@
+{
+  "format": "knoxmap-preset",
+  "version": 1,
+  "name": "Mitchells_Plain_2",
+  "south": -34.072905,
+  "west": 18.57358899999997,
+  "north": -34.003298,
+  "east": 18.658905000000004,
+  "metersPerTile": 1.0,
+  "shape": {
+    "type": "MultiPolygon",
+    "coordinates": [
+      [
+        [
+          [
+            18.573589,
+            -34.023801
+          ],
+          [
+            18.598995,
+            -34.072905
+          ],
+          [
+            18.626804,
+            -34.07262
+          ],
+          [
+            18.658905,
+            -34.065648
+          ],
+          [
+            18.631783,
+            -34.018106
+          ],
+          [
+            18.630409,
+            -34.003298
+          ],
+          [
+            18.617363,
+            -34.015686
+          ],
+          [
+            18.573589,
+            -34.023801
+          ]
+        ]
+      ]
+    ]
+  },
+  "preset": "suburb",
+  "settings": {
+    "spawn_density": 10,
+    "zombies_per_resident": 1.0,
+    "m2_per_person": 60.0,
+    "align_streets": 1,
+    "rotate_degrees": 0.0,
+    "straight_roads": 0,
+    "include_proposed_roads": 0,
+    "tree_density": 1.3,
+    "forest_density": 1.0,
+    "forest_stand_m": 60,
+    "forest_edge_m": 30,
+    "forest_thickets": 1.0,
+    "forest_stand_variety": 0.0,
+    "forest_raggedness": 0.25,
+    "forest_edge_wobble": 0.4,
+    "forest_spill_thick": 0.4,
+    "forest_keep_meadows": 0.33,
+    "forest_seed": 2207,
+    "forest_house_clearing_m": 20,
+    "forest_big_trees": 1.0,
+    "forest_groves": 1.0,
+    "forest_wild_growth": 1.0,
+    "forest_shrubland": 1.0,
+    "terrain_only": 0,
+    "seed": 1,
+    "true_map": 1,
+    "fill_gaps": 0,
+    "fill_frontage": 0,
+    "guaranteed_rifle": 1,
+    "building_mix": "",
+    "spread_buildings": 1,
+    "max_buildings": 0,
+    "min_size": 3,
+    "max_size": 200,
+    "apartment_footprint": 600,
+    "apartment_chance": 0.1,
+    "max_levels": 2,
+    "vanilla_tiles": 0,
+    "square_buildings": 15,
+    "room_size": 24,
+    "room_solver": 0,
+    "neighbourhood_tiles": 140,
+    "style_oddity": 0.18,
+    "arch_style": "auto",
+    "height_mix": "auto",
+    "parking_density": 1.4,
+    "basement_share": 0.4,
+    "max_basement_depth": 8,
+    "building_alignment": "rectilinear",
+    "landcover": "worldcover",
+    "elevation": "3dep",
+    "max_relief": 4,
+    "ne_context": 1,
+    "region_override": "auto",
+    "hospitals": "hifld",
+    "hospitals_place_missing": 0,
+    "climate_flavor": 1,
+    "winter_look": "auto"
+  }
+}

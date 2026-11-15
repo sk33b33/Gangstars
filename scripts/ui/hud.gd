@@ -122,7 +122,24 @@ func combat_text() -> String:
 
 
 func set_stats(p: ProgressionState) -> void:
-	_stats.text = "R%d   ·   Rep %d   ·   Crew %d (influence %d)" % [p.cash, p.reputation, p.recruited_crew_ids.size(), p.crew_influence]
+	_stats_base = "R%d   ·   Rep %d   ·   Crew %d (influence %d)" % [p.cash, p.reputation, p.recruited_crew_ids.size(), p.crew_influence]
+	_stats.text = _stats_base if _survival_text.is_empty() else _stats_base + "   ·   " + _survival_text
+
+
+var _stats_base := ""
+var _survival_text := ""
+
+
+## Hunger, thirst, tiredness and wounds, shown after the cash line only when they need attention.
+func set_survival(text: String) -> void:
+	if text == _survival_text:
+		return
+	_survival_text = text
+	_stats.text = _stats_base if text.is_empty() else _stats_base + "   ·   " + text
+
+
+func stats_text() -> String:
+	return _stats.text
 
 
 func set_tracker(text: String) -> void:
