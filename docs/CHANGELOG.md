@@ -5,7 +5,7 @@
   their gates, traffic, ground and street builders, the "switch world" button and the old-world test branches are gone.
 - The five district data sets now describe turf sectors inside Westridge (Westridge, Harvester, Rocklands, Westridge Centre,
   Duneside); locked sectors are walkable but the player cannot hold turf there until they unlock.
-- Every home has a real street name and number. Full suite passed 1528/1528 before the removal; re-run after it.
+- Every home has a real street name and number. Full suite after the removal: 1524/1524 passed.
 - Obsolete generators removed (`generate_starter_data.py`, `generate_district.py`, `make_tafelsig.py`);
   `tools/world/relocate_to_real.py` and the rebuild scripts are kept as records of the migration only.
 
