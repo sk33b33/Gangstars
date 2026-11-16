@@ -591,3 +591,32 @@ sprite("rain_drops", { w: 32, h: 16 },
   circ(19, 1, 1, "#cfe3f2aa"), line(14, 10, 14, 14, "#cfe3f288"), line(4, 4, 4, 7, "#cfe3f288"), line(24, 5, 24, 9, "#cfe3f288"), px(2, 9, "#ffffffaa"), px(21, 7, "#ffffffaa"))
 sprite("skid_mark", { w: 8, h: 32 },
   rect(1, 0, 2, 32, "#15151888"), rect(5, 0, 2, 32, "#15151888"), rect(1, 0, 2, 4, "#15151833"), rect(5, 0, 2, 4, "#15151833"))
+
+// ---- World detail pass 2026-11-16 ----
+// Dual-road median: mown kikuyu with bare sandy wheel-scuffed patches (cause: cars cutting the corner, foot traffic).
+pal({ "<": "#6f8a3f", ">": "#93ab5c" })
+sprite("median_grass", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "#7f9a4c"), noise(0, 0, 32, 32, "<", 0.12, 9), noise(0, 0, 32, 32, ">", 0.08, 4),
+  ellipse(9, 22, 5, 3, "#b9a57e"), ellipse(10, 22, 3, 2, "#c9b68c"), ellipse(25, 8, 3, 2, "#b9a57e"))
+// STOP painted on the lane before a stop line (read from the driver's seat: letters stretched along the road).
+sprite("stop_text", { w: 16, h: 32 },
+  (c) => {
+    const W = "#f1eee8"
+    // S
+    c.rect(3, 1, 10, 2, W); c.rect(3, 3, 2, 3, W); c.rect(3, 6, 10, 2, W); c.rect(11, 8, 2, 3, W); c.rect(3, 11, 10, 2, W)
+  },
+  (c) => { const W = "#f1eee8"; c.rect(3, 14, 10, 2, W); c.rect(7, 16, 2, 5, W) },
+  (c) => { const W = "#f1eee8"; c.rect(3, 22, 10, 2, W); c.rect(3, 24, 2, 3, W); c.rect(11, 24, 2, 3, W); c.rect(3, 27, 10, 2, W) },
+  (c) => { const W = "#f1eee8"; c.rect(3, 30, 2, 2, W); c.rect(5, 30, 6, 1, W) })
+// Oil drip under where cars park: dark, soft-edged, with a sheen ring.
+sprite("oil_stain", { w: 16, h: 16 },
+  ellipse(8, 8, 6, 5, "#2e2c2a"), ellipse(7, 8, 4, 3, "#24221f"), ellipse(10, 6, 2, 1, "#3d3b3a"), px(13, 11, "#2e2c2a"), px(3, 4, "#2e2c2a"))
+// A second community mural: the mountain at sunset over rooftops (made up, no words).
+sprite("mural_mountain", { w: 48, h: 20 },
+  rect(0, 0, 48, 20, "#f08a3c"), rect(0, 0, 48, 5, "#d8613a"), circ(36, 9, 4, "#ffd25e"),
+  poly([2, 14, 10, 8, 34, 8, 40, 12, 46, 14], "#5a3d6b"), poly([10, 8, 12, 6, 30, 6, 34, 8], "#4a3260"),
+  rect(0, 14, 48, 6, "#2c3e50"), (c) => { for (let x = 2; x < 46; x += 6) { c.rect(x, 12, 4, 3, "#e8967a"); c.poly([x - 1, 12, x + 2, 10, x + 5, 12], "#a24a32") } },
+  hline(0, 0, 48, "#1d1b24"), hline(0, 19, 48, "#1d1b24"), vline(0, 0, 20, "#1d1b24"), vline(47, 0, 20, "#1d1b24"))
+// Striped market-stall awning.
+sprite("awning_stripes", { w: 32, h: 16 },
+  (c) => { for (let x = 0; x < 32; x += 8) { c.rect(x, 0, 4, 16, "#d6403e"); c.rect(x + 4, 0, 4, 16, "#f4f1ea") } }, hline(0, 15, 32, "#a83230"))

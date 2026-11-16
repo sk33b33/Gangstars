@@ -1,0 +1,381 @@
+class_name RealStreetDecor
+extends RefCounted
+## The details that make the real Westridge streets look lived in: speed humps on residential
+## streets, stop lines and STOP where a side street meets a bigger road, zebra crossings by schools
+## and shops, grass medians between dual carriageways, wooden power poles with sagging wires (and
+## the odd pair of sneakers), wear (potholes, tar patches, oil, sand in the gutters, litter), drain
+## grates and manholes, bus and taxi stops, and the trees along Park Avenue.
+## Worked out from a chunk's roads and RealDistrictData.street_context only, so a street always
+## looks the same. Nothing here blocks people (no navigation obstacles): it is flat, thin or overhead.
+## Design: design/gdd/real_world.md ("Street details").
+
+const RANKS := {"path": 0, "lane": 1, "street": 2, "collector": 3, "main": 4}
+## Kinds of real place that get a zebra crossing on the road nearest them, and how far away that road may be.
+const CROSSING_KINDS := ["school", "retail", "kindergarten", "clinic", "community_centre", "convenience", "mall"]
+const CROSSING_REACH := 70.0
+const Y_GROUND_DECAL := 0.0245   # above the verge, footway and kerb
+const Y_MEDIAN := 0.0222         # above the footway and verge, below the kerb
+const Y_ROAD_DECAL := 0.035      # above the asphalt, below the paint
+const HUMP_MIN_PIECE := 70.0
+const HUMP_HEIGHT := 0.08
+const HUMP_LENGTH := 3.6
+const STOP_BACK := 1.2           # stop line this far before the crossing road's kerb
+const POLE_SPACING := 38.0
+const POLE_HEIGHT := 8.5
+const WIRE_SAG := 0.6
+const SNEAKER_ONE_IN := 12
+const STOP_MIN_PIECE := 120.0    # bus / taxi stop on main roads and collectors at least this long
+const TREE_STREETS := ["Park Avenue"]
+const TREE_SPACING := 14.0
+const PAINT := "#f1eee8"
+const WOOD := "#6b4a33"
+const WIRE := "#26262a"
+
+
+static func rank(cls: String) -> int:
+	return int(RANKS.get(cls, 1))
+
+
+## Road piece ends that meet are within a centimetre or two of each other: half-metre cells join them.
+static func node_key(p: Vector2) -> Vector2i:
+	return Vector2i(roundi(p.x * 2.0), roundi(p.y * 2.0))
+
+
+## Adds the street details of a chunk. `props`: {prop name: Array[Transform3D]} filled for the
+## builder's MultiMeshes (trees).
+static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
+	var lamps: PackedVector3Array = ctx.get("lamps", PackedVector3Array())
+	for r: Dictionary in roads:
+		var cls := str(r.c)
+		if cls == "path" or cls == "lane":
+			continue
+		var line := RealChunkBuilder._line(r.p)
+		if line.size() < 2:
+			continue
+		var width := float(r.w)
+		var pave := float(r.get("s", 0.0))
+		var length := RealChunkBuilder._length(line)
+		var rng := RandomNumberGenerator.new()
+		rng.seed = hash(Vector2i(roundi(line[0].x * 10.0), roundi(line[0].y * 10.0)))
+		if cls == "street" and length >= HUMP_MIN_PIECE and rng.randi() % 2 == 0:
+			_hump(line, length * (0.35 + rng.randf() * 0.3), width, surfaces, materials)
+		_stop_lines(r, line, width, ctx.get("nodes", {}), surfaces, materials)
+		if cls == "main" and int(r.get("o", 0)) != 0:
+			_median(line, width, str(r.get("n", "")), ctx.get("oneways", []), surfaces, materials)
+		var poles: Array = []
+		if cls == "street" or cls == "collector":
+			poles = _power_line(line, width, pave, lamps, rng, surfaces, materials)
+		_wear(cls, line, width, pave, length, rng, surfaces, materials)
+		if (cls == "main" or cls == "collector") and length >= STOP_MIN_PIECE and pave >= 2.0:
+			_shelter(line, width, length, rng, surfaces, materials)
+		if str(r.get("n", "")) in TREE_STREETS and pave > 0.0:
+			_street_trees(line, width, pave, lamps, poles, rng, props)
+	for c: Dictionary in ctx.get("crossings", []):
+		_zebra(c.at, c.dir, float(c.w), surfaces, materials)
+
+
+# ------------------------------------------------------------------ helpers
+
+## Queues one prop (a PropLibrary mesh) for the chunk's MultiMesh of that prop.
+static func add_prop(props: Dictionary, prop: String, p: Vector2, rot: float, scale := 1.0, y := 0.0) -> void:
+	if not props.has(prop):
+		props[prop] = []
+	props[prop].append(Transform3D(Basis(Vector3.UP, rot).scaled(Vector3.ONE * scale), Vector3(p.x, y, p.y)))
+
+
+static func _flat(key: String, color: String, surfaces: Dictionary, materials: Dictionary) -> SurfaceTool:
+	return RealChunkBuilder._tool(key, surfaces, materials, PixelMaterials.flat(Color(color)))
+
+
+static func _decal_tool(tex: String, surfaces: Dictionary, materials: Dictionary) -> SurfaceTool:
+	return RealChunkBuilder._tool("decal_" + tex, surfaces, materials, PixelMaterials.panel(tex, Color.WHITE, true))
+
+
+## The point `dist` metres along the polyline and the direction there.
+static func at_distance(line: PackedVector2Array, dist: float) -> Array:
+	var walked := 0.0
+	for i in line.size() - 1:
+		var seg := line[i + 1] - line[i]
+		var l := seg.length()
+		if l <= 0.0001:
+			continue
+		if walked + l >= dist:
+			return [line[i] + seg / l * (dist - walked), seg / l]
+		walked += l
+	var last := (line[line.size() - 1] - line[line.size() - 2]).normalized()
+	return [line[line.size() - 1], last]
+
+
+## The driver's left for a direction of travel (x east, z south): keep-left traffic drives on this side.
+static func left_of(d: Vector2) -> Vector2:
+	return Vector2(d.y, -d.x)
+
+
+## A textured quad lying flat: centre c, `d` along its length (the texture's top towards +d),
+## `width` across, `length` along, at height y.
+static func decal(st: SurfaceTool, c: Vector2, d: Vector2, width: float, length: float, y: float) -> void:
+	var left := left_of(d)
+	var fl := c + d * length * 0.5 + left * width * 0.5
+	var fr := c + d * length * 0.5 - left * width * 0.5
+	var br := c - d * length * 0.5 - left * width * 0.5
+	var bl := c - d * length * 0.5 + left * width * 0.5
+	var pts := [fl, fr, br, bl]
+	var uvs := [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	for k: int in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[k])
+		st.set_normal(Vector3.UP)
+		st.add_vertex(Vector3(pts[k].x, y, pts[k].y))
+
+
+# ------------------------------------------------------------------ details
+
+## A speed hump across the road (the gutters stay open), painted in the hump stripes.
+static func _hump(line: PackedVector2Array, dist: float, width: float, surfaces: Dictionary, materials: Dictionary) -> void:
+	var here: Array = at_distance(line, dist)
+	var c: Vector2 = here[0]
+	var d: Vector2 = here[1]
+	var left := left_of(d)
+	var half_w := width * 0.5 - RealChunkBuilder.GUTTER_WIDTH
+	var st := RealChunkBuilder._tool("hump", surfaces, materials, PixelMaterials.panel("speed_hump"))
+	var y0 := RealChunkBuilder.Y_ROAD + 0.002
+	var steps := [[-HUMP_LENGTH * 0.5, y0], [-HUMP_LENGTH * 0.25, y0 + HUMP_HEIGHT], [HUMP_LENGTH * 0.25, y0 + HUMP_HEIGHT], [HUMP_LENGTH * 0.5, y0]]
+	var u := half_w * 2.0 / 2.0   # stripes repeat every 2 m across
+	for k in 3:
+		var a: Array = steps[k]
+		var b: Array = steps[k + 1]
+		var p0 := c + d * float(a[0])
+		var p1 := c + d * float(b[0])
+		var quad := [Vector3((p0 + left * half_w).x, a[1], (p0 + left * half_w).y), Vector3((p0 - left * half_w).x, a[1], (p0 - left * half_w).y),
+			Vector3((p1 - left * half_w).x, b[1], (p1 - left * half_w).y), Vector3((p1 + left * half_w).x, b[1], (p1 + left * half_w).y)]
+		var uvs := [Vector2(0, 0), Vector2(u, 0), Vector2(u, 1), Vector2(0, 1)]
+		for i: int in [0, 1, 2, 0, 2, 3]:
+			st.set_uv(uvs[i])
+			st.add_vertex(quad[i])
+		for i: int in [0, 2, 1, 0, 3, 2]:   # both windings: seen from either way along the road
+			st.set_uv(uvs[i])
+			st.add_vertex(quad[i])
+
+
+## A stop line across the arriving lane and STOP painted before it, at each end of a piece that
+## meets a bigger road.
+static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, nodes: Dictionary, surfaces: Dictionary, materials: Dictionary) -> void:
+	var own := rank(str(r.c))
+	for end_i: int in [0, line.size() - 1]:
+		var e := line[end_i]
+		var inward := (e - line[1]).normalized() if end_i == 0 else (e - line[line.size() - 2]).normalized()
+		var biggest := -1
+		var cross_w := 0.0
+		var skipped_self := false
+		for entry: Array in nodes.get(node_key(e), []):
+			if int(entry[0]) == own and absf(float(entry[1]) - width) < 0.01 and not skipped_self:
+				skipped_self = true
+				continue
+			if int(entry[0]) > biggest:
+				biggest = int(entry[0])
+				cross_w = float(entry[1])
+		if biggest <= own:
+			continue
+		var back := cross_w * 0.5 + RealChunkBuilder.KERB_WIDTH + STOP_BACK
+		if back + 6.0 > RealChunkBuilder._length(line):
+			continue
+		var left := left_of(inward)
+		var at := e - inward * back
+		RealChunkBuilder.strip(_flat("paint", PAINT, surfaces, materials), PackedVector2Array([at, at + left * (width * 0.5 - 0.3)]), 0.4, RealChunkBuilder.Y_PAINT)
+		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 2.6 + left * width * 0.25, inward, 1.3, 2.6, Y_ROAD_DECAL)
+
+
+## Zebra stripes across the whole road, 3 m long, every metre.
+static func _zebra(at: Vector2, d: Vector2, width: float, surfaces: Dictionary, materials: Dictionary) -> void:
+	var paint := _flat("paint", PAINT, surfaces, materials)
+	var left := left_of(d)
+	var x := -width * 0.5 + 0.6
+	while x <= width * 0.5 - 0.6:
+		var c := at + left * x
+		RealChunkBuilder.strip(paint, PackedVector2Array([c - d * 1.5, c + d * 1.5]), 0.5, RealChunkBuilder.Y_PAINT)
+		x += 1.0
+
+
+## Grass in the middle of a dual road: each carriageway grasses its half of the gap to the other one.
+static func _median(line: PackedVector2Array, width: float, street_name: String, oneways: Array, surfaces: Dictionary, materials: Dictionary) -> void:
+	var mid_here: Array = at_distance(line, RealChunkBuilder._length(line) * 0.5)
+	var m: Vector2 = mid_here[0]
+	var right := -left_of(mid_here[1])
+	var best := INF
+	var other_w := 0.0
+	for o: Dictionary in oneways:
+		var ol: PackedVector2Array = o.line
+		if ol == line or str(o.n) != street_name:
+			continue
+		for i in ol.size() - 1:
+			var q := Geometry2D.get_closest_point_to_segment(m, ol[i], ol[i + 1])
+			var dd := m.distance_to(q)
+			if dd < best and (q - m).dot(right) > 0.0:
+				best = dd
+				other_w = float(o.w)
+	if best == INF:
+		return
+	var gap := best - width * 0.5 - other_w * 0.5 - RealChunkBuilder.KERB_WIDTH * 2.0
+	if gap < 1.0 or gap > 40.0:
+		return
+	var half := gap * 0.5
+	var inner := RealChunkBuilder.offset_line(line, -(width * 0.5 + RealChunkBuilder.KERB_WIDTH + half * 0.5))
+	RealChunkBuilder.ribbon(RealChunkBuilder._tool("median", surfaces, materials, PixelMaterials.surface("median_grass", Vector2(2, 2))), inner, half + 0.05, Y_MEDIAN)
+
+
+## Wooden power poles at the back of the verge on one side, with three sagging wires between them.
+## Returns the poles' positions.
+static func _power_line(line: PackedVector2Array, width: float, pave: float, lamps: PackedVector3Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> Array:
+	var length := RealChunkBuilder._length(line)
+	if length < 25.0:
+		return []
+	var side := 1.0 if rng.randi() % 2 == 0 else -1.0
+	var offset := width * 0.5 + maxf(0.6, minf(pave, RealYards.PAVE_KEEP) - 0.2)
+	var poles: Array = []
+	var dist := 10.0
+	while dist < length - 5.0:
+		var here: Array = at_distance(line, dist)
+		var p: Vector2 = here[0] + left_of(here[1]) * offset * side
+		var clear := true
+		for l in lamps:
+			if Vector2(l.x, l.z).distance_to(p) < 2.0:
+				clear = false
+				break
+		if clear:
+			poles.append([p, here[1]])
+		dist += POLE_SPACING
+	var wood := _flat("pole_wood", WOOD, surfaces, materials)
+	var wire := _flat("wire", WIRE, surfaces, materials)
+	for pole: Array in poles:
+		RealLandmarks._prism(wood, pole[0], 0.13, 6, 0.0, POLE_HEIGHT, true)
+		RealLandmarks._obox(wood, pole[0], pole[1], Vector2(0.8, 0.06), POLE_HEIGHT - 0.5, POLE_HEIGHT - 0.38)
+	for i in poles.size() - 1:
+		var a: Vector2 = poles[i][0]
+		var b: Vector2 = poles[i + 1][0]
+		var da: Vector2 = poles[i][1]
+		var db: Vector2 = poles[i + 1][1]
+		for k: float in [-0.65, 0.0, 0.65]:
+			var top := POLE_HEIGHT - 0.38 + (0.25 if k == 0.0 else 0.0)
+			_wire(wire, Vector3(a.x + da.x * k, top, a.y + da.y * k), Vector3(b.x + db.x * k, top, b.y + db.y * k))
+		if rng.randi() % SNEAKER_ONE_IN == 0:
+			var mid := (a + b) * 0.5
+			var y := POLE_HEIGHT - 0.38 + 0.25 - WIRE_SAG - 0.35
+			var shoe := _flat("sneaker", "#ececec", surfaces, materials)
+			RealLandmarks._obox(shoe, mid + da * 0.12, da.orthogonal(), Vector2(0.14, 0.05), y, y + 0.1)
+			RealLandmarks._obox(shoe, mid - da * 0.12, da.orthogonal(), Vector2(0.14, 0.05), y - 0.05, y + 0.05)
+			RealLandmarks._obox(wire, mid, da, Vector2(0.15, 0.01), y + 0.1, y + 0.35)
+	return poles
+
+
+## A wire from a to b hanging WIRE_SAG at the middle: four straight pieces, each a thin cross of two strips.
+static func _wire(st: SurfaceTool, a: Vector3, b: Vector3) -> void:
+	var pts: Array = []
+	for k in 5:
+		var t := k / 4.0
+		var p := a.lerp(b, t)
+		p.y -= WIRE_SAG * 4.0 * t * (1.0 - t)
+		pts.append(p)
+	var flat_side := Vector3(b.z - a.z, 0, a.x - b.x).normalized() * 0.018
+	for k in 4:
+		var p0: Vector3 = pts[k]
+		var p1: Vector3 = pts[k + 1]
+		for off: Vector3 in [Vector3(0, 0.018, 0), flat_side]:
+			for tri: Array in [[p0 - off, p0 + off, p1 + off], [p0 - off, p1 + off, p1 - off]]:
+				for v: Vector3 in tri:
+					st.add_vertex(v)
+				for v: Vector3 in [tri[0], tri[2], tri[1]]:
+					st.add_vertex(v)
+
+
+## Drain grates in the gutters, manholes in the middle, and wear: potholes, tar patches, oil where
+## cars park, sand blown into the gutters, litter on the verge.
+static func _wear(cls: String, line: PackedVector2Array, width: float, pave: float, length: float, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> void:
+	var gutter := width * 0.5 - RealChunkBuilder.GUTTER_WIDTH * 0.5
+	if pave > 0.0:
+		var dist := 12.0 + rng.randf() * 10.0
+		var side := 1.0
+		while dist < length - 4.0:
+			var here: Array = at_distance(line, dist)
+			decal(_decal_tool("drain_grate", surfaces, materials), here[0] + left_of(here[1]) * gutter * side, here[1], 0.38, 1.0, RealChunkBuilder.Y_ROAD - 0.001 + 0.003)
+			side = -side
+			dist += 45.0
+	if cls != "main":
+		var dist := 25.0 + rng.randf() * 20.0
+		while dist < length - 5.0:
+			var here: Array = at_distance(line, dist)
+			decal(_decal_tool("manhole", surfaces, materials), here[0], here[1], 0.75, 0.75, Y_ROAD_DECAL)
+			dist += 80.0
+	var items := [["pothole", 90.0, Vector2(1.0, 0.75)], ["tar_patch", 60.0, Vector2(1.6, 1.6)], ["oil_stain", 35.0, Vector2(0.9, 0.9)], ["sand_drift", 70.0, Vector2(1.1, 3.2)]]
+	for item: Array in items:
+		var tex := str(item[0])
+		if tex == "sand_drift" and cls == "main":
+			continue
+		var dist := rng.randf() * float(item[1])
+		while dist < length - 2.0:
+			var here: Array = at_distance(line, dist)
+			var d: Vector2 = here[1]
+			var left := left_of(d)
+			var c: Vector2 = here[0]
+			var dir := d
+			match tex:
+				"pothole", "tar_patch":
+					c += left * rng.randf_range(-width * 0.3, width * 0.3)
+					dir = d.rotated(rng.randf() * TAU)
+				"oil_stain":
+					c += left * (width * 0.5 - 1.1) * (1.0 if rng.randi() % 2 == 0 else -1.0)
+				"sand_drift":
+					c += left * (width * 0.5 - 0.45) * (1.0 if rng.randi() % 2 == 0 else -1.0)
+			var size: Vector2 = item[2]
+			decal(_decal_tool(tex, surfaces, materials), c, dir, size.x, size.y, Y_ROAD_DECAL + (0.001 if tex == "sand_drift" else 0.0))
+			dist += float(item[1]) * rng.randf_range(0.7, 1.3)
+	if pave > 0.6:
+		var litter := ["litter_paper", "litter_can", "litter_chips", "litter_bottle"]
+		var dist := rng.randf() * 20.0
+		while dist < length:
+			var here: Array = at_distance(line, dist)
+			var side := 1.0 if rng.randi() % 2 == 0 else -1.0
+			var c: Vector2 = here[0] + left_of(here[1]) * side * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + rng.randf_range(0.2, pave - 0.2))
+			decal(_decal_tool(litter[rng.randi() % litter.size()], surfaces, materials), c, Vector2.RIGHT.rotated(rng.randf() * TAU), 0.5, 0.5, Y_GROUND_DECAL)
+			dist += rng.randf_range(12.0, 28.0)
+
+
+## A bus or taxi stop on the left verge halfway along: back wall, roof, bench, and a sign on a pole.
+static func _shelter(line: PackedVector2Array, width: float, length: float, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> void:
+	var here: Array = at_distance(line, length * 0.5)
+	var d: Vector2 = here[1]
+	var left := left_of(d)
+	var front: Vector2 = here[0] + left * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.4)
+	var back := front + left * 1.6
+	var mid := (front + back) * 0.5
+	var steel := _flat("steel", RealLandmarks.STEEL, surfaces, materials)
+	RealLandmarks._obox(_flat("shelter_wall", "#3f6f8f", surfaces, materials), back, d, Vector2(1.6, 0.04), 0.0, 2.2)
+	RealLandmarks._obox(_flat("canopy", "#d8d3c8", surfaces, materials), mid, d, Vector2(1.7, 0.95), 2.3, 2.4)
+	for s: float in [-1.0, 1.0]:
+		RealLandmarks._obox(steel, front + d * s * 1.5, d, Vector2(0.05, 0.05), 0.0, 2.3)
+	RealLandmarks._obox(_flat("bench_wood", "#8c6044", surfaces, materials), back - left * 0.3, d, Vector2(1.3, 0.2), 0.45, 0.52)
+	var sign_at := front + d * 2.3
+	RealLandmarks._obox(steel, sign_at, d, Vector2(0.04, 0.04), 0.0, 2.6)
+	var tex := "sign_bus" if rng.randi() % 2 == 0 else "sign_taxi"
+	var sign := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
+	for s: float in [1.0, -1.0]:
+		RealChunkBuilder._panel(sign, sign_at, left * s, d * s, 0.5, 2.1, 2.6)
+
+
+## Trees along both sides of the street at the back of the verge, clear of lamps and power poles.
+static func _street_trees(line: PackedVector2Array, width: float, pave: float, lamps: PackedVector3Array, poles: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+	var length := RealChunkBuilder._length(line)
+	var offset := width * 0.5 + maxf(0.8, minf(pave, RealYards.PAVE_KEEP) - 0.3)
+	for side: float in [-1.0, 1.0]:
+		var dist := 6.0 + rng.randf() * 4.0
+		while dist < length - 3.0:
+			var here: Array = at_distance(line, dist)
+			var p: Vector2 = here[0] + left_of(here[1]) * offset * side
+			var clear := true
+			for l in lamps:
+				if Vector2(l.x, l.z).distance_to(p) < 2.5:
+					clear = false
+			for pole: Array in poles:
+				if (pole[0] as Vector2).distance_to(p) < 3.0:
+					clear = false
+			if clear:
+				add_prop(props, "tree_a" if rng.randi() % 3 != 0 else "tree_b", p, rng.randf() * TAU, rng.randf_range(0.8, 1.15))
+			dist += TREE_SPACING

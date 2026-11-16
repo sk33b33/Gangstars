@@ -2063,9 +2063,14 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	_check(dir.dormant_distance == 150.0 and dir.dormant_count >= 40, "a short crowd range puts far-off people to sleep (%d dormant)" % dir.dormant_count)
 	var sleeper: Resident = null
 	for r: Resident in district.residents.values():
-		if r.dormant:
+		if r.dormant and not r.is_inside:   # people at home are hidden anyway: watch one who is out
 			sleeper = r
 			break
+	if sleeper == null:
+		for r: Resident in district.residents.values():
+			if r.dormant:
+				sleeper = r
+				break
 	var frozen_at := sleeper.global_position
 	for i in 120:
 		await physics_frame
@@ -2073,7 +2078,8 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	main.settings.set_value("video/crowd_range", 2)
 	for i in 90:
 		await physics_frame
-	_check(is_inf(dir.dormant_distance) and dir.dormant_count == 0 and not sleeper.dormant and sleeper.visible, "everyone wakes up again when you widen the range")
+	_check(is_inf(dir.dormant_distance) and dir.dormant_count == 0 and not sleeper.dormant and sleeper.visible,
+		"everyone wakes up again when you widen the range (%d still asleep; the sleeper %s: dormant %s, visible %s, inside %s)" % [dir.dormant_count, sleeper.data.id, sleeper.dormant, sleeper.visible, sleeper.is_inside])
 	var teleports := 0
 	for r: Resident in district.residents.values():
 		teleports += r.teleport_violations
@@ -2467,6 +2473,62 @@ func _test_real_world_units() -> void:
 			shapes[str(ch.name)] = true
 		shape_node.free()
 	_check(shapes.has("Mesh_dome") and shapes.has("Mesh_cross"), "the mosque has its dome and minaret, the churches their crosses")
+	# World details: streets, homes and public places, planned from the data.
+	var dkey := data.chunk_at(Vector3(-150, 0, -128))
+	var fresh_d := RealDistrictData.new()
+	fresh_d.load_meta()
+	var td := Time.get_ticks_usec()
+	var dctx := {"street": fresh_d.street_context(dkey), "decor": fresh_d.home_decor(dkey), "schools": fresh_d.school_fences(dkey), "stalls": fresh_d.stalls(dkey), "strips": fresh_d.around(dkey, "road_strips")}
+	var plan_ms := (Time.get_ticks_usec() - td) / 1000.0
+	_check(plan_ms < 1000.0, "planning the first piece's details from a cold start (its 25 neighbours' doors and yards too) is a one-off under 1 s (took %.0f ms)" % plan_ms)
+	var next_key := dkey + Vector2i(1, 0)
+	td = Time.get_ticks_usec()
+	fresh_d.street_context(next_key)
+	fresh_d.home_decor(next_key)
+	fresh_d.school_fences(next_key)
+	fresh_d.stalls(next_key)
+	var next_ms := (Time.get_ticks_usec() - td) / 1000.0
+	_check(next_ms < 200.0, "planning the next piece over while you walk is quick (budget 200 ms, took %.0f)" % next_ms)
+	td = Time.get_ticks_usec()
+	var dstats := {}
+	var dnode := RealChunkBuilder.build(dkey, fresh_d.load_chunk(dkey), dstats, fresh_d.around(dkey, "road_lines"), {}, fresh_d.around(dkey, "outlines"), fresh_d.yards(dkey), fresh_d.home_fronts(dkey), dctx)
+	var dbuild_ms := (Time.get_ticks_usec() - td) / 1000.0
+	var dparts: Array = dnode.get_children().map(func(c): return str(c.name))
+	_check(dbuild_ms < 400.0, "building a piece with all its details is quick enough to do while you walk (budget 400 ms, took %.0f)" % dbuild_ms)
+	_check(dparts.has("Mesh_pole_wood") and dparts.has("Mesh_wire") and dparts.has("Mesh_decal_drain_grate") and dparts.has("Mesh_decal_manhole")
+		and dparts.any(func(n): return n.begins_with("Props_washing_line")) and dparts.any(func(n): return n.begins_with("Props_aloe")),
+		"the Excelsior Street piece has power poles and wires, drains, manholes, washing lines and aloes (%s)" % [dparts.filter(func(n): return n.begins_with("Props_"))])
+	dnode.free()
+	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}
+	for ck: Vector2i in data.chunk_keys:
+		var sc := data.street_context(ck)
+		tally.crossings += (sc.crossings as Array).size()
+		for p: Dictionary in data.yards(ck).values():
+			if not (p.drive as Dictionary).is_empty():
+				tally.drives += 1
+			if p.drive.has("car"):
+				tally.cars += 1
+		for h: Dictionary in data.home_decor(ck).values():
+			if h.has("back") and h.back.kind == "wendy":
+				tally.wendy += 1
+			if h.spaza:
+				tally.spaza += 1
+		tally.school_pieces += data.school_fences(ck).size()
+		for s: Dictionary in data.stalls(ck):
+			tally.stalls += 1
+			if s.kind == "snoek":
+				tally.snoek += 1
+	_check(tally.crossings >= 10 and tally.drives > 300 and tally.cars > 50 and tally.wendy > 200 and tally.spaza > 30 and tally.school_pieces > 50 and tally.stalls >= 5 and tally.snoek == 1,
+		"Westridge has zebra crossings, driveways with parked cars, wendy houses, spaza shops, fenced schools, fruit stalls and one snoek bakkie (%s)" % [tally])
+	var stop_found := false
+	for ck: Vector2i in [dkey, dkey + Vector2i(1, 0), dkey + Vector2i(0, 1), dkey + Vector2i(1, 1)]:
+		var surfaces := {}
+		var materials := {}
+		RealStreetDecor.build(data.load_chunk(ck).get("roads", []), data.street_context(ck), surfaces, materials, {})
+		if surfaces.has("decal_stop_text"):
+			stop_found = true
+	_check(stop_found and RealStreetDecor.rank("main") > RealStreetDecor.rank("street") and RealStreetDecor.node_key(Vector2(10.01, 5.0)) == RealStreetDecor.node_key(Vector2(10.0, 4.99)),
+		"side streets get a stop line and STOP where they meet a bigger road")
 	# Yards: the game's own homes keep their gate spot (5 m out) outside the fence and the yard dog's run inside.
 	var ykey := data.chunk_at(Vector3(-150, 0, -128))
 	var yfronts := data.home_fronts(ykey)
@@ -2643,7 +2705,7 @@ func _test_real_people_and_traffic() -> void:
 		fronted += data.home_fronts(key).size()
 		for i: int in plans:
 			yard_list.append({"front": data.home_fronts(key)[i], "plan": plans[i]})
-		fences.append_array(data.fence_rings(key))
+		fences.append_array(data.obstacles(key))
 	var kinds := {}
 	for y: Dictionary in yard_list:
 		kinds[y.plan.kind] = true
@@ -2676,7 +2738,7 @@ func _test_real_people_and_traffic() -> void:
 		if beyond > 0.5 and length < float(plan.depth) + 12.0:
 			out_ok += 1
 	_check(out_tried >= 10 and out_ok >= out_tried * 0.9, "a fenced home's family walks out through its gate to the street (%d of %d get past the fence line within a few metres)" % [out_ok, out_tried])
-	_check(fence_hits == 0, "nobody's route passes through a fence (%d bad points)" % fence_hits)
+	_check(fence_hits == 0, "nobody's route passes through a fence, parked car, wendy house, school fence or stall (%d bad points)" % fence_hits)
 	# Residents.
 	var people := RealPopulation.new()
 	root.add_child(people)
@@ -2853,6 +2915,33 @@ func _test_real_homes_units() -> void:
 			story_lanes[str(h.id)] = [step, step + front.normal * RealYards.LANE]
 			var parts := str(h.real_id).split("_")
 			keys[Vector2i(int(parts[1]), int(parts[2]))] = true
+	# Generated details (parked cars, wendy houses, tanks, stalls, school fences) keep clear of the game's places.
+	var area_list: Array = []
+	for d in catalog.districts:
+		var f := str(d.get("data", ""))
+		if not f.is_empty():
+			area_list.append(DataFiles.load_json(f))
+	data.game_spots = RealDistrictData.spots_of(area_list)
+	var spot_keys := {}
+	for p in data.clear_spots():
+		spot_keys[data.chunk_at(Vector3(p.x, 0, p.y))] = true
+	var on_spots := []
+	for sk: Vector2i in spot_keys:
+		var generated: Array = []
+		for plan: Dictionary in data.yards(sk).values():
+			if (plan.drive as Dictionary).has("car"):
+				generated.append(RealYards.obstacle_box(plan.drive.car.at, plan.drive.car.dir, Vector2(RealYards.CAR_LENGTH * 0.5, RealYards.CAR_WIDTH * 0.5)))
+		for dd: Dictionary in data.home_decor(sk).values():
+			generated.append_array(dd.obstacles)
+		for s: Dictionary in data.stalls(sk):
+			generated.append(RealParkDecor.stall_box(s))
+		for piece: Array in data.school_fences(sk):
+			generated.append(RealYards.obstacle(piece[0], piece[1]))
+		for ring: PackedVector2Array in generated:
+			for p in data.clear_spots():
+				if RealChunkBuilder.point_in_ring(p, ring) or RealChunkBuilder._distance_to_ring(p, ring) < 1.5:
+					on_spots.append(p.snapped(Vector2.ONE * 0.1))
+	_check(on_spots.is_empty(), "no stall, parked car, wendy house, tank or school fence stands on a corner, shop, landmark or story door (%s)" % [on_spots])
 	var blocked_doors := []
 	var fence_pieces := {}
 	for key: Vector2i in keys:
@@ -2860,17 +2949,19 @@ func _test_real_homes_units() -> void:
 			for dz in [-1, 0, 1]:
 				var k2: Vector2i = key + Vector2i(dx, dz)
 				if not fence_pieces.has(k2):
-					fence_pieces[k2] = data.fence_rings(k2)
+					fence_pieces[k2] = data.obstacles(k2)
 	for hid: String in story_lanes:
 		var lane: Array = story_lanes[hid]
 		for pieces: Array in fence_pieces.values():
 			for ring: PackedVector2Array in pieces:
-				var a := (ring[0] + ring[3]) * 0.5
-				var b := (ring[1] + ring[2]) * 0.5
 				# (a home's own front fence stops either side of its gate, so it never crosses its own lane)
-				if Geometry2D.segment_intersects_segment(a, b, lane[0], lane[1]) != null:
+				var hit := RealChunkBuilder.point_in_ring(lane[0], ring)
+				for e in ring.size():
+					if Geometry2D.segment_intersects_segment(ring[e], ring[(e + 1) % ring.size()], lane[0], lane[1]) != null:
+						hit = true
+				if hit:
 					blocked_doors.append(hid)
-	_check(blocked_doors.is_empty(), "no fence crosses the way straight out of a family's front door (%s)" % [blocked_doors])
+	_check(blocked_doors.is_empty(), "no fence, parked car, wendy house or stall stands in the way straight out of a family's front door (%s)" % [blocked_doors])
 
 
 func _test_real_map_units() -> void:
@@ -3378,7 +3469,17 @@ func _test_gamepad_in_game(main: Node, district: District, player: Player) -> vo
 		await physics_frame
 	_pad_axis(JOY_AXIS_RIGHT_X, 0.0)
 	_check(absf(angle_difference(yaw0, player.pivot.rotation.y)) > 0.3, "the right stick turns the camera")
-	# Triggers drive.
+	# Triggers drive: from the start of a long clear straight (Eisleben Road, northbound lane, no traffic),
+	# so the check does not depend on where earlier checks left the car.
+	main.settings.set_value("gameplay/traffic", false)
+	main.apply_settings()
+	var road_dir := Vector2(814.4 - 860.7, 874.7 - 1000.7).normalized()
+	var start := Vector2(860.7, 1000.7) + road_dir * 15.0 + RealStreetDecor.left_of(road_dir) * 1.8
+	golf.global_position = Vector3(start.x, golf.global_position.y, start.y)
+	golf.rotation = Vector3(0.0, atan2(road_dir.x, road_dir.y), 0.0)
+	golf.speed = 0.0
+	golf.reset_physics_interpolation()
+	await physics_frame
 	player.global_position = golf.global_position + Vector3(2.5, 0.1, 0)
 	player.snap_camera()
 	await physics_frame
@@ -3396,8 +3497,10 @@ func _test_gamepad_in_game(main: Node, district: District, player: Player) -> vo
 	for i in 30:
 		await physics_frame
 	_pad_axis(JOY_AXIS_TRIGGER_LEFT, 0.0)
-	_check(golf.speed < fast - 3.0, "LT brakes (%.1f -> %.1f m/s)" % [fast, golf.speed])
+	_check(golf.speed < fast - 3.0, "LT brakes (%.1f -> %.1f m/s; the car stood at %s)" % [fast, golf.speed, golf.global_position.snapped(Vector3.ONE * 0.1)])
 	player.exit_vehicle()
+	main.settings.set_value("gameplay/traffic", true)
+	main.apply_settings()
 	# Menus: View opens the turf map, B closes it; Menu pauses, B resumes.
 	await _pad_button(JOY_BUTTON_BACK)
 	_check(session.turf_map.visible and not player.input_enabled, "View opens the turf map")
@@ -3898,6 +4001,10 @@ func _test_district() -> void:
 			await _test_crews_in_game(main, district, player)
 		elif only == "dealing":
 			await _test_dealing_in_game(main, district, player)
+		elif only == "gamepad":
+			await _test_gamepad_in_game(main, district, player)
+		elif only == "dormant":
+			await _test_dormant_in_game(main, district, player)
 		return
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")

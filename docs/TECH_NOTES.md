@@ -564,3 +564,13 @@ Winding: `RealChunkBuilder._facing` picks the triangle order from the direction 
 Real-world tests alone: `tests/run.sh --real-only`. The navigation map takes new regions in on a background thread
 (real time, not frames): wait for `RealWorld.nav_synced(pos)` before querying or spawning (`map_get_closest_point` answers
 with the origin until then). Screenshots with people: `--wait=100 --cam-resident`.
+
+### World details (2026-11-16)
+- Classes: `RealStreetDecor` (streets), `RealHomeDecor` (homes), `RealParkDecor` (schools, parks, stalls),
+  `RealLandmarks` (public buildings), driveways in `RealYards`. Plans come from `RealDistrictData`
+  (`street_context`, `yards`, `home_decor`, `school_fences`, `stalls`, `obstacles`, `prepare`).
+- Props (trees, aloes, washing lines, tanks, dishes, crates, chairs) are one MultiMesh per prop per chunk
+  (`RealStreetDecor.add_prop`).
+- Anything solid goes into `RealDistrictData.obstacles` (navigation) and the chunk's collision; keep the two in step.
+- Unclassified outlines in school grounds etc.: `python3 tools/osm/classify_buildings.py` (also run by build_westridge.py).
+- Quick groups: `tests/run.sh --only=gamepad`, `--only=dormant` (besides combat, crews, dealing).

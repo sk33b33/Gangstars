@@ -94,6 +94,53 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
     (left out when there is no room); a canopy outline in the data is built as a roof on columns;
   - sports halls: tall walls, low gable iron roof; everything else: a plain flat-roofed block.
 
+### Street details (`RealStreetDecor`)
+- Residential streets at least `HUMP_MIN_PIECE` long: one in two gets a speed hump (gutters stay open).
+- Where a piece meets a bigger road (by class rank: lane < street < collector < main) it gets a stop line across the
+  arriving (left) lane, `STOP_BACK` before the crossing road's kerb, and STOP painted before it.
+- Zebra crossings on the road nearest each school, shop, clinic, crèche and the civic centre (within `CROSSING_REACH`).
+- Dual roads: each one-way carriageway grasses its half of the gap to the other carriageway of the same name.
+- Residential streets and collectors: wooden power poles every `POLE_SPACING` at the back of the verge on one side,
+  three sagging wires, a pair of sneakers on one span in `SNEAKER_ONE_IN`; poles keep 2 m from street lights.
+- Drain grates in the gutters every 45 m, manholes every 80 m, potholes, tar patches, oil stains and gutter sand at
+  random but fixed places, litter on the verges.
+- Main roads and collectors at least `STOP_MIN_PIECE` long with a 2 m verge: a bus or taxi stop halfway (shelter,
+  bench, sign). Trees every `TREE_SPACING` along `TREE_STREETS` (Park Avenue).
+- Nothing here blocks people: it is flat, thin or overhead.
+
+### Homes (`RealHomeDecor`, driveways in `RealYards`)
+- Driveways: on yards whose front wall is at least `MIN_DRIVE_WALL`, two in three; the front fence stops at the
+  driveway; paving bricks from the house to the fence and a crossover over the verge to the road (under `MAX_CROSSOVER`).
+  One driveway in three has a car (hatch, sedan or skorokoro) with its nose `CAR_OUT` past the fence line.
+- Back yard: a wendy house (`WENDY_ONE_IN`) or a washing line behind the house, where there is room clear of
+  buildings, fences, other homes' ways out and the streets. A JoJo tank by the back wall (`TANK_ONE_IN`), a satellite
+  dish on the front wall (`DISH_ONE_IN`).
+- Front garden (fenced yards): aloes in the corners, bougainvillea against the fence or a small lemon tree, pot plants
+  on the stoep; never on the driveway side or in the path to the gate.
+- Spaza shops (`SPAZA_ONE_IN`, not the game's own homes): a painted sign and a serving hatch beside the door, crates
+  and a chair outside.
+- Semi-detached pairs: pitched-roof houses `SEMI_AREA` big and `SEMI_ASPECT` times as long as wide, two in three:
+  each half its own paint, a party wall through the roof, a second front door for the other half.
+- Wendy houses, tanks and parked cars are navigation obstacles and solid.
+
+### Public places (`RealParkDecor`)
+- School grounds: palisade (`SCHOOL_FENCE_HEIGHT`) along the boundary in pieces of at most `SCHOOL_PIECE`, with
+  `SCHOOL_GATES` gates (`SCHOOL_GATE_WIDTH`) on the pieces nearest a street; a piece that would cross a building,
+  a pavement or another home's way out is left out. Solid and a navigation obstacle.
+- Parks: trees on a jittered `PARK_TREE_SPACING` grid (about half the spots), clear of paths and buildings; two benches.
+  Playgrounds: a swing frame, a slide and a roundabout. Pitches: goals at both ends (full size on big pitches).
+- Murals and tags: one shop or school block in two has a mural or a (made-up) crew tag on its longest side wall;
+  one precast yard wall piece in `TAG_ONE_IN` carries a tag on its street side.
+- A fruit stall beside each zebra crossing (left verge) and a snoek bakkie by the shopping centre's crossing;
+  both solid and navigation obstacles.
+
+### Loading the details
+- Planning a chunk's details (`RealDistrictData.prepare`: street context, yards, home decor, school fences, stalls)
+  and building it are separate steps. Each frame does at least `builds_per_frame` steps, then more while it has used
+  under `frame_budget_ms` (40 ms; phone tuning will lower it), so no frame is long and loading finishes quickly.
+- Generated solid details keep `KEEP_CLEAR` (3 m) from every game place (corners, shops, landmarks, parked cars,
+  patrol points, the story homes' doors and gates): a stall had stood on the Tortel crew's corner.
+
 ### Yards (`RealYards`)
 - A home whose front wall is at least `MIN_WALL` long gets a front yard: a fence along the street side, parallel to
   the front wall, with a `GATE` opening centred on the front door, and side walls from the fence back to the two
@@ -207,6 +254,14 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | `CHURCH_PITCH` / `TOWER_AREA` | `RealLandmarks` | 0.9 / 600 m2 | 0.6 to 1.2 | Church roof steepness; which churches get a tower |
 | `SCHOOL_STOREY` / `TWO_STOREY_AREA` | `RealLandmarks` | 3.3 m / 500 m2 | | Classroom block height |
 | `VERANDA_DEPTH` / `CANOPY_HEIGHT` / `MINARET_HEIGHT` | `RealLandmarks` | 2.6 / 5.2 / 17 m | | Shop verandas, forecourt canopies, the minaret |
+| `HUMP_MIN_PIECE` / `POLE_SPACING` / `SNEAKER_ONE_IN` | `RealStreetDecor` | 70 m / 38 m / 12 | | Speed humps, power poles, sneakers on wires |
+| `CROSSING_REACH` / `STOP_MIN_PIECE` / `TREE_STREETS` | `RealStreetDecor` | 70 m / 120 m / Park Avenue | | Zebras, bus/taxi stops, street trees |
+| `MIN_DRIVE_WALL` / `CAR_OUT` | `RealYards` | 8.8 m / 1.4 m | | Which homes have driveways; how far parked cars stick out |
+| `WENDY_ONE_IN` / `TANK_ONE_IN` / `DISH_ONE_IN` / `SPAZA_ONE_IN` | `RealHomeDecor` | 4 / 5 / 4 / 30 | | How often each home detail appears |
+| `SEMI_AREA` / `SEMI_ASPECT` | builder | 110 to 320 m2 / 1.8 | | Which houses are painted as semi-detached pairs |
+| `SCHOOL_GATES` / `SCHOOL_GATE_WIDTH` / `PARK_TREE_SPACING` | `RealParkDecor` | 2 / 5 m / 11 m | | School gates, park trees |
+| `frame_budget_ms` | `RealWorld` | 40 ms | 8 to 60 | Loading speed against frame time |
+| `KEEP_CLEAR` | `RealDistrictData` | 3 m | 2 to 6 | How far generated obstacles keep from game places |
 | `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
 | `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
 | `max_cars` / `spawn_min` / `far_distance` | `RealTraffic` | 14 (touch: 6) / 70 m / 380 m | 0 to 40 | Traffic density |
@@ -238,6 +293,11 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
     out of any story family's front door.
 18. No home stands in school grounds, the shopping centre or a sports ground; each public kind maps to its shape; the
     mosque chunk builds a dome and the church chunks crosses.
+19. World details: the Excelsior Street piece has poles, wires, drains, manholes, washing lines and aloes; Westridge has
+    zebras, driveways and parked cars, wendy houses, spazas, fenced schools, fruit stalls and one snoek bakkie; side
+    streets get stop lines; planning the next piece over takes under 200 ms and building one under 400 ms; no route
+    passes through a fence, car, wendy house, school fence or stall; no obstacle stands in a family's way out; no
+    generated obstacle stands within 1.5 m of a game place.
 16. Streets have kerbs and gutters; houses have plinths, fascias and sills; a tilted outline gets a fitting roof
     rectangle; road lines can be trimmed and offset for edge lines.
 (`_test_real_people_and_traffic`; run just these with `tests/run.sh --real-only`.)

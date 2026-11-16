@@ -99,6 +99,7 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			else:
 				RealChunkBuilder.flat_roof(ring, h, RealChunkBuilder.PARAPET, _roof("roof_ibr", surfaces, materials), coping)
 			_window_rows(ring, centre, storeys, surfaces, materials)
+			_mural(ring, centre, front, seed_value, 0.5, minf(h - 0.4, 3.0), surfaces, materials)
 		"shop":
 			var walls := _plaster(CREAM, surfaces, materials)
 			var band: String = SIGN_BANDS[seed_value % SIGN_BANDS.size()]
@@ -107,6 +108,7 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			RealChunkBuilder.flat_roof(ring, SHOP_WALL, SHOP_BAND, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
 			if not front.is_empty():
 				_shopfront(ring, front, surfaces, materials)
+			_mural(ring, centre, front, seed_value, 0.4, 3.4, surfaces, materials)
 		"fuel":
 			var walls := _plaster(WHITE, surfaces, materials)
 			RealChunkBuilder.wall_ring(ring, centre, 3.4, walls, null, collision, RealChunkBuilder.PARAPET)
@@ -329,6 +331,34 @@ static func _canopy_on_columns(ring: PackedVector2Array, rect: Dictionary, heigh
 		for sv: float in [-1.0, 1.0]:
 			var at: Vector2 = centre + (rect.u as Vector2) * su * maxf(0.5, half.x - 2.0) + (rect.v as Vector2) * sv * maxf(0.5, half.y - 2.0)
 			_obox(steel, at, rect.u, Vector2(0.25, 0.25), 0.0, height)
+
+
+## A community mural or a crew tag on the longest wall that is not the front, on one building in two.
+static func _mural(ring: PackedVector2Array, centre: Vector2, front: Dictionary, seed_value: int, y0: float, y1: float, surfaces: Dictionary, materials: Dictionary) -> void:
+	if seed_value % 2 != 0:
+		return
+	var best := -1
+	var best_len := 7.0
+	for i in ring.size():
+		if not front.is_empty() and i == int(front.index):
+			continue
+		var l := ring[i].distance_to(ring[(i + 1) % ring.size()])
+		if l > best_len:
+			best_len = l
+			best = i
+	if best < 0:
+		return
+	var p0 := ring[best]
+	var p1 := ring[(best + 1) % ring.size()]
+	var t := (p1 - p0).normalized()
+	var n := Vector2(-t.y, t.x)
+	if n.dot((p0 + p1) * 0.5 - centre) < 0.0:
+		n = -n
+	var art: String = ["mural_plain", "mural_mountain", "tag_tortel", "tag_klip"][(seed_value / 2) % 4]
+	var tag := art.begins_with("tag")
+	var width := minf(best_len - 1.0, 2.6 if tag else 6.5)
+	var top := y0 + width * (20.0 / 48.0)
+	RealChunkBuilder._panel(RealChunkBuilder._tool("panel_" + art, surfaces, materials, PixelMaterials.panel(art, Color.WHITE, tag)), (p0 + p1) * 0.5, t, n, width, y0, minf(top, y1))
 
 
 # ------------------------------------------------------------------ solids

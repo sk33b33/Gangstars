@@ -1,5 +1,27 @@
 # Changelog
 
+## Real Westridge: a fuller world (2026-11-16)
+- **Streets:** speed humps on residential streets; stop lines and STOP where side streets meet bigger roads; zebra
+  crossings by schools, shops, the clinic and the civic centre; grass medians on Spine, Morgenster, Eisleben and
+  Wespoort; wooden power poles and sagging wires (the odd pair of sneakers on a wire); potholes, tar patches, oil,
+  sand in the gutters, litter, drain grates and manholes; bus and taxi stops with shelters; trees along Park Avenue.
+- **Homes:** brick driveways (the fence stops for them) with ~110 parked cars; ~500 wendy houses; washing lines,
+  JoJo tanks and satellite dishes; front gardens (aloes, bougainvillea, lemon trees, pot plants); semi-detached
+  pairs painted as two halves with a party wall and a second door; ~90 spaza shops.
+- **Public places:** palisade fences with gates round every school; trees and benches in the parks; swings, slides
+  and roundabouts in playgrounds; goals on pitches; murals and (made-up) crew tags; fruit stalls by the crossings and
+  a snoek bakkie by the shopping centre.
+- Solid details (wendy houses, tanks, cars, school fences, stalls) are planned from the map data, so people walk
+  round them; no route crosses them and none blocks a family's way out (new checks).
+- Planning a piece's details and building it are separate steps; each frame does steps until it has used 40 ms.
+  Planning the next piece over: about 75 ms; building it: about 65 ms.
+- Stalls, parked cars, wendy houses, tanks and school fences keep 3 m clear of the game's places (a fruit stall had
+  landed on the Tortel crew's corner, so they could not gather or push; found by the full suite, new check).
+- Two older driving/crowd checks were made independent of where earlier checks left the car or which resident is
+  indoors.
+- New textures: median grass, STOP, oil stain, a second mural, stall awning. 9 new checks.
+- Screenshots `docs/screenshots/rw_full_*.png`.
+
 ## Real Westridge: authentic buildings, landmarks and pavements (2026-11-16)
 - **Heat shimmer off** by default (Settings > Video > "Heat shimmer on hot days" turns it back on).
 - **Buildings in their grounds:** 159 unnamed outlines inside school grounds, the shopping centre, sports grounds and

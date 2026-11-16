@@ -45,6 +45,14 @@ const SILL_DEPTH := 0.12
 ## A house gets a pitched roof over its best-fitting rectangle when its outline fills at least this
 ## much of that rectangle; other outlines (L-shapes, odd traces) get a flat roof behind a parapet.
 const ROOF_FILL := 0.75
+## Semi-detached pairs: a pitched-roof house this big and at least SEMI_ASPECT times as long as wide;
+## two in three are painted as two halves. The split is SEMI_DOOR_GAP past the real front door.
+const SEMI_AREA := Vector2(110.0, 320.0)
+const SEMI_ASPECT := 1.8
+const SEMI_DOOR_GAP := 0.9
+## Graffiti: one precast wall piece in TAG_ONE_IN carries a (made-up) crew tag on its street side.
+const TAGS := ["tag_tortel", "tag_duin", "tag_klip", "tag_vlakte"]
+const TAG_ONE_IN := 6
 
 
 ## Builds the chunk's node. `stats` (optional) receives counts for tests and the debug line.
@@ -54,7 +62,8 @@ const ROOF_FILL := 0.75
 ## any house but hang their own front door and are not offered to passers-by residents.
 ## `yards`: {building index: RealYards.plan} (from RealDistrictData.yards); none when empty.
 ## `fronts`: {building index: home_front} already worked out (RealDistrictData.home_fronts); found here when empty.
-static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}, near_outlines: Array = [], yards: Dictionary = {}, fronts: Dictionary = {}) -> Node3D:
+## `ctx`: more from RealDistrictData: "street" (street_context) for the street details; none when empty.
+static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}, near_outlines: Array = [], yards: Dictionary = {}, fronts: Dictionary = {}, ctx: Dictionary = {}) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Chunk_%d_%d" % [key.x, key.y]
 	var surfaces := {}      # material key -> SurfaceTool
@@ -63,6 +72,9 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		_area(a, surfaces, materials)
 	for r in chunk.get("roads", []):
 		_road(r, surfaces, materials, root)
+	var props := {}   # prop name -> Array[Transform3D], built as one MultiMesh each
+	if ctx.has("street"):
+		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props)
 	for at in lamp_points(chunk.get("roads", [])):
 		var steel := _tool("steel", surfaces, materials, PixelMaterials.flat(Color("#7d828c")))
 		var lamp := _tool("lamp", surfaces, materials, PixelMaterials.lamp())
@@ -86,9 +98,16 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 			houses.append({"id": hid, "door": door.at, "area": door.area})
 		if yards.has(n):
 			_yard(yards[n], seed_of(_line(b.p)), surfaces, materials, collision)
+		var decor: Dictionary = ctx.get("decor", {})
+		if decor.has(n) and fronts.has(n):
+			RealHomeDecor.draw(decor[n], yards.get(n, {}), fronts[n], _line(b.p), float(b.get("h", 3.0)), seed_of(_line(b.p)), root, surfaces, materials, props, collision)
 		n += 1
 	stats["houses"] = houses
 	stats["yards"] = yards.size()
+	if ctx.has("strips"):
+		RealParkDecor.draw_areas(chunk.get("areas", []), ctx.strips, rings, surfaces, materials, props)
+	RealParkDecor.draw_school_fence(ctx.get("schools", []), surfaces, materials, collision)
+	RealParkDecor.draw_stalls(ctx.get("stalls", []), root, surfaces, materials, props, collision)
 	for k in surfaces:
 		var st: SurfaceTool = surfaces[k]
 		var mesh_instance := MeshInstance3D.new()
@@ -96,9 +115,25 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		st.generate_normals()
 		mesh_instance.mesh = st.commit()
 		mesh_instance.material_override = materials[k]
-		if not str(k).begins_with("wall") and not str(k).begins_with("roof") and not str(k).begins_with("fence") and str(k) != "steel":
+		if not str(k).begins_with("wall") and not str(k).begins_with("roof") and not str(k).begins_with("fence") and str(k) != "steel" and str(k) != "pole_wood" and str(k) != "canopy":
 			mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mesh_instance)
+	for prop: String in props:
+		var m := PropLibrary.mesh(prop)
+		if m == null:
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = m
+		var list: Array = props[prop]
+		mm.instance_count = list.size()
+		for i in list.size():
+			mm.set_instance_transform(i, list[i])
+		var mmi := MultiMeshInstance3D.new()
+		mmi.name = "Props_" + prop
+		mmi.multimesh = mm
+		root.add_child(mmi)
+	stats["props"] = props.keys().map(func(k): return [k, (props[k] as Array).size()])
 	if not collision.is_empty():
 		var body := StaticBody3D.new()
 		body.name = "Buildings"
@@ -344,6 +379,8 @@ static func _area(a: Dictionary, surfaces: Dictionary, materials: Dictionary) ->
 	var st: SurfaceTool
 	if kind == "parking" or kind == "retail":   # car parks and the shopping centre's grounds are tarmac
 		st = _tool("area_tarmac", surfaces, materials, PixelMaterials.surface("road_asphalt", Vector2(4, 4), Color("#d8d6d2")))
+	elif kind == "school":   # school grounds are bare, trodden sand
+		st = _tool("verge", surfaces, materials, PixelMaterials.surface("verge", Vector2(2, 2)))
 	else:
 		st = _tool("area_" + kind, surfaces, materials, PixelMaterials.flat(Color(AREA_COLORS.get(kind, "#cdbfa5"))))
 	for i in range(0, idx.size(), 3):
@@ -374,7 +411,7 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 	if public:
 		RealLandmarks.build(b, ring, centre, area, rect, seed_value, near_roads, surfaces, materials, collision)
 	else:
-		_house(ring, centre, h, area, rect, seed_value, surfaces, materials, collision)
+		_house(ring, centre, h, area, rect, seed_value, surfaces, materials, collision, known_front if known_front is Dictionary else {})
 	var home: Variant = null
 	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
 		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door, known_front)
@@ -399,21 +436,84 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 
 ## An ordinary house: painted walls with a plinth band; a pitched roof (hip or gable) when the outline is
 ## close to a rectangle, otherwise a flat roof behind a parapet.
-static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: float, rect: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:
+static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: float, rect: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, front: Dictionary = {}) -> void:
 	var paint: String = WALL_PAINTS[seed_value % WALL_PAINTS.size()]
 	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
 	var plinth_paint: String = PLINTH_PAINTS[(seed_value / 7) % PLINTH_PAINTS.size()]
 	var plinth := _tool("plinth_" + plinth_paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(plinth_paint)))
 	var hip := area < 420.0 and area / maxf(float(rect.area), 0.01) >= ROOF_FILL
-	wall_ring(ring, centre, h, walls, plinth, collision, 0.0 if hip else PARAPET)
+	var half: Vector2 = rect.half
+	var semi := hip and not front.is_empty() and area >= SEMI_AREA.x and area <= SEMI_AREA.y and half.x >= half.y * SEMI_ASPECT and seed_value % 3 != 0
+	var gable := seed_value % 2 == 0
 	var tiles := seed_value % 5 < 3
 	var roof := _tool("roof_tiles" if tiles else "roof_ibr", surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2)))
+	if semi:
+		_semi(ring, centre, h, rect, seed_value, walls, plinth, roof, gable, front, surfaces, materials, collision)
+		return
+	wall_ring(ring, centre, h, walls, plinth, collision, 0.0 if hip else PARAPET)
 	if hip:
 		var fascia_paint: String = FASCIA_PAINTS[(seed_value / 11) % FASCIA_PAINTS.size()]
 		var fascia := _tool("fascia_" + fascia_paint, surfaces, materials, PixelMaterials.flat(Color(fascia_paint)))
-		_pitched_roof(roof, fascia, walls, rect, h, seed_value % 2 == 0)
+		_pitched_roof(roof, fascia, walls, rect, h, gable)
 	else:
 		flat_roof(ring, h, PARAPET, roof, _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))))
+
+
+## A semi-detached pair: the house split across its length, each half painted by its own owner, a
+## party wall standing up through the roof between them, and a second front door for the other half.
+## The split sits just past the real front door, so that door belongs to the first half.
+static func _semi(ring: PackedVector2Array, centre: Vector2, h: float, rect: Dictionary, seed_value: int, walls: SurfaceTool, plinth: SurfaceTool, roof: SurfaceTool, gable: bool, front: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:
+	var u: Vector2 = rect.u
+	var c: Vector2 = rect.c
+	var half: Vector2 = rect.half
+	var door_u := ((front.mid as Vector2) - c).dot(u)
+	var split := door_u + (SEMI_DOOR_GAP if door_u <= 0.0 else -SEMI_DOOR_GAP)
+	var side_of_door := -1.0 if split > door_u else 1.0   # which side of the split the real door is on
+	var other: String = WALL_PAINTS[(seed_value / 17 + 3) % WALL_PAINTS.size()]
+	if other == WALL_PAINTS[seed_value % WALL_PAINTS.size()]:
+		other = WALL_PAINTS[(seed_value / 17 + 4) % WALL_PAINTS.size()]
+	var walls_b := _tool("wall_" + other, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(other)))
+	for i in ring.size():
+		var p0 := ring[i]
+		var p1 := ring[(i + 1) % ring.size()]
+		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
+		var s0 := (p0 - c).dot(u) - split
+		var s1 := (p1 - c).dot(u) - split
+		var pieces: Array = [[p0, p1, s0 + s1]]
+		if s0 * s1 < 0.0:
+			var cut := p0.lerp(p1, s0 / (s0 - s1))
+			pieces = [[p0, cut, s0], [cut, p1, s1]]
+		for piece: Array in pieces:
+			var tool: SurfaceTool = walls if signf(float(piece[2])) == side_of_door else walls_b
+			_quad(tool, _v(piece[0], 0.0), _v(piece[1], 0.0), h, out)
+		collision.append_array([_v(p0, 0.0), _v(p0, h), _v(p1, h), _v(p0, 0.0), _v(p1, h), _v(p1, 0.0)])
+		var push := _wall_normal(p0, p1, out) * 0.02
+		_quad(plinth, _v(p0 + push, 0.0), _v(p1 + push, 0.0), PLINTH_HEIGHT, out)
+	var fascia_paint: String = FASCIA_PAINTS[(seed_value / 11) % FASCIA_PAINTS.size()]
+	var fascia := _tool("fascia_" + fascia_paint, surfaces, materials, PixelMaterials.flat(Color(fascia_paint)))
+	_pitched_roof(roof, fascia, walls, rect, h, gable, -1.0, walls_b if side_of_door < 0.0 else walls, walls if side_of_door < 0.0 else walls_b)
+	var rise := clampf(half.y * 0.45, 0.8, 1.8)
+	var ridge := (half.x + EAVES) if gable else maxf(0.0, half.x - half.y)
+	if absf(split) < ridge:
+		var v: Vector2 = rect.v
+		var at := c + u * split
+		var pw := [at - v * (half.y + EAVES), at + v * (half.y + EAVES)]
+		for s: float in [-1.0, 1.0]:
+			var a := _v(pw[0] as Vector2 + u * 0.08 * s, h)
+			var b := _v(pw[1] as Vector2 + u * 0.08 * s, h)
+			_facing(walls, a, b, _v(at + u * 0.08 * s, h + rise + 0.2), Vector3(u.x * s, 0, u.y * s))
+	# The other half's front door, in the middle of its part of the front wall.
+	var i: int = front.index
+	var f0 := ring[i]
+	var f1 := ring[(i + 1) % ring.size()]
+	var e0 := (f0 - c).dot(u) - split
+	var e1 := (f1 - c).dot(u) - split
+	var far := f0 if signf(e0) != side_of_door else f1
+	var cut_t := e0 / (e0 - e1) if e0 * e1 < 0.0 else 0.5
+	var cut := f0.lerp(f1, cut_t)
+	var door_at := (cut + far) * 0.5
+	if cut.distance_to(far) > 2.0:
+		_panel(_tool("panel_door", surfaces, materials, PixelMaterials.panel("door_gate")), door_at, (f1 - f0).normalized(), front.normal, 1.0, 0.0, minf(2.0, h - 0.3))
 
 
 ## Walls on the outline up to h (+ `parapet` above the roof, with its inner face), a plinth band at
@@ -628,7 +728,7 @@ static func min_rect(ring: PackedVector2Array) -> Dictionary:
 
 ## A pitched roof over the rectangle with eaves all round: a hip roof (sloping ends) or a gable roof
 ## (painted triangular end walls). Fascia boards along the eaves, a soffit underneath.
-static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool, rise_override := -1.0) -> void:
+static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool, rise_override := -1.0, end_low: SurfaceTool = null, end_high: SurfaceTool = null) -> void:
 	var u: Vector2 = rect.u
 	var v: Vector2 = rect.v
 	var c: Vector2 = rect.c
@@ -646,15 +746,20 @@ static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: Surface
 	for su: float in [-1.0, 1.0]:
 		var out := Vector3(u.x * su, 0.0, u.y * su)
 		if gable:
+			var end_walls: SurfaceTool = walls
+			if su < 0.0 and end_low != null:
+				end_walls = end_low
+			elif su > 0.0 and end_high != null:
+				end_walls = end_high
 			var e := c + u * su * half.x   # the gable end: walls up to the roof's underside
 			var shoulder := h + rise * EAVES / w
 			var a0 := _v(e - v * half.y, h)
 			var b0 := _v(e + v * half.y, h)
 			var a1 := _v(e - v * half.y, shoulder)
 			var b1 := _v(e + v * half.y, shoulder)
-			_facing(walls, a0, b0, b1, out)
-			_facing(walls, a0, b1, a1, out)
-			_facing(walls, a1, b1, _v(e, h + rise), out)
+			_facing(end_walls, a0, b0, b1, out)
+			_facing(end_walls, a0, b1, a1, out)
+			_facing(end_walls, a1, b1, _v(e, h + rise), out)
 		else:
 			_facing(roof, corner.call(su, -1.0), corner.call(su, 1.0), top.call(su), out + Vector3.UP)
 	var low := h - FASCIA_DEPTH
@@ -701,6 +806,10 @@ static func _yard(plan: Dictionary, seed_value: int, surfaces: Dictionary, mater
 		match kind:
 			"precast":
 				_fence_panel(_tool("fence_precast", surfaces, materials, PixelMaterials.panel("fence_precast", Color.WHITE, true)), a, b, 0.0, height, 2.0)
+				if plan.has("n") and a.distance_to(b) >= 3.0 and (seed_value / 19 + int(a.x)) % TAG_ONE_IN == 0:
+					var tag: String = TAGS[absi(int(a.x * 7.0 + a.y)) % TAGS.size()]
+					var n: Vector2 = plan.n
+					_panel(_tool("panel_" + tag, surfaces, materials, PixelMaterials.panel(tag, Color.WHITE, true)), (a + b) * 0.5 + n * 0.03, (b - a).normalized(), n, 2.2, 0.35, 1.25)
 			"palisade":
 				_fence_panel(_tool("fence_palisade", surfaces, materials, PixelMaterials.panel("fence_palisade", Color.WHITE, true)), a, b, 0.0, height, 2.0)
 			"low_wall":

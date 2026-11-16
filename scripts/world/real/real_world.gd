@@ -12,8 +12,10 @@ signal nav_removed(key: Vector2i)
 
 @export var load_radius := INF
 @export var unload_margin := 120.0
-## Chunks built per frame while catching up (more = faster loading, bigger hitches).
+## Chunks built per frame while catching up (more = faster loading, bigger hitches): at least this many
+## steps (planning a chunk's details, or building it), then more while the frame has used under frame_budget_ms.
 @export var builds_per_frame := 1
+@export var frame_budget_ms := 40.0
 
 ## People and traffic only exist within this distance of the focus: chunks inside it get a
 ## navigation mesh (baked in the background) and lose it again beyond `sim_radius + sim_margin`.
@@ -101,10 +103,14 @@ func _process(delta: float) -> void:
 			scan(pos)
 		else:
 			_scan_nav(pos)
-	for i in builds_per_frame:
-		if _queue.is_empty():
-			break
-		load_chunk(_queue.pop_front())
+	var start := Time.get_ticks_usec()
+	var steps := 0
+	while not _queue.is_empty() and (steps < builds_per_frame or (Time.get_ticks_usec() - start) / 1000.0 < frame_budget_ms):
+		if not data.is_prepared(_queue[0]):
+			data.prepare(_queue[0])   # planning and building are separate steps, so no single step is long
+		else:
+			load_chunk(_queue.pop_front())
+		steps += 1
 
 
 ## Works out which chunks to build and frees the ones that are now too far away.
@@ -159,7 +165,7 @@ func _scan_nav(pos: Vector3) -> void:
 
 func _bake_nav(key: Vector2i) -> void:
 	var rings := data.around(key, "outlines")
-	rings.append_array(data.around(key, "fence_rings"))
+	rings.append_array(data.around(key, "obstacles"))
 	rings.append_array(extra_obstacles)
 	if sync_nav:
 		_on_nav_baked(RealNav.bake(key, data.chunk_size, rings), key)
@@ -221,7 +227,8 @@ func load_chunk(key: Vector2i) -> void:
 		return
 	var stats := {}
 	var chunk := data.load_chunk(key)
-	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"), data.yards(key), data.home_fronts(key))
+	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"), data.yards(key), data.home_fronts(key), {"street": data.street_context(key), "decor": data.home_decor(key),
+		"schools": data.school_fences(key), "stalls": data.stalls(key), "strips": data.around(key, "road_strips")})
 	houses[key] = stats.get("houses", [])
 	for h in houses[key]:
 		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")
