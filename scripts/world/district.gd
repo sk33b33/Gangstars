@@ -25,9 +25,7 @@ var areas: Array = []
 var registry: HouseRegistry
 var destinations := DestinationRegistry.new()
 var plots: Dictionary = {}       # house id -> HousePlot
-var gates: Dictionary = {}       # neighbouring district id -> [DistrictGate]
 var vehicles: Dictionary = {}    # drivable car id -> DrivableCar
-var traffic: TrafficSystem
 var weather: Weather
 var skyline: Skyline
 var light_pool: LightPool
@@ -36,7 +34,6 @@ var use_lod := true
 var lod_count := 0
 var merge_stats := {}
 var rebake_count := 0
-var _rebaking := false
 var _braai: Node3D
 var residents: Dictionary = {}   # npc id -> Resident
 ## Set by the GameSession: lets residents who answer the door invite the player in.
@@ -75,25 +72,15 @@ var player: Node3D:
 
 ## Real-world mode (design/gdd/real_world.md): the districts are parts of the real Westridge. The
 ## real map draws the streets and buildings and bakes the navigation; this class places the game's
-## own homes, landmarks, people and cars on it. Null in the old made-up districts.
+## own homes, landmarks, people and cars on it.
 var real: RealWorld
 var real_people: RealPopulation
 var real_traffic: RealTraffic
 
 
-func is_real() -> bool:
-	return real != null
-
-
 func _ready() -> void:
 	_load_areas()
-	if _real_dir().is_empty():
-		for area in areas:
-			var built := StreetBuilder.build(nav_region, area, destinations)
-			for id in built:
-				gates.get_or_add(id, []).append_array(built[id])
-	else:
-		_build_real_world()
+	_build_real_world()
 	_build_houses()
 	_register_patrol_routes()
 	events = NeighbourhoodEvents.new()
@@ -121,18 +108,8 @@ func _ready() -> void:
 	light_pool = LightPool.new()
 	light_pool.name = "LightPool"
 	add_child(light_pool)
-	light_pool.setup(day_night, real.data.all_lamps() if is_real() else LightPool.collect_lamps(nav_region))
-	if is_real():
-		_await_real_navigation()
-	else:
-		_bake_navigation()
-
-
-var _real_catalog_dir := ""
-
-
-func _real_dir() -> String:
-	return _real_catalog_dir
+	light_pool.setup(day_night, real.data.all_lamps())
+	_await_real_navigation()
 
 
 ## The real map under the game: every home of the game's families is a real house, landmarks stand
@@ -253,9 +230,8 @@ func _await_real_navigation() -> void:
 	navigation_ready.emit()
 
 
-## Data pipeline: the starter district file, then every catalog district with a `data` file.
-## All areas share one navigation bake; the gates (solid at bake time) keep them disconnected,
-## so residents stay in their own district while the player can travel once a gate opens.
+## Data pipeline: the starter part of Westridge, then every other part in the catalog that has a `data` file.
+## The parts are places on one real map: where each one's people and things are, not walls between them.
 func _load_areas() -> void:
 	var raw: Variant = DataFiles.load_json(district_file)
 	info = raw if raw is Dictionary else {}
@@ -274,18 +250,6 @@ func _load_areas() -> void:
 				if a is Dictionary:
 					a["id"] = str(d.id)
 					extra.append(a)
-	# An area can name a locked neighbour on one of its own sides (Lentegeur's east side leads to
-	# Town Centre): it gets that neighbour's gates, as Westridge does for its neighbours.
-	for a in extra:
-		var nb: Dictionary = a.get("neighbours", {}) if a.get("neighbours") is Dictionary else {}
-		var list: Array = []
-		for side in nb:
-			for d in catalog.get("districts", []):
-				if d is Dictionary and str(d.id) == str(nb[side]):
-					var copy: Dictionary = d.duplicate()
-					copy["side"] = side
-					list.append(copy)
-		a["locked_neighbours"] = list
 	info["locked_neighbours"] = neighbours
 	if not info.has("houses_file"):
 		info["houses_file"] = houses_file
@@ -293,9 +257,8 @@ func _load_areas() -> void:
 		info["residents_file"] = residents_file
 	areas = [info]
 	areas.append_array(extra)
-	if catalog is Dictionary and catalog.has("real_world"):
-		_real_catalog_dir = str(catalog.real_world)
-		for a in areas:   # a district's place on the real map (for area_at): from the catalog
+	if catalog is Dictionary:
+		for a in areas:   # a part's heart on the real map (for area_at): from the catalog
 			for d in catalog.get("districts", []):
 				if d is Dictionary and str(d.id) == str(a.id) and d.has("anchor"):
 					a["anchor"] = d.anchor
@@ -307,33 +270,24 @@ func _load_areas() -> void:
 			registry.add(reg.get_house(id))
 
 
-## Which area a world position is in ("" if outside every area, e.g. an approach street).
-## Degrees the game's grid is turned from true north (from the starter area's "real" block):
-## a compass heading is the grid heading plus this.
+## Degrees the game's compass is turned from true north: none (the real map is not turned).
 func grid_bearing() -> float:
-	if is_real():
-		return 0.0   # the real map is not turned
-	return float(info.get("real", {}).get("bearing_deg", 0.0))
+	return 0.0
 
 
+## Which part of Westridge a world position is in: the one whose heart is nearest ("" outside the suburb).
 func area_at(pos: Vector3) -> String:
-	if is_real():   # the part of Westridge whose anchor is nearest ("" outside the suburb)
-		if not real.data.is_inside(pos):
-			return ""
-		var best := ""
-		var best_d := INF
-		for area in areas:
-			var a := DataFiles.to_vec2(area.get("anchor"))
-			var d := Vector2(pos.x, pos.z).distance_to(a)
-			if d < best_d:
-				best_d = d
-				best = str(area.id)
-		return best
+	if not real.data.is_inside(pos):
+		return ""
+	var best := ""
+	var best_d := INF
 	for area in areas:
-		var b: Array = area.get("bounds", [0, 0, 0, 0])
-		if pos.x >= float(b[0]) and pos.x <= float(b[2]) and pos.z >= float(b[1]) and pos.z <= float(b[3]):
-			return str(area.id)
-	return ""
+		var a := DataFiles.to_vec2(area.get("anchor"))
+		var d := Vector2(pos.x, pos.z).distance_to(a)
+		if d < best_d:
+			best_d = d
+			best = str(area.id)
+	return best
 
 
 func area_by_id(id: String) -> Dictionary:
@@ -356,23 +310,15 @@ func display_name() -> String:
 	if registry:
 		for id in registry.order:
 			own += 1 if registry.get_house(id).district_id == info.id else 0
-	if is_real():
-		return "%s · %d of its families are your neighbours · %d real streets" % [info.get("display_name", "?"), own, real.data.streets.size()]
-	return "%s · %d houses · %d streets" % [info.get("display_name", "?"), own, info.get("streets", []).size()]
+	return "%s · %d of its families are your neighbours · %d real streets" % [info.get("display_name", "?"), own, real.data.streets.size()]
 
 
 func _build_houses() -> void:
-	var positions: Array = []
-	for id in registry.order:
-		positions.append(registry.get_house(id).plot_transform())
 	for id in registry.order:
 		var house := registry.get_house(id)
 		var plot: HousePlot = HOUSE_SCENE.instantiate()
 		nav_region.add_child(plot)
-		if is_real():
-			plot.build_real(house)
-		else:
-			plot.build(house, _needs_closing_fence(house, positions))
+		plot.build_real(house)
 		plots[id] = plot
 		destinations.register(house.entrance_id(), plot.door_position(), 0.1, "house_door",
 			"%s (%s)" % [house.address(), house.display_name])
@@ -393,66 +339,6 @@ func _register_patrol_routes() -> void:
 				"patrol point %d" % i)
 
 
-## A plot closes its own +X side only when no neighbour sits there.
-func _needs_closing_fence(house: HouseData, all: Array) -> bool:
-	var t := house.plot_transform()
-	var probe := t * Vector3(house.plot_size.x, 0, 0)
-	for other in all:
-		if other.origin.distance_to(probe) < 1.0:
-			return false
-	return true
-
-
-func _bake_navigation() -> void:
-	var nm := NavigationMesh.new()
-	nm.agent_radius = 0.5
-	nm.agent_height = 1.75
-	nm.agent_max_climb = 0.25
-	nm.cell_size = 0.25
-	nm.cell_height = 0.25
-	nm.geometry_parsed_geometry_type = NavigationMesh.PARSED_GEOMETRY_STATIC_COLLIDERS
-	# Only world geometry (layer 1): moving traffic (AnimatableBody, a static-body type) and
-	# opened gates (layer 0) are never baked in.
-	nm.geometry_collision_mask = 1
-	nav_region.navigation_mesh = nm
-	nav_region.bake_finished.connect(_on_bake_finished, CONNECT_ONE_SHOT)
-	nav_region.bake_navigation_mesh(true)
-
-
-func _on_bake_finished() -> void:
-	# The navigation map applies region changes on a later sync; wait until it has.
-	var map := nav_region.get_navigation_map()
-	var waited := 0
-	while not _region_is_live(map) and waited < 300:
-		await get_tree().physics_frame
-		waited += 1
-	if waited >= 300:
-		push_error("Navigation map never synced after bake; NPC movement will fail.")
-	destinations.navigation_map = map
-	_spawn_residents()
-	_spawn_vehicles()
-	dogs = DogPack.new()
-	dogs.name = "Dogs"
-	add_child(dogs)
-	dogs.setup(self)
-	dogs.barked.connect(func(pos: Vector3, pitch: float): dog_barked.emit(pos, pitch))
-	for area in areas:
-		for k in area.get("kickabouts", []):
-			var game := KickAbout.new()
-			game.name = "KickAbout_" + str(k.poi)
-			add_child(game)
-			var c := DataFiles.to_vec2(k.get("center"))
-			game.setup(self, str(k.poi), Vector3(c.x, 0, c.y), DataFiles.to_vec2(k.get("half"), Vector2(4, 3)))
-			kickabouts.append(game)
-	if use_lod:
-		merge_stats = MeshMerger.merge(nav_region)
-		lod_count = Lod.apply(nav_region)
-		for r: Resident in residents.values():
-			lod_count += Lod.apply(r.model, true)
-	is_navigation_ready = true
-	navigation_ready.emit()
-
-
 ## Vehicles move, so they are created after the bake and never carve the nav mesh.
 func _spawn_vehicles() -> void:
 	var cars: Array = []
@@ -469,53 +355,15 @@ func _spawn_vehicles() -> void:
 		car.rotation.y = deg_to_rad(float(c.get("rot", 0))) + PI * 0.5
 		car.reset_physics_interpolation()
 		vehicles[car.vehicle_id] = car
-	if is_real():
-		return   # the real street network carries its own traffic (RealTraffic)
-	traffic = TrafficSystem.new()
-	traffic.name = "Traffic"
-	add_child(traffic)
-	traffic.setup(self)
-	traffic.extra_obstacles.append_array(vehicles.values())
+	# (the real street network carries the moving traffic: RealTraffic)
 
 
-## Re-bakes on a thread after a gate opens/closes, so the districts' walkable areas connect
-## (crew can follow the player across). Residents still keep to their own district because
-## their schedules only point there. Emits navigation_rebaked when the map has the new mesh.
+## The parts of Westridge have no gates, so there is nothing to re-bake when one opens; this still
+## announces a change a frame later (the session waits for it after an unlock).
 func rebake_navigation() -> void:
-	if is_real():   # nothing to re-bake (no gates on the real map); announced a frame later, as a real bake would be
-		await get_tree().physics_frame
-		rebake_count += 1
-		navigation_rebaked.emit()
-		return
-	if _rebaking:
-		return
-	_rebaking = true
-	await get_tree().physics_frame  # let deferred collision-shape changes apply first
 	await get_tree().physics_frame
-	nav_region.bake_finished.connect(_on_rebake_finished, CONNECT_ONE_SHOT)
-	nav_region.bake_navigation_mesh(true)
-
-
-func _on_rebake_finished() -> void:
-	# Map iterations build asynchronously: one already in flight when the new mesh landed may
-	# not include it, so wait for two fresh iterations (bounded) before announcing the change.
-	var map := nav_region.get_navigation_map()
-	var start := NavigationServer3D.map_get_iteration_id(map)
-	var waited := 0
-	while NavigationServer3D.map_get_iteration_id(map) < start + 2 and waited < 300:
-		await get_tree().physics_frame
-		waited += 1
-	await get_tree().physics_frame
-	_rebaking = false
 	rebake_count += 1
 	navigation_rebaked.emit()
-
-
-func _region_is_live(map: RID) -> bool:
-	if NavigationServer3D.map_get_iteration_id(map) == 0:
-		return false
-	var probe := Vector3(0, 0, 0)
-	return NavigationServer3D.map_get_closest_point_owner(map, probe) == nav_region.get_rid()
 
 
 func _spawn_residents() -> void:
@@ -603,16 +451,10 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 
 ## Opens/closes every gate to a neighbouring district. Only the session calls this, in
 ## response to DistrictManager unlocks (or when restoring a save).
-func set_district_open(district_id: String, open: bool, animate := true) -> bool:
-	if is_real():   # no gates on the real map: a part of Westridge is simply open to you or not yet
-		var was := bool(_open_parts.get(district_id, false))
-		_open_parts[district_id] = open
-		return was != open
-	var changed := false
-	for gate: DistrictGate in gates.get(district_id, []):
-		changed = changed or gate.is_open != open
-		gate.set_open(open, animate)
-	return changed
+func set_district_open(district_id: String, open: bool, _animate := true) -> bool:
+	var was := bool(_open_parts.get(district_id, false))
+	_open_parts[district_id] = open
+	return was != open
 
 
 ## Drum braai with smoke at the park while the braai event runs.
@@ -679,10 +521,7 @@ var _open_parts := {}
 
 
 func is_district_open(district_id: String) -> bool:
-	if is_real():
-		return bool(_open_parts.get(district_id, false))
-	var list: Array = gates.get(district_id, [])
-	return not list.is_empty() and list.all(func(g): return g.is_open)
+	return bool(_open_parts.get(district_id, false))
 
 
 func _on_door_used(house_id: String) -> void:

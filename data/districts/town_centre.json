@@ -1,341 +1,156 @@
 {
-  "id": "district_town_centre",
-  "display_name": "Town Centre",
-  "street_name": "Town Centre",
-  "bounds": [
-    264,
-    -92.0,
-    384,
-    22
-  ],
-  "houses_file": "res://data/houses/town_centre_houses.json",
-  "residents_file": "res://data/npcs/town_centre_residents.json",
-  "ground_texture": "paving_brick",
-  "ground_tint": "#dcd6cc",
-  "ground_margin": {
-    "west": 0
+ "id": "district_town_centre",
+ "display_name": "Westridge Centre",
+ "street_name": "Westridge Centre",
+ "bounds": [
+  -130,
+  -103,
+  104,
+  236
+ ],
+ "houses_file": "res://data/houses/town_centre_houses.json",
+ "residents_file": "res://data/npcs/town_centre_residents.json",
+ "dogs": {
+  "street": 2,
+  "yard": 2
+ },
+ "landmarks": [
+  {
+   "type": "mall",
+   "position": [
+    -45.83,
+    76.23
+   ],
+   "yaw": 21.91
   },
-  "open_sides": [
-    "west"
-  ],
-  "backdrop_skip": [
-    "west"
-  ],
-  "dogs": {
-    "street": 2,
-    "yard": 2
+  {
+   "type": "market",
+   "position": [
+    40.8,
+    78.3
+   ],
+   "yaw": 0.0
   },
-  "streets": [
-    {
-      "id": "duif_t",
-      "name": "AZ Berman Drive",
-      "axis": "x",
-      "at": 0,
-      "from": 252,
-      "to": 396,
-      "half_width": 4.0,
-      "sidewalk": 2.5
-    },
-    {
-      "id": "mossie_t",
-      "name": "Spine Road",
-      "axis": "x",
-      "at": -70.0,
-      "from": 252,
-      "to": 396,
-      "half_width": 4.0,
-      "sidewalk": 2.5
-    },
-    {
-      "id": "prom",
-      "name": "Promenade Road",
-      "axis": "z",
-      "at": 312,
-      "from": -4,
-      "to": -66.0,
-      "half_width": 4.0,
-      "sidewalk": 2.5,
-      "sidewalk_from": -6.5,
-      "sidewalk_to": -63.5
-    },
-    {
-      "id": "market_lane",
-      "name": "Market Lane",
-      "axis": "z",
-      "at": 360,
-      "from": -4,
-      "to": -66.0,
-      "half_width": 3.0,
-      "sidewalk": 2.0,
-      "sidewalk_from": -6.0,
-      "sidewalk_to": -64.0
-    }
-  ],
-  "landmarks": [
-    {
-      "type": "mall",
-      "position": [
-        287,
-        -29
-      ],
-      "facing": "south"
-    },
-    {
-      "type": "market",
-      "position": [
-        336,
-        -28
-      ]
-    },
-    {
-      "type": "taxi_rank",
-      "position": [
-        372,
-        -62.8
-      ],
-      "facing": "north"
-    },
-    {
-      "type": "container_shop",
-      "position": [
-        372,
-        -10
-      ],
-      "facing": "south",
-      "sign": "sign_spaza",
-      "color": "#8e44ad"
-    },
-    {
-      "type": "mosque",
-      "position": [
-        374,
-        -28
-      ],
-      "facing": "west"
-    }
-  ],
-  "pois": [
-    {
-      "id": "tc_mall",
-      "name": "the Promenade",
-      "kind": "shop",
-      "position": [
-        287,
-        -13
-      ],
-      "radius": 2.0,
-      "map_label": "mall"
-    },
-    {
-      "id": "tc_market",
-      "name": "the market",
-      "kind": "shop",
-      "position": [
-        336,
-        -28
-      ],
-      "radius": 2.0,
-      "map_label": "market"
-    },
-    {
-      "id": "tc_taxi",
-      "name": "the big taxi rank",
-      "kind": "bus_stop",
-      "position": [
-        372,
-        -64.7
-      ],
-      "radius": 1.2,
-      "map_label": "rank"
-    },
-    {
-      "id": "tc_spaza",
-      "name": "Promenade Spaza",
-      "kind": "shop",
-      "position": [
-        372,
-        -7.4
-      ],
-      "radius": 1.0,
-      "map_label": "spaza"
-    },
-    {
-      "id": "tc_square",
-      "name": "the Promenade square",
-      "kind": "square",
-      "position": [
-        336,
-        -12
-      ],
-      "radius": 2.0,
-      "map_label": "square"
-    },
-    {
-      "id": "tc_mosque",
-      "name": "the mosque",
-      "kind": "gathering",
-      "position": [
-        367.0,
-        -28
-      ],
-      "radius": 2.5,
-      "map_label": "mosque"
-    }
-  ],
-  "patrol_routes": {
-    "tc_loop": [
-      [
-        316,
-        -5.4
-      ],
-      [
-        316,
-        -64.8
-      ],
-      [
-        356,
-        -64.8
-      ],
-      [
-        356,
-        -5.4
-      ]
-    ]
+  {
+   "type": "taxi_rank",
+   "position": [
+    -3.97,
+    66.3
+   ],
+   "yaw": 21.91
   },
-  "parked_cars": [
-    {
-      "position": [
-        272,
-        -9.5
-      ],
-      "rot": 90,
-      "color": "#bdc3c7"
-    },
-    {
-      "position": [
-        280,
-        -9.5
-      ],
-      "rot": 90,
-      "color": "#c0392b"
-    },
-    {
-      "position": [
-        296,
-        -9.5
-      ],
-      "rot": 90,
-      "color": "#2e86c1"
-    },
-    {
-      "position": [
-        302,
-        -9.5
-      ],
-      "rot": 90,
-      "color": "#f4f1ea"
-    }
-  ],
-  "decals": [
-    {
-      "texture": "tag_vlakte",
-      "position": [
-        301.06,
-        1.6,
-        -30
-      ],
-      "size": [
-        2.4,
-        1.0
-      ],
-      "rot": 90
-    }
-  ],
-  "traffic": {
-    "lane_offset": 1.3,
-    "corner_radius": 6.0,
-    "taxi_stops": [
-      "tc_taxi"
-    ],
-    "taxi_wait": 6.0,
-    "loops": [
-      {
-        "points": [
-          [
-            312,
-            -70.0
-          ],
-          [
-            360,
-            -70.0
-          ],
-          [
-            360,
-            0
-          ],
-          [
-            312,
-            0
-          ]
-        ],
-        "cars": [
-          {
-            "id": "tc_taxi_1",
-            "color": "#f1eee8",
-            "start": 0.2,
-            "taxi": true
-          },
-          {
-            "id": "tc_traffic_1",
-            "color": "#f1c40f",
-            "start": 0.6
-          },
-          {
-            "id": "tc_bus_1",
-            "model": "bus",
-            "color": "#2f7d6d",
-            "start": 0.8,
-            "speed": 7.0
-          }
-        ]
-      },
-      {
-        "points": [
-          [
-            312,
-            0
-          ],
-          [
-            360,
-            0
-          ],
-          [
-            360,
-            -70.0
-          ],
-          [
-            312,
-            -70.0
-          ]
-        ],
-        "cars": [
-          {
-            "id": "tc_traffic_2",
-            "color": "#2c3e50",
-            "start": 0.5
-          },
-          {
-            "id": "tc_bakery_van",
-            "model": "panel_van",
-            "color": "#f2f0ea",
-            "start": 0.0
-          }
-        ]
-      }
-    ]
+  {
+   "type": "container_shop",
+   "position": [
+    -14.32,
+    90.69
+   ],
+   "sign": "sign_spaza",
+   "color": "#8e44ad",
+   "yaw": -157.8
   },
-  "kickabouts": [],
-  "neighbours": {
-    "east": "district_tafelsig"
+  {
+   "type": "mosque",
+   "position": [
+    63.53,
+    64.66
+   ],
+   "yaw": -158.2
   }
+ ],
+ "pois": [
+  {
+   "id": "tc_mall",
+   "name": "the Promenade",
+   "kind": "shop",
+   "position": [
+    -96.59,
+    106.97
+   ],
+   "radius": 2.0,
+   "map_label": "mall"
+  },
+  {
+   "id": "tc_market",
+   "name": "the market",
+   "kind": "shop",
+   "position": [
+    40.8,
+    78.3
+   ],
+   "radius": 2.0,
+   "map_label": "market"
+  },
+  {
+   "id": "tc_taxi",
+   "name": "the big taxi rank",
+   "kind": "bus_stop",
+   "position": [
+    -3.26,
+    68.06
+   ],
+   "radius": 1.2,
+   "map_label": "rank"
+  },
+  {
+   "id": "tc_spaza",
+   "name": "Promenade Spaza",
+   "kind": "shop",
+   "position": [
+    -15.31,
+    88.28
+   ],
+   "radius": 1.0,
+   "map_label": "spaza"
+  },
+  {
+   "id": "tc_square",
+   "name": "the Promenade square",
+   "kind": "square",
+   "position": [
+    -40.45,
+    99.62
+   ],
+   "radius": 2.0,
+   "map_label": "square"
+  },
+  {
+   "id": "tc_mosque",
+   "name": "the mosque",
+   "kind": "gathering",
+   "position": [
+    60.93,
+    58.16
+   ],
+   "radius": 2.5,
+   "map_label": "mosque"
+  }
+ ],
+ "patrol_routes": {
+  "tc_loop": [
+   [
+    -183.7,
+    60.5
+   ],
+   [
+    -26.9,
+    -1.7
+   ],
+   [
+    1.2,
+    21.3
+   ],
+   [
+    33.8,
+    120.3
+   ]
+  ]
+ },
+ "parked_cars": [],
+ "kickabouts": [],
+ "streets": [],
+ "anchor": [
+  -60,
+  60
+ ]
 }

@@ -29,7 +29,7 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	display_name = p_name
 	name = id
 	collision_layer = LAYER_VEHICLES
-	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | TrafficCar.LAYER_VEHICLES
+	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | RealCar.LAYER_VEHICLES
 	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, VehicleLibrary.civilian_for(id))
 	VehicleLibrary.add_headlights(body, VehicleLibrary.civilian_for(id))
 	var shape := CollisionShape3D.new()
@@ -108,7 +108,7 @@ func exit_position() -> Vector3:
 	capsule.radius = 0.35
 	capsule.height = 1.7
 	q.shape = capsule
-	q.collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | TrafficCar.LAYER_VEHICLES
+	q.collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | RealCar.LAYER_VEHICLES
 	q.exclude = [get_rid()]
 	for offset in [global_basis.x * 1.9, -global_basis.x * 1.9, -global_basis.z * 3.0, global_basis.z * 3.0]:
 		var p: Vector3 = global_position + offset

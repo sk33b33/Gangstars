@@ -37,7 +37,7 @@
     },
     {
       "id": "soccer_match",
-      "name": "Soccer on the Lentegeur field",
+      "name": "Soccer on the Harvester field",
       "every_days": 1,
       "offset": 0,
       "hours": [
@@ -122,7 +122,7 @@
     },
     {
       "id": "friday_prayers",
-      "name": "Friday prayers at the Town Centre mosque",
+      "name": "Friday prayers at the Westridge Centre mosque",
       "every_days": 7,
       "offset": 5,
       "hours": [
@@ -134,7 +134,7 @@
       "activity": "at Friday prayers",
       "join_chance": 0.3,
       "duration": 40,
-      "start_text": "Friday prayers at the Town Centre mosque: men and boys in their best head the same way.",
+      "start_text": "Friday prayers at the Westridge Centre mosque: men and boys in their best head the same way.",
       "end_text": ""
     },
     {

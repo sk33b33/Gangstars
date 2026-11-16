@@ -40,13 +40,12 @@ func _ready() -> void:
 	district.director.observer = player
 	session = GameSession.new()
 	session.name = "Session"
-	if DataFiles.real_mode and save_path == "user://savegame.json":
-		save_path = "user://savegame_real.json"   # the two worlds keep separate saves (positions differ)
-	if district.is_real():   # a new game starts at your own gate
-		var home: HousePlot = district.plots.get(GameSession.SAFEHOUSE_ID)
-		if home:
-			player.global_position = home.gate_position() + Vector3(0, 0.15, 0)
-			player.snap_camera()
+	if save_path == "user://savegame.json":
+		save_path = "user://savegame_real.json"   # (named for the real Westridge: a save from the old made-up districts is a different world)
+	var home: HousePlot = district.plots.get(GameSession.SAFEHOUSE_ID)   # a new game starts at your own gate
+	if home:
+		player.global_position = home.gate_position() + Vector3(0, 0.15, 0)
+		player.snap_camera()
 	district.player = player
 	session.save_path = _args.get("load", save_path)
 	add_child(session)
@@ -58,12 +57,6 @@ func _ready() -> void:
 	hud.add_child(pause_menu)
 	pause_menu.setup(settings)
 	pause_menu.quit_requested.connect(func(): get_tree().quit())
-	pause_menu.world_switch_requested.connect(func(to_real: bool):
-		settings.set_value("gameplay/real_world", to_real)
-		settings.save_settings()
-		DataFiles.real_mode = to_real
-		get_tree().paused = false
-		get_tree().reload_current_scene())
 	pause_menu.resumed.connect(func():
 		if DisplayServer.get_name() != "headless":
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED)
@@ -203,8 +196,6 @@ func apply_settings() -> void:
 	RenderQuality.apply(env, district.get_node("Sun"), bool(settings.get_value("video/effects")))
 	district.day_night.shadows_allowed = bool(settings.get_value("video/shadows"))
 	hud.set_fps_visible(bool(settings.get_value("video/show_fps")))
-	if district.traffic:
-		district.traffic.set_enabled(bool(settings.get_value("gameplay/traffic")))
 	if district.real_traffic:
 		district.real_traffic.set_enabled(bool(settings.get_value("gameplay/traffic")))
 	if district.weather:

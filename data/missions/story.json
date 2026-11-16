@@ -160,7 +160,7 @@
           "east_of_the_gate"
         ]
       },
-      "intro": "Boeta: \"Westridge, Lentegeur, the Promenade... People say our name now. One more push and the Plain is ours.\"",
+      "intro": "Boeta: \"Westridge, Harvester, the Promenade... People say our name now. One more push and the Plain is ours.\"",
       "intro_by_flag": {
         "market_cut": "Boeta: \"The market pays us, the block fears us. One more push and the Plain is ours, the hard way.\"",
         "market_free": "Boeta: \"The aunties at the market wave at us now. One more push and the Plain is ours, and they'll be glad of it.\""
@@ -279,7 +279,7 @@
           "district_tafelsig"
         ]
       },
-      "intro": "Boeta: \"Five suburbs. Westridge to Tafelsig. Nobody has held this much of the Plain. Hold ten corners and come and tell me what it was all for.\"",
+      "intro": "Boeta: \"Five suburbs. Westridge to Duneside. Nobody has held this much of the Plain. Hold ten corners and come and tell me what it was all for.\"",
       "description": "Hold ten corners across Mitchells Plain, then decide what the Plain becomes.",
       "objectives": [
         {

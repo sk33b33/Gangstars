@@ -162,7 +162,7 @@
     },
     {
       "id": "duin_word",
-      "title": "Word from Lentegeur",
+      "title": "Word from Harvester",
       "auto_start": true,
       "prerequisites": {
         "member_of": "duin_boys",

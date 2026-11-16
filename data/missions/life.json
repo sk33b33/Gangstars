@@ -30,7 +30,7 @@
           "type": "visit",
           "target": "rooi_field",
           "radius": 8,
-          "text": "Look at the soccer field in Lentegeur"
+          "text": "Look at the soccer field in Harvester"
         },
         {
           "id": "kaylin",
@@ -98,7 +98,7 @@
           "over_the_dunes"
         ]
       },
-      "intro": "Aunty Gadija: \"Load-shedding again! I'm out of candles and the customers sit in the dark. Buy a box at Duin Spaza in Lentegeur, and bring it here when the lights go out.\"",
+      "intro": "Aunty Gadija: \"Load-shedding again! I'm out of candles and the customers sit in the dark. Buy a box at Duin Spaza in Harvester, and bring it here when the lights go out.\"",
       "description": "Bring candles during a power cut.",
       "objectives": [
         {
@@ -106,7 +106,7 @@
           "type": "visit",
           "target": "rooi_spaza",
           "radius": 3,
-          "text": "Buy candles at Duin Spaza in Lentegeur"
+          "text": "Buy candles at Duin Spaza in Harvester"
         },
         {
           "id": "bring",

@@ -29,11 +29,11 @@
       "id": "duin_boys",
       "name": "Dune Cruisers",
       "home": "district_east",
-      "home_name": "Lentegeur",
+      "home_name": "Harvester",
       "colour": "#c99a1c",
       "boss": "npc_rooi_spider",
       "perk": "quick_hands",
-      "perk_text": "Quick hands: +25% cash from every mission. Lentegeur is cheaper to unlock.",
+      "perk_text": "Quick hands: +25% cash from every mission. Harvester is cheaper to unlock.",
       "pitch": "The flats and the field are theirs. Fast with money, faster on their feet.",
       "warning": "Dune Cruisers' side, %s. Turn around."
     },

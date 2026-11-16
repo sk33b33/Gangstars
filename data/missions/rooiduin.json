@@ -10,7 +10,7 @@
         ]
       },
       "intro": "Ma Rachel: \"So you're the one from Westridge everyone's talking about. Walk with me: see the field, the spaza, and greet Uncle Solly at Kings Cuts.\"",
-      "description": "Get to know Lentegeur.",
+      "description": "Get to know Harvester.",
       "objectives": [
         {
           "id": "field",
@@ -71,7 +71,7 @@
           "type": "talk_to",
           "target": "npc_rooi_solly",
           "allow_knock": true,
-          "text": "Bring them to Uncle Solly in Lentegeur"
+          "text": "Bring them to Uncle Solly in Harvester"
         }
       ],
       "rewards": {
@@ -102,7 +102,7 @@
           "type": "talk_to",
           "target": "npc_rooi_spider",
           "allow_knock": true,
-          "text": "Talk to Spider at the Dune Cruisers' flats (8 Marguerite Road)"
+          "text": "Talk to Spider at the Dune Cruisers' flats (8 Farrier Street)"
         },
         {
           "id": "hold",

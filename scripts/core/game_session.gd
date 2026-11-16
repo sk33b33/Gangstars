@@ -459,9 +459,6 @@ func _setup_audio() -> void:
 		autosave.call_deferred("mission done"))
 	for car in district.vehicles.values():
 		audio.attach_engine(car, -8.0)
-	if district.traffic:
-		for car in district.traffic.cars:
-			audio.attach_engine(car)
 
 
 ## When the tracked objective needs the crew beside the player (a crew hold), every recruit
@@ -503,7 +500,7 @@ func _check_area() -> void:
 	var name_text := districts.display_name(a) if a != "starter" else "Westridge"
 	hud.show_banner(name_text.to_upper(), 3.0)
 	hud.set_district_name("%s · %s" % [name_text, districts.state(a)])
-	if district.is_real() and a != "starter" and not districts.is_unlocked(a):
+	if a != "starter" and not districts.is_unlocked(a):
 		hud.show_message("%s isn't your turf yet. You can walk here, but you can't take its corners until you unlock it (turf map: %s)." % [name_text, InputHints.key("turf_map")])
 
 

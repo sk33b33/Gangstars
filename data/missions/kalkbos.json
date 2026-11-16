@@ -61,7 +61,7 @@
           "district_west"
         ]
       },
-      "intro": "Auntie Gail: \"Uncle Solly in Lentegeur ordered snoek for his birthday braai. It's three districts away and it won't stay fresh. Take a car if you have one!\"",
+      "intro": "Auntie Gail: \"Uncle Solly in Harvester ordered snoek for his birthday braai. It's three districts away and it won't stay fresh. Take a car if you have one!\"",
       "description": "Deliver fresh fish across all three districts.",
       "time_limit_minutes": 240,
       "fail_text": "The snoek turned. Auntie Gail sends a sorry message to Solly.",
@@ -71,7 +71,7 @@
           "type": "talk_to",
           "target": "npc_rooi_solly",
           "allow_knock": true,
-          "text": "Deliver the snoek to Uncle Solly (Lentegeur)"
+          "text": "Deliver the snoek to Uncle Solly (Harvester)"
         },
         {
           "id": "back",

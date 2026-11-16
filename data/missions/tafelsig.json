@@ -13,7 +13,7 @@
         ]
       },
       "intro": "Aunty Gadija: \"A new face, all the way out here? Walk the court, see the rank, then come tell me what you think. Out here we watch strangers.\"",
-      "description": "Get to know Tafelsig.",
+      "description": "Get to know Duneside.",
       "objectives": [
         {
           "id": "court",
@@ -27,7 +27,7 @@
           "type": "visit",
           "target": "taf_taxi",
           "radius": 4,
-          "text": "See the Tafelsig rank"
+          "text": "See the Duneside rank"
         },
         {
           "id": "gadija",

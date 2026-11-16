@@ -22,10 +22,6 @@ var manager: DistrictManager
 var player: Node3D
 var turf: TurfWar
 
-## The real Mitchells Plain (OpenStreetMap) with the game's districts placed on it: the CITY view.
-var real_map: RealMap
-var city_view := false
-
 var _canvas: Control
 var _side: VBoxContainer
 var _world_rect := Rect2()
@@ -73,19 +69,9 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 	_side.add_theme_constant_override("separation", 6)
 	scroll.add_child(_side)
 	# The map covers every built area plus a 40 m strip for neighbours that aren't built yet.
-	var r := Rect2()
-	for i in district.areas.size():
-		var ab: Array = district.areas[i].get("bounds", [-72, -78, 72, 22])
-		var ar := Rect2(ab[0], ab[1], ab[2] - ab[0], ab[3] - ab[1])
-		r = ar if i == 0 else r.merge(ar)
-	_world_rect = r.grow_individual(40.0, 6.0, 6.0, 6.0)
-	if district.is_real():   # the whole real suburb
-		_world_rect = district.real.data.bounds.grow(30.0)
+	_world_rect = district.real.data.bounds.grow(30.0)
 	_map_scale = minf(MAP_SIZE.x / _world_rect.size.x, MAP_SIZE.y / _world_rect.size.y)
 	_map_offset = (MAP_SIZE - _world_rect.size * _map_scale) * 0.5
-	real_map = RealMap.new()
-	if not real_map.load_data():
-		real_map = null
 	visible = false
 
 
@@ -104,14 +90,6 @@ func refresh() -> void:
 		_side.remove_child(c)
 		c.queue_free()
 	_add_label("TURF", 28, Color("#ffd75e"))
-	if real_map:
-		var view_btn := Button.new()
-		view_btn.name = "ViewToggle"
-		view_btn.text = "Show my turf" if city_view else "Show all of Mitchells Plain"
-		view_btn.pressed.connect(func():
-			city_view = not city_view
-			refresh())
-		_side.add_child(view_btn)
 	var starter_state := manager.state("starter")
 	_add_label("Westridge — %s" % starter_state.to_upper(), 20, Color("#5fbf6a") if starter_state == "controlled" else Color("#f1c40f"))
 	var bar := ProgressBar.new()
@@ -224,101 +202,7 @@ func _to_map(p: Vector3) -> Vector2:
 	return _map_offset + (Vector2(p.x, p.z) - _world_rect.position) * _map_scale
 
 
-## Real-map metres -> canvas pixels (CITY view).
-func _city_to_map(p: Vector2) -> Vector2:
-	var sc := minf(MAP_SIZE.x / real_map.bounds.size.x, (MAP_SIZE.y - 18.0) / real_map.bounds.size.y)
-	return (MAP_SIZE - Vector2(0, 18) - real_map.bounds.size * sc) * 0.5 + (p - real_map.bounds.position) * sc
-
-
-## Where the player is on the real map: their district's real spot plus their offset inside it.
-func city_player_position() -> Variant:
-	if player == null:
-		return null
-	if district.is_real():   # the real map's own origin is the Westridge suburb point
-		for s in real_map.suburbs:
-			if s.name == "Westridge":
-				return (s.at as Vector2) + Vector2(player.global_position.x, player.global_position.z)
-		return null
-	var area_id := district.area_at(player.global_position)
-	var at: Variant = real_map.district_position(area_id)
-	var area := district.area_by_id(area_id)
-	if at == null or area.is_empty():
-		return null
-	var ab: Array = area.bounds
-	var centre := Vector2((float(ab[0]) + float(ab[2])) * 0.5, (float(ab[1]) + float(ab[3])) * 0.5)
-	var real: Dictionary = area.get("real", {})
-	if real.has("anchor"):   # a rebuilt area: one local point with its spot on the real map
-		at = DataFiles.to_vec2(real.anchor.metres)
-		centre = DataFiles.to_vec2(real.anchor.local)
-	var off := Vector2(player.global_position.x, player.global_position.z) - centre
-	return (at as Vector2) + off.rotated(deg_to_rad(district.grid_bearing()))
-
-
-func _draw_city() -> void:
-	var font := ThemeDB.fallback_font
-	_canvas.draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#22303a"))
-	var land := PackedVector2Array()
-	for p in real_map.outline:
-		land.append(_city_to_map(p))
-	_canvas.draw_colored_polygon(land.slice(0, land.size() - 1), Color("#3a3326"))
-	_canvas.draw_polyline(land, Color("#ffd75e"), 1.5)
-	var style := {"collector": [Color("#6b6b72"), 1.0], "main": [Color("#c9c6bf"), 2.0], "freeway": [Color("#e0a14a"), 3.0]}
-	for cls in ["collector", "main", "freeway"]:
-		for r in real_map.roads:
-			if r["class"] != cls:
-				continue
-			var line := PackedVector2Array()
-			for p in r.pts:
-				line.append(_city_to_map(p))
-			_canvas.draw_polyline(line, style[cls][0], style[cls][1])
-	for r in real_map.rail:
-		var line := PackedVector2Array()
-		for p in r:
-			line.append(_city_to_map(p))
-		_canvas.draw_polyline(line, Color("#1d1b24"), 3.0)
-	for s in real_map.stations:
-		var m := _city_to_map(s.at)
-		_canvas.draw_rect(Rect2(m - Vector2(4, 4), Vector2(8, 8)), Color("#2e86c1"))
-	var taken: Array = []   # suburbs that are game districts get the district label instead
-	for id in real_map._places:
-		var dp: Variant = real_map.district_position(str(id))
-		if dp != null:
-			taken.append(dp)
-	for s in real_map.suburbs:
-		if taken.any(func(t): return (t as Vector2).distance_to(s.at) < 300.0):
-			continue
-		var m := _city_to_map(s.at)
-		var w := font.get_string_size(str(s.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x
-		_canvas.draw_string(font, m - Vector2(w * 0.5, -3), str(s.name), HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color(1, 1, 1, 0.45))
-	# The game's districts, in their turf colours.
-	var all: Array = [{"id": "starter", "display_name": "Westridge"}]
-	all.append_array(manager.neighbours())
-	all.append_array(manager.planned())
-	for d in all:
-		var at: Variant = real_map.district_position(str(d.id))
-		if at == null:
-			continue
-		var m := _city_to_map(at)
-		var planned: bool = bool(d.get("planned", false))
-		var st := "controlled" if str(d.id) == "starter" else manager.state(str(d.id))
-		var col: Color = Color("#8a8f99") if planned else DISTRICT_COLORS.get(st, Color.GRAY)
-		_canvas.draw_circle(m, 11.0, Color(col, 0.35))
-		_canvas.draw_arc(m, 11.0, 0.0, TAU, 28, col, 2.0)
-		var text := str(d.display_name).to_upper()
-		var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-		var pos := m + Vector2(-tw * 0.5, -15)
-		_canvas.draw_string_outline(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color("#1d1b24"))
-		_canvas.draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, col)
-	var pp: Variant = city_player_position()
-	if pp != null:
-		var m := _city_to_map(pp)
-		_canvas.draw_circle(m, 5.0, Color.WHITE)
-		_canvas.draw_arc(m, 8.0, 0.0, TAU, 20, Color.WHITE, 1.5)
-	_canvas.draw_string(font, Vector2(8, 16), "N ↑   orange: freeway · white: main roads · black: railway", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
-	_canvas.draw_string(font, Vector2(8, MAP_SIZE.y - 5), real_map.credit, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(1, 1, 1, 0.7))
-
-
-## Real-world mode: the real suburb with its streets, the game's homes by turf state, the parts
+## The map: the real suburb with its streets, the game's homes by turf state, the parts
 ## of Westridge (locked ones tinted), places, corners, crew and you.
 func _draw_real() -> void:
 	var font := ThemeDB.fallback_font
@@ -380,103 +264,4 @@ func _draw_real() -> void:
 
 
 func _draw_map() -> void:
-	if city_view and real_map:
-		_draw_city()
-		return
-	if district.is_real():
-		_draw_real()
-		return
-	var font := ThemeDB.fallback_font
-	_canvas.draw_rect(Rect2(Vector2.ZERO, MAP_SIZE), Color("#3a3326"))
-	var b: Array = district.info.get("bounds", [-72, -78, 72, 22])
-	for area in district.areas:
-		var ab: Array = area.get("bounds", b)
-		var ar := Rect2(_to_map(Vector3(ab[0], 0, ab[1])), Vector2(ab[2] - ab[0], ab[3] - ab[1]) * _map_scale)
-		_canvas.draw_rect(ar, AREA_GROUND.get(str(area.id), Color("#d8a07a")))
-	# Neighbouring districts: their real area if built, otherwise a strip beside Westridge.
-	var overlays: Array = []
-	var labels: Array = []
-	for d in manager.neighbours():
-		var st := manager.state(str(d.id))
-		var area := district.area_by_id(str(d.id))
-		var zone: Rect2
-		if not area.is_empty():
-			var ab: Array = area.bounds
-			zone = Rect2(_to_map(Vector3(ab[0], 0, ab[1])), Vector2(ab[2] - ab[0], ab[3] - ab[1]) * _map_scale)
-			if not manager.is_unlocked(str(d.id)):
-				overlays.append([zone, DISTRICT_COLORS.get(st, Color.GRAY)])
-		else:
-			var east: bool = d.side == "east"
-			var zx: float = b[2] if east else b[0] - 40.0
-			zone = Rect2(_to_map(Vector3(zx, 0, b[1])), Vector2(40.0, b[3] - b[1]) * _map_scale)
-		var col: Color = DISTRICT_COLORS.get(st, Color.GRAY)
-		_canvas.draw_rect(zone, Color(col, 0.25))
-		_canvas.draw_rect(zone, col, false, 2.0)
-		labels.append([zone, "%s · %s" % [str(d.display_name).to_upper(), st.to_upper()], col])
-	# Streets (all areas).
-	var all_streets: Array = []
-	var all_pois: Array = []
-	for area in district.areas:
-		all_streets.append_array(area.get("streets", []))
-		all_pois.append_array(area.get("pois", []))
-	for s in all_streets:
-		var hw: float = s.get("half_width", 4.0)
-		var a0 := maxf(minf(s.from, s.to), _world_rect.position.x)
-		var a1 := minf(maxf(s.from, s.to), _world_rect.end.x)
-		var r: Rect2
-		if s.axis == "x":
-			r = Rect2(_to_map(Vector3(a0, 0, s.at - hw)), Vector2(a1 - a0, hw * 2) * _map_scale)
-		else:
-			r = Rect2(_to_map(Vector3(s.at - hw, 0, a0)), Vector2(hw * 2, a1 - a0) * _map_scale)
-		_canvas.draw_rect(r, Color("#4a4a50"))
-	# Houses by turf state.
-	for id in district.registry.order:
-		var house := district.registry.get_house(id)
-		var t := house.plot_transform()
-		var hw2 := house.plot_size.x * 0.5
-		var poly := PackedVector2Array()
-		for c in [Vector3(-hw2, 0, 0), Vector3(hw2, 0, 0), Vector3(hw2, 0, -house.plot_size.y), Vector3(-hw2, 0, -house.plot_size.y)]:
-			poly.append(_to_map(t * c))
-		_canvas.draw_colored_polygon(poly, STATE_COLORS.get(manager.house_state(house), Color.GRAY))
-		poly.append(poly[0])
-		_canvas.draw_polyline(poly, Color("#1d1b24"), 1.0)
-	# Landmarks.
-	for poi in all_pois:
-		var pp := DataFiles.to_vec2(poi.get("position"))
-		var m := _to_map(Vector3(pp.x, 0, pp.y))
-		_canvas.draw_circle(m, 5.0, Color("#2e86c1"))
-		_canvas.draw_string(font, m + Vector2(7, 4), str(poi.get("map_label", poi.get("name", ""))), HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.WHITE)
-	for ov in overlays:
-		_canvas.draw_rect(ov[0], Color(ov[1], 0.45))
-		_canvas.draw_rect(ov[0], ov[1], false, 2.0)
-	# District names last, centred just above each zone so houses and landmarks never cover them.
-	for lb in labels:
-		var zr: Rect2 = lb[0]
-		# Centred on the zone but never clipped to its width (long names + "LOCKED" overflow narrow zones).
-		var text_w := font.get_string_size(lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
-		var pos := Vector2(zr.get_center().x - text_w * 0.5, zr.position.y - 8)
-		_canvas.draw_string_outline(font, pos, lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 4, Color("#1d1b24"))
-		_canvas.draw_string(font, pos, lb[1], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, lb[2])
-	# Corners: a ring in the holder's colour (white = nobody's), flashing red while pushed.
-	if turf:
-		for id in turf.state.order:
-			var c: Dictionary = turf.state.corners[id]
-			var m := _to_map(turf.anchor(id))
-			var col: Color = district.crews.colour(str(c.owner)) if not str(c.owner).is_empty() else Color("#f4f1ea")
-			_canvas.draw_circle(m, 9.0, Color(col, 0.35))
-			_canvas.draw_arc(m, 9.0, 0.0, TAU * float(c.control) / 100.0, 24, col, 3.0)
-			if turf.state.is_players(id):
-				_canvas.draw_circle(m, 3.0, Color.WHITE)
-			if turf.state.pushed(id):
-				_canvas.draw_arc(m, 13.0, 0.0, TAU, 24, Color("#e2585e"), 2.0)
-	# Crew and player.
-	for r: Resident in district.residents.values():
-		if r.data.role == "player_crew" and not r.is_inside:
-			_canvas.draw_circle(_to_map(r.global_position), 4.0, Color("#e2585e"))
-	if player:
-		var p := _to_map(player.global_position)
-		var f: Vector3 = player.facing_dir() if player.has_method("facing_dir") else Vector3.FORWARD
-		var fwd := Vector2(f.x, f.z).normalized() * 9.0
-		var side := Vector2(-fwd.y, fwd.x) * 0.6
-		_canvas.draw_colored_polygon(PackedVector2Array([p + fwd, p - fwd * 0.6 + side, p - fwd * 0.6 - side]), Color.WHITE)
-	_canvas.draw_string(font, Vector2(8, MAP_SIZE.y - 8), "N ↑", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.WHITE)
+	_draw_real()

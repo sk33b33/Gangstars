@@ -2,7 +2,6 @@ class_name PauseMenu
 extends Control
 ## Esc menu: pauses the game; audio, controls, video and gameplay settings (saved on change).
 
-signal world_switch_requested(real: bool)
 signal resumed
 signal quit_requested
 signal replay_tutorial
@@ -98,11 +97,6 @@ func _build() -> void:
 	replay.text = "Replay the tutorial"
 	replay.pressed.connect(func(): replay_tutorial.emit())
 	_rows.add_child(replay)
-	var real := Button.new()
-	real.name = "RealWestridge"
-	real.text = "Switch to the old made-up districts (restarts)" if DataFiles.real_mode else "Switch to the real Westridge (restarts; its own save)"
-	real.pressed.connect(func(): world_switch_requested.emit(not DataFiles.real_mode))
-	_rows.add_child(real)
 	var quit := Button.new()
 	quit.text = "Quit to desktop"
 	quit.pressed.connect(func(): quit_requested.emit())

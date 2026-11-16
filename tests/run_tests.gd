@@ -16,12 +16,6 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 
-## True when the suite runs against the real Westridge (tests/run.sh --real): checks that only
-## make sense for the old made-up districts (straight streets, gates, kit houses) are skipped,
-## and the real-world versions run in their place.
-var _real: bool = DataFiles.real_mode
-
-
 func _check(cond: bool, what: String) -> void:
 	if cond:
 		_passed += 1
@@ -74,9 +68,7 @@ func _run() -> void:
 	_test_access_units()
 	_test_loading_units()
 	_test_real_map_units()
-	if not _real:   # the two block rebuilds belong to the old districts
-		_test_real_westridge_units()
-		_test_real_lentegeur_units()
+	_test_real_homes_units()
 	_test_real_world_units()
 	await _test_real_world_streaming()
 	_test_survival_units()
@@ -282,19 +274,6 @@ func _test_npc_data() -> void:
 			bricks += 1
 	_check(bricks >= 1, "some parked cars are up on bricks (%d of 80)" % bricks)
 	garage.queue_free()
-	# Detail pass: litter, potholes, drains, bins along the streets.
-	var district_data: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
-	var street_root := Node3D.new()
-	root.add_child(street_root)
-	var ground_bits := GroundDetail.build(street_root, district_data)
-	_check(ground_bits >= 60, "open ground gets worn earth, grass, drifting sand, weeds and dune grass (%d)" % ground_bits)
-	if not _real:   # the real streets have no litter or puddles yet (ROADMAP)
-		var bits := StreetDetail.build(street_root, district_data)
-		_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
-		_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
-		var puddles := street_root.find_children("*", "MeshInstance3D", true, false).filter(func(m): return m.material_override == StreetDetail.puddle_material())
-		_check(puddles.size() >= 10, "rain collects in puddles along the streets (%d)" % puddles.size())
-	street_root.queue_free()
 	# Faces blink and talk; hair and posture vary.
 	var talker := CharacterModel.new()
 	root.add_child(talker)
@@ -612,16 +591,10 @@ func _test_phase5_units() -> void:
 	var dm := DistrictManager.load_file("res://data/districts/districts.json", p, houses)
 	# Mitchells Plain: three built suburbs, the rest listed as future turf that can't be unlocked yet.
 	var future := dm.planned()
-	if _real:
-		_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Harvester" and dm.display_name("district_west") == "Rocklands"
-			and dm.display_name("district_town_centre") == "Westridge Centre" and dm.display_name("district_tafelsig") == "Duneside",
-			"the parts of Westridge are Westridge, Harvester, Rocklands, Westridge Centre and Duneside")
-		_check(future.is_empty(), "nothing outside Westridge is planned")
-	else:
-		_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
-			"the districts are Westridge, Lentegeur and Rocklands")
-		_check(future.size() == 4 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
-			"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
+	_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Harvester" and dm.display_name("district_west") == "Rocklands"
+		and dm.display_name("district_town_centre") == "Westridge Centre" and dm.display_name("district_tafelsig") == "Duneside",
+		"the parts of Westridge are Westridge, Harvester, Rocklands, Westridge Centre and Duneside")
+	_check(future.is_empty(), "nothing outside Westridge is planned")
 	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
 	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
 		"only the starter district is open at the start")
@@ -683,18 +656,6 @@ func _test_phase5_units() -> void:
 
 
 func _test_phase6_units() -> void:
-	# Left-hand traffic: driving east along z=0, the lane is on the north (-z) side.
-	var built := TrafficSystem.build_route([Vector3(-50, 0, 0), Vector3(50, 0, 0), Vector3(50, 0, -56), Vector3(-50, 0, -56)], 1.4, 6.0)
-	var route: PackedVector3Array = built.route
-	_check(route.size() == 28 and built.curves.size() == 20, "route has rounded corners (%d points)" % route.size())
-	var east_ok := false
-	for i in route.size() - 1:
-		var a2 := route[i]
-		var b2 := route[i + 1]
-		if not built.curves.has(i) and not built.curves.has(i + 1) and b2.x - a2.x > 50.0:
-			east_ok = absf(a2.z + 1.4) < 0.01 and absf(b2.z + 1.4) < 0.01
-	_check(east_ok, "eastbound lane sits 1.4 m to the left (north) of the centre line")
-
 	for n in AudioBank.names():
 		var s := AudioBank.get_stream(n)
 		_check(s != null and s.data.size() > 400, "sound '%s' is synthesized (%d bytes)" % [n, s.data.size() if s else 0])
@@ -867,17 +828,10 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 
 	district.director.clock.set_hour(12.0)
 	player.pivot.rotation.y = 0.0
-	if _real:
-		player.global_position = district.destinations.anchor_position("district_west:entrance") + Vector3(1.0, 0.1, 0.0)
-		player.snap_camera()
-		for i in 60:
-			await physics_frame
-	else:
-		player.global_position = Vector3(west_x - 26.0, 0.1, 5.2)
-		player.snap_camera()
-		await _press_toward(player, "move_left", 5.0)
-		for i in 20:
-			await physics_frame
+	player.global_position = district.destinations.anchor_position("district_west:entrance") + Vector3(1.0, 0.1, 0.0)
+	player.snap_camera()
+	for i in 60:
+		await physics_frame
 	_check(session.current_area == "district_west" and session.hud.banner_text() == "ROCKLANDS", "walking west enters Rocklands (x %.1f)" % player.global_position.x)
 	var kalk_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_west")
 	_check(kalk_res.size() >= 20, "Rocklands is populated (%d)" % kalk_res.size())
@@ -906,9 +860,9 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	district.director.clock.set_hour(20.0)
 	player.global_position = district.destinations.anchor_position("kalk_lookout") + Vector3(0, 0.1, 0)
 	player.snap_camera()
-	session.police.turf_provocation = not _real
+	session.police.turf_provocation = false
 	_slow_clock(district, true)
-	for i in 60 * (900 if _real else 400):
+	for i in 60 * 900:
 		if missions.is_completed("quarry_night"):
 			break
 		await physics_frame
@@ -935,18 +889,17 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 5 and district.area_by_id("district_east").display_name == ("Harvester" if _real else "Lentegeur"), "five areas are built (%s)" % [district.areas.map(func(ar): return ar.display_name)])
+	_check(district.areas.size() == 5 and district.area_by_id("district_east").display_name == "Harvester", "five areas are built (%s)" % [district.areas.map(func(ar): return ar.display_name)])
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
-	if _real:   # the rest of the suburb's navigation bakes in the background after the game starts
-		var t_nav := Time.get_ticks_msec()
-		while not district.real.all_nav_ready() and Time.get_ticks_msec() - t_nav < 240000:
-			await physics_frame
-			OS.delay_msec(5)
-		_check(district.real.all_nav_ready(), "the whole suburb's navigation is baked in the background (%d pieces, %.0f s after this check began)" % [district.real.nav_regions.size(), (Time.get_ticks_msec() - t_nav) / 1000.0])
-		for i in 600:
-			await physics_frame
-			OS.delay_msec(2)
+	var t_nav := Time.get_ticks_msec()
+	while not district.real.all_nav_ready() and Time.get_ticks_msec() - t_nav < 240000:
+		await physics_frame
+		OS.delay_msec(5)
+	_check(district.real.all_nav_ready(), "the whole suburb's navigation is baked in the background (%d pieces, %.0f s after this check began)" % [district.real.nav_regions.size(), (Time.get_ticks_msec() - t_nav) / 1000.0])
+	for i in 600:
+		await physics_frame
+		OS.delay_msec(2)
 	var map := district.nav_region.get_navigation_map()
 	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("starter_h05:gate"))
 	var to := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
@@ -956,17 +909,10 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	# Travel on foot from the approach street into Lentegeur.
 	district.director.clock.set_hour(12.0)
 	player.pivot.rotation.y = 0.0
-	if _real:
-		player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
-		player.snap_camera()
-		for i in 60:
-			await physics_frame
-	else:
-		player.global_position = Vector3(98, 0.1, 5.2)
-		player.snap_camera()
-		await _press_toward(player, "move_right", 5.0)
-		for i in 20:
-			await physics_frame
+	player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
+	player.snap_camera()
+	for i in 60:
+		await physics_frame
 	_check(district.area_at(player.global_position) == "district_east" and session.current_area == "district_east",
 		"going east enters %s (x %.1f)" % [dm.display_name("district_east"), player.global_position.x])
 	_check(session.hud.banner_text() == dm.display_name("district_east").to_upper(), "a district banner greets the player (%s)" % session.hud.banner_text())
@@ -1009,11 +955,11 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var field := district.destinations.anchor_position("rooi_field")
 	player.global_position = field + Vector3(0, 0.1, 0)
 	player.snap_camera()
-	session.police.turf_provocation = not _real   # which rivals happen to be at the field is the map's business; the hold is what's tested
+	session.police.turf_provocation = false   # which rivals happen to be at the field is the map's business; the hold is what's tested
 	_slow_clock(district, true)
 	var boeta: Resident = district.residents["npc_boeta"]
 	var arrived := false
-	for i in 60 * (900 if _real else 360):   # in the real suburb Boeta has half a kilometre to walk
+	for i in 60 * 900:   # in the real suburb Boeta has half a kilometre to walk
 		if missions.is_completed("dune_truce"):
 			break
 		if not arrived and not boeta.is_inside and boeta.global_position.distance_to(player.global_position) < 10.0:
@@ -1047,105 +993,21 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 
 func _test_phase6_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
-	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	if _real:
-		# Traffic on the real street network (its own checks: _test_real_people_and_traffic).
-		var rt := district.real_traffic
-		player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
-		player.snap_camera()
-		var moved := 0.0
-		var last_at := {}
-		for f in 60 * 25:
-			for c: RealCar in rt.cars:
-				if last_at.has(c):
-					moved += c.global_position.distance_to(last_at[c])
-				last_at[c] = c.global_position
-			await physics_frame
-		_check(rt.cars.size() >= 6 and moved > 300.0, "cars drive the real streets around you (%d cars, %.0f m driven in 25 s)" % [rt.cars.size(), moved])
-		_check(district.merge_stats.get("merged_into", 0) > 10, "static meshes are batched (%s)" % district.merge_stats)
-	else:
-		_check(traffic.cars.size() == 27, "27 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
-		_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
-		player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
-		player.global_position = Vector3(0, 0.1, -30)
-		player.snap_camera()
-		var last := traffic.cars.map(func(c): return c.global_position)
-		var travelled := traffic.cars.map(func(_c): return 0.0)
-		var off_road := 0
-		var streets: Array = []
-		for area in district.areas:
-			streets.append_array(area.get("streets", []))
-		for f in 60 * 25:
-			for i in traffic.cars.size():
-				travelled[i] += traffic.cars[i].global_position.distance_to(last[i])
-				last[i] = traffic.cars[i].global_position
-			if f % 300 == 0 and _args.has("verbose"):
-				for c: TrafficCar in traffic.cars:
-					if c.speed < 1.0:
-						for n in c.candidates:
-							var l: Vector3 = c.to_local(n.global_position)
-							if n != c and l.z > 1.0 and l.z < 9.0 and absf(l.x) < 1.7:
-								print("    %s at %s blocked by %s at %s" % [c.vehicle_id, c.global_position.snapped(Vector3.ONE * 0.1), n.name, n.global_position.snapped(Vector3.ONE * 0.1)])
-			if f % 30 == 0:
-				for c: TrafficCar in traffic.cars:
-					var best := INF
-					for s in streets:
-						var across: float = absf((c.global_position.z if s.axis == "x" else c.global_position.x) - s.at)
-						var along: float = c.global_position.x if s.axis == "x" else c.global_position.z
-						if along >= minf(s.from, s.to) - 1.0 and along <= maxf(s.from, s.to) + 1.0:
-							best = minf(best, across - float(s.half_width))
-					if best > 0.3:
-						off_road += 1
-			await physics_frame
-		# (> 30 m: none is stuck; busy streets with slow-crossing pedestrians can halve a car's distance.)
-		_check(travelled.all(func(t): return t > 30.0), "all AI vehicles keep driving (metres in 25 s: %s)" % [travelled.map(func(t): return int(t))])
-		_check(off_road == 0, "AI vehicles stay on the roads (%d off-road samples)" % off_road)
-
-		# A car brakes for the player standing in its lane, without shoving them.
-		var car: TrafficCar = traffic.cars[0]
-		var found_straight := false
-		var stand := car.global_position
-		for i in 60 * 90:
-			# Wait for >= 9 m of straight lane ahead of the car, then stand at the end of it.
-			if car.speed > 6.0 and not car.curve_points.has(car.lane_index()):
-				var walked := 0.0
-				var prev := car.global_position
-				var ok := false
-				for k in car.route.size():
-					var ri := (car.lane_index() + k) % car.route.size()
-					if car.curve_points.has(ri):
-						break
-					walked += prev.distance_to(car.route[ri])
-					prev = car.route[ri]
-					if walked >= 9.0:
-						stand = prev
-						ok = true
-						break
-				if ok:
-					found_straight = true
-					break
-			await physics_frame
-		player.global_position = stand + Vector3(0, 0.1, 0)
-		player.snap_camera()
-		for i in 180:
-			await physics_frame
-		var slowest := car.speed
-		var pushed := 0.0
-		for i in 900:   # the car may still be some way off: give it time to arrive and brake
-			if car.global_position.distance_to(player.global_position) < 6.0:
-				pushed = maxf(pushed, Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length())
-			slowest = minf(slowest, car.speed)
-			if car.speed < 0.2:
-				break
-			await physics_frame
-		slowest = minf(slowest, car.speed)
-		# (Or it is held back further up the lane, queued behind another car that stopped first.)
-		var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 3.0
-		_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
-		_check(pushed < 0.3, "the player is not pushed by the car (%.2f m)" % pushed)
-		var gap := car.global_position.distance_to(player.global_position)
-		_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
+	# Traffic on the real street network (its own checks: _test_real_people_and_traffic).
+	var rt := district.real_traffic
+	player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	var moved := 0.0
+	var last_at := {}
+	for f in 60 * 25:
+		for c: RealCar in rt.cars:
+			if last_at.has(c):
+				moved += c.global_position.distance_to(last_at[c])
+			last_at[c] = c.global_position
+		await physics_frame
+	_check(rt.cars.size() >= 6 and moved > 300.0, "cars drive the real streets around you (%d cars, %.0f m driven in 25 s)" % [rt.cars.size(), moved])
+	_check(district.merge_stats.get("merged_into", 0) > 10, "static meshes are batched (%s)" % district.merge_stats)
 
 	# Driving.
 	player.global_position = _place(district, "open")
@@ -1184,7 +1046,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	player.exit_vehicle()
 	_check(not player.is_driving() and player.model.visible and player.collision_layer != 0, "getting out restores the player")
 	_check(player.global_position.distance_to(golf.global_position) < 4.5, "the player steps out beside the car")
-	golf.global_position = golf.global_position if _real else Vector3(-30, 0.05, -52.7)
+	pass
 	_check(session.load_game() == "" and golf.global_position.distance_to(saved_pos) < 0.3, "loading restores the car's position")
 
 	# Weather.
@@ -1293,12 +1155,9 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	main.settings.set_value("audio/sfx", 0.25)
 	_check(absf(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX")) - linear_to_db(0.25)) < 0.1, "volume settings drive the audio buses")
 	main.settings.set_value("gameplay/traffic", false)
-	if _real:
-		_check(not district.real_traffic.visible and district.real_traffic.cars.is_empty(), "traffic can be switched off")
-	else:
-		_check(not traffic.visible and traffic.cars.all(func(c): return c.collision_layer == 0), "traffic can be switched off")
+	_check(not district.real_traffic.visible and district.real_traffic.cars.is_empty(), "traffic can be switched off")
 	main.settings.set_value("gameplay/traffic", true)
-	_check(district.real_traffic.visible if _real else traffic.visible, "and back on")
+	_check(district.real_traffic.visible, "and back on")
 	main.pause_menu.open()
 	_check(paused and main.pause_menu.visible and main.pause_menu.control_for("video/fov") != null, "Esc menu pauses the game and shows settings")
 	main.pause_menu.close()
@@ -1418,13 +1277,9 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
 	_check(cops.size() == 10 and cops.all(func(r): return r.model.weapon in ["pistol", "shotgun"]), "10 armed officers (%d)" % cops.size())
 	_check(cops.all(func(r): return r.model.skeleton().get_node("Acc_police_vest").visible), "officers wear the vest, cap and belt")
-	if _real:
-		for i in 240:
-			await physics_frame
-		_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
-	else:
-		var bakkies := district.traffic.cars.filter(func(c): return c.model == "police")
-		_check(bakkies.size() == 3, "a police bakkie patrols each district (%d)" % bakkies.size())
+	for i in 240:
+		await physics_frame
+	_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
 	# Find a rival gangster out on the street in Westridge (daytime: they hang at the corner).
 	district.director.clock.set_hour(16.0)
 	var thug: Resident = null
@@ -1579,9 +1434,8 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	_check(snap.progression.crew_id == "vlakte_vipers", "the save remembers your crew")
 	# A rival on their turf: pointing a gun at them starts a fight.
 	district.director.clock.set_hour(16.0)
-	if _real:   # the rivals are out in Westridge's own streets: be there (the earlier checks left you elsewhere)
-		player.global_position = district.destinations.anchor_position("poi_corner") + Vector3(0, 0.1, 6)
-		player.snap_camera()
+	player.global_position = district.destinations.anchor_position("poi_corner") + Vector3(0, 0.1, 6)
+	player.snap_camera()
 	var rival: Resident = null
 	var tried: Array = []
 	var last: Resident = null
@@ -1752,7 +1606,7 @@ func _test_dealing_in_game(main: Node, district: District, player: Player) -> vo
 	_check(not dealing.state.order_for(client).is_empty() and player.input_enabled, "answering takes the order")
 	var cr: Resident = district.residents[client]
 	var gate := district.destinations.anchor_position(dealing.state.order_for(client).place)
-	for i in 60 * (360 if _real else 120):   # (real streets: they may be a long walk from home)
+	for i in 60 * 360:   # (real streets: they may be a long walk from home)
 		if not cr.is_inside and cr.global_position.distance_to(gate) < 3.0:
 			break
 		await physics_frame
@@ -2082,8 +1936,6 @@ func _test_town_centre_in_game(main: Node, district: District, player: Player) -
 	_check(district.area_by_id("district_town_centre").get("landmarks", []).any(func(l): return l.type == "mosque"), "Town Centre has a mosque (the suburb's mosques are real landmarks of the place)")
 	_check(district.destinations.has("tc_mall") and district.destinations.has("tc_market") and district.destinations.has("tc_taxi"),
 		"the Promenade mall, the market and the big taxi rank")
-	if not _real:
-		_check(district.gates.has("district_town_centre") and district.gates.district_town_centre.size() == 2, "two gates from Lentegeur into Town Centre")
 	_check(dm.state("district_town_centre") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_town_centre").is_empty(),
 		"Town Centre starts locked, with requirements")
 	_check(session.missions.get_mission("the_promenade") != null and session.missions.get_mission("market_day") != null, "Town Centre missions load")
@@ -2115,8 +1967,6 @@ func _test_tafelsig_in_game(main: Node, district: District, player: Player) -> v
 	_check(houses.size() == 20 and people.size() >= 20, "Tafelsig: 20 houses (flats and court row houses), %d residents" % people.size())
 	_check(district.destinations.has("taf_court") and district.destinations.has("taf_courtyard") and district.destinations.has("taf_taxi"),
 		"the sand court, the courtyard and the rank")
-	if not _real:
-		_check(district.gates.has("district_tafelsig") and district.gates.district_tafelsig.size() == 2, "two gates from Town Centre into Tafelsig")
 	_check(dm.state("district_tafelsig") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_tafelsig").is_empty()
 		and not dm.can_unlock("district_tafelsig"), "Tafelsig starts locked, with requirements")
 	_check(session.missions.get_mission("over_the_dunes") != null and session.missions.get_mission("court_time") != null
@@ -2611,16 +2461,13 @@ func _test_real_world_streaming() -> void:
 ## The real Westridge's own, slower clock (0.25 game minutes per second) for the checks that depend
 ## on how long a walk across town takes; the rest of the suite runs at 1.0.
 func _slow_clock(district: District, on: bool) -> void:
-	if _real:
-		district.director.clock.minutes_per_second = 0.25 if on else 1.0
+	district.director.clock.minutes_per_second = 0.25 if on else 1.0
 
 
 ## Where a check stands the player. The old districts use their fixed spots; the real Westridge
 ## uses the same kinds of place around the safehouse: the pavement at your gate, the middle of your
 ## street, and open ground (the park) away from any road.
 func _place(district: District, what: String) -> Vector3:
-	if not _real:
-		return {"open": Vector3(0, 0.1, -30), "road": Vector3(-30, 0.1, 0), "pavement": Vector3(-30, 0.1, 5.4), "aside": Vector3(-30, 0.1, 30)}[what]
 	var plot: HousePlot = district.plots[GameSession.SAFEHOUSE_ID]
 	match what:
 		"road":
@@ -2848,94 +2695,33 @@ func _test_real_people_and_traffic() -> void:
 		await process_frame
 
 
-## A district rebuilt on real streets: every street name exists in the OpenStreetMap data within
-## `radius` metres of the area's anchor, and no house plot sits on a road, on another plot or
-## outside the wall.
-func _check_real_area(label: String, area: Dictionary, houses_file: String, house_count: int, street_names: Array, radius: float) -> void:
-	var rm := RealMap.new()
-	rm.load_data()
-	var anchor := DataFiles.to_vec2(area.real.anchor.metres)
-	var near := {}
-	for s in rm.load_streets():
-		for p in s.pts:
-			if (p as Vector2).distance_to(anchor) < radius:
-				near[str(s.name)] = true
-	var missing: Array = street_names.filter(func(n): return not near.has(n))
-	_check(missing.is_empty(), "every %s street is a real street there on the map (%s)" % [label, missing])
-	var made_up: Array = area.streets.filter(func(s): return not street_names.has(str(s.name))).map(func(s): return s.name)
-	_check(made_up.is_empty(), "%s has no made-up street names left (%s)" % [label, made_up])
-	_check(absf(float(area.real.bearing_deg) + 22.0) < 1.0, "%s is turned 22 degrees from true north, like the real grid" % label)
-	var houses: Array = DataFiles.load_json(houses_file).houses
-	_check(houses.size() == house_count, "%s still has its %d houses" % [label, house_count])
-	var rects: Array = []
-	for h in houses:
-		var pos := DataFiles.to_vec2(h.position)
-		var size := DataFiles.to_vec2(h.get("plot_size"), Vector2(12, 14))
-		var r: Rect2
-		match str(h.facing):
-			"north": r = Rect2(pos.x - size.x * 0.5, pos.y, size.x, size.y)
-			"south": r = Rect2(pos.x - size.x * 0.5, pos.y - size.y, size.x, size.y)
-			"east": r = Rect2(pos.x - size.y, pos.y - size.x * 0.5, size.y, size.x)
-			_: r = Rect2(pos.x, pos.y - size.x * 0.5, size.y, size.x)
-		rects.append([str(h.id), r.grow(-0.05)])
-	var on_road := ""
-	for s in area.streets:
-		var hw: float = float(s.get("half_width", 4.0)) + float(s.get("sidewalk", 2.5))
-		var lo: float = minf(s.from, s.to)
-		var hi: float = maxf(s.from, s.to)
-		var sr := Rect2(lo, float(s.at) - hw, hi - lo, hw * 2.0) if s.axis == "x" else Rect2(float(s.at) - hw, lo, hw * 2.0, hi - lo)
-		for hr in rects:
-			if sr.intersects(hr[1]):
-				on_road = "%s on %s" % [hr[0], s.name]
-	_check(on_road.is_empty(), "%s: no house plot sits on a street or pavement (%s)" % [label, on_road])
-	var clash := ""
-	for i in rects.size():
-		for j in range(i + 1, rects.size()):
-			if (rects[i][1] as Rect2).intersects(rects[j][1]):
-				clash = "%s / %s" % [rects[i][0], rects[j][0]]
-	_check(clash.is_empty(), "%s: no two house plots overlap (%s)" % [label, clash])
-	var b: Array = area.bounds
-	var outside: Array = rects.filter(func(hr): return not Rect2(b[0], b[1], b[2] - b[0], b[3] - b[1]).grow(1.5).encloses(hr[1]))
-	_check(outside.is_empty(), "%s: every plot is inside the district wall (%s)" % [label, outside.map(func(hr): return hr[0])])
-
-
-## Lentegeur is the real Hyacinth Avenue crescent off Firethorn Road, south of Marguerite Road.
-func _test_real_lentegeur_units() -> void:
-	print("== real Lentegeur")
-	var area: Dictionary = DataFiles.load_json("res://data/districts/rooiduin.json")
-	_check_real_area("Lentegeur", area, "res://data/houses/rooiduin_houses.json", 20, ["Hyacinth Avenue", "Marguerite Road", "Firethorn Road"], 260.0)
-	var legs: Array = area.streets.filter(func(s): return s.axis == "x" and str(s.name) == "Hyacinth Avenue").map(func(s): return float(s.at))
-	_check(legs.size() == 2 and is_equal_approx(absf(legs[0] - legs[1]), 44.6), "the crescent's two legs are 44.6 m apart, as in real life")
-	var bend: Array = area.streets.filter(func(s): return str(s.id) == "hyacinth_bend")
-	var firethorn: Array = area.streets.filter(func(s): return str(s.id) == "firethorn")
-	_check(bend.size() == 1 and firethorn.size() == 1 and absf(float(bend[0].at) - float(firethorn[0].at) - 114.0) <= 6.5, "the crescent runs about 114 m east from Firethorn Road before it bends back")
-	var loop: Array = area.traffic.loops[0].points
-	_check(loop.any(func(p): return is_equal_approx(float(p[0]), float(firethorn[0].at))) and loop.any(func(p): return is_equal_approx(float(p[0]), float(bend[0].at))), "traffic drives the real circuit: Firethorn Road and round the crescent")
-
-
-## Westridge is the real block between Rhone Way, Excelsior Street, Coetzenburg Street and
-## Constantia Street (OpenStreetMap), turned so its streets run along the game's axes.
-func _test_real_westridge_units() -> void:
-	print("== real Westridge")
-	var area: Dictionary = DataFiles.load_json("res://data/districts/starter.json")
-	var names := {}
-	for s in area.streets:
-		names[str(s.name)] = s
-	for n in ["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"]:
-		_check(names.has(n), "Westridge has the real %s" % n)
-	_check(not names.has("AZ Berman Drive") and not names.has("Kwikkie Street"), "the made-up street names are gone from Westridge")
-	# The real block is 100 m between the cross streets; Rhone Way lies 60 to 78 m north of Excelsior Street.
-	var cross: Array = area.streets.filter(func(s): return s.axis == "z" and str(s.id) in ["kwikkie", "tortel"]).map(func(s): return float(s.at))
-	_check(cross.size() == 2 and is_equal_approx(absf(cross[0] - cross[1]), 100.0), "Coetzenburg and Constantia Street are 100 m apart, as in real life")
-	var depth := absf(float(names["Rhone Way"].at) - float(names["Excelsior Street"].at))
-	_check(depth >= 60.0 and depth <= 78.0, "Rhone Way is a real block's depth from Excelsior Street (%.0f m)" % depth)
-	_check(is_equal_approx(float(names["Rhone Close"].at), float(names["Excelsior Close"].at)) and absf(float(names["Rhone Close"].at)) < 5.0, "the two closes sit mid-block, in line, as on the map")
-	_check(absf(float(area.real.bearing_deg) + 22.0) < 1.0, "the block is turned 22 degrees from true north")
-	_check_real_area("Westridge", area, "res://data/houses/starter_houses.json", 30,
-		["Excelsior Street", "Rhone Way", "Coetzenburg Street", "Constantia Street", "Rhone Close", "Excelsior Close"], 130.0)
-	var houses: Array = DataFiles.load_json("res://data/houses/starter_houses.json").houses
-	var on_close: Array = houses.filter(func(h): return str(h.street) == "Excelsior Close")
-	_check(on_close.size() == 2, "two families live on Excelsior Close")
+## Every family of the game lives in a real house on a real street of Westridge (data written by
+## tools/world/relocate_to_real.py; see design/gdd/real_world.md).
+func _test_real_homes_units() -> void:
+	var data := RealDistrictData.new()
+	data.load_meta()
+	var catalog: Dictionary = DataFiles.load_json("res://data/districts/districts.json")
+	var homes := 0
+	var no_real := []
+	var bad_street := []
+	var seen := {}
+	var dup := []
+	for d in catalog.districts:
+		var f := str(d.get("data", ""))
+		if f.is_empty():
+			continue
+		var area: Dictionary = DataFiles.load_json(f)
+		for h in DataFiles.load_json(str(area.houses_file)).houses:
+			homes += 1
+			if str(h.get("real_id", "")).is_empty():
+				no_real.append(h.id)
+			elif seen.has(h.real_id):
+				dup.append(h.id)
+			seen[h.get("real_id", "")] = true
+			if not data.streets.has(str(h.street)):
+				bad_street.append("%s (%s)" % [h.id, h.street])
+	_check(homes == 102 and no_real.is_empty() and dup.is_empty(), "all %d families live in their own real house (%s %s)" % [homes, no_real, dup])
+	_check(bad_street.is_empty(), "every address is on a real street of Westridge (%s)" % [bad_street])
 
 
 func _test_real_map_units() -> void:
@@ -2956,22 +2742,6 @@ func _test_real_map_units() -> void:
 	var t: Vector2 = rm.district_position("district_tafelsig")
 	_check(t.x > w.x + 2000.0, "Tafelsig lies east of Westridge, as in real life")
 	_check(rm.load_streets().size() > 2000, "the local streets are stored for the suburb rebuilds")
-
-
-func _test_city_map_in_game(main: Node, player: Player) -> void:
-	var tm: TurfMap = main.session.turf_map
-	_check(tm.real_map != null and not tm.city_view, "the turf map opens on your turf")
-	tm.open()
-	var btn: Button = tm._side.get_node_or_null("ViewToggle")
-	_check(btn != null, "the map has a button for all of Mitchells Plain")
-	btn.pressed.emit()
-	await process_frame
-	await process_frame
-	var pp: Variant = tm.city_player_position()
-	var west: Vector2 = tm.real_map.district_position("starter")
-	_check(tm.city_view and pp != null and (pp as Vector2).distance_to(west) < 200.0, "the city view shows you in Westridge")
-	tm.city_view = false
-	tm.close()
 
 
 func _test_view_in_game(main: Node, player: Player) -> void:
@@ -3397,11 +3167,10 @@ func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 
 func _test_greetings(main: Node, district: District, player: Player) -> void:
 	district.director.clock.set_hour(11.0)
-	if _real:
-		player.global_position = _place(district, "pavement")
-		player.snap_camera()
+	player.global_position = _place(district, "pavement")
+	player.snap_camera()
 	var who: Resident = null
-	for i in (3600 if _real else 600):
+	for i in 3600:
 		for r: Resident in district.residents.values():
 			if not r.is_inside and r.data.role == "resident" and r.sim_tier == "near" and not r.brain.is_reacting():
 				who = r
@@ -3516,34 +3285,24 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	district.director.ambient_incidents = false
 	var east_x: float = district.info.bounds[2]
 	var east_name := dm.display_name("district_east")
-	if _real:
-		# The real map has no gates: a locked part can be walked into, but its turf can't be taken.
-		_check(not district.is_district_open("district_east") and not district.is_district_open("district_west"), "the other parts of Westridge start locked")
-		var field_corner := ""
-		for cid in session.turf.state.order:
-			if session.turf.area_of(cid) == "district_east":
-				field_corner = cid
-				break
-		player.global_position = session.turf.anchor(field_corner) + Vector3(1.0, 0.1, 0.0)
-		player.snap_camera()
-		for i in 40:
-			await physics_frame
-		_check(district.area_at(player.global_position) == "district_east" and session.turf.is_locked(field_corner) and not session.turf.presence(field_corner).player,
-			"you can walk into a locked part, but you don't count on its corners")
-		_check(session.hud.message_text().contains("isn't your turf yet"), "walking into a locked part says so (%s)" % session.hud.message_text().left(60))
-		player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
-		player.snap_camera()
-		for i in 40:
-			await physics_frame
-	else:
-		_check(district.gates.has("district_east") and district.gates.has("district_west"), "both neighbours have boom gates")
-		_check(not district.is_district_open("district_east"), "Lentegeur gate starts closed")
-		# The gate physically blocks the player.
-		player.pivot.rotation.y = 0.0
-		player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
-		player.snap_camera()
-		await _press_toward(player, "move_right", 3.0)
-		_check(player.global_position.x < east_x, "the locked gate stops the player (x %.1f < %.1f)" % [player.global_position.x, east_x])
+	# The real map has no gates: a locked part can be walked into, but its turf can't be taken.
+	_check(not district.is_district_open("district_east") and not district.is_district_open("district_west"), "the other parts of Westridge start locked")
+	var field_corner := ""
+	for cid in session.turf.state.order:
+		if session.turf.area_of(cid) == "district_east":
+			field_corner = cid
+			break
+	player.global_position = session.turf.anchor(field_corner) + Vector3(1.0, 0.1, 0.0)
+	player.snap_camera()
+	for i in 40:
+		await physics_frame
+	_check(district.area_at(player.global_position) == "district_east" and session.turf.is_locked(field_corner) and not session.turf.presence(field_corner).player,
+		"you can walk into a locked part, but you don't count on its corners")
+	_check(session.hud.message_text().contains("isn't your turf yet"), "walking into a locked part says so (%s)" % session.hud.message_text().left(60))
+	player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
+	player.snap_camera()
+	for i in 40:
+		await physics_frame
 	_check(not session.request_unlock("district_east") and not district.is_district_open("district_east"), "an early unlock request is refused")
 
 	# Turf map shows requirements.
@@ -3609,38 +3368,23 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	_check(missions.active.has("beyond_the_block"), "Lionel offers Beyond the Block")
 	_check(missions.current_objective("beyond_the_block").get("id") == "enter", "the unlock objective is already done")
 	district.director.clock.set_hour(12.0)
-	if _real:
-		player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
-		player.snap_camera()
-		for i in 40:
-			await physics_frame
-		_check(missions.is_completed("beyond_the_block"), "walking into %s completes Beyond the Block" % east_name)
-		var east_corner := ""
-		for cid in session.turf.state.order:
-			if session.turf.area_of(cid) == "district_east":
-				east_corner = cid
-				break
-		_check(not session.turf.is_locked(east_corner), "once unlocked, its corners can be taken")
-		var west_corner := ""
-		for cid in session.turf.state.order:
-			if session.turf.area_of(cid) == "district_west":
-				west_corner = cid
-				break
-		_check(session.turf.is_locked(west_corner), "Rocklands' corners are still locked")
-	else:
-		player.pivot.rotation.y = 0.0
-		player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
-		player.snap_camera()
-		await _press_toward(player, "move_right", 7.0)
-		_check(player.global_position.x > east_x + 12.0, "the open gate lets the player through (x %.1f)" % player.global_position.x)
-		for i in 20:
-			await physics_frame
-		_check(missions.is_completed("beyond_the_block"), "walking into Lentegeur completes Beyond the Block")
-		var west_x: float = district.info.bounds[0]
-		player.global_position = Vector3(west_x + 6.0, 0.1, 0.0)
-		player.snap_camera()
-		await _press_toward(player, "move_left", 3.0)
-		_check(player.global_position.x > west_x, "Rocklands' gate still blocks the player")
+	player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
+	player.snap_camera()
+	for i in 40:
+		await physics_frame
+	_check(missions.is_completed("beyond_the_block"), "walking into %s completes Beyond the Block" % east_name)
+	var east_corner := ""
+	for cid in session.turf.state.order:
+		if session.turf.area_of(cid) == "district_east":
+			east_corner = cid
+			break
+	_check(not session.turf.is_locked(east_corner), "once unlocked, its corners can be taken")
+	var west_corner := ""
+	for cid in session.turf.state.order:
+		if session.turf.area_of(cid) == "district_west":
+			west_corner = cid
+			break
+	_check(session.turf.is_locked(west_corner), "Rocklands' corners are still locked")
 
 	# Persistence: save, lock everything again, load.
 	_check(session.save_game() == "", "save after unlocking")
@@ -3779,10 +3523,7 @@ func _test_district() -> void:
 	_check(district.player_crew_id == "vlakte_vipers" and district.residents["npc_viper_slang"].is_ally() and not district.residents["npc_h29_1"].is_ally(),
 		"crew-mates are allies, other crews aren't")
 	_check(is_equal_approx(main.session.police.heat.gain_mult, 0.6), "Stylers' perk: heat builds slower")
-	if _real:
-		_check(district.real.nav_regions.size() >= 15 and district.real.keep_nav_ready(), "navigation is baked wherever the game has homes and places (%d pieces)" % district.real.nav_regions.size())
-	else:
-		_check(district.nav_region.navigation_mesh.get_polygon_count() > 0, "navigation mesh baked (%d polys)" % district.nav_region.navigation_mesh.get_polygon_count())
+	_check(district.real.nav_regions.size() >= 15 and district.real.keep_nav_ready(), "navigation is baked wherever the game has homes and places (%d pieces)" % district.real.nav_regions.size())
 	_check(district.plots.size() == district.registry.count(), "every house plot is built")
 	_check(district.residents.size() >= 8, "at least 8 residents spawned (%d)" % district.residents.size())
 
@@ -3852,9 +3593,6 @@ func _test_district() -> void:
 		for c in hp.get_children():
 			if c is MeshInstance3D and PropLibrary.mesh(str(c.name)) != null:
 				prop_kinds[str(c.name)] = int(prop_kinds.get(str(c.name), 0)) + 1
-	if not _real:   # real houses have no dressed yards yet (ROADMAP)
-		_check(prop_kinds.size() >= 8 and int(prop_kinds.get("wheelie_bin", 0)) >= 10,
-			"yards are dressed with Blender-built props (%s)" % [prop_kinds])
 	var doors_used := [0]
 	for r: Resident in district.residents.values():
 		r.door_used.connect(func(_h): doors_used[0] += 1)
@@ -3927,7 +3665,7 @@ func _test_district() -> void:
 	var ms_per_frame := real_s * 1000.0 / frames
 	print("  soak: %.1f simulated minutes in %.1f s real time (%.2f ms per physics frame, %d NPCs)" % [
 		minutes, real_s, ms_per_frame, district.residents.size()])
-	_check(ms_per_frame < (20.0 if _real else 12.0), "simulation cost per frame is under %d ms headless (%.2f ms)" % [20 if _real else 12, ms_per_frame])
+	_check(ms_per_frame < 20.0, "simulation cost per frame is under %d ms headless (%.2f ms)" % [20, ms_per_frame])
 	_check(lost.travel_failures >= 1 and lost.arrivals >= 2, "resident with a missing destination recovers (%d failures, %d arrivals)" % [lost.travel_failures, lost.arrivals])
 	var total_arrivals := 0
 	for r: Resident in district.residents.values():
@@ -3935,7 +3673,7 @@ func _test_district() -> void:
 	print("  total arrivals: %d" % total_arrivals)
 	for r: Resident in district.residents.values():
 		# Real Westridge: walks are several times longer than in the old block, so fewer fit in the soak.
-		var need_trips := (0 if r.data.role in ["police", "crew"] else 1) if _real else (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5))   # (patrols and guards stand their post for longer than the 2-minute soak)
+		var need_trips := 0 if r.data.role in ["police", "crew"] else 1   # (patrols and guards stand their post for longer than the 2-minute soak)
 		if not _args.has("verbose") and r.arrivals >= need_trips and r.teleport_violations == 0:
 			_passed += 3
 			continue
@@ -3944,7 +3682,7 @@ func _test_district() -> void:
 		_check(r.teleport_violations == 0, "%s never teleports" % r.data.id)
 		# Kids play for 6 minutes at a stretch, so they make fewer (longer) trips.
 		_check(r.arrivals >= need_trips, "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
-		_check(r.max_travel_time < (360.0 if _real else 150.0), "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
+		_check(r.max_travel_time < 360.0, "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
 	print("  daytime states seen: %s" % seen)
 	print("  tier samples: %s, ambient reactions %d" % [tiers, director.reactions_delivered])
 	for st in ["TRAVELLING", "AT_DESTINATION", "SOCIALIZING", "GUARDING", "AT_HOME"]:
@@ -3966,10 +3704,10 @@ func _test_district() -> void:
 	# Night: 17:00 -> 01:00 (two hours after the latest curfew). Crew patrol/follow; residents go home by curfew.
 	district.destinations.set_enabled("poi_shop", true)
 	director.ambient_incidents = false
-	director.clock.set_hour(20.0 if _real else 17.0)
+	director.clock.set_hour(20.0)
 	_slow_clock(district, true)
 	var night_seen := {}
-	for f in 60 * 60 * (20 if _real else 8):   # (the real clock runs 0.25 game minutes per second: 20:00 to 01:00 is 20 real minutes)
+	for f in 60 * 60 * 20:   # (the real clock runs 0.25 game minutes per second: 20:00 to 01:00 is 20 real minutes)
 		if f % 60 == 0:
 			_sample_states(district, night_seen, tiers)
 		await physics_frame
@@ -4040,7 +3778,6 @@ func _test_district() -> void:
 	await _test_tafelsig_in_game(main, district, player)
 	await _test_guidance_in_game(main, district, player)
 	await _test_view_in_game(main, player)
-	await _test_city_map_in_game(main, player)
 	await _test_touch_in_game(main, district, player)
 	await _test_survival_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)

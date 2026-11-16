@@ -182,10 +182,6 @@ func police_watching(at: Vector3) -> bool:
 		if r.data.role == "police" and not r.is_inside and not r.is_down() \
 				and r.global_position.distance_to(at) < POLICE_SEE_RANGE and r._line_of_sight(player):
 			return true
-	if district.traffic:
-		for car: TrafficCar in district.traffic.cars:
-			if car.model == "police" and car.global_position.distance_to(at) < BAKKIE_SEE_RANGE:
-				return true
 	if district.real_traffic:
 		for car: RealCar in district.real_traffic.police_cars():
 			if car.global_position.distance_to(at) < BAKKIE_SEE_RANGE:

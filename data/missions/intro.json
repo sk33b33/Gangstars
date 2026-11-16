@@ -239,21 +239,21 @@
           "hold_the_corner"
         ]
       },
-      "intro": "Lionel: \"Westridge knows your name now. Lentegeur is next door. Check the turf map (M / View) to see what it takes.\"",
-      "description": "Open the way to Lentegeur and walk in.",
+      "intro": "Lionel: \"Westridge knows your name now. Harvester is next door. Check the turf map (M / View) to see what it takes.\"",
+      "description": "Open the way to Harvester and walk in.",
       "objectives": [
         {
           "id": "unlock",
           "type": "district_unlocked",
           "target": "district_east",
-          "text": "Unlock Lentegeur on the turf map (M / View)"
+          "text": "Unlock Harvester on the turf map (M / View)"
         },
         {
           "id": "enter",
           "type": "visit",
           "target": "district_east:entrance",
           "radius": 4,
-          "text": "Walk into Lentegeur"
+          "text": "Walk into Harvester"
         }
       ],
       "rewards": {

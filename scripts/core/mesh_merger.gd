@@ -59,7 +59,7 @@ static func _mergeable(mi: MeshInstance3D, root: Node) -> bool:
 		return false
 	var n: Node = mi.get_parent()
 	while n != null and n != root:
-		if n is DistrictGate or n is CPUParticles3D or SKIP_NAMES.has(String(n.name)) or String(n.name).begins_with("upgrade_"):
+		if n is CPUParticles3D or SKIP_NAMES.has(String(n.name)) or String(n.name).begins_with("upgrade_"):
 			return false
 		n = n.get_parent()
 	return true

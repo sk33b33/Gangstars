@@ -223,16 +223,11 @@ func _update_bakkies(dt: float) -> void:
 		for car: RealCar in district.real_traffic.police_cars():
 			if car.body:
 				VehicleLibrary.set_lights(car.body, responding, _time)
-	if district.traffic == null:
-		return
 	_siren_timer -= dt
-	for car: TrafficCar in district.traffic.cars:
-		if car.model != "police" or car.body == null:
-			continue
-		VehicleLibrary.set_lights(car.body, responding, _time)
-		car.cruise_speed = 11.0 if responding else 8.0
-		if responding and _siren_timer <= 0.0 and audio and car.global_position.distance_to(player.global_position) < 70.0:
-			audio.play_at("siren", car.global_position + Vector3(0, 1.5, 0), -4.0)
+	if district.real_traffic:
+		for car: RealCar in district.real_traffic.police_cars():
+			if responding and _siren_timer <= 0.0 and audio and car.global_position.distance_to(player.global_position) < 70.0:
+				audio.play_at("siren", car.global_position + Vector3(0, 1.5, 0), -4.0)
 	if _siren_timer <= 0.0:
 		_siren_timer = 1.6
 

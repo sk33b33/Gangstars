@@ -1,5 +1,5 @@
 {
-  "_comment": "Hosts of the house smokkies in Lentegeur and Rocklands (venues in data/dealing/dealing.json).",
+  "_comment": "Hosts of the house smokkies in Harvester and Rocklands (venues in data/dealing/dealing.json).",
   "residents": [
     {
       "id": "npc_rooi_doreen",

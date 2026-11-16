@@ -1,899 +1,929 @@
 {
-  "district_id": "starter",
-  "houses": [
-    {
-      "id": "starter_h01",
-      "number": 5,
-      "street": "Excelsior Street",
-      "display_name": "Daniels family",
-      "kit": "single_hip",
-      "position": [
-        -25.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#e8967a",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#efb59c",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_faiza",
-        "npc_boeta"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h02",
-      "number": 7,
-      "street": "Excelsior Street",
-      "display_name": "Jacobs family",
-      "kit": "single_gable",
-      "position": [
-        -13.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#a6d455",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#a6d455",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_shireen"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": true,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h03",
-      "number": 2,
-      "street": "Excelsior Close",
-      "display_name": "Petersen family",
-      "kit": "double_semi",
-      "position": [
-        -7.5,
-        28
-      ],
-      "facing": "east",
-      "wall_color": "#ece9e2",
-      "roof": "ibr",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_lionel"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": true,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h04",
-      "number": 11,
-      "street": "Excelsior Street",
-      "display_name": "Adams family",
-      "kit": "double_garage",
-      "position": [
-        9.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#bfc3c8",
-      "roof": "ibr",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_tasneem"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": false,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h05",
-      "number": 13,
-      "street": "Excelsior Street",
-      "display_name": "Your safehouse",
-      "kit": "single_hip",
-      "position": [
-        21.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#8fb8d8",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9e4ea",
-      "occupancy": "vacant",
-      "ownership": "player",
-      "occupant_ids": [],
-      "props": {
-        "yard": "sand",
-        "bin": false,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h06",
-      "number": 15,
-      "street": "Excelsior Street",
-      "display_name": "Solomons family",
-      "kit": "single_gable",
-      "position": [
-        33.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#f1d36b",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h06_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": false,
-        "dish": true,
-        "washing": true,
-        "wendy": false,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h07",
-      "number": 3,
-      "street": "Excelsior Street",
-      "display_name": "Meyer family",
-      "kit": "double_garage",
-      "position": [
-        -37.5,
-        7.0
-      ],
-      "facing": "north",
-      "wall_color": "#7cc7c4",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h07_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h08",
-      "number": 1,
-      "street": "Excelsior Close",
-      "display_name": "Davids family",
-      "kit": "single_hip",
-      "position": [
-        3.5,
-        28
-      ],
-      "facing": "west",
-      "wall_color": "#a6d455",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h08_1"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": true,
-        "dish": true,
-        "washing": true,
-        "wendy": false,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h09",
-      "number": 2,
-      "street": "Rhone Way",
-      "display_name": "Wyngaard family",
-      "kit": "single_gable",
-      "position": [
-        -42,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#7cc7c4",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h09_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h10",
-      "number": 4,
-      "street": "Rhone Way",
-      "display_name": "Isaacs family",
-      "kit": "single_gable",
-      "position": [
-        -30,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#a6d455",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#a6d455",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h10_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": true,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h11",
-      "number": 6,
-      "street": "Rhone Way",
-      "display_name": "Cupido family",
-      "kit": "single_gable",
-      "position": [
-        -18,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#f1d36b",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#f1d36b",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h11_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h12",
-      "number": 8,
-      "street": "Rhone Way",
-      "display_name": "Cupido family",
-      "kit": "double_semi",
-      "position": [
-        -6,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#ece9e2",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#ece9e2",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h12_1"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": false,
-        "dish": true,
-        "washing": false,
-        "wendy": false,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h13",
-      "number": 10,
-      "street": "Rhone Way",
-      "display_name": "Solomons family",
-      "kit": "single_hip",
-      "position": [
-        6,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#8fb8d8",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h13_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h14",
-      "number": 12,
-      "street": "Rhone Way",
-      "display_name": "Empty house",
-      "kit": "single_hip",
-      "position": [
-        18,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#8fb8d8",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "vacant",
-      "ownership": "neutral",
-      "occupant_ids": [],
-      "props": {
-        "yard": "paved",
-        "bin": true,
-        "dish": true,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h15",
-      "number": 14,
-      "street": "Rhone Way",
-      "display_name": "Cupido family",
-      "kit": "single_hip",
-      "position": [
-        30,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#a6d455",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#a6d455",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h15_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": true,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h16",
-      "number": 16,
-      "street": "Rhone Way",
-      "display_name": "Fortuin family",
-      "kit": "single_hip",
-      "position": [
-        42,
-        -77.0
-      ],
-      "facing": "south",
-      "wall_color": "#c3b0d8",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#c3b0d8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h16_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": false,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h17",
-      "number": 1,
-      "street": "Rhone Way",
-      "display_name": "Abrahams family",
-      "kit": "double_garage",
-      "position": [
-        -14,
-        -63.0
-      ],
-      "facing": "north",
-      "wall_color": "#ece9e2",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h17_1"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": true,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h18",
-      "number": 3,
-      "street": "Rhone Way",
-      "display_name": "Samuels family",
-      "kit": "single_gable",
-      "position": [
-        10,
-        -63.0
-      ],
-      "facing": "north",
-      "wall_color": "#f1d36b",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#56606e",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h18_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h19",
-      "number": 5,
-      "street": "Coetzenburg Street",
-      "display_name": "Josephs family",
-      "kit": "single_hip",
-      "position": [
-        -57.0,
-        -16
-      ],
-      "facing": "east",
-      "wall_color": "#bfc3c8",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#bfc3c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h19_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h20",
-      "number": 3,
-      "street": "Coetzenburg Street",
-      "display_name": "Empty house",
-      "kit": "single_hip",
-      "position": [
-        -57.0,
-        -28
-      ],
-      "facing": "east",
-      "wall_color": "#f0a58a",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "vacant",
-      "ownership": "neutral",
-      "occupant_ids": [],
-      "props": {
-        "yard": "lawn",
-        "bin": false,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h21",
-      "number": 1,
-      "street": "Coetzenburg Street",
-      "display_name": "Solomons family",
-      "kit": "single_hip",
-      "position": [
-        -57.0,
-        -40
-      ],
-      "facing": "east",
-      "wall_color": "#f4c59a",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#f4c59a",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h21_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": true,
-        "washing": false,
-        "wendy": false,
-        "tree": true,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h22",
-      "number": 6,
-      "street": "Coetzenburg Street",
-      "display_name": "Kannemeyer family",
-      "kit": "single_hip",
-      "position": [
-        -43.0,
-        -16
-      ],
-      "facing": "west",
-      "wall_color": "#9fd8b8",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h22_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": true,
-        "tree": true,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h23",
-      "number": 4,
-      "street": "Coetzenburg Street",
-      "display_name": "Williams family",
-      "kit": "double_semi",
-      "position": [
-        -43.0,
-        -28
-      ],
-      "facing": "west",
-      "wall_color": "#ece9e2",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h23_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": false,
-        "dish": false,
-        "washing": false,
-        "wendy": true,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h24",
-      "number": 2,
-      "street": "Coetzenburg Street",
-      "display_name": "Carelse family",
-      "kit": "single_hip",
-      "position": [
-        -43.0,
-        -40
-      ],
-      "facing": "west",
-      "wall_color": "#7cc7c4",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h24_1"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": false,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h25",
-      "number": 5,
-      "street": "Constantia Street",
-      "display_name": "Wyngaard family",
-      "kit": "double_semi",
-      "position": [
-        44.5,
-        -16
-      ],
-      "facing": "east",
-      "wall_color": "#c3b0d8",
-      "roof": "tiles",
-      "fence": "palisade",
-      "fence_color": "#ffffff",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h25_1"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": false,
-        "dish": false,
-        "washing": true,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h26",
-      "number": 3,
-      "street": "Constantia Street",
-      "display_name": "Meyer family",
-      "kit": "single_gable",
-      "position": [
-        44.5,
-        -28
-      ],
-      "facing": "east",
-      "wall_color": "#a6d455",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h26_1"
-      ],
-      "props": {
-        "yard": "paved",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": true
-      }
-    },
-    {
-      "id": "starter_h27",
-      "number": 1,
-      "street": "Constantia Street",
-      "display_name": "Empty house",
-      "kit": "single_hip",
-      "position": [
-        44.5,
-        -40
-      ],
-      "facing": "east",
-      "wall_color": "#f0a58a",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "vacant",
-      "ownership": "neutral",
-      "occupant_ids": [],
-      "props": {
-        "yard": "lawn",
-        "bin": false,
-        "dish": true,
-        "washing": false,
-        "wendy": false,
-        "tree": true,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h28",
-      "number": 6,
-      "street": "Constantia Street",
-      "display_name": "Solomons family",
-      "kit": "single_gable",
-      "position": [
-        55.5,
-        -16
-      ],
-      "facing": "west",
-      "wall_color": "#c3b0d8",
-      "roof": "ibr",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h28_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": true,
-        "washing": false,
-        "wendy": true,
-        "tree": false,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h29",
-      "number": 4,
-      "street": "Constantia Street",
-      "display_name": "Carelse family",
-      "kit": "single_hip",
-      "position": [
-        55.5,
-        -28
-      ],
-      "facing": "west",
-      "wall_color": "#f0a58a",
-      "roof": "ibr",
-      "fence": "palisade",
-      "fence_color": "#56606e",
-      "occupancy": "occupied",
-      "ownership": "hostile",
-      "occupant_ids": [
-        "npc_h29_1",
-        "npc_h29_2"
-      ],
-      "props": {
-        "yard": "lawn",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": true,
-        "gate": false
-      }
-    },
-    {
-      "id": "starter_h30",
-      "number": 2,
-      "street": "Constantia Street",
-      "display_name": "Wyngaard family",
-      "kit": "double_garage",
-      "position": [
-        55.5,
-        -40
-      ],
-      "facing": "west",
-      "wall_color": "#e8967a",
-      "roof": "tiles",
-      "fence": "precast",
-      "fence_color": "#d9d4c8",
-      "occupancy": "occupied",
-      "ownership": "neutral",
-      "occupant_ids": [
-        "npc_h30_1"
-      ],
-      "props": {
-        "yard": "sand",
-        "bin": true,
-        "dish": false,
-        "washing": false,
-        "wendy": false,
-        "tree": false,
-        "gate": false
-      }
-    }
-  ]
+ "district_id": "starter",
+ "houses": [
+  {
+   "id": "starter_h01",
+   "number": 5,
+   "street": "Excelsior Street",
+   "display_name": "Daniels family",
+   "kit": "single_hip",
+   "position": [
+    -184.57,
+    -151.2
+   ],
+   "facing": "north",
+   "wall_color": "#e8967a",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#efb59c",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_faiza",
+    "npc_boeta"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_60"
+  },
+  {
+   "id": "starter_h02",
+   "number": 7,
+   "street": "Excelsior Street",
+   "display_name": "Jacobs family",
+   "kit": "single_gable",
+   "position": [
+    -161.2,
+    -160.77
+   ],
+   "facing": "north",
+   "wall_color": "#a6d455",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#a6d455",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_shireen"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": true,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_27"
+  },
+  {
+   "id": "starter_h03",
+   "number": 2,
+   "street": "Excelsior Close",
+   "display_name": "Petersen family",
+   "kit": "double_semi",
+   "position": [
+    -147.68,
+    -124.95
+   ],
+   "facing": "east",
+   "wall_color": "#ece9e2",
+   "roof": "ibr",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_lionel"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_54"
+  },
+  {
+   "id": "starter_h04",
+   "number": 11,
+   "street": "Excelsior Street",
+   "display_name": "Adams family",
+   "kit": "double_garage",
+   "position": [
+    -154.1,
+    -164.3
+   ],
+   "facing": "north",
+   "wall_color": "#bfc3c8",
+   "roof": "ibr",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_tasneem"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_28"
+  },
+  {
+   "id": "starter_h05",
+   "number": 13,
+   "street": "Excelsior Street",
+   "display_name": "Your safehouse",
+   "kit": "single_hip",
+   "position": [
+    -196.13,
+    -147.2
+   ],
+   "facing": "north",
+   "wall_color": "#8fb8d8",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9e4ea",
+   "occupancy": "vacant",
+   "ownership": "player",
+   "occupant_ids": [],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_47"
+  },
+  {
+   "id": "starter_h06",
+   "number": 15,
+   "street": "Excelsior Street",
+   "display_name": "Solomons family",
+   "kit": "single_gable",
+   "position": [
+    -143.25,
+    -171.8
+   ],
+   "facing": "north",
+   "wall_color": "#f1d36b",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h06_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_2"
+  },
+  {
+   "id": "starter_h07",
+   "number": 3,
+   "street": "Excelsior Street",
+   "display_name": "Meyer family",
+   "kit": "double_garage",
+   "position": [
+    -126.25,
+    -144.58
+   ],
+   "facing": "north",
+   "wall_color": "#7cc7c4",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h07_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-1_56"
+  },
+  {
+   "id": "starter_h08",
+   "number": 1,
+   "street": "Excelsior Close",
+   "display_name": "Davids family",
+   "kit": "single_hip",
+   "position": [
+    -149.9,
+    -98.12
+   ],
+   "facing": "west",
+   "wall_color": "#a6d455",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h08_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": true,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_62"
+  },
+  {
+   "id": "starter_h09",
+   "number": 2,
+   "street": "Rhone Way",
+   "display_name": "Wyngaard family",
+   "kit": "single_gable",
+   "position": [
+    -210.5,
+    -190.2
+   ],
+   "facing": "south",
+   "wall_color": "#7cc7c4",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h09_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-2_-1_78"
+  },
+  {
+   "id": "starter_h10",
+   "number": 4,
+   "street": "Rhone Way",
+   "display_name": "Isaacs family",
+   "kit": "single_gable",
+   "position": [
+    -155.65,
+    -218.1
+   ],
+   "facing": "south",
+   "wall_color": "#a6d455",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#a6d455",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h10_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-2_38"
+  },
+  {
+   "id": "starter_h11",
+   "number": 6,
+   "street": "Rhone Way",
+   "display_name": "Cupido family",
+   "kit": "single_gable",
+   "position": [
+    -228.93,
+    -196.82
+   ],
+   "facing": "south",
+   "wall_color": "#f1d36b",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#f1d36b",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h11_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-2_-1_42"
+  },
+  {
+   "id": "starter_h12",
+   "number": 8,
+   "street": "Rhone Way",
+   "display_name": "Cupido family",
+   "kit": "double_semi",
+   "position": [
+    -258.35,
+    -163.0
+   ],
+   "facing": "south",
+   "wall_color": "#ece9e2",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#ece9e2",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h12_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": false,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_3"
+  },
+  {
+   "id": "starter_h13",
+   "number": 10,
+   "street": "Rhone Way",
+   "display_name": "Solomons family",
+   "kit": "single_hip",
+   "position": [
+    -253.42,
+    -179.6
+   ],
+   "facing": "south",
+   "wall_color": "#8fb8d8",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h13_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_41"
+  },
+  {
+   "id": "starter_h14",
+   "number": 12,
+   "street": "Rhone Way",
+   "display_name": "Empty house",
+   "kit": "single_hip",
+   "position": [
+    -218.92,
+    -221.0
+   ],
+   "facing": "south",
+   "wall_color": "#8fb8d8",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "vacant",
+   "ownership": "neutral",
+   "occupant_ids": [],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-2_-2_1"
+  },
+  {
+   "id": "starter_h15",
+   "number": 14,
+   "street": "Rhone Way",
+   "display_name": "Cupido family",
+   "kit": "single_hip",
+   "position": [
+    -178.5,
+    -239.2
+   ],
+   "facing": "south",
+   "wall_color": "#a6d455",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#a6d455",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h15_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": true,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-2_40"
+  },
+  {
+   "id": "starter_h16",
+   "number": 16,
+   "street": "Rhone Way",
+   "display_name": "Fortuin family",
+   "kit": "single_hip",
+   "position": [
+    -291.99,
+    -156.41
+   ],
+   "facing": "south",
+   "wall_color": "#c3b0d8",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#c3b0d8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h16_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": false,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_18"
+  },
+  {
+   "id": "starter_h17",
+   "number": 1,
+   "street": "Rhone Way",
+   "display_name": "Abrahams family",
+   "kit": "double_garage",
+   "position": [
+    -304.83,
+    -148.68
+   ],
+   "facing": "north",
+   "wall_color": "#ece9e2",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h17_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_65"
+  },
+  {
+   "id": "starter_h18",
+   "number": 3,
+   "street": "Rhone Close",
+   "display_name": "Samuels family",
+   "kit": "single_gable",
+   "position": [
+    -173.3,
+    -156.8
+   ],
+   "facing": "north",
+   "wall_color": "#f1d36b",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h18_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_3"
+  },
+  {
+   "id": "starter_h19",
+   "number": 5,
+   "street": "Coetzenburg Street",
+   "display_name": "Josephs family",
+   "kit": "single_hip",
+   "position": [
+    -178.5,
+    -101.04
+   ],
+   "facing": "east",
+   "wall_color": "#bfc3c8",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#bfc3c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h19_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_22"
+  },
+  {
+   "id": "starter_h20",
+   "number": 3,
+   "street": "Coetzenburg Street",
+   "display_name": "Empty house",
+   "kit": "single_hip",
+   "position": [
+    -224.35,
+    -125.58
+   ],
+   "facing": "east",
+   "wall_color": "#f0a58a",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "vacant",
+   "ownership": "neutral",
+   "occupant_ids": [],
+   "props": {
+    "yard": "lawn",
+    "bin": false,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_72"
+  },
+  {
+   "id": "starter_h21",
+   "number": 1,
+   "street": "Coetzenburg Street",
+   "display_name": "Solomons family",
+   "kit": "single_hip",
+   "position": [
+    -223.48,
+    -113.28
+   ],
+   "facing": "east",
+   "wall_color": "#f4c59a",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#f4c59a",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h21_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_-2_-1_77"
+  },
+  {
+   "id": "starter_h22",
+   "number": 6,
+   "street": "Coetzenburg Street",
+   "display_name": "Kannemeyer family",
+   "kit": "single_hip",
+   "position": [
+    -230.25,
+    -135.25
+   ],
+   "facing": "west",
+   "wall_color": "#9fd8b8",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h22_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": true,
+    "tree": true,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_44"
+  },
+  {
+   "id": "starter_h23",
+   "number": 4,
+   "street": "Coetzenburg Street",
+   "display_name": "Williams family",
+   "kit": "double_semi",
+   "position": [
+    -210.07,
+    -93.45
+   ],
+   "facing": "west",
+   "wall_color": "#ece9e2",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h23_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": false,
+    "dish": false,
+    "washing": false,
+    "wendy": true,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-2_-1_73"
+  },
+  {
+   "id": "starter_h24",
+   "number": 2,
+   "street": "Coetzenburg Street",
+   "display_name": "Carelse family",
+   "kit": "single_hip",
+   "position": [
+    -219.18,
+    -102.72
+   ],
+   "facing": "west",
+   "wall_color": "#7cc7c4",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h24_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": false,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-2_-1_54"
+  },
+  {
+   "id": "starter_h25",
+   "number": 5,
+   "street": "Constantia Street",
+   "display_name": "Wyngaard family",
+   "kit": "double_semi",
+   "position": [
+    -122.13,
+    -134.4
+   ],
+   "facing": "east",
+   "wall_color": "#c3b0d8",
+   "roof": "tiles",
+   "fence": "palisade",
+   "fence_color": "#ffffff",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h25_1"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": false,
+    "dish": false,
+    "washing": true,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-1_33"
+  },
+  {
+   "id": "starter_h26",
+   "number": 3,
+   "street": "Constantia Street",
+   "display_name": "Meyer family",
+   "kit": "single_gable",
+   "position": [
+    -132.2,
+    -174.87
+   ],
+   "facing": "east",
+   "wall_color": "#a6d455",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h26_1"
+   ],
+   "props": {
+    "yard": "paved",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": true
+   },
+   "real_id": "h_-1_-1_0"
+  },
+  {
+   "id": "starter_h27",
+   "number": 1,
+   "street": "Constantia Street",
+   "display_name": "Empty house",
+   "kit": "single_hip",
+   "position": [
+    -118.95,
+    -126.85
+   ],
+   "facing": "east",
+   "wall_color": "#f0a58a",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "vacant",
+   "ownership": "neutral",
+   "occupant_ids": [],
+   "props": {
+    "yard": "lawn",
+    "bin": false,
+    "dish": true,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_-1_-1_37"
+  },
+  {
+   "id": "starter_h28",
+   "number": 6,
+   "street": "Constantia Street",
+   "display_name": "Solomons family",
+   "kit": "single_gable",
+   "position": [
+    -109.78,
+    -114.5
+   ],
+   "facing": "west",
+   "wall_color": "#c3b0d8",
+   "roof": "ibr",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h28_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": true,
+    "washing": false,
+    "wendy": true,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-1_50"
+  },
+  {
+   "id": "starter_h29",
+   "number": 4,
+   "street": "Constantia Street",
+   "display_name": "Carelse family",
+   "kit": "single_hip",
+   "position": [
+    -163.47,
+    -244.82
+   ],
+   "facing": "west",
+   "wall_color": "#f0a58a",
+   "roof": "ibr",
+   "fence": "palisade",
+   "fence_color": "#56606e",
+   "occupancy": "occupied",
+   "ownership": "hostile",
+   "occupant_ids": [
+    "npc_h29_1",
+    "npc_h29_2"
+   ],
+   "props": {
+    "yard": "lawn",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": true,
+    "gate": false
+   },
+   "real_id": "h_-1_-2_62"
+  },
+  {
+   "id": "starter_h30",
+   "number": 2,
+   "street": "Constantia Street",
+   "display_name": "Wyngaard family",
+   "kit": "double_garage",
+   "position": [
+    -174.57,
+    -255.32
+   ],
+   "facing": "west",
+   "wall_color": "#e8967a",
+   "roof": "tiles",
+   "fence": "precast",
+   "fence_color": "#d9d4c8",
+   "occupancy": "occupied",
+   "ownership": "neutral",
+   "occupant_ids": [
+    "npc_h30_1"
+   ],
+   "props": {
+    "yard": "sand",
+    "bin": true,
+    "dish": false,
+    "washing": false,
+    "wendy": false,
+    "tree": false,
+    "gate": false
+   },
+   "real_id": "h_-1_-2_27"
+  }
+ ]
 }
