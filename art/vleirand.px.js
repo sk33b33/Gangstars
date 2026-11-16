@@ -120,6 +120,22 @@ sprite("sidewalk", { w: 32, h: 32 },
   hline(1, 1, 15, "q"), hline(17, 17, 15, "q"),
   line(20, 4, 26, 9, "P"))                                    // one cracked slab
 
+// Street verge: trodden, compacted sand (darker and greyer than a yard) with clumps of kikuyu grass
+// surviving where feet and tyres don't reach. 2 m tile.
+pal({ "!": "#b9a57e", "%": "#a8946c", "&": "#c9b68c", "=": "#7f9a4c", "~": "#647f3c", "^": "#9fae62" })
+sprite("_tuft", { w: 5, h: 4 }, `
+  .=.^.
+  ~=^=.
+  =~=~^
+  .~=~.`)
+sprite("_tuft_s", { w: 3, h: 3 }, `
+  ^=.
+  =~=
+  .~.`)
+sprite("verge", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "!"), noise(0, 0, 32, 32, "%&", 0.12, 5),
+  stamp("_tuft", 3, 4), stamp("_tuft", 20, 22), stamp("_tuft_s", 25, 6), stamp("_tuft_s", 9, 25), stamp("_tuft_s", 14, 14))
+
 // Cape Flats sand: granular, so sparse speckle is justified.
 sprite("yard_sand", { w: 32, h: 32 },
   rect(0, 0, 32, 32, "z"), noise(0, 0, 32, 32, "ZxX", 0.14, 11))

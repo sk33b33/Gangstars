@@ -1,5 +1,18 @@
 # Changelog
 
+## Real Westridge: authentic buildings, landmarks and pavements (2026-11-16)
+- **Heat shimmer off** by default (Settings > Video > "Heat shimmer on hot days" turns it back on).
+- **Buildings in their grounds:** 159 unnamed outlines inside school grounds, the shopping centre, sports grounds and
+  parks are now classroom blocks, shops and pavilions instead of homes with doors, yards and residents
+  (`tools/osm/classify_buildings.py`). Five game families who lived in school buildings moved to the nearest real
+  house (two got new addresses: 19 Bering, 3 and 5 Dexter Close, 15 Angus Road).
+- **Landmark shapes** (`RealLandmarks`): churches with steep gables, crosses and bell towers; the mosque with dome and
+  minaret; the Civic Centre with its raised hall, entrance canopy and flagpole; clinic canopy; two-storey face-brick
+  classroom blocks with rows of barred windows; shops with sign bands, roller shutters and verandas; fuel-station
+  forecourt canopies with pump islands. Flat roofs are dark grey; car parks and the shopping centre are tarmac.
+- **Pavements:** residential streets have sandy verges with grass tufts; main roads and collectors a paved footway.
+- 4 new checks. Screenshots `docs/screenshots/rw_lm_*.png`.
+
 ## Real Westridge: fences and yard walls (2026-11-16)
 - About 1,800 homes get a front yard (`RealYards`): precast concrete panel walls, steel palisade between plaster
   pillars, low plastered walls in the house's colour, or a low wall with palisade on top. A gate opening sits in line

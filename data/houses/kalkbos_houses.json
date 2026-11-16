@@ -4,13 +4,13 @@
   {
    "id": "kalk_h01",
    "number": 19,
-   "street": "Park Avenue",
+   "street": "Bering",
    "district_id": "district_west",
    "display_name": "Willemse family",
    "kit": "cottage",
    "position": [
-    165.45,
-    987.92
+    124.33,
+    1019.58
    ],
    "facing": "north",
    "plot_size": [
@@ -35,7 +35,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_4_30"
+   "real_id": "h_0_5_28"
   },
   {
    "id": "kalk_h02",
@@ -81,8 +81,8 @@
    "display_name": "September family",
    "kit": "cottage",
    "position": [
-    149.25,
-    993.23
+    151.72,
+    1050.67
    ],
    "facing": "north",
    "plot_size": [
@@ -107,7 +107,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_4_43"
+   "real_id": "h_0_5_97"
   },
   {
    "id": "kalk_h04",

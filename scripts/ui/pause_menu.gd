@@ -82,6 +82,7 @@ func _build() -> void:
 	_check("Shadows", "video/shadows")
 	_check("Lighting effects (ambient occlusion, bloom)", "video/effects")
 	_check("Distance fog", "video/fog")
+	_check("Heat shimmer on hot days", "video/heat_shimmer")
 	_check("Fullscreen", "video/fullscreen")
 	_check("VSync", "video/vsync")
 	_check("Show FPS", "video/show_fps")

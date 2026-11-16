@@ -8,13 +8,14 @@ extends RefCounted
 const Y_AREA := 0.01
 const Y_PATH := 0.016
 const Y_PAVE := 0.02
+const Y_FOOT := 0.0215
 const Y_KERB := 0.023
 const Y_GUTTER := 0.027
 const Y_ROAD := 0.03
 const Y_PAINT := 0.04
 const WALL_PAINTS := ["#e8967a", "#a6d455", "#8fb8d8", "#f2e4b8", "#c3b0d8", "#ece9e2", "#f1d36b", "#9fd8b8", "#d9b38c", "#e6c7b0"]
-const AREA_COLORS := {"park": "#7fae55", "pitch": "#5c9a45", "playground": "#9bbf6a", "school": "#cdbfa5", "parking": "#77777d",
-	"dunes": "#cdb980", "retail": "#b7b2bd", "pool": "#5aa0d0", "sports": "#86b06a"}
+const AREA_COLORS := {"park": "#7fae55", "pitch": "#5c9a45", "playground": "#9bbf6a", "school": "#b8a888", "parking": "#77777d",
+	"dunes": "#cdb980", "retail": "#77777d", "pool": "#5aa0d0", "sports": "#86b06a"}
 const PUBLIC_WALL := "#d9d4c8"
 ## Roads: the kerb is a concrete strip just outside the carriageway, the gutter a darker concrete
 ## channel just inside it. They are drawn as wider ribbons under the asphalt, so where a side street
@@ -24,6 +25,9 @@ const GUTTER_WIDTH := 0.35
 const KERB_COLOR := "#bdb8ad"
 const GUTTER_COLOR := "#8f8b83"
 const PAVE_TINT := "#e2dccd"
+## Pavements as in Mitchells Plain: residential streets have a sandy, trodden verge from the kerb to
+## the boundary walls; main roads and collectors also have a paved footway of FOOTWAY width beside the kerb.
+const FOOTWAY := 1.5
 const EDGE_LINE_COLOR := "#e3bd3a"
 ## Main roads: yellow edge lines this far in from the edge, stopped short of the junctions.
 const EDGE_LINE_IN := 0.45
@@ -284,7 +288,9 @@ static func _road(r: Dictionary, surfaces: Dictionary, materials: Dictionary, ro
 	var pave := float(r.get("s", 0.0))
 	var asphalt := PixelMaterials.surface("road_asphalt", Vector2(4, 4))
 	if pave > 0.0:
-		ribbon(_tool("pave", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color(PAVE_TINT))), line, width + pave * 2.0, Y_PAVE)
+		ribbon(_tool("verge", surfaces, materials, PixelMaterials.surface("verge", Vector2(2, 2))), line, width + pave * 2.0, Y_PAVE)
+		if cls == "main" or cls == "collector":
+			ribbon(_tool("pave", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color(PAVE_TINT))), line, width + minf(pave, FOOTWAY) * 2.0, Y_FOOT)
 		ribbon(_tool("kerb", surfaces, materials, PixelMaterials.flat(Color(KERB_COLOR))), line, width + KERB_WIDTH * 2.0, Y_KERB)
 		ribbon(_tool("gutter", surfaces, materials, PixelMaterials.flat(Color(GUTTER_COLOR))), line, width, Y_GUTTER)
 		ribbon(_tool("road", surfaces, materials, asphalt), line, maxf(1.0, width - GUTTER_WIDTH * 2.0), Y_ROAD)
@@ -335,7 +341,11 @@ static func _area(a: Dictionary, surfaces: Dictionary, materials: Dictionary) ->
 	if idx.is_empty():
 		return
 	var kind := str(a.k)
-	var st := _tool("area_" + kind, surfaces, materials, PixelMaterials.flat(Color(AREA_COLORS.get(kind, "#cdbfa5"))))
+	var st: SurfaceTool
+	if kind == "parking" or kind == "retail":   # car parks and the shopping centre's grounds are tarmac
+		st = _tool("area_tarmac", surfaces, materials, PixelMaterials.surface("road_asphalt", Vector2(4, 4), Color("#d8d6d2")))
+	else:
+		st = _tool("area_" + kind, surfaces, materials, PixelMaterials.flat(Color(AREA_COLORS.get(kind, "#cdbfa5"))))
 	for i in range(0, idx.size(), 3):
 		_up(st, _v(ring[idx[i]], Y_AREA), _v(ring[idx[i + 1]], Y_AREA), _v(ring[idx[i + 2]], Y_AREA))
 
@@ -359,39 +369,12 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 	centre /= ring.size()
 	var seed_value := seed_of(ring)
 	var public := b.has("k")
-	var paint: String = PUBLIC_WALL if public else WALL_PAINTS[seed_value % WALL_PAINTS.size()]
-	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
-	var plinth_paint: String = PLINTH_PAINTS[(seed_value / 7) % PLINTH_PAINTS.size()]
-	var plinth := _tool("plinth_" + plinth_paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(plinth_paint)))
 	var area := absf(_signed_area(ring))
 	var rect := min_rect(ring)
-	var hip := not public and area < 420.0 and area / maxf(float(rect.area), 0.01) >= ROOF_FILL
-	var top := h if hip else h + PARAPET    # flat roofs hide behind a low parapet
-	for i in ring.size():
-		var p0 := ring[i]
-		var p1 := ring[(i + 1) % ring.size()]
-		var a := _v(p0, 0.0)
-		var c := _v(p1, 0.0)
-		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
-		_quad(walls, a, c, top, out)
-		collision.append_array([a, _v(p0, h), _v(p1, h), a, _v(p1, h), c])
-		var push := _wall_normal(p0, p1, out) * 0.02
-		_quad(plinth, _v(p0 + push, 0.0), _v(p1 + push, 0.0), PLINTH_HEIGHT, out)
-		if not hip:
-			_quad(walls, _v(p0, h + 0.05), _v(p1, h + 0.05), PARAPET - 0.05, -out)   # the parapet's inner face
-	var tiles := seed_value % 5 < 3
-	var roof := _tool("roof_tiles" if tiles else "roof_ibr", surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2)))
-	if hip:
-		var fascia_paint: String = FASCIA_PAINTS[(seed_value / 11) % FASCIA_PAINTS.size()]
-		var fascia := _tool("fascia_" + fascia_paint, surfaces, materials, PixelMaterials.flat(Color(fascia_paint)))
-		_pitched_roof(roof, fascia, walls, rect, h, seed_value % 2 == 0)
+	if public:
+		RealLandmarks.build(b, ring, centre, area, rect, seed_value, near_roads, surfaces, materials, collision)
 	else:
-		var idx := Geometry2D.triangulate_polygon(ring)
-		for i in range(0, idx.size(), 3):
-			_up(roof, _v(ring[idx[i]], h + 0.05), _v(ring[idx[i + 1]], h + 0.05), _v(ring[idx[i + 2]], h + 0.05))
-		var closed := ring.duplicate()
-		closed.append(ring[0])
-		strip(_tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))), closed, 0.3, top + 0.01)
+		_house(ring, centre, h, area, rect, seed_value, surfaces, materials, collision)
 	var home: Variant = null
 	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
 		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door, known_front)
@@ -412,6 +395,53 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 		label.set_meta("landmark", building_name)
 		root.add_child(label)
 	return home
+
+
+## An ordinary house: painted walls with a plinth band; a pitched roof (hip or gable) when the outline is
+## close to a rectangle, otherwise a flat roof behind a parapet.
+static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: float, rect: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:
+	var paint: String = WALL_PAINTS[seed_value % WALL_PAINTS.size()]
+	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
+	var plinth_paint: String = PLINTH_PAINTS[(seed_value / 7) % PLINTH_PAINTS.size()]
+	var plinth := _tool("plinth_" + plinth_paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(plinth_paint)))
+	var hip := area < 420.0 and area / maxf(float(rect.area), 0.01) >= ROOF_FILL
+	wall_ring(ring, centre, h, walls, plinth, collision, 0.0 if hip else PARAPET)
+	var tiles := seed_value % 5 < 3
+	var roof := _tool("roof_tiles" if tiles else "roof_ibr", surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2)))
+	if hip:
+		var fascia_paint: String = FASCIA_PAINTS[(seed_value / 11) % FASCIA_PAINTS.size()]
+		var fascia := _tool("fascia_" + fascia_paint, surfaces, materials, PixelMaterials.flat(Color(fascia_paint)))
+		_pitched_roof(roof, fascia, walls, rect, h, seed_value % 2 == 0)
+	else:
+		flat_roof(ring, h, PARAPET, roof, _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))))
+
+
+## Walls on the outline up to h (+ `parapet` above the roof, with its inner face), a plinth band at
+## the foot (when `plinth` is given) and the walls' collision up to h.
+static func wall_ring(ring: PackedVector2Array, centre: Vector2, h: float, walls: SurfaceTool, plinth: SurfaceTool, collision: PackedVector3Array, parapet: float) -> void:
+	for i in ring.size():
+		var p0 := ring[i]
+		var p1 := ring[(i + 1) % ring.size()]
+		var a := _v(p0, 0.0)
+		var c := _v(p1, 0.0)
+		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
+		_quad(walls, a, c, h + parapet, out)
+		collision.append_array([a, _v(p0, h), _v(p1, h), a, _v(p1, h), c])
+		if plinth != null:
+			var push := _wall_normal(p0, p1, out) * 0.02
+			_quad(plinth, _v(p0 + push, 0.0), _v(p1 + push, 0.0), PLINTH_HEIGHT, out)
+		if parapet > 0.0:
+			_quad(walls, _v(p0, h + 0.05), _v(p1, h + 0.05), parapet - 0.05, -out)   # the parapet's inner face
+
+
+## A flat roof on the outline at h, with a concrete cap along the top of its parapet.
+static func flat_roof(ring: PackedVector2Array, h: float, parapet: float, roof: SurfaceTool, coping: SurfaceTool) -> void:
+	var idx := Geometry2D.triangulate_polygon(ring)
+	for i in range(0, idx.size(), 3):
+		_up(roof, _v(ring[idx[i]], h + 0.05), _v(ring[idx[i + 1]], h + 0.05), _v(ring[idx[i + 2]], h + 0.05))
+	var closed := ring.duplicate()
+	closed.append(ring[0])
+	strip(coping, closed, 0.3, h + parapet + 0.01)
 
 
 const HOME_MIN_AREA := 30.0
@@ -598,14 +628,14 @@ static func min_rect(ring: PackedVector2Array) -> Dictionary:
 
 ## A pitched roof over the rectangle with eaves all round: a hip roof (sloping ends) or a gable roof
 ## (painted triangular end walls). Fascia boards along the eaves, a soffit underneath.
-static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool) -> void:
+static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool, rise_override := -1.0) -> void:
 	var u: Vector2 = rect.u
 	var v: Vector2 = rect.v
 	var c: Vector2 = rect.c
 	var half: Vector2 = rect.half
 	var l := half.x + EAVES
 	var w := half.y + EAVES
-	var rise := clampf(half.y * 0.45, 0.8, 1.8)
+	var rise := clampf(half.y * 0.45, 0.8, 1.8) if rise_override < 0.0 else rise_override
 	var ridge := l if gable else maxf(0.0, l - w)
 	var corner := func(su: float, sv: float) -> Vector3: return _v(c + u * su * l + v * sv * w, h)
 	var top := func(su: float) -> Vector3: return _v(c + u * su * ridge, h + rise)

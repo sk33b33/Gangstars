@@ -277,6 +277,8 @@ def main(raw, ms_file):
     json.dump(meta, open(os.path.join(OUT, "meta.json"), "w"), indent=1)
     size = sum(os.path.getsize(os.path.join(OUT, f)) for f in os.listdir(OUT))
     print(dict(counts)); print("chunks", len(keys), "streets", len(street_names), "landmarks", len(landmarks), "bytes", size)
+    import classify_buildings   # unnamed outlines in school grounds, shops, sports grounds, parks
+    classify_buildings.main(OUT)
 
 
 if __name__ == "__main__":

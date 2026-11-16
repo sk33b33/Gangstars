@@ -9,7 +9,7 @@ const DEFAULTS := {
 	"audio/master": 0.9, "audio/sfx": 0.9, "audio/ambient": 0.7, "audio/ui": 0.8, "audio/music": 0.7,
 	"controls/mouse_sensitivity": 0.0025, "controls/stick_sensitivity": 2.6, "controls/invert_y": false,
 	"controls/vibration": true, "controls/top_down": false,
-	"video/fov": 70.0, "video/shadows": true, "video/effects": true, "video/msaa": 2, "video/fog": true,
+	"video/fov": 70.0, "video/shadows": true, "video/effects": true, "video/msaa": 2, "video/fog": true, "video/heat_shimmer": false,
 	"video/render_scale": 1.0, "video/crowd_range": 2, "video/fullscreen": false, "video/vsync": true, "video/show_fps": false,
 	"gameplay/weather": true, "gameplay/traffic": true, "gameplay/autosave": true, "gameplay/waypoint": true, "gameplay/tips": true, "gameplay/survival": true,
 	"access/captions": true, "access/speech_bubbles": true,

@@ -69,6 +69,31 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 - People may walk anywhere that is not a building (streets, pavements, open ground, parks). Keeping them to pavements
   and crossings is stage 3 work.
 
+### Pavements
+- Residential streets: from the kerb to the boundary walls a sandy, trodden verge with grass tufts (texture `verge`),
+  as most Mitchells Plain side streets have. Main roads and collectors: a paved slab footway `FOOTWAY` wide beside
+  the kerb, verge behind it. Car parks and the shopping centre's grounds are tarmac.
+
+### Public buildings (`RealLandmarks`)
+- Unnamed outlines whose centre lies in school grounds, the shopping centre, a sports ground, park, pitch, playground
+  or the pool are given a kind by `tools/osm/classify_buildings.py` (school_block, shop_block, sports_block,
+  park_building, pool_building), so they are never homes (no door, yard or residents). The game's family homes are
+  never reclassified; five that had been placed in school buildings moved to the nearest real house (2026-11-16).
+- Each public kind has a shape (`RealLandmarks.style_of`):
+  - church: face brick or white walls 5 m, steep gable roof (`CHURCH_PITCH`) along the long side, a cross on the
+    gable nearest the street, and a bell tower with a pyramid cap beside the front when bigger than `TOWER_AREA`;
+  - mosque (name holds "masjid" or "mosque"): white walls, flat roof, a green dome on a drum, an octagonal minaret with
+    a balcony at the front corner;
+  - civic centre: face brick, flat roof, the middle third raised into a hall with a low gable roof, an entrance
+    canopy on posts and a flagpole;
+  - clinic and crèche: white with a green plinth, flat roof, entrance canopy;
+  - school blocks: face brick, one storey (`SCHOOL_STOREY`) or two over `TWO_STOREY_AREA`, low gable iron roof,
+    rows of barred windows on every long wall;
+  - shops: cream walls, a coloured sign band (parapet), roller shutters and a veranda on posts along the front;
+  - fuel stations: kiosk, plus a forecourt canopy on four columns over two pump islands between kiosk and road
+    (left out when there is no room); a canopy outline in the data is built as a roof on columns;
+  - sports halls: tall walls, low gable iron roof; everything else: a plain flat-roofed block.
+
 ### Yards (`RealYards`)
 - A home whose front wall is at least `MIN_WALL` long gets a front yard: a fence along the street side, parallel to
   the front wall, with a `GATE` opening centred on the front door, and side walls from the fence back to the two
@@ -178,6 +203,10 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | `MIN_DEPTH` / `MAX_DEPTH` | `RealYards` | 2.2 / 4.5 m | 2.2 to 3 / 3 to 6 | How shallow / deep a front yard may be |
 | `PAVE_GAP` / `PAVE_KEEP` | `RealYards` | 0.3 / 1.5 m | 0 to 1 / 1 to 2.5 | How much pavement stays in front of a fence |
 | `DOOR_KEEP` / `LANE` / `MIN_WALL` | `RealYards` | 1.0 / 4.0 / 4.0 m | | Fences keep away from other doors and their way out; shortest front wall with a yard |
+| `FOOTWAY` | builder | 1.5 m | 1 to 2.5 | Paved footway on main roads and collectors |
+| `CHURCH_PITCH` / `TOWER_AREA` | `RealLandmarks` | 0.9 / 600 m2 | 0.6 to 1.2 | Church roof steepness; which churches get a tower |
+| `SCHOOL_STOREY` / `TWO_STOREY_AREA` | `RealLandmarks` | 3.3 m / 500 m2 | | Classroom block height |
+| `VERANDA_DEPTH` / `CANOPY_HEIGHT` / `MINARET_HEIGHT` | `RealLandmarks` | 2.6 / 5.2 / 17 m | | Shop verandas, forecourt canopies, the minaret |
 | `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
 | `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
 | `max_cars` / `spawn_min` / `far_distance` | `RealTraffic` | 14 (touch: 6) / 70 m / 380 m | 0 to 40 | Traffic density |
@@ -207,6 +236,8 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
     stands between its dog's yard and its gate spot; a fenced family walks out through the gate (aiming beyond the
     fence, 90% get past it within a few metres) and no route passes through a fence; no fence crosses the way straight
     out of any story family's front door.
+18. No home stands in school grounds, the shopping centre or a sports ground; each public kind maps to its shape; the
+    mosque chunk builds a dome and the church chunks crosses.
 16. Streets have kerbs and gutters; houses have plinths, fascias and sills; a tilted outline gets a fitting roof
     rectangle; road lines can be trimmed and offset for edge lines.
 (`_test_real_people_and_traffic`; run just these with `tests/run.sh --real-only`.)

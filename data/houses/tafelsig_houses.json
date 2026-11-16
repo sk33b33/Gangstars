@@ -4,13 +4,13 @@
   {
    "id": "taf_h01",
    "number": 3,
-   "street": "Angus Road",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Damons block",
    "kit": "flats",
    "position": [
-    448.25,
-    140.75
+    398.93,
+    81.73
    ],
    "facing": "north",
    "plot_size": [
@@ -36,18 +36,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_14"
+   "real_id": "h_1_0_33"
   },
   {
    "id": "taf_h02",
    "number": 5,
-   "street": "Angus Road",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Ockhuis block",
    "kit": "flats",
    "position": [
     404.95,
-    149.6
+    72.92
    ],
    "facing": "north",
    "plot_size": [
@@ -73,7 +73,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_2_0_2"
+   "real_id": "h_2_0_33"
   },
   {
    "id": "taf_h03",
@@ -256,13 +256,13 @@
   {
    "id": "taf_h08",
    "number": 15,
-   "street": "Eisleben Road",
+   "street": "Angus Road",
    "district_id": "district_tafelsig",
    "display_name": "Maans family",
    "kit": "row_house",
    "position": [
-    518.73,
-    153.05
+    445.55,
+    59.56
    ],
    "facing": "north",
    "plot_size": [
@@ -287,7 +287,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_2_0_15"
+   "real_id": "h_2_0_13"
   },
   {
    "id": "taf_h09",

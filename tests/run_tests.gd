@@ -2435,6 +2435,38 @@ func _test_real_world_units() -> void:
 	var mid_part := RealChunkBuilder.sub_line(bend, 5.0, 30.0)
 	_check(mid_part.size() == 3 and mid_part[0].is_equal_approx(Vector2(5, 0)) and mid_part[2].is_equal_approx(Vector2(20, 10)),
 		"a road line can be cut to the part between 5 m and 30 m along it")
+	# Buildings in school grounds, shops, sports grounds and parks are not homes; public buildings take their shape.
+	var homes_in_grounds := 0
+	var mosque_key := Vector2i.ZERO
+	var church_key := Vector2i.ZERO
+	for ck: Vector2i in data.chunk_keys:
+		var chunk := data.load_chunk(ck)
+		var grounds: Array = chunk.get("areas", []).filter(func(a): return str(a.k) in ["school", "retail", "sports"])
+		for b: Dictionary in chunk.get("buildings", []):
+			var r := RealChunkBuilder._line(b.p)
+			if RealChunkBuilder.is_home(b, r):
+				var c := Vector2.ZERO
+				for p in r:
+					c += p
+				c /= r.size()
+				if grounds.any(func(a): return RealChunkBuilder.point_in_ring(c, RealChunkBuilder._line(a.p))):
+					homes_in_grounds += 1
+			match RealLandmarks.style_of(b):
+				"mosque":
+					mosque_key = ck
+				"church":
+					church_key = ck
+	_check(homes_in_grounds <= 2, "classroom blocks, shops and sports-ground buildings are not homes (%d homes left in such grounds)" % homes_in_grounds)
+	_check(RealLandmarks.style_of({"k": "place_of_worship", "n": "AL Masjiduth Thanie Mosque"}) == "mosque" and RealLandmarks.style_of({"k": "place_of_worship", "n": "New Apostolic Church"}) == "church"
+		and RealLandmarks.style_of({"k": "community_centre"}) == "civic" and RealLandmarks.style_of({"k": "school_block"}) == "school" and RealLandmarks.style_of({"k": "fuel"}) == "fuel",
+		"each kind of public building has its own shape (mosque, church, civic centre, school, fuel station)")
+	var shapes := {}
+	for sk: Vector2i in [mosque_key, church_key]:
+		var shape_node := RealChunkBuilder.build(sk, data.load_chunk(sk), {}, data.around(sk, "road_lines"))
+		for ch in shape_node.get_children():
+			shapes[str(ch.name)] = true
+		shape_node.free()
+	_check(shapes.has("Mesh_dome") and shapes.has("Mesh_cross"), "the mosque has its dome and minaret, the churches their crosses")
 	# Yards: the game's own homes keep their gate spot (5 m out) outside the fence and the yard dog's run inside.
 	var ykey := data.chunk_at(Vector3(-150, 0, -128))
 	var yfronts := data.home_fronts(ykey)

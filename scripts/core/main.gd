@@ -165,7 +165,8 @@ func _process(_delta: float) -> void:
 	var look := -player.camera.global_transform.basis.z
 	hud.set_heading(rad_to_deg(atan2(look.x, -look.z)) + district.grid_bearing())
 	hud.set_night(district.day_night.night_amount())
-	hud.set_weather(district.weather.rain if district.weather.enabled else 0.0, district.day_night.heat())
+	hud.set_weather(district.weather.rain if district.weather.enabled else 0.0,
+		district.day_night.heat() if bool(settings.get_value("video/heat_shimmer")) else 0.0)
 	if session.police:
 		hud.set_combat(player.health.fraction(), session.police.heat.level(), player.aiming)
 
