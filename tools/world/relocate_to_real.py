@@ -1,3 +1,5 @@
+# APPLIED MIGRATION (record only): the old districts were removed and this already ran; the data it read has been
+# overwritten, so it no longer runs. The real world is built by tools/osm/build_westridge.py.
 """Moves the game's content onto the real Westridge (data/world/westridge/) and writes it to
 data/real/, an overlay that DataFiles reads first when the game runs in real-world mode.
 

@@ -2,15 +2,13 @@
 **Phones/tablets:** on-screen controls appear automatically on a touchscreen (left stick move, right stick look, TALK/RUN/JUMP/AIM/FIRE buttons, MENU/PHONE/MAP/HEY/RADIO on the right edge).
 
 
-> **Current state:** playable. Set in Mitchells Plain on the Cape Flats: the starter suburb, Westridge, has 30 houses
-> on 4 streets, 28 residents with day/night routines, social groups, reactions to incidents, and a
-> rival crew that patrols at night. Five intro missions, a recruitable crew member, safehouse
-> upgrades, save/load, and a turf map with locked neighbouring districts (Lentegeur, Rocklands) that
-> open through progression. Left-hand traffic and drivable cars, weather, braais and
-> load-shedding, synthesized audio, and a settings menu. Lentegeur, the first expansion district
-> (flats, container shops, a soccer field and the Dune Cruisers), and Rocklands to the west (limestone
-> cottages, an old quarry and the Rock Royals) are built from the same data pipeline. Beyond Lentegeur
-> lie the Town Centre (the Promenade mall, the market) and Tafelsig (courts and flats by the dunes).
+> **Current state:** playable. The game is set in the **real Westridge, Mitchells Plain**: real street lines (bends and
+> angles) and a building on every real outline, loaded in pieces as you move (a desktop builds the whole suburb, a phone
+> the area around you). About 150 residents live in real houses, with day/night routines, social groups, reactions to
+> incidents and rival crews. Missions, a recruitable crew, safehouse upgrades, save/load, a turf map (turf sectors inside
+> Westridge unlock through progression), police, survival needs, left-hand traffic and drivable cars, weather, braais and
+> load-shedding, synthesized audio and a settings menu. The old made-up districts (Lentegeur, Rocklands, Town Centre,
+> Tafelsig) were removed.
 > Walk into your safehouse, the smokkies and neighbours' homes (knock first). Fight over street
 > corners, follow a story with choices, and drive with the radio on.
 > Start the hustle at Aunty Mavis' smokkie: serve drinks, save clients on your phone, and make
@@ -81,5 +79,4 @@ The game must become playable early. Build a small, complete vertical slice firs
 thirsty and tired: buy food at shops, search bins and crates, sleep at your safehouse, bandage wounds.
 The turf map (M) can show all of Mitchells Plain with its real main roads.
 
-**Real Westridge (preview):** pause (Esc / MENU) and choose "Real Westridge preview" to walk the real streets of Westridge
-with a building on every real outline. This is the world the game is moving into; it has no people or missions yet.
+**World:** the game starts in the real Westridge; there is no separate preview any more.

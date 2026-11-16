@@ -1,3 +1,5 @@
+# APPLIED MIGRATION (record only): the old districts were removed and this already ran; the data it read has been
+# overwritten, so it no longer runs. The real world is built by tools/osm/build_westridge.py.
 """One-off migration (2026-11-15): deepens every area's block from 56 to 70 m and rebuilds Westridge on its
 real block (Rhone Way / Excelsior Street / Coetzenburg Street / Constantia Street, with Rhone Close and
 Excelsior Close). Already applied to data/; kept as the record of what changed. Do not run it again."""

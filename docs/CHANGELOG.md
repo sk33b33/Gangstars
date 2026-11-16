@@ -1,5 +1,14 @@
 # Changelog
 
+## Old districts removed; real Westridge is the only world (2026-11-16)
+- The game starts in the real Westridge. Lentegeur, Rocklands, Town Centre, Tafelsig and the old 30-house Westridge,
+  their gates, traffic, ground and street builders, the "switch world" button and the old-world test branches are gone.
+- The five district data sets now describe turf sectors inside Westridge (Westridge, Harvester, Rocklands, Westridge Centre,
+  Duneside); locked sectors are walkable but the player cannot hold turf there until they unlock.
+- Every home has a real street name and number. Full suite passed 1528/1528 before the removal; re-run after it.
+- Obsolete generators removed (`generate_starter_data.py`, `generate_district.py`, `make_tafelsig.py`);
+  `tools/world/relocate_to_real.py` and the rebuild scripts are kept as records of the migration only.
+
 ## Real Westridge, stage 2: people and traffic
 - **Navigation** on the real streets (`RealNav`): a navigation mesh per 200 m piece with every building outline cut out,
   baked in the background near you; pieces join edge to edge, so walks cross the suburb and go round the real buildings.

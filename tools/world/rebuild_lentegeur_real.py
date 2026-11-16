@@ -1,3 +1,5 @@
+# APPLIED MIGRATION (record only): the old districts were removed and this already ran; the data it read has been
+# overwritten, so it no longer runs. The real world is built by tools/osm/build_westridge.py.
 """One-off migration (2026-11-15): rebuilds Lentegeur on its real streets (OpenStreetMap): the
 Hyacinth Avenue crescent off Firethorn Road, with Marguerite Road to the north. Already applied
 to data/; kept as the record of what changed. Do not run it again.

@@ -1,6 +1,6 @@
 # Real Westridge world
 
-Status: stages 1 and 2 of 4 done (2026-11-15). Code: `scripts/world/real/`. Data: `data/world/westridge/`.
+Status: stages 1 to 3 done and the old districts removed (2026-11-16); phone tuning and Windows build remain. Code: `scripts/world/real/`. Data: `data/world/westridge/`.
 Tool: `tools/osm/build_westridge.py`. Preview scene: `scenes/real/real_westridge.tscn`.
 
 ## 1. Overview
@@ -17,8 +17,7 @@ near and freed when you leave; a desktop builds all of them, a phone only those 
 | 3 | The game moves in: safehouse, shops, missions, crews, turf, police, survival spots, saves; turf sectors inside Westridge replace the locked districts | next |
 | 4 | The old districts (Lentegeur, Rocklands, Town Centre, Tafelsig, old Westridge) and their code are removed; phone tuning; Windows build | |
 
-Until stage 3 is finished the existing game keeps running unchanged, and the real Westridge is a preview you
-open from the pause menu. Nothing is removed before its replacement works.
+The real Westridge is now the only world; the old districts and the preview button are gone.
 
 ## 2. Player Fantasy
 

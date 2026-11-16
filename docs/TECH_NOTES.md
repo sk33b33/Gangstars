@@ -31,7 +31,7 @@ xvfb-run -a godot --path . --rendering-driver opengl3 -- \
 tools/build_textures.sh
 
 # Regenerate house/resident data (deterministic; keeps h01-h05 and the first 5 residents)
-python3 tools/generate_starter_data.py   # SUPERSEDED: do not run (Westridge was rebuilt on its real streets; see WORLD_LAYOUT.md)
+# (generate_starter_data.py was removed with the old districts)
 ```
 
 `--fixed-fps 60` advances exactly 1/60 s per frame, so a 10-minute soak runs in about 12 s.
