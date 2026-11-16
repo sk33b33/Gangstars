@@ -16,6 +16,12 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 
+## True when the suite runs against the real Westridge (tests/run.sh --real): checks that only
+## make sense for the old made-up districts (straight streets, gates, kit houses) are skipped,
+## and the real-world versions run in their place.
+var _real: bool = DataFiles.real_mode
+
+
 func _check(cond: bool, what: String) -> void:
 	if cond:
 		_passed += 1
@@ -30,6 +36,13 @@ func _run() -> void:
 		_test_real_world_units()
 		await _test_real_world_streaming()
 		await _test_real_people_and_traffic()
+		print("\n%d passed, %d failed" % [_passed, _failed.size()])
+		for f in _failed:
+			print("  failed: ", f)
+		quit(0 if _failed.is_empty() else 1)
+		return
+	if _args.has("district-only"):   # --district-only: straight to the in-game checks (while working on them)
+		await _test_district()
 		print("\n%d passed, %d failed" % [_passed, _failed.size()])
 		for f in _failed:
 			print("  failed: ", f)
@@ -60,8 +73,9 @@ func _run() -> void:
 	_test_access_units()
 	_test_loading_units()
 	_test_real_map_units()
-	_test_real_westridge_units()
-	_test_real_lentegeur_units()
+	if not _real:   # the two block rebuilds belong to the old districts
+		_test_real_westridge_units()
+		_test_real_lentegeur_units()
 	_test_real_world_units()
 	await _test_real_world_streaming()
 	_test_survival_units()
@@ -273,11 +287,12 @@ func _test_npc_data() -> void:
 	root.add_child(street_root)
 	var ground_bits := GroundDetail.build(street_root, district_data)
 	_check(ground_bits >= 60, "open ground gets worn earth, grass, drifting sand, weeds and dune grass (%d)" % ground_bits)
-	var bits := StreetDetail.build(street_root, district_data)
-	_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
-	_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
-	var puddles := street_root.find_children("*", "MeshInstance3D", true, false).filter(func(m): return m.material_override == StreetDetail.puddle_material())
-	_check(puddles.size() >= 10, "rain collects in puddles along the streets (%d)" % puddles.size())
+	if not _real:   # the real streets have no litter or puddles yet (ROADMAP)
+		var bits := StreetDetail.build(street_root, district_data)
+		_check(bits >= 40 and street_root.get_child_count() >= 40, "streets get litter, potholes, drains and bins (%d)" % bits)
+		_check(street_root.find_children("*", "CollisionShape3D", true, false).is_empty(), "street detail never blocks walking")
+		var puddles := street_root.find_children("*", "MeshInstance3D", true, false).filter(func(m): return m.material_override == StreetDetail.puddle_material())
+		_check(puddles.size() >= 10, "rain collects in puddles along the streets (%d)" % puddles.size())
 	street_root.queue_free()
 	# Faces blink and talk; hair and posture vary.
 	var talker := CharacterModel.new()
@@ -595,11 +610,17 @@ func _test_phase5_units() -> void:
 	var p := ProgressionState.new()
 	var dm := DistrictManager.load_file("res://data/districts/districts.json", p, houses)
 	# Mitchells Plain: three built suburbs, the rest listed as future turf that can't be unlocked yet.
-	_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
-		"the districts are Westridge, Lentegeur and Rocklands")
 	var future := dm.planned()
-	_check(future.size() == 4 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
-		"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
+	if _real:
+		_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Harvester" and dm.display_name("district_west") == "Rocklands"
+			and dm.display_name("district_town_centre") == "Westridge Centre" and dm.display_name("district_tafelsig") == "Duneside",
+			"the parts of Westridge are Westridge, Harvester, Rocklands, Westridge Centre and Duneside")
+		_check(future.is_empty(), "nothing outside Westridge is planned")
+	else:
+		_check(dm.display_name("starter") == "Westridge" and dm.display_name("district_east") == "Lentegeur" and dm.display_name("district_west") == "Rocklands",
+			"the districts are Westridge, Lentegeur and Rocklands")
+		_check(future.size() == 4 and future.all(func(d): return dm.state(str(d.id)) == "planned" and not dm.can_unlock(str(d.id))),
+			"the rest of Mitchells Plain is listed as planned turf (%s)" % [future.map(func(d): return d.display_name)])
 	_check(dm.neighbours().size() >= 2, "at least two neighbouring districts (%d)" % dm.neighbours().size())
 	_check(dm.is_unlocked("starter") and not dm.is_unlocked("district_east") and not dm.is_unlocked("district_west"),
 		"only the starter district is open at the start")
@@ -845,11 +866,17 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 
 	district.director.clock.set_hour(12.0)
 	player.pivot.rotation.y = 0.0
-	player.global_position = Vector3(west_x - 26.0, 0.1, 5.2)
-	player.snap_camera()
-	await _press_toward(player, "move_left", 5.0)
-	for i in 20:
-		await physics_frame
+	if _real:
+		player.global_position = district.destinations.anchor_position("district_west:entrance") + Vector3(1.0, 0.1, 0.0)
+		player.snap_camera()
+		for i in 60:
+			await physics_frame
+	else:
+		player.global_position = Vector3(west_x - 26.0, 0.1, 5.2)
+		player.snap_camera()
+		await _press_toward(player, "move_left", 5.0)
+		for i in 20:
+			await physics_frame
 	_check(session.current_area == "district_west" and session.hud.banner_text() == "ROCKLANDS", "walking west enters Rocklands (x %.1f)" % player.global_position.x)
 	var kalk_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_west")
 	_check(kalk_res.size() >= 20, "Rocklands is populated (%d)" % kalk_res.size())
@@ -903,9 +930,18 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var dm := session.districts
 	district.director.ambient_incidents = false
 	district.weather.enabled = false
-	_check(district.areas.size() == 5 and district.area_by_id("district_east").display_name == "Lentegeur", "five areas are built (Westridge, Lentegeur, Rocklands, Town Centre, Tafelsig)")
+	_check(district.areas.size() == 5 and district.area_by_id("district_east").display_name == ("Harvester" if _real else "Lentegeur"), "five areas are built (%s)" % [district.areas.map(func(ar): return ar.display_name)])
 	if district.rebake_count == 0:
 		await district.navigation_rebaked
+	if _real:   # the rest of the suburb's navigation bakes in the background after the game starts
+		var t_nav := Time.get_ticks_msec()
+		while not district.real.all_nav_ready() and Time.get_ticks_msec() - t_nav < 240000:
+			await physics_frame
+			OS.delay_msec(5)
+		_check(district.real.all_nav_ready(), "the whole suburb's navigation is baked in the background (%d pieces, %.0f s after this check began)" % [district.real.nav_regions.size(), (Time.get_ticks_msec() - t_nav) / 1000.0])
+		for i in 600:
+			await physics_frame
+			OS.delay_msec(2)
 	var map := district.nav_region.get_navigation_map()
 	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("starter_h05:gate"))
 	var to := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
@@ -915,14 +951,20 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	# Travel on foot from the approach street into Lentegeur.
 	district.director.clock.set_hour(12.0)
 	player.pivot.rotation.y = 0.0
-	player.global_position = Vector3(98, 0.1, 5.2)
-	player.snap_camera()
-	await _press_toward(player, "move_right", 5.0)
-	for i in 20:
-		await physics_frame
+	if _real:
+		player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
+		player.snap_camera()
+		for i in 60:
+			await physics_frame
+	else:
+		player.global_position = Vector3(98, 0.1, 5.2)
+		player.snap_camera()
+		await _press_toward(player, "move_right", 5.0)
+		for i in 20:
+			await physics_frame
 	_check(district.area_at(player.global_position) == "district_east" and session.current_area == "district_east",
-		"walking east enters Lentegeur (x %.1f)" % player.global_position.x)
-	_check(session.hud.banner_text() == "LENTEGEUR", "a district banner greets the player (%s)" % session.hud.banner_text())
+		"going east enters %s (x %.1f)" % [dm.display_name("district_east"), player.global_position.x])
+	_check(session.hud.banner_text() == dm.display_name("district_east").to_upper(), "a district banner greets the player (%s)" % session.hud.banner_text())
 	var rooi_res: Array = district.residents.values().filter(func(r): return district.resident_district(r) == "district_east")
 	var rooi_trips := 0
 	for r: Resident in rooi_res:
@@ -997,90 +1039,106 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	var session: GameSession = main.session
 	var traffic := district.traffic
 	district.director.ambient_incidents = false
-	_check(traffic.cars.size() == 27, "27 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
-	_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
-	player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
-	player.global_position = Vector3(0, 0.1, -30)
-	player.snap_camera()
-	var last := traffic.cars.map(func(c): return c.global_position)
-	var travelled := traffic.cars.map(func(_c): return 0.0)
-	var off_road := 0
-	var streets: Array = []
-	for area in district.areas:
-		streets.append_array(area.get("streets", []))
-	for f in 60 * 25:
-		for i in traffic.cars.size():
-			travelled[i] += traffic.cars[i].global_position.distance_to(last[i])
-			last[i] = traffic.cars[i].global_position
-		if f % 300 == 0 and _args.has("verbose"):
-			for c: TrafficCar in traffic.cars:
-				if c.speed < 1.0:
-					for n in c.candidates:
-						var l: Vector3 = c.to_local(n.global_position)
-						if n != c and l.z > 1.0 and l.z < 9.0 and absf(l.x) < 1.7:
-							print("    %s at %s blocked by %s at %s" % [c.vehicle_id, c.global_position.snapped(Vector3.ONE * 0.1), n.name, n.global_position.snapped(Vector3.ONE * 0.1)])
-		if f % 30 == 0:
-			for c: TrafficCar in traffic.cars:
-				var best := INF
-				for s in streets:
-					var across: float = absf((c.global_position.z if s.axis == "x" else c.global_position.x) - s.at)
-					var along: float = c.global_position.x if s.axis == "x" else c.global_position.z
-					if along >= minf(s.from, s.to) - 1.0 and along <= maxf(s.from, s.to) + 1.0:
-						best = minf(best, across - float(s.half_width))
-				if best > 0.3:
-					off_road += 1
-		await physics_frame
-	# (> 30 m: none is stuck; busy streets with slow-crossing pedestrians can halve a car's distance.)
-	_check(travelled.all(func(t): return t > 30.0), "all AI vehicles keep driving (metres in 25 s: %s)" % [travelled.map(func(t): return int(t))])
-	_check(off_road == 0, "AI vehicles stay on the roads (%d off-road samples)" % off_road)
+	if _real:
+		# Traffic on the real street network (its own checks: _test_real_people_and_traffic).
+		var rt := district.real_traffic
+		player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		var moved := 0.0
+		var last_at := {}
+		for f in 60 * 25:
+			for c: RealCar in rt.cars:
+				if last_at.has(c):
+					moved += c.global_position.distance_to(last_at[c])
+				last_at[c] = c.global_position
+			await physics_frame
+		_check(rt.cars.size() >= 6 and moved > 300.0, "cars drive the real streets around you (%d cars, %.0f m driven in 25 s)" % [rt.cars.size(), moved])
+		_check(district.merge_stats.get("merged_into", 0) > 10, "static meshes are batched (%s)" % district.merge_stats)
+	else:
+		_check(traffic.cars.size() == 27, "27 AI vehicles (incl. 3 police bakkies) drive across the four districts (%d)" % traffic.cars.size())
+		_check(district.merge_stats.get("merged_into", 0) > 100, "static meshes are batched (%s)" % district.merge_stats)
+		player.global_position = Vector3(-30, 0.1, 30)  # out of the way (behind Duif south houses? keep off roads)
+		player.global_position = Vector3(0, 0.1, -30)
+		player.snap_camera()
+		var last := traffic.cars.map(func(c): return c.global_position)
+		var travelled := traffic.cars.map(func(_c): return 0.0)
+		var off_road := 0
+		var streets: Array = []
+		for area in district.areas:
+			streets.append_array(area.get("streets", []))
+		for f in 60 * 25:
+			for i in traffic.cars.size():
+				travelled[i] += traffic.cars[i].global_position.distance_to(last[i])
+				last[i] = traffic.cars[i].global_position
+			if f % 300 == 0 and _args.has("verbose"):
+				for c: TrafficCar in traffic.cars:
+					if c.speed < 1.0:
+						for n in c.candidates:
+							var l: Vector3 = c.to_local(n.global_position)
+							if n != c and l.z > 1.0 and l.z < 9.0 and absf(l.x) < 1.7:
+								print("    %s at %s blocked by %s at %s" % [c.vehicle_id, c.global_position.snapped(Vector3.ONE * 0.1), n.name, n.global_position.snapped(Vector3.ONE * 0.1)])
+			if f % 30 == 0:
+				for c: TrafficCar in traffic.cars:
+					var best := INF
+					for s in streets:
+						var across: float = absf((c.global_position.z if s.axis == "x" else c.global_position.x) - s.at)
+						var along: float = c.global_position.x if s.axis == "x" else c.global_position.z
+						if along >= minf(s.from, s.to) - 1.0 and along <= maxf(s.from, s.to) + 1.0:
+							best = minf(best, across - float(s.half_width))
+					if best > 0.3:
+						off_road += 1
+			await physics_frame
+		# (> 30 m: none is stuck; busy streets with slow-crossing pedestrians can halve a car's distance.)
+		_check(travelled.all(func(t): return t > 30.0), "all AI vehicles keep driving (metres in 25 s: %s)" % [travelled.map(func(t): return int(t))])
+		_check(off_road == 0, "AI vehicles stay on the roads (%d off-road samples)" % off_road)
 
-	# A car brakes for the player standing in its lane, without shoving them.
-	var car: TrafficCar = traffic.cars[0]
-	var found_straight := false
-	var stand := car.global_position
-	for i in 60 * 90:
-		# Wait for >= 9 m of straight lane ahead of the car, then stand at the end of it.
-		if car.speed > 6.0 and not car.curve_points.has(car.lane_index()):
-			var walked := 0.0
-			var prev := car.global_position
-			var ok := false
-			for k in car.route.size():
-				var ri := (car.lane_index() + k) % car.route.size()
-				if car.curve_points.has(ri):
+		# A car brakes for the player standing in its lane, without shoving them.
+		var car: TrafficCar = traffic.cars[0]
+		var found_straight := false
+		var stand := car.global_position
+		for i in 60 * 90:
+			# Wait for >= 9 m of straight lane ahead of the car, then stand at the end of it.
+			if car.speed > 6.0 and not car.curve_points.has(car.lane_index()):
+				var walked := 0.0
+				var prev := car.global_position
+				var ok := false
+				for k in car.route.size():
+					var ri := (car.lane_index() + k) % car.route.size()
+					if car.curve_points.has(ri):
+						break
+					walked += prev.distance_to(car.route[ri])
+					prev = car.route[ri]
+					if walked >= 9.0:
+						stand = prev
+						ok = true
+						break
+				if ok:
+					found_straight = true
 					break
-				walked += prev.distance_to(car.route[ri])
-				prev = car.route[ri]
-				if walked >= 9.0:
-					stand = prev
-					ok = true
-					break
-			if ok:
-				found_straight = true
+			await physics_frame
+		player.global_position = stand + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		for i in 180:
+			await physics_frame
+		var slowest := car.speed
+		var pushed := 0.0
+		for i in 900:   # the car may still be some way off: give it time to arrive and brake
+			if car.global_position.distance_to(player.global_position) < 6.0:
+				pushed = maxf(pushed, Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length())
+			slowest = minf(slowest, car.speed)
+			if car.speed < 0.2:
 				break
-		await physics_frame
-	player.global_position = stand + Vector3(0, 0.1, 0)
-	player.snap_camera()
-	for i in 180:
-		await physics_frame
-	var slowest := car.speed
-	var pushed := 0.0
-	for i in 900:   # the car may still be some way off: give it time to arrive and brake
-		if car.global_position.distance_to(player.global_position) < 6.0:
-			pushed = maxf(pushed, Vector2(player.global_position.x - stand.x, player.global_position.z - stand.z).length())
+			await physics_frame
 		slowest = minf(slowest, car.speed)
-		if car.speed < 0.2:
-			break
-		await physics_frame
-	slowest = minf(slowest, car.speed)
-	# (Or it is held back further up the lane, queued behind another car that stopped first.)
-	var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 3.0
-	_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
-	_check(pushed < 0.3, "the player is not pushed by the car (%.2f m)" % pushed)
-	var gap := car.global_position.distance_to(player.global_position)
-	_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
+		# (Or it is held back further up the lane, queued behind another car that stopped first.)
+		var held_back := car.to_local(player.global_position).z > 6.0 and car.speed < 3.0
+		_check(slowest < 0.5 or held_back, "a car stops for the player in its lane (slowest %.1f m/s, straight %s, lane %d, player visible %s driving %s, local %s)" % [slowest, found_straight, car.lane_index(), player.visible, player.is_driving(), car.to_local(player.global_position).snapped(Vector3.ONE * 0.1)])
+		_check(pushed < 0.3, "the player is not pushed by the car (%.2f m)" % pushed)
+		var gap := car.global_position.distance_to(player.global_position)
+		_check(gap > 2.5, "it stops short of the player (%.1f m)" % gap)
 
 	# Driving.
-	player.global_position = Vector3(0, 0.1, -30)
+	player.global_position = _place(district, "open")
 	player.snap_camera()
 	for i in 120:
 		await physics_frame
@@ -1116,7 +1174,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	player.exit_vehicle()
 	_check(not player.is_driving() and player.model.visible and player.collision_layer != 0, "getting out restores the player")
 	_check(player.global_position.distance_to(golf.global_position) < 4.5, "the player steps out beside the car")
-	golf.global_position = Vector3(-30, 0.05, -52.7)
+	golf.global_position = golf.global_position if _real else Vector3(-30, 0.05, -52.7)
 	_check(session.load_game() == "" and golf.global_position.distance_to(saved_pos) < 0.3, "loading restores the car's position")
 
 	# Weather.
@@ -1225,9 +1283,12 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	main.settings.set_value("audio/sfx", 0.25)
 	_check(absf(AudioServer.get_bus_volume_db(AudioServer.get_bus_index("SFX")) - linear_to_db(0.25)) < 0.1, "volume settings drive the audio buses")
 	main.settings.set_value("gameplay/traffic", false)
-	_check(not traffic.visible and traffic.cars.all(func(c): return c.collision_layer == 0), "traffic can be switched off")
+	if _real:
+		_check(not district.real_traffic.visible and district.real_traffic.cars.is_empty(), "traffic can be switched off")
+	else:
+		_check(not traffic.visible and traffic.cars.all(func(c): return c.collision_layer == 0), "traffic can be switched off")
 	main.settings.set_value("gameplay/traffic", true)
-	_check(traffic.visible, "and back on")
+	_check(district.real_traffic.visible if _real else traffic.visible, "and back on")
 	main.pause_menu.open()
 	_check(paused and main.pause_menu.visible and main.pause_menu.control_for("video/fov") != null, "Esc menu pauses the game and shows settings")
 	main.pause_menu.close()
@@ -2075,7 +2136,7 @@ func _test_consequences_in_game(main: Node, district: District, player: Player) 
 			turf.state._end_push(id, true)
 	turf.state.corners["corner_cafe"].owner = prog.crew_id
 	turf.state.corners["corner_cafe"].control = 60.0
-	player.global_position = Vector3(-30, 0.1, 30)
+	player.global_position = _place(district, "aside")
 	var held_before := session.dealing.state.stat("pushes_held")
 	prog.flags["retaliate:tortel_crew"] = turf.minutes() - 1.0
 	for i in 60:
@@ -2120,7 +2181,7 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	for r: Resident in district.residents.values():
 		teleports_before += r.teleport_violations
 	_check(is_inf(dir.dormant_distance), "by default everyone is simulated all the time")
-	player.global_position = Vector3(0, 0.1, -30)
+	player.global_position = _place(district, "open")
 	main.settings.set_value("video/crowd_range", 0)
 	for i in 90:
 		await physics_frame
@@ -2163,7 +2224,7 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 	_check(session.objective_position(visit).distance_to(district.destinations.anchor_position("poi_shop")) < 0.1, "a 'go to' objective points at that place")
 	_check(session.objective_position({"type": "talk_to", "target": "npc_boeta"}) != null and session.objective_position({"type": "reputation", "value": 10}) == null,
 		"a 'talk to' objective points at the person; one with no place points nowhere")
-	player.global_position = Vector3(0, 0.1, -30)
+	player.global_position = _place(district, "open")
 	await process_frame
 	await process_frame
 	_check(main.waypoint.visible == (not session.waypoint_info().is_empty()), "the marker beam shows in the world")
@@ -2520,6 +2581,21 @@ func _test_real_world_streaming() -> void:
 	world.queue_free()
 	focus.queue_free()
 	await process_frame
+
+
+## Where a check stands the player. The old districts use their fixed spots; the real Westridge
+## uses the same kinds of place around the safehouse: the pavement at your gate, the middle of your
+## street, and open ground (the park) away from any road.
+func _place(district: District, what: String) -> Vector3:
+	if not _real:
+		return {"open": Vector3(0, 0.1, -30), "road": Vector3(-30, 0.1, 0), "pavement": Vector3(-30, 0.1, 5.4), "aside": Vector3(-30, 0.1, 30)}[what]
+	var plot: HousePlot = district.plots[GameSession.SAFEHOUSE_ID]
+	match what:
+		"road":
+			return plot.global_transform * Vector3(3.0, 0.1, 7.5)
+		"pavement":
+			return plot.gate_position() + Vector3(0, 0.1, 0)
+	return district.destinations.anchor_position("poi_park") + Vector3(0, 0.1, 5.0)
 
 
 static func _in_any_outline(p: Vector3, rings: Array, shrink := 0.0) -> bool:
@@ -3060,7 +3136,7 @@ func _test_sound_in_game(main: Node, district: District, player: Player) -> void
 		r.say("Howzit")
 		_check(audio.voices_played > v0, "people speak in (made-up) voices")
 	# Captions for sounds, the speech-bubble switch and autosave.
-	player.global_position = Vector3(0, 0.1, -30)
+	player.global_position = _place(district, "open")
 	audio.play_at("gunshot", player.global_position + Vector3(-8, 1, 0))
 	await process_frame
 	_check(main.hud.caption_text().contains("Gunshot"), "a gunshot is captioned for players who can't hear it (%s)" % main.hud.caption_text())
@@ -3404,15 +3480,35 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	var missions := session.missions
 	district.director.ambient_incidents = false
 	var east_x: float = district.info.bounds[2]
-	_check(district.gates.has("district_east") and district.gates.has("district_west"), "both neighbours have boom gates")
-	_check(not district.is_district_open("district_east"), "Lentegeur gate starts closed")
-
-	# The gate physically blocks the player.
-	player.pivot.rotation.y = 0.0
-	player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
-	player.snap_camera()
-	await _press_toward(player, "move_right", 3.0)
-	_check(player.global_position.x < east_x, "the locked gate stops the player (x %.1f < %.1f)" % [player.global_position.x, east_x])
+	var east_name := dm.display_name("district_east")
+	if _real:
+		# The real map has no gates: a locked part can be walked into, but its turf can't be taken.
+		_check(not district.is_district_open("district_east") and not district.is_district_open("district_west"), "the other parts of Westridge start locked")
+		var field_corner := ""
+		for cid in session.turf.state.order:
+			if session.turf.area_of(cid) == "district_east":
+				field_corner = cid
+				break
+		player.global_position = session.turf.anchor(field_corner) + Vector3(1.0, 0.1, 0.0)
+		player.snap_camera()
+		for i in 40:
+			await physics_frame
+		_check(district.area_at(player.global_position) == "district_east" and session.turf.is_locked(field_corner) and not session.turf.presence(field_corner).player,
+			"you can walk into a locked part, but you don't count on its corners")
+		_check(session.hud.message_text().contains("isn't your turf yet"), "walking into a locked part says so (%s)" % session.hud.message_text().left(60))
+		player.global_position = district.plots[GameSession.SAFEHOUSE_ID].gate_position() + Vector3(0, 0.1, 0)
+		player.snap_camera()
+		for i in 40:
+			await physics_frame
+	else:
+		_check(district.gates.has("district_east") and district.gates.has("district_west"), "both neighbours have boom gates")
+		_check(not district.is_district_open("district_east"), "Lentegeur gate starts closed")
+		# The gate physically blocks the player.
+		player.pivot.rotation.y = 0.0
+		player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
+		player.snap_camera()
+		await _press_toward(player, "move_right", 3.0)
+		_check(player.global_position.x < east_x, "the locked gate stops the player (x %.1f < %.1f)" % [player.global_position.x, east_x])
 	_check(not session.request_unlock("district_east") and not district.is_district_open("district_east"), "an early unlock request is refused")
 
 	# Turf map shows requirements.
@@ -3469,7 +3565,7 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	_check(btn != null and not btn.disabled, "the Unlock button is enabled")
 	btn.pressed.emit()
 	_check(prog.unlocked_district_ids.has("district_east") and district.is_district_open("district_east"), "pressing Unlock opens Lentegeur's gates")
-	_check(session.hud.banner_text().contains("LENTEGEUR UNLOCKED"), "unlock banner is shown")
+	_check(session.hud.banner_text().contains("%s UNLOCKED" % east_name.to_upper()), "unlock banner is shown")
 	session.turf_map.close()
 	_check(not district.is_district_open("district_west") and not session.request_unlock("district_west"), "Rocklands stays locked")
 
@@ -3478,19 +3574,38 @@ func _test_turf_in_game(main: Node, district: District, player: Player) -> void:
 	_check(missions.active.has("beyond_the_block"), "Lionel offers Beyond the Block")
 	_check(missions.current_objective("beyond_the_block").get("id") == "enter", "the unlock objective is already done")
 	district.director.clock.set_hour(12.0)
-	player.pivot.rotation.y = 0.0
-	player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
-	player.snap_camera()
-	await _press_toward(player, "move_right", 7.0)
-	_check(player.global_position.x > east_x + 12.0, "the open gate lets the player through (x %.1f)" % player.global_position.x)
-	for i in 20:
-		await physics_frame
-	_check(missions.is_completed("beyond_the_block"), "walking into Lentegeur completes Beyond the Block")
-	var west_x: float = district.info.bounds[0]
-	player.global_position = Vector3(west_x + 6.0, 0.1, 0.0)
-	player.snap_camera()
-	await _press_toward(player, "move_left", 3.0)
-	_check(player.global_position.x > west_x, "Rocklands' gate still blocks the player")
+	if _real:
+		player.global_position = district.destinations.anchor_position("district_east:entrance") + Vector3(1.0, 0.1, 0.0)
+		player.snap_camera()
+		for i in 40:
+			await physics_frame
+		_check(missions.is_completed("beyond_the_block"), "walking into %s completes Beyond the Block" % east_name)
+		var east_corner := ""
+		for cid in session.turf.state.order:
+			if session.turf.area_of(cid) == "district_east":
+				east_corner = cid
+				break
+		_check(not session.turf.is_locked(east_corner), "once unlocked, its corners can be taken")
+		var west_corner := ""
+		for cid in session.turf.state.order:
+			if session.turf.area_of(cid) == "district_west":
+				west_corner = cid
+				break
+		_check(session.turf.is_locked(west_corner), "Rocklands' corners are still locked")
+	else:
+		player.pivot.rotation.y = 0.0
+		player.global_position = Vector3(east_x - 6.0, 0.1, 0.0)
+		player.snap_camera()
+		await _press_toward(player, "move_right", 7.0)
+		_check(player.global_position.x > east_x + 12.0, "the open gate lets the player through (x %.1f)" % player.global_position.x)
+		for i in 20:
+			await physics_frame
+		_check(missions.is_completed("beyond_the_block"), "walking into Lentegeur completes Beyond the Block")
+		var west_x: float = district.info.bounds[0]
+		player.global_position = Vector3(west_x + 6.0, 0.1, 0.0)
+		player.snap_camera()
+		await _press_toward(player, "move_left", 3.0)
+		_check(player.global_position.x > west_x, "Rocklands' gate still blocks the player")
 
 	# Persistence: save, lock everything again, load.
 	_check(session.save_game() == "", "save after unlocking")
@@ -3566,7 +3681,7 @@ func _test_missions_in_game(main: Node, district: District, player: Player) -> v
 	_check(not session.hud.is_menu_open() and player.input_enabled, "closing the menu gives control back")
 
 	# Boeta follows the player once he is out.
-	player.global_position = Vector3(10, 0.1, 4)
+	player.global_position = _place(district, "pavement")
 	var followed := false
 	for i in 60 * 120:
 		if boeta.brain.state == NpcBrain.State.FOLLOWING and boeta.global_position.distance_to(player.global_position) < 6.0:
@@ -3582,7 +3697,7 @@ func _test_missions_in_game(main: Node, district: District, player: Player) -> v
 	_check(session.save_game() == "", "game saves")
 	prog.add_cash(999)
 	prog.recruited_crew_ids.clear()
-	player.global_position = Vector3(-30, 0.1, 3)
+	player.global_position = _place(district, "pavement")
 	missions.active.clear()
 	_check(session.load_game() == "", "game loads")
 	_check(prog.cash == cash_saved and prog.recruited_crew_ids.has("npc_boeta"), "load restores cash and crew")
@@ -3629,7 +3744,10 @@ func _test_district() -> void:
 	_check(district.player_crew_id == "vlakte_vipers" and district.residents["npc_viper_slang"].is_ally() and not district.residents["npc_h29_1"].is_ally(),
 		"crew-mates are allies, other crews aren't")
 	_check(is_equal_approx(main.session.police.heat.gain_mult, 0.6), "Stylers' perk: heat builds slower")
-	_check(district.nav_region.navigation_mesh.get_polygon_count() > 0, "navigation mesh baked (%d polys)" % district.nav_region.navigation_mesh.get_polygon_count())
+	if _real:
+		_check(district.real.nav_regions.size() >= 15 and district.real.keep_nav_ready(), "navigation is baked wherever the game has homes and places (%d pieces)" % district.real.nav_regions.size())
+	else:
+		_check(district.nav_region.navigation_mesh.get_polygon_count() > 0, "navigation mesh baked (%d polys)" % district.nav_region.navigation_mesh.get_polygon_count())
 	_check(district.plots.size() == district.registry.count(), "every house plot is built")
 	_check(district.residents.size() >= 8, "at least 8 residents spawned (%d)" % district.residents.size())
 
@@ -3660,7 +3778,7 @@ func _test_district() -> void:
 		await physics_frame
 	_check(player.current_target == plot.door_interactable, "interaction target is the nearby door")
 	_check(not player.current_target.interact(player).is_empty(), "door interaction returns feedback")
-	player.global_position = Vector3(-30, 0.1, 0)
+	player.global_position = _place(district, "road")
 	for i in 10:
 		await physics_frame
 	_check(player.current_target == null, "no prompt in the middle of the road")
@@ -3699,8 +3817,9 @@ func _test_district() -> void:
 		for c in hp.get_children():
 			if c is MeshInstance3D and PropLibrary.mesh(str(c.name)) != null:
 				prop_kinds[str(c.name)] = int(prop_kinds.get(str(c.name), 0)) + 1
-	_check(prop_kinds.size() >= 8 and int(prop_kinds.get("wheelie_bin", 0)) >= 10,
-		"yards are dressed with Blender-built props (%s)" % [prop_kinds])
+	if not _real:   # real houses have no dressed yards yet (ROADMAP)
+		_check(prop_kinds.size() >= 8 and int(prop_kinds.get("wheelie_bin", 0)) >= 10,
+			"yards are dressed with Blender-built props (%s)" % [prop_kinds])
 	var doors_used := [0]
 	for r: Resident in district.residents.values():
 		r.door_used.connect(func(_h): doors_used[0] += 1)
@@ -3743,7 +3862,7 @@ func _test_district() -> void:
 	# The observer stands on the sidewalk, not in a traffic lane (cars would queue behind them).
 	# Weather is off for this baseline (rain keeps leisure-only residents home; tested separately).
 	district.weather.enabled = false
-	player.global_position = Vector3(-30, 0.1, 5.4)
+	player.global_position = _place(district, "pavement")
 	player.snap_camera()
 	director.clock.set_hour(7.0)
 	var seen := {}

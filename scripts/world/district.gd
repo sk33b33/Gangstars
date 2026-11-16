@@ -121,7 +121,7 @@ func _ready() -> void:
 	light_pool = LightPool.new()
 	light_pool.name = "LightPool"
 	add_child(light_pool)
-	light_pool.setup(day_night, LightPool.collect_lamps(nav_region))
+	light_pool.setup(day_night, real.data.all_lamps() if is_real() else LightPool.collect_lamps(nav_region))
 	if is_real():
 		_await_real_navigation()
 	else:
@@ -150,9 +150,15 @@ func _build_real_world() -> void:
 	real.name = "RealWestridge"
 	real.places = destinations
 	add_child(real)
+	real.bake_all = true
 	real.setup(data, player if player else self)
 	for area in areas:
 		real.extra_obstacles.append_array(StreetBuilder.build_real(nav_region, area, destinations))
+	for area in areas:   # where "walk into <part>" objectives send you: that part's first place
+		var pois: Array = area.get("pois", [])
+		if str(area.id) != str(info.id) and not pois.is_empty():
+			var at := DataFiles.to_vec2(pois[0].get("position"))
+			destinations.register("%s:entrance" % area.id, Vector3(at.x, 0, at.y), 3.0, "district_entrance", str(area.get("display_name", area.id)))
 	# Homes: stand each family's plot in its real house's doorway.
 	for id in registry.order:
 		var h := registry.get_house(id)
@@ -182,6 +188,18 @@ func _build_real_world() -> void:
 			for dz in [-1, 0, 1]:
 				var near := p + Vector3(dx, 0, dz) * 25.0   # a place near a chunk edge needs the neighbour too
 				real.keep_nav[data.chunk_at(near)] = true
+	# ...and everything between them: each part's people walk across the whole of its patch.
+	for area in areas:
+		var lo := Vector2i(1 << 20, 1 << 20)
+		var hi := Vector2i(-(1 << 20), -(1 << 20))
+		for key: Vector2i in real.keep_nav.keys():
+			if area_at(data.chunk_centre(key)) == str(area.id):
+				lo = Vector2i(mini(lo.x, key.x), mini(lo.y, key.y))
+				hi = Vector2i(maxi(hi.x, key.x), maxi(hi.y, key.y))
+		for cx in range(lo.x, hi.x + 1):
+			for cz in range(lo.y, hi.y + 1):
+				if data.has_chunk(Vector2i(cx, cz)):
+					real.keep_nav[Vector2i(cx, cz)] = true
 
 
 ## Waits for the kept navigation to be baked and taken in by the map, then brings the world to life.
@@ -218,6 +236,11 @@ func _await_real_navigation() -> void:
 	real_traffic.name = "RealTraffic"
 	add_child(real_traffic)
 	real_traffic.setup(real, player if player else self, real_people)
+	if use_lod:
+		merge_stats = MeshMerger.merge(nav_region)
+		lod_count = Lod.apply(nav_region)
+		for r: Resident in residents.values():
+			lod_count += Lod.apply(r.model, true)
 	is_navigation_ready = true
 	navigation_ready.emit()
 
@@ -451,7 +474,8 @@ func _spawn_vehicles() -> void:
 ## (crew can follow the player across). Residents still keep to their own district because
 ## their schedules only point there. Emits navigation_rebaked when the map has the new mesh.
 func rebake_navigation() -> void:
-	if is_real():   # nothing to re-bake: there are no gates on the real map
+	if is_real():   # nothing to re-bake (no gates on the real map); announced a frame later, as a real bake would be
+		await get_tree().physics_frame
 		rebake_count += 1
 		navigation_rebaked.emit()
 		return
@@ -572,6 +596,10 @@ func apply_recruit(npc_id: String, safehouse_id: String) -> void:
 ## Opens/closes every gate to a neighbouring district. Only the session calls this, in
 ## response to DistrictManager unlocks (or when restoring a save).
 func set_district_open(district_id: String, open: bool, animate := true) -> bool:
+	if is_real():   # no gates on the real map: a part of Westridge is simply open to you or not yet
+		var was := bool(_open_parts.get(district_id, false))
+		_open_parts[district_id] = open
+		return was != open
 	var changed := false
 	for gate: DistrictGate in gates.get(district_id, []):
 		changed = changed or gate.is_open != open
@@ -639,7 +667,12 @@ func is_braai_on() -> bool:
 	return _braai != null and _braai.visible
 
 
+var _open_parts := {}
+
+
 func is_district_open(district_id: String) -> bool:
+	if is_real():
+		return bool(_open_parts.get(district_id, false))
 	var list: Array = gates.get(district_id, [])
 	return not list.is_empty() and list.all(func(g): return g.is_open)
 

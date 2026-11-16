@@ -123,6 +123,8 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	add_child(turf)
 	turf.setup(district, player, progression, police, dealing, interiors)
 	turf.message.connect(_on_turf_message)
+	turf.area_locked = func(area: String) -> bool:
+		return not area.is_empty() and area != "starter" and not districts.is_unlocked(area)
 	# Story: "corners" counts for stat objectives too; dialogue scenes with choices.
 	missions.stat_value = func(name: String) -> int:
 		return turf.state.players_corners().size() if name == "corners" else dealing.state.stat(name)
@@ -495,6 +497,8 @@ func _check_area() -> void:
 	var name_text := districts.display_name(a) if a != "starter" else "Westridge"
 	hud.show_banner(name_text.to_upper(), 3.0)
 	hud.set_district_name("%s · %s" % [name_text, districts.state(a)])
+	if district.is_real() and a != "starter" and not districts.is_unlocked(a):
+		hud.show_message("%s isn't your turf yet. You can walk here, but you can't take its corners until you unlock it (turf map: %s)." % [name_text, InputHints.key("turf_map")])
 
 
 func _on_vehicle_changed(car: DrivableCar) -> void:

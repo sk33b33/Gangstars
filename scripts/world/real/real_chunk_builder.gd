@@ -21,7 +21,7 @@ const PUBLIC_WALL := "#d9d4c8"
 ## street). `stats.houses` lists the homes: {id, door: Vector3 (1.2 m outside the door), area}.
 ## `story`: {house id: true} for homes that belong to the game's own families: they are built like
 ## any house but hang their own front door and are not offered to passers-by residents.
-static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}) -> Node3D:
+static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}, near_outlines: Array = []) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Chunk_%d_%d" % [key.x, key.y]
 	var surfaces := {}      # material key -> SurfaceTool
@@ -30,15 +30,24 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		_area(a, surfaces, materials)
 	for r in chunk.get("roads", []):
 		_road(r, surfaces, materials, root)
+	for at in lamp_points(chunk.get("roads", [])):
+		var steel := _tool("steel", surfaces, materials, PixelMaterials.flat(Color("#7d828c")))
+		var lamp := _tool("lamp", surfaces, materials, PixelMaterials.lamp())
+		var pole := Vector3(at.x, 0.0, at.z)
+		_box(steel, pole + Vector3(0, 2.5, 0), Vector3(0.14, 5.0, 0.14))
+		_box(steel, pole + Vector3(0, 4.95, 0), Vector3(0.9, 0.1, 0.1))
+		_box(lamp, at, Vector3(0.4, 0.12, 0.3))
 	var collision := PackedVector3Array()
 	var n := 0
 	var houses: Array = []
-	var rings: Array = []
-	for b in chunk.get("buildings", []):
-		rings.append(_line(b.p))
+	var rings: Array = near_outlines   # the chunk's own outlines and its neighbours': a doorstep must be clear of all of them
+	if rings.is_empty():
+		for b in chunk.get("buildings", []):
+			rings.append(_line(b.p))
+	var boxes: Array = rings.map(func(r): return ring_box(r))
 	for b in chunk.get("buildings", []):
 		var hid := "h_%d_%d_%d" % [key.x, key.y, n]
-		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings, not story.has(hid))
+		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings_near(_line(b.p), rings, boxes), not story.has(hid))
 		if door != null and not story.has(hid):
 			houses.append({"id": hid, "door": door.at, "area": door.area})
 		n += 1
@@ -50,7 +59,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		st.generate_normals()
 		mesh_instance.mesh = st.commit()
 		mesh_instance.material_override = materials[k]
-		if not str(k).begins_with("wall") and not str(k).begins_with("roof"):
+		if not str(k).begins_with("wall") and not str(k).begins_with("roof") and str(k) != "steel":
 			mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mesh_instance)
 	if not collision.is_empty():
@@ -100,6 +109,56 @@ static func _facing(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, want: V
 
 static func _up(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3) -> void:
 	_facing(st, a, b, c, Vector3.UP)
+
+
+const LAMP_SPACING := 32.0
+const LAMP_HEIGHT := 4.85
+
+
+## Where the street lights stand: every 32 m along each street, alternating sides, just behind
+## the kerb. Worked out from the data alone, so the light pool knows them before a chunk is built.
+static func lamp_points(roads: Array) -> PackedVector3Array:
+	var out := PackedVector3Array()
+	for r in roads:
+		if str(r.c) == "path" or str(r.c) == "lane":
+			continue
+		var line := _line(r.p)
+		var offset := float(r.w) * 0.5 + 0.6
+		var walked := 0.0
+		var next := 8.0 + fmod(absf(line[0].x * 3.1 + line[0].y * 1.7), LAMP_SPACING)   # staggered, so pieces of one street don't bunch their lamps
+		var side := 1.0 if int(absf(line[0].x + line[0].y)) % 2 == 0 else -1.0
+		for i in line.size() - 1:
+			var seg := line[i + 1] - line[i]
+			var length := seg.length()
+			if length < 0.01:
+				continue
+			var dir := seg / length
+			while next <= walked + length:
+				var p := line[i] + dir * (next - walked) + Vector2(-dir.y, dir.x) * offset * side
+				out.append(Vector3(p.x, LAMP_HEIGHT, p.y))
+				next += LAMP_SPACING
+				side = -side
+			walked += length
+	return out
+
+
+static func _box(st: SurfaceTool, centre: Vector3, size: Vector3) -> void:
+	var h := size * 0.5
+	for axis in 3:
+		for s in [-1.0, 1.0]:
+			var n := Vector3.ZERO
+			n[axis] = s
+			var u := Vector3.ZERO
+			u[(axis + 1) % 3] = 1.0
+			var v := Vector3.ZERO
+			v[(axis + 2) % 3] = 1.0
+			var c := centre + n * h[axis]
+			var a := c - u * h[(axis + 1) % 3] - v * h[(axis + 2) % 3]
+			var b := c + u * h[(axis + 1) % 3] - v * h[(axis + 2) % 3]
+			var d := c + u * h[(axis + 1) % 3] + v * h[(axis + 2) % 3]
+			var e := c - u * h[(axis + 1) % 3] + v * h[(axis + 2) % 3]
+			_facing(st, a, b, d, n)
+			_facing(st, a, d, e, n)
 
 
 ## A flat ribbon of `width` along a polyline at height y: mitred at the bends, with a round cap on
@@ -290,8 +349,10 @@ static func home_front(ring: PackedVector2Array, near_roads: Array, rings: Array
 		var step := mid + normal * DOOR_OUT
 		var hemmed := false
 		for other: PackedVector2Array in rings:
-			if other != ring and Geometry2D.is_point_in_polygon(step, other):
-				hemmed = true
+			if other == ring:
+				continue
+			if Geometry2D.is_point_in_polygon(step, other) or _distance_to_ring(step, other) < DOOR_CLEAR:
+				hemmed = true   # inside a neighbour, or in a gap too narrow to walk
 				break
 		if not hemmed:
 			best_d = d
@@ -330,6 +391,33 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 		elif length > 3.2:
 			_panel(window, mid, tangent, normal, 1.4, 1.0, top)
 	return {"at": anchor}
+
+
+const DOOR_CLEAR := 0.9
+
+
+static func _distance_to_ring(p: Vector2, ring: PackedVector2Array) -> float:
+	var best := INF
+	for i in ring.size():
+		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, ring[i], ring[(i + 1) % ring.size()])))
+	return best
+
+
+static func ring_box(ring: PackedVector2Array) -> Rect2:
+	var box := Rect2(ring[0], Vector2.ZERO)
+	for p in ring:
+		box = box.expand(p)
+	return box
+
+
+## The outlines close enough to `ring` to matter for its doorstep (`boxes[i]` is `rings[i]`'s box).
+static func rings_near(ring: PackedVector2Array, rings: Array, boxes: Array) -> Array:
+	var reach := ring_box(ring).grow(DOOR_OUT + DOOR_CLEAR + 0.5)
+	var out: Array = []
+	for i in rings.size():
+		if (boxes[i] as Rect2).intersects(reach):
+			out.append(rings[i])
+	return out
 
 
 static func _distance_to_lines(p: Vector2, lines: Array) -> float:

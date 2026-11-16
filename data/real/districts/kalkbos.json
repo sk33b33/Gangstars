@@ -8,9 +8,9 @@
  "street_name": "Rocklands",
  "bounds": [
   65,
-  882,
-  298,
-  1099
+  916,
+  302,
+  1108
  ],
  "houses_file": "res://data/houses/kalkbos_houses.json",
  "residents_file": "res://data/npcs/kalkbos_residents.json",
@@ -36,8 +36,8 @@
   {
    "type": "quarry_face",
    "position": [
-    230.4,
-    958.4
+    226.8,
+    956.3
    ],
    "size": [
     34,
@@ -48,32 +48,32 @@
   {
    "type": "lookout",
    "position": [
-    149.42,
-    1006.23
+    151.36,
+    1007.86
    ],
-   "yaw": -39.89
+   "yaw": -40.1
   },
   {
    "type": "courtyard",
    "position": [
-    156.0,
-    978.8
+    150.0,
+    979.1
    ],
    "yaw": 0.0
   },
   {
    "type": "bus_stop",
    "position": [
-    115.79,
-    977.32
+    128.32,
+    988.87
    ],
-   "yaw": -44.54
+   "yaw": -40.1
   },
   {
    "type": "kickabout",
    "position": [
-    146.4,
-    959.6
+    144.3,
+    961.7
    ],
    "size": [
     9,
@@ -85,10 +85,10 @@
    "type": "police_post",
    "id": "saps_kalk",
    "position": [
-    257.74,
-    965.85
+    253.2,
+    969.37
    ],
-   "yaw": 33.52
+   "yaw": 43.3
   }
  ],
  "pois": [
@@ -119,8 +119,8 @@
    "name": "the quarry lookout",
    "kind": "park",
    "position": [
-    148.78,
-    1007.0
+    150.71,
+    1008.63
    ],
    "radius": 2.5,
    "map_label": "lookout"
@@ -130,8 +130,8 @@
    "name": "the Rocklands bus stop",
    "kind": "transit",
    "position": [
-    114.46,
-    978.68
+    127.1,
+    990.33
    ],
    "radius": 1.0,
    "map_label": "bus"
@@ -141,8 +141,8 @@
    "name": "the village square",
    "kind": "gathering",
    "position": [
-    156.0,
-    978.8
+    150.0,
+    979.1
    ],
    "radius": 2.5,
    "map_label": "square"
@@ -152,8 +152,8 @@
    "name": "the kick-about lot",
    "kind": "park",
    "position": [
-    146.4,
-    959.6
+    144.3,
+    961.7
    ],
    "radius": 3.0,
    "map_label": "lot"
@@ -218,8 +218,8 @@
   {
    "poi": "kalk_kickabout",
    "center": [
-    146.4,
-    959.6
+    144.3,
+    961.7
    ],
    "half": [
     4.0,

@@ -224,8 +224,8 @@
    "display_name": "Davids family",
    "kit": "single_hip",
    "position": [
-    -136.25,
-    -122.62
+    -149.9,
+    -98.12
    ],
    "facing": "west",
    "wall_color": "#a6d455",
@@ -246,7 +246,7 @@
     "tree": true,
     "gate": true
    },
-   "real_id": "h_-1_-1_39"
+   "real_id": "h_-1_-1_62"
   },
   {
    "id": "starter_h09",
@@ -532,8 +532,8 @@
    "display_name": "Samuels family",
    "kit": "single_gable",
    "position": [
-    -266.5,
-    -169.55
+    -291.99,
+    -156.41
    ],
    "facing": "north",
    "wall_color": "#f1d36b",
@@ -554,7 +554,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_-2_-1_60"
+   "real_id": "h_-2_-1_18"
   },
   {
    "id": "starter_h19",

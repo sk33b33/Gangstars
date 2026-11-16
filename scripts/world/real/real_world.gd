@@ -26,6 +26,9 @@ var places := DestinationRegistry.new()   # house doors ("<house id>:door") and 
 ## Chunks that always keep their navigation, wherever the focus is (the game's own places), baked
 ## from the map data even when the chunk's buildings are not loaded.
 var keep_nav := {}          # chunk key -> true
+## Bake the rest of the suburb too, in the background (nearest first) and keep it: people can
+## then walk from any part of Westridge to any other (a crew-mate following you across town).
+var bake_all := false
 ## Things the game built on top of the real map (landmark props): outlines the navigation must go round.
 var extra_obstacles: Array = []   # PackedVector2Array
 var graph := RealRoadGraph.new()
@@ -130,9 +133,10 @@ func _near(key: Vector2i, pos: Vector3, radius: float) -> bool:
 ## Navigation follows the focus: bake the nearest loaded chunk that lacks it (one at a time),
 ## and drop the meshes that are now far away.
 func _scan_nav(pos: Vector3) -> void:
-	for key: Vector2i in nav_regions.keys():
-		if not keep_nav.has(key) and not _near(key, pos, sim_radius + sim_margin):
-			_remove_nav(key)
+	if not bake_all:
+		for key: Vector2i in nav_regions.keys():
+			if not keep_nav.has(key) and not _near(key, pos, sim_radius + sim_margin):
+				_remove_nav(key)
 	if not _nav_baking.is_empty():
 		return
 	for key: Vector2i in keep_nav:
@@ -145,6 +149,12 @@ func _scan_nav(pos: Vector3) -> void:
 			_bake_nav(key)
 			if not sync_nav:
 				return
+	if bake_all:
+		for key in data.chunks_near(pos, 1e7):
+			if not nav_regions.has(key):
+				_bake_nav(key)
+				if not sync_nav:
+					return
 
 
 func _bake_nav(key: Vector2i) -> void:
@@ -159,7 +169,7 @@ func _bake_nav(key: Vector2i) -> void:
 
 func _on_nav_baked(nm: NavigationMesh, key: Vector2i) -> void:
 	_nav_baking.erase(key)
-	if not is_inside_tree() or not (loaded.has(key) or keep_nav.has(key)) or nav_regions.has(key):
+	if not is_inside_tree() or not (loaded.has(key) or keep_nav.has(key) or bake_all) or nav_regions.has(key):
 		return
 	var region := NavigationRegion3D.new()
 	region.name = "Nav_%d_%d" % [key.x, key.y]
@@ -176,6 +186,11 @@ func _remove_nav(key: Vector2i) -> void:
 	nav_regions.erase(key)
 	nav_removed.emit(key)
 	region.queue_free()
+
+
+## True once the whole suburb has navigation.
+func all_nav_ready() -> bool:
+	return nav_regions.size() >= data.chunk_keys.size()
 
 
 ## True once every kept chunk has its navigation and the map has taken it in.
@@ -205,7 +220,7 @@ func load_chunk(key: Vector2i) -> void:
 		return
 	var stats := {}
 	var chunk := data.load_chunk(key)
-	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story)
+	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"))
 	houses[key] = stats.get("houses", [])
 	for h in houses[key]:
 		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")
@@ -222,7 +237,7 @@ func unload_chunk(key: Vector2i) -> void:
 	if node == null:
 		return
 	buildings_loaded -= int(node.get_meta("buildings", 0))
-	if not keep_nav.has(key):
+	if not keep_nav.has(key) and not bake_all:
 		_remove_nav(key)
 	for h in houses.get(key, []):
 		places.remove(str(h.id) + ":door")

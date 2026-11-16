@@ -284,6 +284,10 @@ func show_banner(text: String, seconds := 4.0) -> void:
 	_banner_timer = seconds
 
 
+func message_text() -> String:
+	return _message.text
+
+
 func banner_text() -> String:
 	return _banner.text if _banner.visible else ""
 

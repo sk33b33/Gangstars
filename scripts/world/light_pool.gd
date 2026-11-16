@@ -99,7 +99,16 @@ func _process(delta: float) -> void:
 			l.visible = false
 		return
 	var origin := cam.global_position
-	var order := Array(lamps)
+	var near: Array = []   # only the lamps close by are worth sorting (the real suburb has thousands)
+	for reach in [60.0, 150.0, 1e9]:
+		near.clear()
+		var r2: float = reach * reach
+		for lamp in lamps:
+			if lamp.distance_squared_to(origin) < r2:
+				near.append(lamp)
+		if near.size() >= POOL or reach > 1e8:
+			break
+	var order := near
 	order.sort_custom(func(a, b): return a.distance_squared_to(origin) < b.distance_squared_to(origin))
 	for i in POOL:
 		_lights[i].visible = i < order.size()

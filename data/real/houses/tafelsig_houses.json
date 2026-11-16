@@ -78,13 +78,13 @@
   {
    "id": "taf_h03",
    "number": 5,
-   "street": "Westridge",
+   "street": "Ayrshire Close",
    "district_id": "district_tafelsig",
    "display_name": "Maans family",
    "kit": "row_house",
    "position": [
-    461.1,
-    146.7
+    375.43,
+    127.28
    ],
    "facing": "north",
    "plot_size": [
@@ -109,18 +109,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_2_0_9"
+   "real_id": "h_1_0_0"
   },
   {
    "id": "taf_h04",
    "number": 7,
-   "street": "Ayrshire Close",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Hartnick family",
    "kit": "row_house",
    "position": [
-    375.43,
-    127.28
+    416.7,
+    94.78
    ],
    "facing": "north",
    "plot_size": [
@@ -145,18 +145,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_0_0"
+   "real_id": "h_2_0_8"
   },
   {
    "id": "taf_h05",
    "number": 9,
-   "street": "Dexter Close",
+   "street": "Angus Road",
    "district_id": "district_tafelsig",
    "display_name": "Van Wyk family",
    "kit": "row_house",
    "position": [
-    416.7,
-    94.78
+    443.27,
+    91.45
    ],
    "facing": "north",
    "plot_size": [
@@ -181,18 +181,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_2_0_8"
+   "real_id": "h_2_0_23"
   },
   {
    "id": "taf_h06",
    "number": 11,
-   "street": "Angus Road",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Empty house",
    "kit": "row_house",
    "position": [
-    443.27,
-    91.45
+    433.99,
+    85.3
    ],
    "facing": "north",
    "plot_size": [
@@ -215,18 +215,18 @@
     "tree": true,
     "gate": true
    },
-   "real_id": "h_2_0_23"
+   "real_id": "h_2_0_30"
   },
   {
    "id": "taf_h07",
    "number": 13,
-   "street": "Ayrshire Close",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Hartnick family",
    "kit": "row_house",
    "position": [
-    396.45,
-    98.25
+    398.93,
+    81.73
    ],
    "facing": "north",
    "plot_size": [
@@ -251,18 +251,18 @@
     "tree": true,
     "gate": false
    },
-   "real_id": "h_1_0_70"
+   "real_id": "h_1_0_33"
   },
   {
    "id": "taf_h08",
    "number": 15,
-   "street": "Dexter Close",
+   "street": "Angus Road",
    "district_id": "district_tafelsig",
    "display_name": "Maans family",
    "kit": "row_house",
    "position": [
-    433.99,
-    85.3
+    455.32,
+    78.04
    ],
    "facing": "north",
    "plot_size": [
@@ -287,18 +287,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_2_0_30"
+   "real_id": "h_2_0_16"
   },
   {
    "id": "taf_h09",
    "number": 17,
-   "street": "Dexter Close",
+   "street": "Eisleben Road",
    "district_id": "district_tafelsig",
    "display_name": "Rhode family",
    "kit": "row_house",
    "position": [
-    398.93,
-    81.73
+    518.73,
+    153.05
    ],
    "facing": "north",
    "plot_size": [
@@ -323,18 +323,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_0_33"
+   "real_id": "h_2_0_15"
   },
   {
    "id": "taf_h10",
    "number": 19,
-   "street": "Angus Road",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Isaacs family",
    "kit": "row_house",
    "position": [
-    455.32,
-    78.04
+    404.95,
+    72.92
    ],
    "facing": "north",
    "plot_size": [
@@ -359,7 +359,7 @@
     "tree": true,
     "gate": true
    },
-   "real_id": "h_2_0_16"
+   "real_id": "h_2_0_33"
   },
   {
    "id": "taf_h11",
@@ -401,13 +401,13 @@
   {
    "id": "taf_h12",
    "number": 4,
-   "street": "Eisleben Road",
+   "street": "Ayrshire Close",
    "district_id": "district_tafelsig",
    "display_name": "Ockhuis block",
    "kit": "flats",
    "position": [
-    518.73,
-    153.05
+    379.23,
+    76.98
    ],
    "facing": "south",
    "plot_size": [
@@ -433,18 +433,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_15"
+   "real_id": "h_1_0_54"
   },
   {
    "id": "taf_h13",
    "number": 6,
-   "street": "Ayrshire Close",
+   "street": "Angus Road",
    "district_id": "district_tafelsig",
    "display_name": "Van Wyk block",
    "kit": "flats",
    "position": [
-    379.23,
-    76.98
+    445.55,
+    59.56
    ],
    "facing": "south",
    "plot_size": [
@@ -470,7 +470,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_0_54"
+   "real_id": "h_2_0_13"
   },
   {
    "id": "taf_h14",
@@ -480,8 +480,8 @@
    "display_name": "Lottering block",
    "kit": "flats",
    "position": [
-    445.55,
-    59.56
+    491.62,
+    78.47
    ],
    "facing": "south",
    "plot_size": [
@@ -508,18 +508,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_13"
+   "real_id": "h_2_0_1"
   },
   {
    "id": "taf_h15",
-   "number": 8,
-   "street": "Dexter Close",
+   "number": 10,
+   "street": "Angus Road",
    "district_id": "district_tafelsig",
    "display_name": "Rhode family",
    "kit": "row_house",
    "position": [
-    404.95,
-    72.92
+    462.93,
+    74.05
    ],
    "facing": "west",
    "plot_size": [
@@ -544,18 +544,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_33"
+   "real_id": "h_2_0_22"
   },
   {
    "id": "taf_h16",
    "number": 6,
-   "street": "Angus Road",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Hartnick family",
    "kit": "row_house",
    "position": [
-    462.93,
-    74.05
+    421.77,
+    59.98
    ],
    "facing": "west",
    "plot_size": [
@@ -580,18 +580,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_22"
+   "real_id": "h_2_0_18"
   },
   {
    "id": "taf_h17",
-   "number": 4,
-   "street": "Dexter Close",
+   "number": 6,
+   "street": "Ayrshire Close",
    "district_id": "district_tafelsig",
    "display_name": "Empty house",
    "kit": "row_house",
    "position": [
-    421.77,
-    59.98
+    379.38,
+    67.4
    ],
    "facing": "west",
    "plot_size": [
@@ -614,18 +614,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_2_0_18"
+   "real_id": "h_1_0_1"
   },
   {
    "id": "taf_h18",
-   "number": 4,
+   "number": 8,
    "street": "Ayrshire Close",
    "district_id": "district_tafelsig",
    "display_name": "Booysen family",
    "kit": "row_house",
    "position": [
-    379.38,
-    67.4
+    354.75,
+    83.3
    ],
    "facing": "west",
    "plot_size": [
@@ -650,18 +650,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_0_1"
+   "real_id": "h_1_0_7"
   },
   {
    "id": "taf_h19",
    "number": 3,
-   "street": "Ayrshire Close",
+   "street": "Jersey Street",
    "district_id": "district_tafelsig",
    "display_name": "Rhode family",
    "kit": "row_house",
    "position": [
-    354.75,
-    83.3
+    338.26,
+    102.39
    ],
    "facing": "east",
    "plot_size": [
@@ -686,18 +686,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_0_7"
+   "real_id": "h_1_0_58"
   },
   {
    "id": "taf_h20",
    "number": 1,
-   "street": "Jersey Street",
+   "street": "Dexter Close",
    "district_id": "district_tafelsig",
    "display_name": "Ockhuis family",
    "kit": "row_house",
    "position": [
-    338.26,
-    102.39
+    418.25,
+    51.02
    ],
    "facing": "east",
    "plot_size": [
@@ -722,7 +722,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_0_58"
+   "real_id": "h_2_0_26"
   }
  ]
 }

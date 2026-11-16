@@ -205,6 +205,8 @@ func apply_settings() -> void:
 	hud.set_fps_visible(bool(settings.get_value("video/show_fps")))
 	if district.traffic:
 		district.traffic.set_enabled(bool(settings.get_value("gameplay/traffic")))
+	if district.real_traffic:
+		district.real_traffic.set_enabled(bool(settings.get_value("gameplay/traffic")))
 	if district.weather:
 		district.weather.enabled = bool(settings.get_value("gameplay/weather"))
 

@@ -93,12 +93,22 @@ func _physics_process(delta: float) -> void:
 	_maybe_push(now)
 
 
+## area id -> true while that part of the map is still locked to the player (set by the session).
+## You and your crew don't count on a corner there: turf can't grow before its milestone.
+var area_locked: Callable
+
+
+func is_locked(id: String) -> bool:
+	return area_locked.is_valid() and bool(area_locked.call(area_of(id)))
+
+
 ## Who's standing on a corner (on foot, not indoors, not knocked down).
 func presence(id: String) -> Dictionary:
 	var at := anchor(id)
 	var r2 := float(state.cfg.get("presence_radius", 12.0))
 	var out := {"player": false, "crew": 0, "owners": 0, "pushers": 0}
-	out.player = not player.is_down() and not player.is_driving() and not (interiors and interiors.is_inside()) \
+	var locked := is_locked(id)
+	out.player = not locked and not player.is_down() and not player.is_driving() and not (interiors and interiors.is_inside()) \
 		and _flat(player.global_position, at) < r2
 	var owner := state.owner(id)
 	var pusher := str(state.corners[id].push_crew)
@@ -106,7 +116,7 @@ func presence(id: String) -> Dictionary:
 		if r.is_inside or r.is_down() or _flat(r.global_position, at) > r2:
 			continue
 		if r.data.role == "player_crew" or (r.data.role == "crew" and r.data.faction_id == progression.crew_id):
-			out.crew += 1
+			out.crew += 0 if locked else 1
 		elif r.data.role == "crew" and not owner.is_empty() and r.data.faction_id == owner and owner != progression.crew_id:
 			out.owners += 1
 		if r.data.role == "crew" and not pusher.is_empty() and r.data.faction_id == pusher:

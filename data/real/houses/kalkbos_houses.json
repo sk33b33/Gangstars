@@ -112,13 +112,13 @@
   {
    "id": "kalk_h04",
    "number": 13,
-   "street": "Westridge",
+   "street": "Capricorn Road",
    "district_id": "district_west",
    "display_name": "Plaatjies family",
    "kit": "cottage",
    "position": [
-    148.45,
-    948.85
+    235.25,
+    981.85
    ],
    "facing": "north",
    "plot_size": [
@@ -143,7 +143,7 @@
     "tree": true,
     "gate": false
    },
-   "real_id": "h_0_4_6"
+   "real_id": "h_1_4_26"
   },
   {
    "id": "kalk_h05",
@@ -153,8 +153,8 @@
    "display_name": "Bailey family",
    "kit": "cottage",
    "position": [
-    235.25,
-    981.85
+    223.45,
+    1027.65
    ],
    "facing": "north",
    "plot_size": [
@@ -179,18 +179,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_4_26"
+   "real_id": "h_1_5_11"
   },
   {
    "id": "kalk_h06",
    "number": 9,
-   "street": "Westridge",
+   "street": "Capricorn Road",
    "district_id": "district_west",
    "display_name": "Kleinsmidt family",
    "kit": "cottage",
    "position": [
-    176.97,
-    922.95
+    238.0,
+    1013.85
    ],
    "facing": "north",
    "plot_size": [
@@ -215,18 +215,18 @@
     "tree": true,
     "gate": false
    },
-   "real_id": "h_0_4_37"
+   "real_id": "h_1_5_8"
   },
   {
    "id": "kalk_h07",
    "number": 7,
-   "street": "Westridge",
+   "street": "Bering",
    "district_id": "district_west",
    "display_name": "Empty house",
    "kit": "cottage",
    "position": [
-    185.55,
-    922.2
+    124.33,
+    1019.58
    ],
    "facing": "north",
    "plot_size": [
@@ -249,7 +249,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_4_19"
+   "real_id": "h_0_5_28"
   },
   {
    "id": "kalk_h08",
@@ -259,8 +259,8 @@
    "display_name": "Hendricks family",
    "kit": "cottage",
    "position": [
-    223.45,
-    1027.65
+    210.93,
+    1041.15
    ],
    "facing": "north",
    "plot_size": [
@@ -285,18 +285,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_5_11"
+   "real_id": "h_1_5_87"
   },
   {
    "id": "kalk_h09",
    "number": 3,
-   "street": "Capricorn Road",
+   "street": "Park Avenue",
    "district_id": "district_west",
    "display_name": "Ontong family",
    "kit": "cottage",
    "position": [
-    238.0,
-    1013.85
+    115.97,
+    1010.98
    ],
    "facing": "north",
    "plot_size": [
@@ -321,18 +321,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_5_8"
+   "real_id": "h_0_5_99"
   },
   {
    "id": "kalk_h10",
    "number": 1,
-   "street": "Bering",
+   "street": "Capricorn Road",
    "district_id": "district_west",
    "display_name": "Plaatjies family",
    "kit": "cottage",
    "position": [
-    124.33,
-    1019.58
+    245.77,
+    1007.58
    ],
    "facing": "north",
    "plot_size": [
@@ -357,18 +357,18 @@
     "tree": true,
     "gate": true
    },
-   "real_id": "h_0_5_28"
+   "real_id": "h_1_5_25"
   },
   {
    "id": "kalk_h11",
    "number": 16,
-   "street": "Capricorn Road",
+   "street": "Park Avenue",
    "district_id": "district_west",
    "display_name": "Rossouw family",
    "kit": "double_semi",
    "position": [
-    210.93,
-    1041.15
+    162.4,
+    1050.73
    ],
    "facing": "south",
    "plot_size": [
@@ -393,7 +393,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_5_87"
+   "real_id": "h_0_5_17"
   },
   {
    "id": "kalk_h12",
@@ -403,8 +403,8 @@
    "display_name": "Bailey family",
    "kit": "single_gable",
    "position": [
-    115.97,
-    1010.98
+    151.72,
+    1050.67
    ],
    "facing": "south",
    "plot_size": [
@@ -429,18 +429,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_0_5_99"
+   "real_id": "h_0_5_97"
   },
   {
    "id": "kalk_h13",
    "number": 12,
-   "street": "Capricorn Road",
+   "street": "Bering",
    "district_id": "district_west",
    "display_name": "Domingo family",
    "kit": "single_gable",
    "position": [
-    245.77,
-    1007.58
+    112.83,
+    1020.08
    ],
    "facing": "south",
    "plot_size": [
@@ -465,18 +465,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_5_25"
+   "real_id": "h_0_5_112"
   },
   {
    "id": "kalk_h14",
    "number": 10,
-   "street": "Park Avenue",
+   "street": "Bering",
    "district_id": "district_west",
    "display_name": "Kleinsmidt family",
    "kit": "cottage",
    "position": [
-    162.4,
-    1050.73
+    104.92,
+    1004.05
    ],
    "facing": "south",
    "plot_size": [
@@ -501,7 +501,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_5_17"
+   "real_id": "h_0_5_24"
   },
   {
    "id": "kalk_h15",
@@ -511,8 +511,8 @@
    "display_name": "Hendricks family",
    "kit": "double_semi",
    "position": [
-    151.72,
-    1050.67
+    174.15,
+    1059.45
    ],
    "facing": "south",
    "plot_size": [
@@ -537,18 +537,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_5_97"
+   "real_id": "h_0_5_46"
   },
   {
    "id": "kalk_h16",
    "number": 6,
-   "street": "Bering",
+   "street": "Park Avenue",
    "district_id": "district_west",
    "display_name": "Esau family",
    "kit": "single_gable",
    "position": [
-    112.83,
-    1020.08
+    217.22,
+    1052.65
    ],
    "facing": "south",
    "plot_size": [
@@ -573,18 +573,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_5_112"
+   "real_id": "h_1_5_115"
   },
   {
    "id": "kalk_h17",
    "number": 4,
-   "street": "Bering",
+   "street": "Capricorn Road",
    "district_id": "district_west",
    "display_name": "September family",
    "kit": "single_gable",
    "position": [
-    104.92,
-    1004.05
+    262.44,
+    996.69
    ],
    "facing": "south",
    "plot_size": [
@@ -609,18 +609,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_5_24"
+   "real_id": "h_1_4_20"
   },
   {
    "id": "kalk_h18",
    "number": 2,
-   "street": "Park Avenue",
+   "street": "Bering",
    "district_id": "district_west",
    "display_name": "Plaatjies family",
    "kit": "cottage",
    "position": [
-    120.99,
-    927.05
+    135.35,
+    1051.3
    ],
    "facing": "south",
    "plot_size": [
@@ -647,18 +647,18 @@
     "tree": true,
     "gate": true
    },
-   "real_id": "h_0_4_42"
+   "real_id": "h_0_5_6"
   },
   {
    "id": "kalk_h19",
-   "number": 12,
-   "street": "Park Avenue",
+   "number": 8,
+   "street": "Aegean",
    "district_id": "district_west",
    "display_name": "Mentoor family",
    "kit": "row_house",
    "position": [
-    174.15,
-    1059.45
+    165.22,
+    1064.5
    ],
    "facing": "west",
    "plot_size": [
@@ -683,7 +683,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_0_5_46"
+   "real_id": "h_0_5_19"
   },
   {
    "id": "kalk_h20",
@@ -693,8 +693,8 @@
    "display_name": "Ma Lena's smokkie",
    "kit": "row_house",
    "position": [
-    232.9,
-    1040.22
+    247.67,
+    1036.22
    ],
    "facing": "west",
    "plot_size": [
@@ -719,18 +719,18 @@
     "tree": true,
     "gate": false
    },
-   "real_id": "h_1_5_48"
+   "real_id": "h_1_5_34"
   },
   {
    "id": "kalk_h21",
    "number": 4,
-   "street": "Libra Close",
+   "street": "Park Avenue",
    "district_id": "district_west",
    "display_name": "Cloete family",
    "kit": "row_house",
    "position": [
-    228.43,
-    1044.58
+    184.7,
+    1068.42
    ],
    "facing": "west",
    "plot_size": [
@@ -755,18 +755,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_5_60"
+   "real_id": "h_0_5_76"
   },
   {
    "id": "kalk_h22",
    "number": 2,
-   "street": "Capricorn Road",
+   "street": "Libra Close",
    "district_id": "district_west",
    "display_name": "January family",
    "kit": "row_house",
    "position": [
-    255.7,
-    1008.12
+    240.1,
+    1045.45
    ],
    "facing": "west",
    "plot_size": [
@@ -791,7 +791,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_5_52"
+   "real_id": "h_1_5_27"
   }
  ]
 }

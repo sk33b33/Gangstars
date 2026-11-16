@@ -225,8 +225,8 @@
    "display_name": "Booysen family",
    "kit": "row_house",
    "position": [
-    214.13,
-    -455.13
+    258.35,
+    -442.3
    ],
    "facing": "north",
    "plot_size": [
@@ -251,18 +251,18 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_-3_32"
+   "real_id": "h_1_-3_18"
   },
   {
    "id": "rooi_h08",
    "number": 15,
-   "street": "Saaier Close",
+   "street": "Ranger Close",
    "district_id": "district_east",
    "display_name": "Witbooi family",
    "kit": "row_house",
    "position": [
-    258.35,
-    -442.3
+    244.45,
+    -505.1
    ],
    "facing": "north",
    "plot_size": [
@@ -287,7 +287,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_18"
+   "real_id": "h_1_-3_66"
   },
   {
    "id": "rooi_h09",
@@ -297,8 +297,8 @@
    "display_name": "Booysen family",
    "kit": "row_house",
    "position": [
-    221.4,
-    -441.9
+    209.54,
+    -494.12
    ],
    "facing": "north",
    "plot_size": [
@@ -323,18 +323,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_62"
+   "real_id": "h_1_-3_34"
   },
   {
    "id": "rooi_h10",
    "number": 19,
-   "street": "Ranger Close",
+   "street": "Baker Close",
    "district_id": "district_east",
    "display_name": "Lottering family",
    "kit": "row_house",
    "position": [
-    244.45,
-    -505.1
+    203.25,
+    -456.88
    ],
    "facing": "north",
    "plot_size": [
@@ -359,7 +359,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_-3_66"
+   "real_id": "h_1_-3_52"
   },
   {
    "id": "rooi_h11",
@@ -401,13 +401,13 @@
   {
    "id": "rooi_h12",
    "number": 4,
-   "street": "Saaier Close",
+   "street": "Baker Close",
    "district_id": "district_east",
    "display_name": "Van Wyk block",
    "kit": "flats",
    "position": [
-    209.54,
-    -494.12
+    195.83,
+    -467.82
    ],
    "facing": "south",
    "plot_size": [
@@ -433,18 +433,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_34"
+   "real_id": "h_0_-3_15"
   },
   {
    "id": "rooi_h13",
    "number": 6,
-   "street": "Baker Close",
+   "street": "Ranger Close",
    "district_id": "district_east",
    "display_name": "Hartnick block",
    "kit": "flats",
    "position": [
-    195.83,
-    -467.82
+    290.53,
+    -480.3
    ],
    "facing": "south",
    "plot_size": [
@@ -470,7 +470,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_-3_15"
+   "real_id": "h_1_-3_10"
   },
   {
    "id": "rooi_h14",
@@ -480,8 +480,8 @@
    "display_name": "Fortuin block",
    "kit": "flats",
    "position": [
-    290.53,
-    -480.3
+    283.4,
+    -502.3
    ],
    "facing": "south",
    "plot_size": [
@@ -508,7 +508,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_-3_10"
+   "real_id": "h_1_-3_38"
   },
   {
    "id": "rooi_h15",
@@ -518,8 +518,8 @@
    "display_name": "Jacobs family",
    "kit": "row_house",
    "position": [
-    203.25,
-    -456.88
+    208.83,
+    -442.08
    ],
    "facing": "north",
    "plot_size": [
@@ -544,7 +544,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_52"
+   "real_id": "h_1_-3_56"
   },
   {
    "id": "rooi_h16",
@@ -554,8 +554,8 @@
    "display_name": "Lottering family",
    "kit": "row_house",
    "position": [
-    269.9,
-    -441.8
+    278.6,
+    -493.67
    ],
    "facing": "north",
    "plot_size": [
@@ -580,18 +580,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_44"
+   "real_id": "h_1_-3_6"
   },
   {
    "id": "rooi_h17",
-   "number": 8,
+   "number": 6,
    "street": "Baker Close",
    "district_id": "district_east",
    "display_name": "Doreen's smokkie",
    "kit": "row_house",
    "position": [
-    208.83,
-    -442.08
+    196.8,
+    -452.55
    ],
    "facing": "north",
    "plot_size": [
@@ -616,18 +616,18 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_1_-3_56"
+   "real_id": "h_0_-3_53"
   },
   {
    "id": "rooi_h18",
-   "number": 10,
-   "street": "Ranger Close",
+   "number": 8,
+   "street": "Baker Close",
    "district_id": "district_east",
    "display_name": "Maans family",
    "kit": "row_house",
    "position": [
-    278.6,
-    -493.67
+    199.9,
+    -445.48
    ],
    "facing": "south",
    "plot_size": [
@@ -652,7 +652,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_1_-3_6"
+   "real_id": "h_0_-3_46"
   },
   {
    "id": "rooi_h19",
@@ -662,8 +662,8 @@
    "display_name": "Maans family",
    "kit": "row_house",
    "position": [
-    196.8,
-    -452.55
+    204.82,
+    -432.9
    ],
    "facing": "south",
    "plot_size": [
@@ -688,7 +688,7 @@
     "tree": false,
     "gate": false
    },
-   "real_id": "h_0_-3_53"
+   "real_id": "h_1_-3_29"
   },
   {
    "id": "rooi_h20",
@@ -698,8 +698,8 @@
    "display_name": "Damons family",
    "kit": "row_house",
    "position": [
-    199.9,
-    -445.48
+    186.15,
+    -482.0
    ],
    "facing": "south",
    "plot_size": [
@@ -724,7 +724,7 @@
     "tree": false,
     "gate": true
    },
-   "real_id": "h_0_-3_46"
+   "real_id": "h_0_-3_34"
   }
  ]
 }

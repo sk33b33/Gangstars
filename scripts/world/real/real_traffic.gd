@@ -28,8 +28,21 @@ func setup(p_world: RealWorld, p_player: Node3D, p_people: RealPopulation = null
 	_rng.seed = 20261115
 
 
+var enabled := true
+
+
+## Settings > Traffic: off removes every car and stops new ones.
+func set_enabled(on: bool) -> void:
+	enabled = on
+	visible = on
+	if not on:
+		for car in cars:
+			car.queue_free()
+		cars.clear()
+
+
 func _physics_process(delta: float) -> void:
-	if world == null:
+	if world == null or not enabled:
 		return
 	_accum += delta
 	if _accum >= 0.25:

@@ -8,7 +8,7 @@
  "street_name": "Westridge",
  "is_initially_unlocked": true,
  "bounds": [
-  -306,
+  -332,
   -279,
   -55,
   -25
@@ -17,40 +17,40 @@
   {
    "type": "cafe",
    "position": [
-    -195.86,
-    -65.4
+    -191.97,
+    -64.87
    ],
-   "yaw": 172.08
+   "yaw": 172.34
   },
   {
    "type": "bus_stop",
    "position": [
-    -158.64,
-    -109.72
+    -152.83,
+    -133.5
    ],
-   "yaw": 113.16
+   "yaw": -66.84
   },
   {
    "type": "bus_stop",
    "position": [
-    -221.92,
-    -175.24
+    -172.99,
+    -185.17
    ],
-   "yaw": -67.18
+   "yaw": -67.89
   },
   {
    "type": "court",
    "position": [
     -95.0,
-    -160.2
+    -161.4
    ],
    "yaw": 0.0
   },
   {
    "type": "park",
    "position": [
-    -103.4,
-    -180.6
+    -102.8,
+    -182.7
    ],
    "yaw": 0.0
   },
@@ -75,8 +75,8 @@
    "type": "crew_den",
    "id": "vipers_den",
    "position": [
-    -118.28,
-    -193.49
+    -120.17,
+    -198.12
    ],
    "tag": "STYLERS",
    "yaw": -67.76
@@ -97,8 +97,8 @@
    "name": "Westridge Cafe",
    "kind": "shop",
    "position": [
-    -195.09,
-    -70.95
+    -191.22,
+    -70.42
    ],
    "radius": 1.2,
    "map_label": "caf\u00e9"
@@ -108,8 +108,8 @@
    "name": "the Excelsior Street bus stop",
    "kind": "transit",
    "position": [
-    -156.89,
-    -110.46
+    -154.57,
+    -132.75
    ],
    "radius": 1.0,
    "map_label": "bus"
@@ -119,8 +119,8 @@
    "name": "the Rhone Way bus stop",
    "kind": "transit",
    "position": [
-    -223.67,
-    -174.5
+    -174.75,
+    -184.45
    ],
    "radius": 1.0,
    "map_label": "bus"
@@ -142,7 +142,7 @@
    "kind": "court",
    "position": [
     -95.0,
-    -160.2
+    -161.4
    ],
    "radius": 2.5,
    "map_label": "court"
@@ -152,8 +152,8 @@
    "name": "the park",
    "kind": "park",
    "position": [
-    -103.4,
-    -180.6
+    -102.8,
+    -182.7
    ],
    "radius": 3.0,
    "map_label": "park"
@@ -263,7 +263,7 @@
    "poi": "poi_court",
    "center": [
     -95.0,
-    -160.2
+    -161.4
    ],
    "half": [
     5.2,

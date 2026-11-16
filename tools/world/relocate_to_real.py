@@ -238,15 +238,18 @@ class Placer:
                 n = (-n[0], -n[1])
             walls.append((d, add(mid, mul(n, 1.2)), seg))
         for d, step, seg in sorted(walls, key=lambda w: w[0]):
-            box = [add(step, (-0.1, -0.1)), add(step, (0.1, -0.1)), add(step, (0.1, 0.1)), add(step, (-0.1, 0.1))]
-            if any(b is not home and inside(step, b["ring"]) for b in self.real.buildings_near(box)):
+            box = [add(step, (-2, -2)), add(step, (2, -2)), add(step, (2, 2)), add(step, (-2, 2))]
+            def hems(b):   # inside a neighbour, or in a gap too narrow to walk (the game's own rule)
+                r = b["ring"]
+                return inside(step, r) or min(seg_point_dist(step, r[k], r[(k + 1) % len(r)]) for k in range(len(r))) < 0.9
+            if any(b is not home and hems(b) for b in self.real.buildings_near(box)):
                 continue
-            if d > 40.0:
+            if d - seg[2] > 12.0:      # a true street front: the door is within 12 m of the pavement
                 return None
             return seg[3]
         return None
 
-    def street_spot(self, want, width, depth, max_r=320.0):
+    def street_spot(self, want, width, depth, max_r=260.0):
         """Clear ground beside a street, facing it; the nearest such spot to `want`."""
         best = None
         for s in self.real.segs:
@@ -271,7 +274,7 @@ class Placer:
                         best = (d, front, yaw, poly)
         return best
 
-    def open_spot(self, want, width, depth, max_r=420.0):
+    def open_spot(self, want, width, depth, max_r=260.0):
         """A clear axis-aligned rectangle on open ground (parks and pitches preferred)."""
         best = None
         step = 6.0
@@ -283,7 +286,7 @@ class Placer:
                 if d > max_r:
                     continue
                 kind = self.real.area_kind(c)
-                score = d + (0 if kind in ("park", "pitch", "playground", "dunes", "sports") else 140)
+                score = d + (0 if kind in ("park", "pitch", "playground", "dunes", "sports") else 60)
                 if best is not None and score >= best[0]:
                     continue
                 poly = centred_rect(c, 0.0, width, depth, 0.8)
@@ -348,7 +351,7 @@ def relocate(real, placer, did, old_name, new_name, anchor, description, reports
         if "size" in lm:
             w, d = lm["size"][0] + 2, lm["size"][1] + 2
         old = tuple(lm["position"])
-        want = add(anchor, mul(sub(old, old_centre), 1.2))
+        want = add(anchor, mul(sub(old, old_centre), 0.9))
         old_rot = OLD_ROT.get(lm.get("facing", "south"), 0.0)
         if mode == "street":
             got = placer.street_spot(want, w, d)

@@ -19,6 +19,7 @@ var bounds := Rect2()
 var story := {}
 var _has := {}
 var _outlines := {}
+var _chunks := {}
 var _road_lines := {}
 
 
@@ -62,8 +63,18 @@ func chunk_centre(key: Vector2i) -> Vector3:
 func load_chunk(key: Vector2i) -> Dictionary:
 	if not has_chunk(key):
 		return {}
-	var d: Variant = DataFiles.load_json("%sc_%d_%d.json" % [DIR, key.x, key.y])
-	return d if d is Dictionary else {}
+	if not _chunks.has(key):
+		var d: Variant = DataFiles.load_json("%sc_%d_%d.json" % [DIR, key.x, key.y])
+		_chunks[key] = d if d is Dictionary else {}
+	return _chunks[key]
+
+
+## Every street light in the suburb (from the data; the builder puts a pole at each).
+func all_lamps() -> PackedVector3Array:
+	var out := PackedVector3Array()
+	for key in chunk_keys:
+		out.append_array(RealChunkBuilder.lamp_points(load_chunk(key).get("roads", [])))
+	return out
 
 
 ## Building outlines of a chunk (cached): the navigation bake needs a chunk's neighbours too.
@@ -107,7 +118,9 @@ func house_front(house_id: String) -> Dictionary:
 	var index := int(parts[3])
 	if index < 0 or index >= rings.size():
 		return {}
-	return RealChunkBuilder.home_front(rings[index], around(key, "road_lines"), rings)
+	var all := around(key, "outlines")
+	var near := RealChunkBuilder.rings_near(rings[index], all, all.map(func(r): return RealChunkBuilder.ring_box(r)))
+	return RealChunkBuilder.home_front(rings[index], around(key, "road_lines"), near)
 
 
 func is_inside(pos: Vector3) -> bool:
