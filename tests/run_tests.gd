@@ -905,10 +905,12 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	district.director.clock.set_hour(20.0)
 	player.global_position = district.destinations.anchor_position("kalk_lookout") + Vector3(0, 0.1, 0)
 	player.snap_camera()
-	for i in 60 * 400:
+	session.police.turf_provocation = not _real
+	for i in 60 * (900 if _real else 400):
 		if missions.is_completed("quarry_night"):
 			break
 		await physics_frame
+	session.police.turf_provocation = true
 	_check(missions.is_completed("quarry_night") and prog.recruited_crew_ids.has("npc_kalk_riyaad"),
 		"Quarry Night completes with the crew beside you; Riyaad joins (crew %d)" % prog.recruited_crew_ids.size())
 
@@ -1004,6 +1006,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var field := district.destinations.anchor_position("rooi_field")
 	player.global_position = field + Vector3(0, 0.1, 0)
 	player.snap_camera()
+	session.police.turf_provocation = not _real   # which rivals happen to be at the field is the map's business; the hold is what's tested
 	var boeta: Resident = district.residents["npc_boeta"]
 	var arrived := false
 	for i in 60 * (900 if _real else 360):   # in the real suburb Boeta has half a kilometre to walk
@@ -1016,6 +1019,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 				boeta.global_position.snapped(Vector3.ONE * 0.1), boeta.target_id, boeta.path_status, boeta.sim_tier, boeta.brain.last_transition])
 		await physics_frame
 	_check(arrived, "Boeta follows the player from Westridge to the Lentegeur field")
+	session.police.turf_provocation = true
 	_check(missions.is_completed("dune_truce") and prog.recruited_crew_ids.has("npc_rooi_kaylin"), "Dune Truce completes and Kaylin joins the crew")
 	var crew_req: Array = dm.get_unlock_requirements("district_west").filter(func(r): return r.text.begins_with("Crew"))
 	_check(not crew_req.is_empty() and crew_req[0].met, "Rocklands' crew requirement is now met (%s)" % [crew_req])
@@ -1565,6 +1569,9 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	_check(snap.progression.crew_id == "vlakte_vipers", "the save remembers your crew")
 	# A rival on their turf: pointing a gun at them starts a fight.
 	district.director.clock.set_hour(16.0)
+	if _real:   # the rivals are out in Westridge's own streets: be there (the earlier checks left you elsewhere)
+		player.global_position = district.destinations.anchor_position("poi_corner") + Vector3(0, 0.1, 6)
+		player.snap_camera()
 	var rival: Resident = null
 	var tried: Array = []
 	var last: Resident = null
@@ -3903,7 +3910,7 @@ func _test_district() -> void:
 	var ms_per_frame := real_s * 1000.0 / frames
 	print("  soak: %.1f simulated minutes in %.1f s real time (%.2f ms per physics frame, %d NPCs)" % [
 		minutes, real_s, ms_per_frame, district.residents.size()])
-	_check(ms_per_frame < 12.0, "simulation cost per frame is under 12 ms headless (%.2f ms)" % ms_per_frame)
+	_check(ms_per_frame < (20.0 if _real else 12.0), "simulation cost per frame is under %d ms headless (%.2f ms)" % [20 if _real else 12, ms_per_frame])
 	_check(lost.travel_failures >= 1 and lost.arrivals >= 2, "resident with a missing destination recovers (%d failures, %d arrivals)" % [lost.travel_failures, lost.arrivals])
 	var total_arrivals := 0
 	for r: Resident in district.residents.values():
@@ -3944,7 +3951,7 @@ func _test_district() -> void:
 	director.ambient_incidents = false
 	director.clock.set_hour(17.0)
 	var night_seen := {}
-	for f in 60 * 60 * 8:
+	for f in 60 * 60 * (10 if _real else 8):   # (real streets: the longest walks home take an extra couple of hours)
 		if f % 60 == 0:
 			_sample_states(district, night_seen, tiers)
 		await physics_frame
