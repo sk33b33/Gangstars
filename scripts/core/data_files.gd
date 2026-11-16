@@ -22,7 +22,7 @@ static func _initial_real_mode() -> bool:
 
 
 ## Which world a fresh install starts in.
-const REAL_DEFAULT := false
+const REAL_DEFAULT := true
 const REAL_OVERLAY := "res://data/real/"
 
 
