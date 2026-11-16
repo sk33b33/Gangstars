@@ -3918,7 +3918,7 @@ func _test_district() -> void:
 	print("  total arrivals: %d" % total_arrivals)
 	for r: Resident in district.residents.values():
 		# Real Westridge: walks are several times longer than in the old block, so fewer fit in the soak.
-		var need_trips := 1 if _real else (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5))
+		var need_trips := (0 if r.data.role in ["police", "crew"] else 1) if _real else (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5))   # (patrols and guards stand their post for longer than the 2-minute soak)
 		if not _args.has("verbose") and r.arrivals >= need_trips and r.teleport_violations == 0:
 			_passed += 3
 			continue
