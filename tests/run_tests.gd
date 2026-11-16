@@ -2421,7 +2421,23 @@ func _test_real_world_units() -> void:
 	var signs: Array = node.get_children().filter(func(c): return c.has_meta("street")).map(func(c): return str(c.get_meta("street")))
 	_check(signs.has("Excelsior Street"), "the piece has an Excelsior Street sign")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
+	var parts: Array = node.get_children().map(func(c): return str(c.name))
+	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \
+		and parts.any(func(n): return n.begins_with("Mesh_fascia")) and parts.has("Mesh_coping"),
+		"streets have kerbs and gutters; houses have plinth bands, fascias and window sills")
 	node.free()
+	# Roofs and road paint helpers.
+	var tilted := PackedVector2Array([Vector2(0, 0), Vector2(8, 6), Vector2(5, 10), Vector2(-3, 4)])   # an 10 x 5 m rectangle at an angle
+	var rect := RealChunkBuilder.min_rect(tilted)
+	_check(absf(float(rect.area) - 50.0) < 0.5 and absf((rect.half as Vector2).x - 5.0) < 0.05 and absf((rect.c as Vector2).distance_to(Vector2(2.5, 5.0))) < 0.05,
+		"a tilted house outline gets a roof rectangle that fits it (10 x 5 m, area %.1f)" % float(rect.area))
+	var bend := PackedVector2Array([Vector2(0, 0), Vector2(20, 0), Vector2(20, 20)])
+	var mid_part := RealChunkBuilder.sub_line(bend, 5.0, 30.0)
+	_check(mid_part.size() == 3 and mid_part[0].is_equal_approx(Vector2(5, 0)) and mid_part[2].is_equal_approx(Vector2(20, 10)),
+		"a road line can be cut to the part between 5 m and 30 m along it")
+	var side := RealChunkBuilder.offset_line(bend, 2.0)
+	_check(side[0].is_equal_approx(Vector2(0, 2)) and side[1].is_equal_approx(Vector2(18, 2)),
+		"an edge line runs beside the road line and turns its corners inside (%s)" % [side])
 
 
 func _test_real_world_streaming() -> void:

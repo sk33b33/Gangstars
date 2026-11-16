@@ -1,5 +1,16 @@
 # Changelog
 
+## Real Westridge: roads, walls and roofs (2026-11-16)
+- **Roads:** concrete kerbs and gutter channels along every street with a pavement; sun-bleached asphalt
+  (4 m texture with sealed cracks); yellow edge lines on main roads; warmer pavement slabs. Junctions close by
+  layering (a side street's asphalt covers the other street's kerb), so any angle works.
+- **Walls:** a darker painted plinth band at the foot of every building, concrete window sills, a parapet with a
+  concrete cap on flat roofs.
+- **Roofs:** houses whose outline is close to a rectangle (84%) get a pitched roof over their best-fitting rectangle,
+  hip or gable (gable ends in the wall paint), with eaves, fascia boards and soffits. Odd shapes keep a flat roof.
+- Screenshots: `docs/screenshots/rw_street_before.png`, `rw_street_after.png`, `rw_roofs_after.png`, `rw_main_road.png`.
+- 4 new checks; building one 200 m piece takes about 40 ms (budget 400 ms).
+
 ## Old districts removed; real Westridge is the only world (2026-11-16)
 - The game starts in the real Westridge. Lentegeur, Rocklands, Town Centre, Tafelsig and the old 30-house Westridge,
   their gates, traffic, ground and street builders, the "switch world" button and the old-world test branches are gone.

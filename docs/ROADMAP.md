@@ -191,5 +191,6 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 - [ ] Stage 4: remove Lentegeur, Rocklands, Town Centre, Tafelsig, the old Westridge and their code and tests; phone tuning; Windows build.
 The "rebuild the other suburbs" items above are dropped: only Westridge is built from now on.
 
+- Graphics pass 1 done (2026-11-16): kerbs, gutters, bleached asphalt, edge lines, plinths, sills, parapets, pitched hip/gable roofs. Next: fences and yard walls, driveways, litter and wear, stop lines at junctions.
 - Stage 4a done (2026-11-16): old districts and code removed. Still to do: phone tuning, Windows build (when asked), graphics (roads, walls, roofs, fences).
 - Stage 3 done (2026-11-16): the full suite passes against the real Westridge (1528/1528). The real Westridge is now the default world.

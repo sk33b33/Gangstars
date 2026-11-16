@@ -8,12 +8,39 @@ extends RefCounted
 const Y_AREA := 0.01
 const Y_PATH := 0.016
 const Y_PAVE := 0.02
+const Y_KERB := 0.023
+const Y_GUTTER := 0.027
 const Y_ROAD := 0.03
 const Y_PAINT := 0.04
 const WALL_PAINTS := ["#e8967a", "#a6d455", "#8fb8d8", "#f2e4b8", "#c3b0d8", "#ece9e2", "#f1d36b", "#9fd8b8", "#d9b38c", "#e6c7b0"]
 const AREA_COLORS := {"park": "#7fae55", "pitch": "#5c9a45", "playground": "#9bbf6a", "school": "#cdbfa5", "parking": "#77777d",
 	"dunes": "#cdb980", "retail": "#b7b2bd", "pool": "#5aa0d0", "sports": "#86b06a"}
 const PUBLIC_WALL := "#d9d4c8"
+## Roads: the kerb is a concrete strip just outside the carriageway, the gutter a darker concrete
+## channel just inside it. They are drawn as wider ribbons under the asphalt, so where a side street
+## opens into another its asphalt covers the other's kerb and gutter: junctions close by themselves.
+const KERB_WIDTH := 0.25
+const GUTTER_WIDTH := 0.35
+const KERB_COLOR := "#bdb8ad"
+const GUTTER_COLOR := "#8f8b83"
+const PAVE_TINT := "#e2dccd"
+const EDGE_LINE_COLOR := "#e3bd3a"
+## Main roads: yellow edge lines this far in from the edge, stopped short of the junctions.
+const EDGE_LINE_IN := 0.45
+const EDGE_LINE_TRIM := 6.0
+## Walls: a darker painted band at the foot (the Cape Flats "plinth" that hides splash-back dirt),
+## a fascia board and soffit under hip-roof eaves, a parapet with a concrete cap on flat roofs.
+const PLINTH_PAINTS := ["#5b5f66", "#7a3d33", "#3f5a48", "#8a7f70", "#6e5a4a"]
+const PLINTH_HEIGHT := 0.5
+const FASCIA_PAINTS := ["#ece9e2", "#4a3a30", "#2f3b4a"]
+const FASCIA_DEPTH := 0.2
+const EAVES := 0.35
+const PARAPET := 0.35
+const COPING_COLOR := "#cfcac0"
+const SILL_DEPTH := 0.12
+## A house gets a pitched roof over its best-fitting rectangle when its outline fills at least this
+## much of that rectangle; other outlines (L-shapes, odd traces) get a flat roof behind a parapet.
+const ROOF_FILL := 0.75
 
 
 ## Builds the chunk's node. `stats` (optional) receives counts for tests and the debug line.
@@ -192,6 +219,52 @@ static func ribbon(st: SurfaceTool, line: PackedVector2Array, width: float, y: f
 			_up(st, centre, centre + Vector3(cos(a0), 0, sin(a0)) * hw, centre + Vector3(cos(a1), 0, sin(a1)) * hw)
 
 
+## The polyline moved sideways by `d` (positive: to the left of the direction of travel), mitred like `ribbon`.
+static func offset_line(line: PackedVector2Array, d: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in line.size():
+		var dir_in := (line[i] - line[i - 1]).normalized() if i > 0 else (line[1] - line[0]).normalized()
+		var dir_out := (line[i + 1] - line[i]).normalized() if i < line.size() - 1 else dir_in
+		var tangent := (dir_in + dir_out).normalized()
+		if tangent.is_zero_approx():
+			tangent = dir_in
+		var normal := Vector2(-tangent.y, tangent.x)
+		out.append(line[i] + normal * d / maxf(0.35, normal.dot(Vector2(-dir_in.y, dir_in.x))))
+	return out
+
+
+## The part of a polyline between `from` and `to` metres along it.
+static func sub_line(line: PackedVector2Array, from: float, to: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	var walked := 0.0
+	for i in line.size() - 1:
+		var a := line[i]
+		var b := line[i + 1]
+		var seg := a.distance_to(b)
+		if seg <= 0.0:
+			continue
+		var t0 := clampf((from - walked) / seg, 0.0, 1.0)
+		var t1 := clampf((to - walked) / seg, 0.0, 1.0)
+		if t1 > t0:
+			var p0 := a.lerp(b, t0)
+			if out.is_empty() or not out[out.size() - 1].is_equal_approx(p0):
+				out.append(p0)
+			out.append(a.lerp(b, t1))
+		walked += seg
+	return out
+
+
+## A painted line: a ribbon without the round caps.
+static func strip(st: SurfaceTool, line: PackedVector2Array, width: float, y: float) -> void:
+	if line.size() < 2:
+		return
+	var l := offset_line(line, width * 0.5)
+	var r := offset_line(line, -width * 0.5)
+	for i in line.size() - 1:
+		_up(st, _v(l[i], y), _v(r[i], y), _v(r[i + 1], y))
+		_up(st, _v(l[i], y), _v(r[i + 1], y), _v(l[i + 1], y))
+
+
 static func _road(r: Dictionary, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
 	var line := _line(r.p)
 	if line.size() < 2:
@@ -202,9 +275,19 @@ static func _road(r: Dictionary, surfaces: Dictionary, materials: Dictionary, ro
 		ribbon(_tool("path", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color("#d6c7a8"))), line, width, Y_PATH)
 		return
 	var pave := float(r.get("s", 0.0))
+	var asphalt := PixelMaterials.surface("road_asphalt", Vector2(4, 4))
 	if pave > 0.0:
-		ribbon(_tool("pave", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(2, 2))), line, width + pave * 2.0, Y_PAVE)
-	ribbon(_tool("road", surfaces, materials, PixelMaterials.surface("road_asphalt", Vector2(2, 2))), line, width, Y_ROAD)
+		ribbon(_tool("pave", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(2, 2), Color(PAVE_TINT))), line, width + pave * 2.0, Y_PAVE)
+		ribbon(_tool("kerb", surfaces, materials, PixelMaterials.flat(Color(KERB_COLOR))), line, width + KERB_WIDTH * 2.0, Y_KERB)
+		ribbon(_tool("gutter", surfaces, materials, PixelMaterials.flat(Color(GUTTER_COLOR))), line, width, Y_GUTTER)
+		ribbon(_tool("road", surfaces, materials, asphalt), line, maxf(1.0, width - GUTTER_WIDTH * 2.0), Y_ROAD)
+	else:
+		ribbon(_tool("road", surfaces, materials, asphalt), line, width, Y_ROAD)
+	if cls == "main" and _length(line) > EDGE_LINE_TRIM * 2.0 + 4.0:
+		var yellow := _tool("edge_line", surfaces, materials, PixelMaterials.flat(Color(EDGE_LINE_COLOR)))
+		var inner := sub_line(line, EDGE_LINE_TRIM, _length(line) - EDGE_LINE_TRIM)
+		for side: float in [-1.0, 1.0]:
+			strip(yellow, offset_line(inner, side * (width * 0.5 - EDGE_LINE_IN)), 0.12, Y_PAINT)
 	if cls == "main" or cls == "collector":   # centre line dashes
 		var paint := _tool("paint", surfaces, materials, PixelMaterials.flat(Color("#f1eee8")))
 		for i in line.size() - 1:
@@ -271,30 +354,37 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 	var public := b.has("k")
 	var paint: String = PUBLIC_WALL if public else WALL_PAINTS[seed_value % WALL_PAINTS.size()]
 	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
+	var plinth_paint: String = PLINTH_PAINTS[(seed_value / 7) % PLINTH_PAINTS.size()]
+	var plinth := _tool("plinth_" + plinth_paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(plinth_paint)))
+	var area := absf(_signed_area(ring))
+	var rect := min_rect(ring)
+	var hip := not public and area < 420.0 and area / maxf(float(rect.area), 0.01) >= ROOF_FILL
+	var top := h if hip else h + PARAPET    # flat roofs hide behind a low parapet
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
 		var a := _v(p0, 0.0)
 		var c := _v(p1, 0.0)
-		var a1 := _v(p0, h)
-		var c1 := _v(p1, h)
 		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
-		_facing(walls, a, a1, c1, out)
-		_facing(walls, a, c1, c, out)
-		collision.append_array([a, a1, c1, a, c1, c])
+		_quad(walls, a, c, top, out)
+		collision.append_array([a, _v(p0, h), _v(p1, h), a, _v(p1, h), c])
+		var push := _wall_normal(p0, p1, out) * 0.02
+		_quad(plinth, _v(p0 + push, 0.0), _v(p1 + push, 0.0), PLINTH_HEIGHT, out)
+		if not hip:
+			_quad(walls, _v(p0, h + 0.05), _v(p1, h + 0.05), PARAPET - 0.05, -out)   # the parapet's inner face
 	var tiles := seed_value % 5 < 3
 	var roof := _tool("roof_tiles" if tiles else "roof_ibr", surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2)))
-	var area := absf(_signed_area(ring))
-	if not public and area < 420.0 and Geometry2D.is_polygon_clockwise(ring) == Geometry2D.is_polygon_clockwise(Geometry2D.convex_hull(ring)) and _is_convex(ring):
-		var apex := _v(centre, h + clampf(sqrt(area) * 0.12, 0.8, 1.8))
-		for i in ring.size():
-			var e0 := ring[i] + (ring[i] - centre).normalized() * 0.35   # eaves overhang
-			var e1 := ring[(i + 1) % ring.size()] + (ring[(i + 1) % ring.size()] - centre).normalized() * 0.35
-			_up(roof, _v(e0, h), apex, _v(e1, h))
+	if hip:
+		var fascia_paint: String = FASCIA_PAINTS[(seed_value / 11) % FASCIA_PAINTS.size()]
+		var fascia := _tool("fascia_" + fascia_paint, surfaces, materials, PixelMaterials.flat(Color(fascia_paint)))
+		_pitched_roof(roof, fascia, walls, rect, h, seed_value % 2 == 0)
 	else:
 		var idx := Geometry2D.triangulate_polygon(ring)
 		for i in range(0, idx.size(), 3):
 			_up(roof, _v(ring[idx[i]], h + 0.05), _v(ring[idx[i + 1]], h + 0.05), _v(ring[idx[i + 2]], h + 0.05))
+		var closed := ring.duplicate()
+		closed.append(ring[0])
+		strip(_tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))), closed, 0.3, top + 0.01)
 	var home: Variant = null
 	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
 		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door)
@@ -370,6 +460,7 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 	var best: int = front.index
 	var door := _tool("panel_door", surfaces, materials, PixelMaterials.panel("door_gate"))
 	var window := _tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
+	var sill := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
 	var anchor := Vector3.ZERO
 	for i in ring.size():
 		var p0 := ring[i]
@@ -387,9 +478,9 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 			anchor = Vector3(mid.x + normal.x * DOOR_OUT, 0.0, mid.y + normal.y * DOOR_OUT)
 			if length > 5.0:
 				for side in [-1.0, 1.0]:
-					_panel(window, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, 1.4, 1.0, top)
+					_window(window, sill, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, top)
 		elif length > 3.2:
-			_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+			_window(window, sill, mid, tangent, normal, top)
 	return {"at": anchor}
 
 
@@ -441,6 +532,18 @@ static func _distance_to_lines(p: Vector2, lines: Array) -> float:
 	return best
 
 
+## A barred window 1.4 m wide from 1.0 m up to `top`, with a concrete sill under it.
+static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float) -> void:
+	_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+	var a := mid - tangent * 0.8
+	var b := mid + tangent * 0.8
+	var a_out := a + normal * SILL_DEPTH
+	var b_out := b + normal * SILL_DEPTH
+	_up(sill, _v(a, 1.0), _v(a_out, 1.0), _v(b_out, 1.0))
+	_up(sill, _v(a, 1.0), _v(b_out, 1.0), _v(b, 1.0))
+	_quad(sill, _v(a_out, 0.92), _v(b_out, 0.92), 0.08, Vector3(normal.x, 0, normal.y))
+
+
 ## A textured rectangle on a wall: centred on `mid`, `width` along the wall, from y0 to y1, just proud of it.
 static func _panel(st: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, width: float, y0: float, y1: float) -> void:
 	var out := Vector3(normal.x, 0, normal.y)
@@ -457,6 +560,90 @@ static func _panel(st: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vect
 		for k in order:
 			st.set_uv(uvs[k])
 			st.add_vertex(corners[k])
+
+
+## The smallest rectangle around the outline: {c: centre, u: long axis, v: short axis,
+## half: Vector2(half length, half width), area}. Found by trying each edge of the convex hull.
+static func min_rect(ring: PackedVector2Array) -> Dictionary:
+	var hull := Geometry2D.convex_hull(ring)
+	var best := {"c": Vector2.ZERO, "u": Vector2.RIGHT, "v": Vector2.DOWN, "half": Vector2.ZERO, "area": INF}
+	for i in hull.size() - 1:
+		var u := (hull[i + 1] - hull[i]).normalized()
+		if u.is_zero_approx():
+			continue
+		var v := Vector2(-u.y, u.x)
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		for p in hull:
+			var q := Vector2(p.dot(u), p.dot(v))
+			lo = lo.min(q)
+			hi = hi.max(q)
+		var size := hi - lo
+		if size.x * size.y < float(best.area):
+			var mid := (lo + hi) * 0.5
+			best = {"c": u * mid.x + v * mid.y, "u": u, "v": v, "half": size * 0.5, "area": size.x * size.y}
+			if size.x < size.y:
+				best.u = v
+				best.v = -u
+				best.half = Vector2(size.y, size.x) * 0.5
+	return best
+
+
+## A pitched roof over the rectangle with eaves all round: a hip roof (sloping ends) or a gable roof
+## (painted triangular end walls). Fascia boards along the eaves, a soffit underneath.
+static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool) -> void:
+	var u: Vector2 = rect.u
+	var v: Vector2 = rect.v
+	var c: Vector2 = rect.c
+	var half: Vector2 = rect.half
+	var l := half.x + EAVES
+	var w := half.y + EAVES
+	var rise := clampf(half.y * 0.45, 0.8, 1.8)
+	var ridge := l if gable else maxf(0.0, l - w)
+	var corner := func(su: float, sv: float) -> Vector3: return _v(c + u * su * l + v * sv * w, h)
+	var top := func(su: float) -> Vector3: return _v(c + u * su * ridge, h + rise)
+	for sv: float in [-1.0, 1.0]:
+		var want := Vector3(v.x * sv, 1.0, v.y * sv)
+		_facing(roof, corner.call(-1.0, sv), corner.call(1.0, sv), top.call(1.0), want)
+		_facing(roof, corner.call(-1.0, sv), top.call(1.0), top.call(-1.0), want)
+	for su: float in [-1.0, 1.0]:
+		var out := Vector3(u.x * su, 0.0, u.y * su)
+		if gable:
+			var e := c + u * su * half.x   # the gable end: walls up to the roof's underside
+			var shoulder := h + rise * EAVES / w
+			var a0 := _v(e - v * half.y, h)
+			var b0 := _v(e + v * half.y, h)
+			var a1 := _v(e - v * half.y, shoulder)
+			var b1 := _v(e + v * half.y, shoulder)
+			_facing(walls, a0, b0, b1, out)
+			_facing(walls, a0, b1, a1, out)
+			_facing(walls, a1, b1, _v(e, h + rise), out)
+		else:
+			_facing(roof, corner.call(su, -1.0), corner.call(su, 1.0), top.call(su), out + Vector3.UP)
+	var low := h - FASCIA_DEPTH
+	var pts := [corner.call(-1.0, -1.0), corner.call(1.0, -1.0), corner.call(1.0, 1.0), corner.call(-1.0, 1.0)]
+	for i in 4:
+		var a: Vector3 = pts[i]
+		var b: Vector3 = pts[(i + 1) % 4]
+		var mid := (a + b) * 0.5 - _v(c, h)
+		_quad(fascia, a - Vector3(0, FASCIA_DEPTH, 0), b - Vector3(0, FASCIA_DEPTH, 0), FASCIA_DEPTH, mid)
+	var down := Vector3(0, -FASCIA_DEPTH, 0)
+	_facing(fascia, pts[0] + down, pts[1] + down, pts[2] + down, Vector3.DOWN)   # soffit
+	_facing(fascia, pts[0] + down, pts[2] + down, pts[3] + down, Vector3.DOWN)
+
+
+## A vertical wall face from a to c (both at ground height y), `height` tall, looking towards `out`.
+static func _quad(st: SurfaceTool, a: Vector3, c: Vector3, height: float, out: Vector3) -> void:
+	var up := Vector3(0, height, 0)
+	_facing(st, a, a + up, c + up, out)
+	_facing(st, a, c + up, c, out)
+
+
+## The unit normal of the wall p0-p1 on the side of `out`.
+static func _wall_normal(p0: Vector2, p1: Vector2, out: Vector3) -> Vector2:
+	var t := (p1 - p0).normalized()
+	var n := Vector2(-t.y, t.x)
+	return n if n.dot(Vector2(out.x, out.z)) >= 0.0 else -n
 
 
 static func _signed_area(ring: PackedVector2Array) -> float:

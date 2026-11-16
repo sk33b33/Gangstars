@@ -105,15 +105,20 @@ sprite("roof_ibr", { w: 32, h: 32 },
   px(5, 9, "R"), vline(5, 10, 5, "T"), px(21, 25, "R"), vline(21, 26, 4, "T"))
 
 // ------------------------------------------------------------------ ground
-sprite("road_asphalt", { w: 32, h: 32 },
-  rect(0, 0, 32, 32, "a"), noise(0, 0, 32, 32, "As", 0.12, 7),
-  line(4, 30, 11, 22, "A"), line(11, 22, 14, 23, "A"))       // one patched crack
+// Sun-bleached Cape Flats asphalt, 4 m tile: granular aggregate (so sparse speckle is justified)
+// and two cracks sealed with black tar (cause: maintenance crews pour sealant along cracks).
+pal({ "7": "#77746f", "8": "#68655f", "9": "#8a8781", "+": "#3a3836" })
+sprite("road_asphalt", { w: 64, h: 64 },
+  rect(0, 0, 64, 64, "7"), noise(0, 0, 64, 64, "89", 0.10, 7), noise(0, 0, 64, 64, "8", 0.05, 21),
+  line(6, 60, 14, 47, "+"), line(14, 47, 19, 45, "+"), line(19, 45, 22, 38, "+"),
+  line(41, 9, 47, 15, "+"), line(47, 15, 58, 17, "+"))
 
 // Sidewalk: 1 m square concrete slabs with expansion joints.
 sprite("sidewalk", { w: 32, h: 32 },
   rect(0, 0, 32, 32, "p"),
   hline(0, 0, 32, "P"), hline(0, 16, 32, "P"), vline(0, 0, 32, "P"), vline(16, 0, 32, "P"),
-  hline(1, 1, 15, "q"), hline(17, 17, 15, "q"), noise(0, 0, 32, 32, "P", 0.03, 3))
+  hline(1, 1, 15, "q"), hline(17, 17, 15, "q"),
+  line(20, 4, 26, 9, "P"))                                    // one cracked slab
 
 // Cape Flats sand: granular, so sparse speckle is justified.
 sprite("yard_sand", { w: 32, h: 32 },

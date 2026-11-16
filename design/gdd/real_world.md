@@ -39,11 +39,19 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
   steps and each piece belongs to the chunk its middle lies in, so no piece is drawn twice.
 
 ### Builder (`RealChunkBuilder`)
-- A road is a flat ribbon along its points, mitred at bends, with a round cap at both ends. Pavements are a wider
-  ribbon underneath, so junctions at any angle close without gaps. Main roads and collectors get centre dashes.
+- A road is a flat ribbon along its points, mitred at bends, with a round cap at both ends. Under it, from the top
+  down: a concrete gutter ribbon (the road's full width; the asphalt is `2 * GUTTER_WIDTH` narrower), a kerb ribbon
+  (`2 * KERB_WIDTH` wider) and the pavement (widest). Each layer sits a few millimetres lower, so where streets meet,
+  one street's asphalt covers the other's kerb and gutter and junctions at any angle close without gaps.
+  Main roads and collectors get centre dashes; main roads also get yellow edge lines `EDGE_LINE_IN` in from the
+  edge, stopped `EDGE_LINE_TRIM` short of each end (the ends are junctions).
 - Footpaths are narrow paved ribbons. Parks, pitches, school grounds, parking, dunes and the pool are flat coloured areas.
-- A building is walls on its outline up to its height plus a roof: a low hip roof for house-sized convex outlines,
-  flat otherwise. Paint and roof type are picked from the outline's position, so a house always looks the same.
+- A building is walls on its outline up to its height, a darker plinth band (`PLINTH_HEIGHT`) at the foot, and a roof.
+  A house (not public, under 420 m2) whose outline fills at least `ROOF_FILL` of its smallest surrounding rectangle
+  gets a pitched roof over that rectangle: hip or gable (gable ends painted like the walls), with `EAVES` overhang,
+  fascia boards and a soffit. Every other building gets a flat roof behind a `PARAPET` with a concrete cap.
+  Windows have concrete sills. Paint, plinth, fascia, roof material and hip/gable are picked from the outline's
+  position, so a house always looks the same.
 - Named streets get a sign every piece longer than 35 m; named buildings get a label.
 - Everything in a chunk is merged into one mesh per material and one collision body for the walls.
 
@@ -96,7 +104,11 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
   Example: a 6 m street turning 90 degrees: `3 / cos(45 deg)` = 4.2 m.
 - Default building height when the data has none: outline under 220 m2: 3.0 m; under 600 m2: 3.4 m; larger: 5.5 m;
   places of worship 7 m; schools, halls and the civic centre 6 m.
-- Hip roof rise: `clamp(0.12 * sqrt(area), 0.8, 1.8)` m.
+- Pitched roof rise: `clamp(0.45 * half_width, 0.8, 1.8)` m, where half_width is half the short side of the roof
+  rectangle. Example: a 7 m wide house: `0.45 * 3.5` = 1.6 m. Hip ridge length: `2 * max(0, half_length - half_width)`
+  (eaves included); a gable ridge runs the full length.
+- Smallest rectangle: for each edge of the convex hull, project the hull on that edge and its normal; keep the
+  smallest box. Fill = outline area / rectangle area.
 
 ## 5. Edge Cases
 
@@ -135,6 +147,11 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | sign and label ranges | builder | 70 m, 160 m | | How far names are readable |
 | `sim_radius` / `sim_margin` | `RealWorld` | 300 m (desktop), 220 m (touch) / 150 m | 150 to 500 / 60 to 300 | Where people and navigation exist; bake load |
 | `RealNav.CELL`, `AGENT_RADIUS`, `BORDER` | `RealNav` | 0.25, 0.5, 1.0 m | | Navigation detail and the gap people keep from walls |
+| `KERB_WIDTH` / `GUTTER_WIDTH` | builder | 0.25 / 0.35 m | 0.1 to 0.5 | Width of the kerb and gutter strips |
+| `EDGE_LINE_IN` / `EDGE_LINE_TRIM` | builder | 0.45 / 6 m | 0.2 to 1 / 3 to 12 | Where main-road edge lines run and stop |
+| `PLINTH_HEIGHT` / `PLINTH_PAINTS` | builder | 0.5 m / 5 colours | 0.3 to 0.9 | The painted band at the foot of walls |
+| `ROOF_FILL` | builder | 0.75 | 0.6 to 0.9 | Which outlines get a pitched roof (lower = more pitched roofs, worse fits) |
+| `EAVES` / `FASCIA_DEPTH` / `PARAPET` | builder | 0.35 / 0.2 / 0.35 m | | Roof overhang, fascia board, flat-roof parapet |
 | `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
 | `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
 | `max_cars` / `spawn_min` / `far_distance` | `RealTraffic` | 14 (touch: 6) / 70 m / 380 m | 0 to 40 | Traffic density |
@@ -160,4 +177,6 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
 13. The streets form a network with junctions; one-way streets are entered only the right way.
 14. Cars drive, never jump, stay on the road, keep left, never appear beside you, and stop for something in their lane.
 15. Freeing a chunk removes its homes, navigation, streets and residents.
+16. Streets have kerbs and gutters; houses have plinths, fascias and sills; a tilted outline gets a fitting roof
+    rectangle; road lines can be trimmed and offset for edge lines.
 (`_test_real_people_and_traffic`; run just these with `tests/run.sh --real-only`.)
