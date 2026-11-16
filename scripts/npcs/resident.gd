@@ -71,6 +71,7 @@ var near_nudges := 0
 var unsticks := 0
 var travel_time := 0.0
 var max_travel_time := 0.0
+var _trip_limit := MAX_TRIP_TIME
 
 var _think_accum := 0.0
 var _stuck_accum := 0.0
@@ -144,6 +145,7 @@ func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: f
 	_think_accum = fmod(think_offset, 0.5)
 	agent.max_speed = data.walk_speed * NpcBrain.FLEE_SPEED * 1.1
 	agent.velocity_computed.connect(_on_velocity_computed)
+	agent.path_search_max_polygons = RealNav.SEARCH_POLYGONS   # a walk across the whole suburb must not be cut short
 	model.build(data.shirt_color, data.pants_color, data.skin_color,
 		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0), data.appearance())
 	_arm()
@@ -458,13 +460,38 @@ func _on_velocity_computed(safe_velocity: Vector3) -> void:
 		_apply_velocity(safe_velocity)
 
 
+## Walking but getting nowhere (someone standing square in the way, a tight corner): after
+## BLOCKED_AFTER seconds, step round it for SIDESTEP_TIME, to the other side each time.
+const BLOCKED_AFTER := 0.7
+const SIDESTEP_TIME := 0.9
+const SIDESTEP_ANGLE := 1.2
+var _blocked_time := 0.0
+var _sidestep := 0.0
+var _sidestep_dir := 1.0
+var sidesteps := 0
+
+
 func _apply_velocity(v: Vector3) -> void:
 	var dt := get_physics_process_delta_time()
 	_frames_in_tier += 1
+	if _sidestep > 0.0:
+		_sidestep -= dt
+		v = v.rotated(Vector3.UP, SIDESTEP_ANGLE * _sidestep_dir)
+	var before := global_position
 	velocity.x = v.x
 	velocity.z = v.z
 	velocity.y = 0.0 if is_on_floor() else velocity.y - GRAVITY * dt
 	move_and_slide()
+	var want := Vector2(v.x, v.z).length()
+	if want > 0.5 and Vector2(global_position.x - before.x, global_position.z - before.z).length() < want * dt * 0.25:
+		_blocked_time += dt
+		if _blocked_time > BLOCKED_AFTER and _sidestep <= 0.0:
+			_blocked_time = 0.0
+			_sidestep = SIDESTEP_TIME
+			_sidestep_dir = -_sidestep_dir
+			sidesteps += 1
+	else:
+		_blocked_time = maxf(0.0, _blocked_time - dt)
 	_last_wall_normal = Vector3.ZERO
 	for i in get_slide_collision_count():
 		var n := get_slide_collision(i).get_normal()
@@ -530,7 +557,7 @@ func _think(dt: float) -> void:
 		if not agent.is_target_reachable():
 			_retry("unreachable")
 			return
-	if travel_time > MAX_TRIP_TIME:
+	if travel_time > _trip_limit:
 		travel_time = 0.0
 		_start_unstick()
 		_retry("trip too long")
@@ -633,6 +660,8 @@ func _go(dest: String) -> void:
 		face_point(_incident_pos)
 	if not _set_target(0.0):
 		_fail("destination unavailable")
+	else:   # a long walk gets the time it needs: twice the straight line at this walker's pace, and some
+		_trip_limit = maxf(MAX_TRIP_TIME, global_position.distance_to(agent.target_position) / maxf(0.5, data.walk_speed * _speed_mult) * 2.0 + 30.0)
 
 
 func _set_target(extra_jitter: float) -> bool:

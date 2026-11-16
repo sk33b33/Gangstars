@@ -351,7 +351,7 @@ static func home_front(ring: PackedVector2Array, near_roads: Array, rings: Array
 		for other: PackedVector2Array in rings:
 			if other == ring:
 				continue
-			if Geometry2D.is_point_in_polygon(step, other) or _distance_to_ring(step, other) < DOOR_CLEAR:
+			if point_in_ring(step, other) or _distance_to_ring(step, other) < DOOR_CLEAR:
 				hemmed = true   # inside a neighbour, or in a gap too narrow to walk
 				break
 		if not hemmed:
@@ -401,6 +401,19 @@ static func _distance_to_ring(p: Vector2, ring: PackedVector2Array) -> float:
 	for i in ring.size():
 		best = minf(best, p.distance_to(Geometry2D.get_closest_point_to_segment(p, ring[i], ring[(i + 1) % ring.size()])))
 	return best
+
+
+## Point-in-outline, by ray casting. (Geometry2D.is_point_in_polygon now and then answers true for
+## a point far outside the polygon, so it is not used for the map.)
+static func point_in_ring(p: Vector2, ring: PackedVector2Array) -> bool:
+	var hit := false
+	var n := ring.size()
+	for i in n:
+		var a := ring[i]
+		var b := ring[(i + 1) % n]
+		if (a.y > p.y) != (b.y > p.y) and p.x < (b.x - a.x) * (p.y - a.y) / (b.y - a.y) + a.x:
+			hit = not hit
+	return hit
 
 
 static func ring_box(ring: PackedVector2Array) -> Rect2:

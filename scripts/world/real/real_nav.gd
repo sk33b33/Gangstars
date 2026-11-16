@@ -44,8 +44,27 @@ static func source(key: Vector2i, chunk_size: float, outlines: Array) -> Navigat
 		var verts := PackedVector3Array()
 		for p in ring:
 			verts.append(Vector3(p.x, 0.0, p.y))
-		src.add_projected_obstruction(verts, -1.0, 4.0, true)
+		# carve = false: the outline is treated like a wall, so the bake keeps the agent radius clear
+		# of it. (Carved outlines ignore the radius: routes then squeeze through gaps under a metre.)
+		src.add_projected_obstruction(verts, -1.0, 4.0, false)
 	return src
+
+
+## The engine gives up a route search after 4,096 polygons by default; the whole suburb has about
+## 85,000, so a walk across it needs the limit lifted.
+const SEARCH_POLYGONS := 200000
+
+
+## A walking route between two points anywhere on the map (the plain map_get_path is cut short on long walks).
+static func long_path(map: RID, from: Vector3, to: Vector3) -> PackedVector3Array:
+	var params := NavigationPathQueryParameters3D.new()
+	params.map = map
+	params.start_position = from
+	params.target_position = to
+	params.path_search_max_polygons = SEARCH_POLYGONS
+	var result := NavigationPathQueryResult3D.new()
+	NavigationServer3D.query_path(params, result)
+	return result.path
 
 
 ## Bakes now (blocking) and returns the mesh.

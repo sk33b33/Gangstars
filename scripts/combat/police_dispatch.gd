@@ -219,6 +219,10 @@ func _provoke(r: Resident, line: String) -> void:
 # ------------------------------------------------------------------ bakkies
 
 func _update_bakkies(dt: float) -> void:
+	if district.real_traffic:   # the real streets: flashing lights while responding
+		for car: RealCar in district.real_traffic.police_cars():
+			if car.body:
+				VehicleLibrary.set_lights(car.body, responding, _time)
 	if district.traffic == null:
 		return
 	_siren_timer -= dt

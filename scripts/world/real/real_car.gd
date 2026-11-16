@@ -38,7 +38,7 @@ var _creep := 0.0
 const GIVE_WAY_AFTER := 5.0
 
 
-func setup(p_graph: RealRoadGraph, p_edge: int, p_from: Vector2i, seed_value: int, color: Color) -> void:
+func setup(p_graph: RealRoadGraph, p_edge: int, p_from: Vector2i, seed_value: int, color: Color, p_model := "") -> void:
 	sync_to_physics = false
 	graph = p_graph
 	rng.seed = seed_value
@@ -51,7 +51,7 @@ func setup(p_graph: RealRoadGraph, p_edge: int, p_from: Vector2i, seed_value: in
 	global_position = Vector3(start.x, 0.0, start.y)
 	rotation.y = atan2(ahead.x - start.x, ahead.y - start.y)
 	reset_physics_interpolation()
-	model = VehicleLibrary.civilian_for(str(seed_value)) if seed_value % 9 != 0 else "taxi"
+	model = p_model if not p_model.is_empty() else (VehicleLibrary.civilian_for(str(seed_value)) if seed_value % 9 != 0 else "taxi")
 	var car_length: float = VehicleLibrary.LENGTH.get(model, 4.0)
 	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, car_length, model)
 	VehicleLibrary.add_occupants(body)

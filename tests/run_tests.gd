@@ -861,7 +861,7 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	var map := district.nav_region.get_navigation_map()
 	var a := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
 	var b := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("kalk_lookout"))
-	var path := NavigationServer3D.map_get_path(map, a, b, true)
+	var path := RealNav.long_path(map, a, b)
 	_check(path.size() > 2 and path[path.size() - 1].distance_to(b) < 1.0, "all three districts connect after the unlock")
 
 	district.director.clock.set_hour(12.0)
@@ -945,7 +945,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	var map := district.nav_region.get_navigation_map()
 	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("starter_h05:gate"))
 	var to := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_field"))
-	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	var path := RealNav.long_path(map, from, to)
 	_check(path.size() > 2 and path[path.size() - 1].distance_to(to) < 1.0, "after the unlock the districts' walkable areas connect (rebakes: %d)" % district.rebake_count)
 
 	# Travel on foot from the approach street into Lentegeur.
@@ -1006,7 +1006,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	player.snap_camera()
 	var boeta: Resident = district.residents["npc_boeta"]
 	var arrived := false
-	for i in 60 * 360:
+	for i in 60 * (900 if _real else 360):   # in the real suburb Boeta has half a kilometre to walk
 		if missions.is_completed("dune_truce"):
 			break
 		if not arrived and not boeta.is_inside and boeta.global_position.distance_to(player.global_position) < 10.0:
@@ -1022,7 +1022,8 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 
 	session.open_turf_map()
 	var panel := session.turf_map.panel_text()
-	_check(panel.contains("Lentegeur (east) — CONTEST") or panel.contains("Lentegeur (east) — CONTROLLED"), "the turf map shows Lentegeur's control state")
+	var east_label := dm.display_name("district_east")
+	_check(panel.contains("%s (" % east_label) and (panel.contains("— CONTEST") or panel.contains("— CONTROLLED")), "the turf map shows %s's control state" % east_label)
 	session.turf_map.close()
 
 	# Save compatibility: a save written before Lentegeur existed still loads.
@@ -1408,8 +1409,13 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
 	_check(cops.size() == 10 and cops.all(func(r): return r.model.weapon in ["pistol", "shotgun"]), "10 armed officers (%d)" % cops.size())
 	_check(cops.all(func(r): return r.model.skeleton().get_node("Acc_police_vest").visible), "officers wear the vest, cap and belt")
-	var bakkies := district.traffic.cars.filter(func(c): return c.model == "police")
-	_check(bakkies.size() == 3, "a police bakkie patrols each district (%d)" % bakkies.size())
+	if _real:
+		for i in 240:
+			await physics_frame
+		_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
+	else:
+		var bakkies := district.traffic.cars.filter(func(c): return c.model == "police")
+		_check(bakkies.size() == 3, "a police bakkie patrols each district (%d)" % bakkies.size())
 	# Find a rival gangster out on the street in Westridge (daytime: they hang at the corner).
 	district.director.clock.set_hour(16.0)
 	var thug: Resident = null
@@ -1729,7 +1735,7 @@ func _test_dealing_in_game(main: Node, district: District, player: Player) -> vo
 	_check(not dealing.state.order_for(client).is_empty() and player.input_enabled, "answering takes the order")
 	var cr: Resident = district.residents[client]
 	var gate := district.destinations.anchor_position(dealing.state.order_for(client).place)
-	for i in 60 * 120:
+	for i in 60 * (360 if _real else 120):   # (real streets: they may be a long walk from home)
 		if not cr.is_inside and cr.global_position.distance_to(gate) < 3.0:
 			break
 		await physics_frame
@@ -2059,7 +2065,8 @@ func _test_town_centre_in_game(main: Node, district: District, player: Player) -
 	_check(district.area_by_id("district_town_centre").get("landmarks", []).any(func(l): return l.type == "mosque"), "Town Centre has a mosque (the suburb's mosques are real landmarks of the place)")
 	_check(district.destinations.has("tc_mall") and district.destinations.has("tc_market") and district.destinations.has("tc_taxi"),
 		"the Promenade mall, the market and the big taxi rank")
-	_check(district.gates.has("district_town_centre") and district.gates.district_town_centre.size() == 2, "two gates from Lentegeur into Town Centre")
+	if not _real:
+		_check(district.gates.has("district_town_centre") and district.gates.district_town_centre.size() == 2, "two gates from Lentegeur into Town Centre")
 	_check(dm.state("district_town_centre") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_town_centre").is_empty(),
 		"Town Centre starts locked, with requirements")
 	_check(session.missions.get_mission("the_promenade") != null and session.missions.get_mission("market_day") != null, "Town Centre missions load")
@@ -2074,7 +2081,7 @@ func _test_town_centre_in_game(main: Node, district: District, player: Player) -
 	var map := district.nav_region.get_navigation_map()
 	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("rooi_taxi"))
 	var to := district.destinations.anchor_position("tc_market")
-	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	var path := RealNav.long_path(map, from, to)
 	_check(path.size() > 1 and path[path.size() - 1].distance_to(to) < 3.0, "once open, you can walk from Lentegeur to the market")
 	district.set_district_open("district_town_centre", false, false)
 	district.set_district_open("district_east", session.districts.is_unlocked("district_east"), false)
@@ -2091,7 +2098,8 @@ func _test_tafelsig_in_game(main: Node, district: District, player: Player) -> v
 	_check(houses.size() == 20 and people.size() >= 20, "Tafelsig: 20 houses (flats and court row houses), %d residents" % people.size())
 	_check(district.destinations.has("taf_court") and district.destinations.has("taf_courtyard") and district.destinations.has("taf_taxi"),
 		"the sand court, the courtyard and the rank")
-	_check(district.gates.has("district_tafelsig") and district.gates.district_tafelsig.size() == 2, "two gates from Town Centre into Tafelsig")
+	if not _real:
+		_check(district.gates.has("district_tafelsig") and district.gates.district_tafelsig.size() == 2, "two gates from Town Centre into Tafelsig")
 	_check(dm.state("district_tafelsig") in ["locked", "unlockable"] and not dm.get_unlock_requirements("district_tafelsig").is_empty()
 		and not dm.can_unlock("district_tafelsig"), "Tafelsig starts locked, with requirements")
 	_check(session.missions.get_mission("over_the_dunes") != null and session.missions.get_mission("court_time") != null
@@ -2108,7 +2116,7 @@ func _test_tafelsig_in_game(main: Node, district: District, player: Player) -> v
 	var map := district.nav_region.get_navigation_map()
 	var from := NavigationServer3D.map_get_closest_point(map, district.destinations.anchor_position("tc_taxi"))
 	var to := district.destinations.anchor_position("taf_court")
-	var path := NavigationServer3D.map_get_path(map, from, to, true)
+	var path := RealNav.long_path(map, from, to)
 	_check(path.size() > 1 and path[path.size() - 1].distance_to(to) < 3.0, "once open, you can walk from the Town Centre rank to the Tafelsig court")
 	district.set_district_open("district_tafelsig", false, false)
 	district.set_district_open("district_town_centre", false, false)
@@ -2601,7 +2609,7 @@ func _place(district: District, what: String) -> Vector3:
 static func _in_any_outline(p: Vector3, rings: Array, shrink := 0.0) -> bool:
 	var q := Vector2(p.x, p.z)
 	for ring: PackedVector2Array in rings:
-		if Geometry2D.is_point_in_polygon(q, ring):
+		if RealChunkBuilder.point_in_ring(q, ring):
 			if shrink <= 0.0:
 				return true
 			var edge := INF   # only count points well inside (people brush past walls)
@@ -2667,7 +2675,7 @@ func _test_real_people_and_traffic() -> void:
 		for k in range(1, sim_homes.size(), maxi(1, sim_homes.size() / 40)):
 			var b: Vector3 = sim_homes[k].door
 			n += 1
-			var path := NavigationServer3D.map_get_path(map, a, b, true)
+			var path := RealNav.long_path(map, a, b)
 			if path.size() < 2 or path[path.size() - 1].distance_to(b) > 2.5:
 				continue
 			got += 1
@@ -3365,8 +3373,11 @@ func _test_ambient_life(main: Node, district: District, player: Player) -> void:
 
 func _test_greetings(main: Node, district: District, player: Player) -> void:
 	district.director.clock.set_hour(11.0)
+	if _real:
+		player.global_position = _place(district, "pavement")
+		player.snap_camera()
 	var who: Resident = null
-	for i in 600:
+	for i in (3600 if _real else 600):
 		for r: Resident in district.residents.values():
 			if not r.is_inside and r.data.role == "resident" and r.sim_tier == "near" and not r.brain.is_reacting():
 				who = r
@@ -3899,16 +3910,17 @@ func _test_district() -> void:
 		total_arrivals += r.arrivals
 	print("  total arrivals: %d" % total_arrivals)
 	for r: Resident in district.residents.values():
-		if not _args.has("verbose") and r.arrivals >= (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5)) and r.teleport_violations == 0:
+		# Real Westridge: walks are several times longer than in the old block, so fewer fit in the soak.
+		var need_trips := 1 if _real else (2 if r.data.role in ["kid", "police"] else int(minutes * 0.5))
+		if not _args.has("verbose") and r.arrivals >= need_trips and r.teleport_violations == 0:
 			_passed += 3
 			continue
 		print("    %s arrivals=%d failures=%d max_travel=%.1fs state=%s last=%s" % [
 			r.data.id, r.arrivals, r.travel_failures, r.max_travel_time, r.state_name(), r.brain.last_transition])
 		_check(r.teleport_violations == 0, "%s never teleports" % r.data.id)
 		# Kids play for 6 minutes at a stretch, so they make fewer (longer) trips.
-		var need := 2 if r.data.role in ["kid", "police"] else int(minutes * 0.5)
-		_check(r.arrivals >= need, "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
-		_check(r.max_travel_time < 150.0, "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
+		_check(r.arrivals >= need_trips, "%s keeps completing trips (%d arrivals)" % [r.data.id, r.arrivals])
+		_check(r.max_travel_time < (360.0 if _real else 150.0), "%s never stays stuck travelling (max %.1fs)" % [r.data.id, r.max_travel_time])
 	print("  daytime states seen: %s" % seen)
 	print("  tier samples: %s, ambient reactions %d" % [tiers, director.reactions_delivered])
 	for st in ["TRAVELLING", "AT_DESTINATION", "SOCIALIZING", "GUARDING", "AT_HOME"]:

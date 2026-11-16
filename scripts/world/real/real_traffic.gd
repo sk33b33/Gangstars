@@ -62,6 +62,10 @@ func _tick() -> void:
 		spawn_one(origin)
 
 
+func police_cars() -> Array:
+	return cars.filter(func(c: RealCar): return c.model == "police")
+
+
 ## What a car must watch: the player, cars near it, people out on the street near it.
 func _blockers_for(car: RealCar) -> Array:
 	var out: Array = []
@@ -98,7 +102,9 @@ func spawn_one(origin: Vector3) -> RealCar:
 		var car := RealCar.new()
 		car.name = "RealCar_%d" % spawned_total
 		add_child(car)
-		car.setup(world.graph, id, from, _rng.randi(), Color(COLORS[_rng.randi() % COLORS.size()]))
+		# One SAPS bakkie is always somewhere on the streets around you.
+		var police := not cars.any(func(c: RealCar): return c.model == "police")
+		car.setup(world.graph, id, from, _rng.randi(), Color.WHITE if police else Color(COLORS[_rng.randi() % COLORS.size()]), "police" if police else "")
 		cars.append(car)
 		spawned_total += 1
 		return car

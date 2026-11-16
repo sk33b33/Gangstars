@@ -102,7 +102,7 @@
           "type": "talk_to",
           "target": "npc_rooi_spider",
           "allow_knock": true,
-          "text": "Talk to Spider at the Dune Cruisers' flats (8 Ranger Close)"
+          "text": "Talk to Spider at the Dune Cruisers' flats (8 Farrier Street)"
         },
         {
           "id": "hold",

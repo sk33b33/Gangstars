@@ -741,7 +741,7 @@ func reachability_report() -> Dictionary:
 		var from := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(house.entrance_id()))
 		for poi_id in pois:
 			var to := NavigationServer3D.map_get_closest_point(map, destinations.anchor_position(poi_id))
-			var path := NavigationServer3D.map_get_path(map, from, to, true)
+			var path := RealNav.long_path(map, from, to)
 			if path.size() >= 2 and path[path.size() - 1].distance_to(to) < 0.6:
 				report.ok += 1
 			else:

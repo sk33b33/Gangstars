@@ -124,7 +124,7 @@ func house_front(house_id: String) -> Dictionary:
 
 
 func is_inside(pos: Vector3) -> bool:
-	return Geometry2D.is_point_in_polygon(Vector2(pos.x, pos.z), boundary)
+	return RealChunkBuilder.point_in_ring(Vector2(pos.x, pos.z), boundary)
 
 
 func landmark(landmark_name: String) -> Dictionary:

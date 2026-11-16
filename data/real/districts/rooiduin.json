@@ -7,9 +7,9 @@
  "display_name": "Harvester",
  "street_name": "Harvester",
  "bounds": [
-  130,
-  -545,
-  331,
+  121,
+  -577,
+  348,
   -383
  ],
  "houses_file": "res://data/houses/rooiduin_houses.json",

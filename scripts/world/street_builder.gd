@@ -77,8 +77,7 @@ static func _build_landmark(root: Node3D, lm: Dictionary, pos: Vector3, destinat
 
 
 ## Real-world mode: no streets, walls or backdrop to build (the real map draws those). Landmarks
-## stand where the data says, turned by their `yaw` (degrees): each is built in its own frame, so
-## the anchors it registers are turned with it. Returns the outlines of everything solid that was
+## stand where the data says, turned by their `yaw` (degrees): each is built in its own frame. Returns the outlines of everything solid that was
 ## built (boxes), for the navigation to go round.
 static func build_real(root: Node3D, info: Dictionary, destinations: DestinationRegistry) -> Array:
 	var holder := Node3D.new()
@@ -93,7 +92,9 @@ static func build_real(root: Node3D, info: Dictionary, destinations: Destination
 		holder.add_child(pivot)
 		var local: Dictionary = lm.duplicate()
 		local.erase("facing")   # the pivot does the turning
-		_build_landmark(pivot, local, Vector3.ZERO, PivotRegistry.new(destinations, pivot))
+		# The landmarks that register anchors (police post, den, smokkie) work them out from their own
+		# node's place in the world, so the plain registry is right here.
+		_build_landmark(pivot, local, Vector3.ZERO, destinations)
 	for car in info.get("parked_cars", []):
 		if not car.get("drivable", false):
 			var cp := DataFiles.to_vec2(car.get("position"))

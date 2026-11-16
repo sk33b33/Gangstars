@@ -186,6 +186,10 @@ func police_watching(at: Vector3) -> bool:
 		for car: TrafficCar in district.traffic.cars:
 			if car.model == "police" and car.global_position.distance_to(at) < BAKKIE_SEE_RANGE:
 				return true
+	if district.real_traffic:
+		for car: RealCar in district.real_traffic.police_cars():
+			if car.global_position.distance_to(at) < BAKKIE_SEE_RANGE:
+				return true
 	return false
 
 

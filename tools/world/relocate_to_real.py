@@ -225,6 +225,8 @@ class Placer:
         """The street a real house faces: the one nearest the middle of a wall whose doorstep is on open
         ground (the same rule the game uses to put the front door). None if every wall is hemmed in."""
         ring = home["ring"]; c = home["c"]; walls = []
+        if any(o is not home and polys_overlap(ring, o["ring"]) for o in self.real.buildings_near(ring)):
+            return None      # outlines that overlap (a doubled or merged trace) box their doorsteps in
         for i in range(len(ring)):
             p0, p1 = ring[i], ring[(i + 1) % len(ring)]
             if dist(p0, p1) < 2.2:
@@ -246,8 +248,43 @@ class Placer:
                 continue
             if d - seg[2] > 12.0:      # a true street front: the door is within 12 m of the pavement
                 return None
+            home["_front"] = (step, seg)
             return seg[3]
         return None
+
+    def reaches_street(self, step, seg, reach=34.0, cell=0.6, clear=0.6):
+        """Can a person walk from the doorstep to its street? A flood fill over open ground (cells at
+        least `clear` from every outline) within `reach` of the doorstep."""
+        n = int(reach / cell)
+        box = [add(step, (-reach, -reach)), add(step, (reach, -reach)), add(step, (reach, reach)), add(step, (-reach, reach))]
+        near = self.real.buildings_near(box)
+        blocked = {}
+        def is_blocked(ix, iz):
+            key = (ix, iz)
+            if key not in blocked:
+                p = (step[0] + ix * cell, step[1] + iz * cell)
+                hit = False
+                for b in near:
+                    x0, z0, x1, z1 = b.setdefault("box", bbox(b["ring"]))
+                    if p[0] < x0 - clear or p[0] > x1 + clear or p[1] < z0 - clear or p[1] > z1 + clear:
+                        continue
+                    r = b["ring"]
+                    if inside(p, r) or min(seg_point_dist(p, r[k], r[(k + 1) % len(r)]) for k in range(len(r))) < clear:
+                        hit = True; break
+                blocked[key] = hit
+            return blocked[key]
+        seen = {(0, 0)}; todo = [(0, 0)]
+        while todo:
+            ix, iz = todo.pop()
+            p = (step[0] + ix * cell, step[1] + iz * cell)
+            if seg_point_dist(p, seg[0], seg[1]) < seg[5] + 0.5:
+                return True
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                k = (ix + dx, iz + dz)
+                if k in seen or abs(k[0]) > n or abs(k[1]) > n or is_blocked(*k):
+                    continue
+                seen.add(k); todo.append(k)
+        return False
 
     def street_spot(self, want, width, depth, max_r=260.0):
         """Clear ground beside a street, facing it; the nearest such spot to `want`."""
@@ -325,6 +362,10 @@ def relocate(real, placer, did, old_name, new_name, anchor, description, reports
                     continue
                 street = placer.front_street(b)
                 if street is None or (strict and street != h["street"]):
+                    continue
+                if "_reach" not in b:   # a courtyard or walled-in gap is no good: you could not walk out of it
+                    b["_reach"] = placer.reaches_street(*b["_front"])
+                if not b["_reach"]:
                     continue
                 pick = (b, street); break
             if pick:
