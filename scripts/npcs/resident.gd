@@ -746,7 +746,38 @@ func _retry(reason: String) -> void:
 		path_status = "repath %d (%s)" % [_repaths, reason]
 
 
+## Someone who has failed several trips in a row and is well away from the player, out of sight, is
+## put back at their own front door instead of being stuck for ever on an odd corner of the map.
+## A last resort (counted in `unseen_recoveries`), never done within sight or near the player.
+const UNSEEN_DISTANCE := 70.0
+const RECOVER_AFTER_FAILS := 3
+var unseen_recoveries := 0
+var _fail_streak := 0
+
+
+func _recover_unseen() -> bool:
+	var pl: Node3D = lookup.call("player") if lookup.is_valid() else null
+	if pl == null or global_position.distance_to(pl.global_position) < UNSEEN_DISTANCE or fight_target != null or spot_phase != "":
+		return false
+	var cam := get_viewport().get_camera_3d()
+	if cam and not cam.is_position_behind(global_position) and cam.global_position.distance_to(global_position) < 150.0:
+		return false   # might be in view: not now
+	_travelling = false
+	_fail_streak = 0
+	unseen_recoveries += 1
+	global_position = destinations.anchor_position(home_door_id)
+	_last_pos = global_position
+	reset_physics_interpolation()
+	_set_inside(true)
+	brain.recover_home()
+	path_status = "recovered at home"
+	return true
+
+
 func _fail(reason: String) -> void:
+	_fail_streak += 1
+	if _fail_streak >= RECOVER_AFTER_FAILS and brain.state in [NpcBrain.State.RETURNING_HOME, NpcBrain.State.UNAVAILABLE] and _recover_unseen():
+		return
 	_travelling = false
 	travel_failures += 1
 	path_status = "failed: " + reason
@@ -756,6 +787,7 @@ func _fail(reason: String) -> void:
 
 
 func _on_arrived() -> void:
+	_fail_streak = 0
 	_travelling = false
 	arrivals += 1
 	path_status = "arrived"

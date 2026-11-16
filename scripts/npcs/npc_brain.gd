@@ -350,6 +350,13 @@ func _start_entry(e: Dictionary, reason: String) -> Array:
 	return [{"cmd": "go", "destination": destination_id}]
 
 
+## Last resort for someone who cannot find a way home (see Resident._recover_unseen): they are home.
+func recover_home() -> void:
+	timer = DEFAULT_HOME_TIME
+	_failures = 0
+	_set_state(State.AT_HOME, "recovered at home (could not walk it)")
+
+
 func _return_home(reason: String) -> Array:
 	destination_id = HOME
 	activity = "walking home"

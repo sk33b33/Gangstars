@@ -1437,6 +1437,11 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 		if thug:
 			break
 		await physics_frame
+	if thug == null:
+		for r: Resident in district.residents.values():
+			if r.data.role == "crew" and not r.is_ally():
+				print("    rival %s %s inside=%s fight=%s area=%s tier=%s dormant=%s at %s target=%s status=%s" % [r.data.id, r.state_name(), r.is_inside, r.can_fight(), district.resident_district(r), r.sim_tier, r.dormant,
+					r.global_position.snapped(Vector3.ONE * 0.1), r.target_id, r.path_status])
 	_check(thug != null, "a rival gangster is out")
 	if thug == null:
 		return
@@ -3984,6 +3989,10 @@ func _test_district() -> void:
 			print("    still out at midnight: %s %s %s at %s path=%s target=%s tier=%s" % [r.data.id, r.state_name(), r.brain.last_transition,
 				r.global_position.snapped(Vector3.ONE * 0.1), r.path_status, r.target_id, r.sim_tier])
 	_check(residents_out == 0, "all residents are home by 01:00 (%d still out)" % residents_out)
+	var recovered := 0
+	for r: Resident in district.residents.values():
+		recovered += r.unseen_recoveries
+	_check(recovered <= 3, "almost nobody needed the out-of-sight rescue (%d)" % recovered)
 	_check(crew_out >= 1, "the crew is still out after midnight (%d)" % crew_out)
 	var tele := 0
 	var nudges := 0
@@ -3994,6 +4003,15 @@ func _test_district() -> void:
 		near_nudges += r.near_nudges
 	_check(tele == 0, "no teleports (>0.5 m in one frame) across day and night runs (%d)" % tele)
 	print("== phase 4 in game (missions, recruit, safehouse, save/load)")
+	if _args.has("only"):   # --only=combat|crews|...: just that in-game group, right after the crew choice (quick while debugging)
+		var only := str(_args.only)
+		if only == "combat":
+			await _test_combat_in_game(main, district, player)
+		elif only == "crews":
+			await _test_crews_in_game(main, district, player)
+		elif only == "dealing":
+			await _test_dealing_in_game(main, district, player)
+		return
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
 	await _test_turf_in_game(main, district, player)
