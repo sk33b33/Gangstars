@@ -21,6 +21,9 @@ var _has := {}
 var _outlines := {}
 var _chunks := {}
 var _road_lines := {}
+var _strips := {}
+var _fronts := {}
+var _yards := {}
 
 
 func load_meta() -> bool:
@@ -96,6 +99,75 @@ func road_lines(key: Vector2i) -> Array:
 				lines.append(RealChunkBuilder._line(r.p))
 		_road_lines[key] = lines
 	return _road_lines[key]
+
+
+## Street and footpath centre lines of a chunk with how far from the line a yard must stay: half the
+## width plus the pavement, but at most RealYards.PAVE_KEEP of it (a fence may stand on the back of a
+## wide pavement): [{line, reach}], cached.
+func road_strips(key: Vector2i) -> Array:
+	if not _strips.has(key):
+		var out: Array = []
+		for r in load_chunk(key).get("roads", []):
+			var line := RealChunkBuilder._line(r.p)
+			out.append({"line": line, "reach": float(r.w) * 0.5 + minf(float(r.get("s", 0.0)), RealYards.PAVE_KEEP), "box": RealChunkBuilder.ring_box(line)})
+		_strips[key] = out
+	return _strips[key]
+
+
+## The fronts of a chunk's homes: {building index: home_front}, cached.
+func home_fronts(key: Vector2i) -> Dictionary:
+	if not _fronts.has(key):
+		var fronts := {}
+		var all := around(key, "outlines")
+		var boxes: Array = all.map(func(r): return RealChunkBuilder.ring_box(r))
+		var roads := around(key, "road_lines")
+		var rings := outlines(key)
+		var buildings: Array = load_chunk(key).get("buildings", [])
+		for i in buildings.size():
+			if RealChunkBuilder.is_home(buildings[i], rings[i]):
+				var front := RealChunkBuilder.home_front(rings[i], roads, RealChunkBuilder.rings_near(rings[i], all, boxes))
+				if not front.is_empty():
+					fronts[i] = front
+		_fronts[key] = fronts
+	return _fronts[key]
+
+
+## Walk-out lanes of a chunk's homes: from the doorstep (1.2 m outside the front door) straight out
+## RealYards.LANE metres. No fence may cross another home's lane.
+func door_lanes(key: Vector2i) -> Array:
+	var out: Array = []
+	for f: Dictionary in home_fronts(key).values():
+		var step: Vector2 = f.mid + f.normal * RealChunkBuilder.DOOR_OUT
+		out.append(PackedVector2Array([step, step + f.normal * RealYards.LANE]))
+	return out
+
+
+## The yards of a chunk's homes: {building index: RealYards.plan}, cached.
+func yards(key: Vector2i) -> Dictionary:
+	if not _yards.has(key):
+		var out := {}
+		var all := around(key, "outlines")
+		var boxes: Array = all.map(func(r): return RealChunkBuilder.ring_box(r))
+		var strips := around(key, "road_strips")
+		var lanes := around(key, "door_lanes")
+		var rings := outlines(key)
+		var fronts := home_fronts(key)
+		for i: int in fronts:
+			var plan := RealYards.plan(rings[i], fronts[i], strips, RealChunkBuilder.rings_near(rings[i], all, boxes), lanes,
+				story.has("h_%d_%d_%d" % [key.x, key.y, i]), RealChunkBuilder.seed_of(rings[i]))
+			if not plan.is_empty():
+				out[i] = plan
+		_yards[key] = out
+	return _yards[key]
+
+
+## The fences of a chunk as thin outlines for the navigation bake.
+func fence_rings(key: Vector2i) -> Array:
+	var out: Array = []
+	for plan: Dictionary in yards(key).values():
+		for seg: Array in plan.segments:
+			out.append(RealYards.obstacle(seg[0], seg[1]))
+	return out
 
 
 ## `what` ("outlines" or "road_lines") of the chunk and its eight neighbours.

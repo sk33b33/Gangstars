@@ -1,5 +1,17 @@
 # Changelog
 
+## Real Westridge: fences and yard walls (2026-11-16)
+- About 1,800 homes get a front yard (`RealYards`): precast concrete panel walls, steel palisade between plaster
+  pillars, low plastered walls in the house's colour, or a low wall with palisade on top. A gate opening sits in line
+  with the front door; side walls run back to the house. About one yard in eight is left open.
+- Yards are worked out from the map data, so the 3D builder and the navigation agree: fences are solid, people walk
+  out through the gate, nobody walks through a fence (a new check that fails when fences are left out of navigation).
+- Fences never cross a building, a pavement, a footpath, a neighbour's doorstep or the way straight out of a
+  neighbour's front door (a neighbour's side wall had shut the Ranger Close family in; caught by the full suite,
+  now has its own check); the game's own houses keep their gate spot outside the fence and the yard dog inside.
+- The builder reuses the front doors the data already found (it no longer works them out twice).
+- 6 new checks. Screenshots `docs/screenshots/rw_fence_*.png`.
+
 ## Real Westridge: roads, walls and roofs (2026-11-16)
 - **Roads:** concrete kerbs and gutter channels along every street with a pavement; sun-bleached asphalt
   (4 m texture with sealed cracks); yellow edge lines on main roads; warmer pavement slabs. Junctions close by

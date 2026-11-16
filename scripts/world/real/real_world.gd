@@ -159,6 +159,7 @@ func _scan_nav(pos: Vector3) -> void:
 
 func _bake_nav(key: Vector2i) -> void:
 	var rings := data.around(key, "outlines")
+	rings.append_array(data.around(key, "fence_rings"))
 	rings.append_array(extra_obstacles)
 	if sync_nav:
 		_on_nav_baked(RealNav.bake(key, data.chunk_size, rings), key)
@@ -220,7 +221,7 @@ func load_chunk(key: Vector2i) -> void:
 		return
 	var stats := {}
 	var chunk := data.load_chunk(key)
-	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"))
+	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"), data.yards(key), data.home_fronts(key))
 	houses[key] = stats.get("houses", [])
 	for h in houses[key]:
 		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")

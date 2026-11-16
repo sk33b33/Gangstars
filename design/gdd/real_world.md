@@ -69,6 +69,24 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 - People may walk anywhere that is not a building (streets, pavements, open ground, parks). Keeping them to pavements
   and crossings is stage 3 work.
 
+### Yards (`RealYards`)
+- A home whose front wall is at least `MIN_WALL` long gets a front yard: a fence along the street side, parallel to
+  the front wall, with a `GATE` opening centred on the front door, and side walls from the fence back to the two
+  front corners of the house. About one yard in eight is left open (style "none").
+- Style, from the outline's position: precast concrete panels (1.5 m), steel palisade between plaster pillars (1.6 m),
+  a low plastered wall in the house's paint (1.0 m), or a 0.6 m wall with palisade on top (1.8 m). Posts at every end.
+- Depth: the deepest of `MAX_DEPTH`, `MAX_DEPTH - 0.2`, ... down to `MIN_DEPTH` at which the whole fence line keeps
+  `PAVE_GAP` clear of every street's pavement (only `PAVE_KEEP` of a wider pavement is kept; the rest joins the yard)
+  and of every footpath. No depth fits: no yard (the house fronts the pavement).
+- A fence piece is left out when it would cross another building, cross its own house anywhere but its ends, pass
+  within `DOOR_KEEP` of another home's doorstep, or cross another home's walk-out lane (from its doorstep `LANE`
+  metres straight out). A yard that would enclose another home's doorstep is not built at all.
+- The game's own homes (story homes): depth between `STORY_MIN_DEPTH` and `STORY_MAX_DEPTH` (their yard dog runs up
+  to 3.5 m out, their gate spot is 5 m out), the fence spans at least `STORY_HALF` either side of the door, and the
+  sides stay open.
+- Fences are solid (collision, both sides) and are obstacles in the navigation bake, so people walk out through the gate.
+- Worked out from the data only (`RealDistrictData.yards`), so the builder and the navigation bake always agree.
+
 ### Homes and places
 - A building that is not public and is 30 to 450 m2 is a home. Its front door is in the middle of the wall nearest a
   street, skipping a wall whose doorstep would be inside another outline. The door gets a door panel; long walls get windows.
@@ -121,6 +139,9 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
   Residents are only moved in after `RealWorld.nav_synced` says the map knows their chunk.
 - A car that reaches the edge of the loaded network with nowhere to go is marked lost and removed.
 - An outline that cannot be cut into triangles (self-crossing): its roof is skipped, the walls are still built.
+- A house too close to the street for a 2.2 m yard, or with a front wall under 4 m: no fence.
+- A neighbour's doorstep near a fence piece, or a neighbour's way straight out of their door crossing it: that piece
+  is dropped, so the neighbour can still get out (found when a neighbour's side wall shut a story family in).
 - Two outlines that overlap (merged or doubled houses in the source): both are built; they intersect harmlessly.
 - Moving faster than chunks build (driving): the queue is re-sorted from your new position every half second,
   so the nearest pieces always come first; far pieces already queued are dropped.
@@ -152,6 +173,11 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | `PLINTH_HEIGHT` / `PLINTH_PAINTS` | builder | 0.5 m / 5 colours | 0.3 to 0.9 | The painted band at the foot of walls |
 | `ROOF_FILL` | builder | 0.75 | 0.6 to 0.9 | Which outlines get a pitched roof (lower = more pitched roofs, worse fits) |
 | `EAVES` / `FASCIA_DEPTH` / `PARAPET` | builder | 0.35 / 0.2 / 0.35 m | | Roof overhang, fascia board, flat-roof parapet |
+| `KINDS` / `HEIGHTS` | `RealYards` | 4 styles + open (1 in 8) / 1.0 to 1.8 m | | Which fences appear and how tall |
+| `GATE` | `RealYards` | 2.0 m | 1.8 to 3 | Gate opening (people keep 0.6 m from fences: below 1.8 m nobody fits) |
+| `MIN_DEPTH` / `MAX_DEPTH` | `RealYards` | 2.2 / 4.5 m | 2.2 to 3 / 3 to 6 | How shallow / deep a front yard may be |
+| `PAVE_GAP` / `PAVE_KEEP` | `RealYards` | 0.3 / 1.5 m | 0 to 1 / 1 to 2.5 | How much pavement stays in front of a fence |
+| `DOOR_KEEP` / `LANE` / `MIN_WALL` | `RealYards` | 1.0 / 4.0 / 4.0 m | | Fences keep away from other doors and their way out; shortest front wall with a yard |
 | `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
 | `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
 | `max_cars` / `spawn_min` / `far_distance` | `RealTraffic` | 14 (touch: 6) / 70 m / 380 m | 0 to 40 | Traffic density |
@@ -177,6 +203,10 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
 13. The streets form a network with junctions; one-way streets are entered only the right way.
 14. Cars drive, never jump, stay on the road, keep left, never appear beside you, and stop for something in their lane.
 15. Freeing a chunk removes its homes, navigation, streets and residents.
+17. Many homes have a fence in all four styles; working out a piece's yards takes under 250 ms; a story home's fence
+    stands between its dog's yard and its gate spot; a fenced family walks out through the gate (aiming beyond the
+    fence, 90% get past it within a few metres) and no route passes through a fence; no fence crosses the way straight
+    out of any story family's front door.
 16. Streets have kerbs and gutters; houses have plinths, fascias and sills; a tilted outline gets a fitting roof
     rectangle; road lines can be trimmed and offset for edge lines.
 (`_test_real_people_and_traffic`; run just these with `tests/run.sh --real-only`.)

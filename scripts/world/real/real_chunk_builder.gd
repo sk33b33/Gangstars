@@ -48,7 +48,9 @@ const ROOF_FILL := 0.75
 ## street). `stats.houses` lists the homes: {id, door: Vector3 (1.2 m outside the door), area}.
 ## `story`: {house id: true} for homes that belong to the game's own families: they are built like
 ## any house but hang their own front door and are not offered to passers-by residents.
-static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}, near_outlines: Array = []) -> Node3D:
+## `yards`: {building index: RealYards.plan} (from RealDistrictData.yards); none when empty.
+## `fronts`: {building index: home_front} already worked out (RealDistrictData.home_fronts); found here when empty.
+static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near_roads: Array = [], story: Dictionary = {}, near_outlines: Array = [], yards: Dictionary = {}, fronts: Dictionary = {}) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Chunk_%d_%d" % [key.x, key.y]
 	var surfaces := {}      # material key -> SurfaceTool
@@ -74,11 +76,15 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 	var boxes: Array = rings.map(func(r): return ring_box(r))
 	for b in chunk.get("buildings", []):
 		var hid := "h_%d_%d_%d" % [key.x, key.y, n]
-		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, rings_near(_line(b.p), rings, boxes), not story.has(hid))
+		var known: Variant = fronts.get(n, {}) if not fronts.is_empty() else null
+		var door: Variant = _building(b, surfaces, materials, collision, root, near_roads, [] if known != null else rings_near(_line(b.p), rings, boxes), not story.has(hid), known)
 		if door != null and not story.has(hid):
 			houses.append({"id": hid, "door": door.at, "area": door.area})
+		if yards.has(n):
+			_yard(yards[n], seed_of(_line(b.p)), surfaces, materials, collision)
 		n += 1
 	stats["houses"] = houses
+	stats["yards"] = yards.size()
 	for k in surfaces:
 		var st: SurfaceTool = surfaces[k]
 		var mesh_instance := MeshInstance3D.new()
@@ -86,7 +92,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		st.generate_normals()
 		mesh_instance.mesh = st.commit()
 		mesh_instance.material_override = materials[k]
-		if not str(k).begins_with("wall") and not str(k).begins_with("roof") and str(k) != "steel":
+		if not str(k).begins_with("wall") and not str(k).begins_with("roof") and not str(k).begins_with("fence") and str(k) != "steel":
 			mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mesh_instance)
 	if not collision.is_empty():
@@ -94,6 +100,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		body.name = "Buildings"
 		var shape := ConcavePolygonShape3D.new()
 		shape.set_faces(collision)
+		shape.backface_collision = true   # fences are single faces: solid from both sides
 		var cs := CollisionShape3D.new()
 		cs.shape = shape
 		body.add_child(cs)
@@ -341,7 +348,7 @@ static func _v(p: Vector2, y: float) -> Vector3:
 ## convex outlines, flat otherwise). Paint and roof are picked from the outline's position, so a
 ## house always looks the same.
 ## Returns {at, area} for a home (its door anchor), or null for other buildings.
-static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D, near_roads: Array = [], rings: Array = [], own_door := true) -> Variant:
+static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, root: Node3D, near_roads: Array = [], rings: Array = [], own_door := true, known_front: Variant = null) -> Variant:
 	var ring := _line(b.p)
 	if ring.size() < 3:
 		return null
@@ -350,7 +357,7 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 	for p in ring:
 		centre += p
 	centre /= ring.size()
-	var seed_value := absi(int(centre.x * 13.0) * 7919 + int(centre.y * 17.0) * 104729)
+	var seed_value := seed_of(ring)
 	var public := b.has("k")
 	var paint: String = PUBLIC_WALL if public else WALL_PAINTS[seed_value % WALL_PAINTS.size()]
 	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
@@ -387,7 +394,7 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 		strip(_tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))), closed, 0.3, top + 0.01)
 	var home: Variant = null
 	if not public and area >= HOME_MIN_AREA and area <= HOME_MAX_AREA:
-		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door)
+		home = _front(ring, centre, h, near_roads, surfaces, materials, rings, own_door, known_front)
 		if home != null:
 			home["area"] = area
 	var building_name := str(b.get("n", ""))
@@ -453,8 +460,8 @@ static func home_front(ring: PackedVector2Array, near_roads: Array, rings: Array
 ## The house's front: a door in the middle of the front wall (see home_front), windows beside it
 ## and on the other long walls. `own_door` false leaves the doorway bare (a story home hangs its
 ## own door there). Returns {at: the point 1.2 m outside the door}, or null if no wall fits.
-static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roads: Array, surfaces: Dictionary, materials: Dictionary, rings: Array = [], own_door := true) -> Variant:
-	var front := home_front(ring, near_roads, rings)
+static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roads: Array, surfaces: Dictionary, materials: Dictionary, rings: Array = [], own_door := true, known_front: Variant = null) -> Variant:
+	var front: Dictionary = known_front if known_front != null else home_front(ring, near_roads, rings)
 	if front.is_empty():
 		return null
 	var best: int = front.index
@@ -630,6 +637,85 @@ static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: Surface
 	var down := Vector3(0, -FASCIA_DEPTH, 0)
 	_facing(fascia, pts[0] + down, pts[1] + down, pts[2] + down, Vector3.DOWN)   # soffit
 	_facing(fascia, pts[0] + down, pts[2] + down, pts[3] + down, Vector3.DOWN)
+
+
+## The number that picks a building's paint, roof and fence: from its outline's centre, so it never changes.
+static func seed_of(ring: PackedVector2Array) -> int:
+	var centre := Vector2.ZERO
+	for p in ring:
+		centre += p
+	centre /= ring.size()
+	return absi(int(centre.x * 13.0) * 7919 + int(centre.y * 17.0) * 104729)
+
+
+## True for an outline the builder treats as a home (not public, house-sized).
+static func is_home(b: Dictionary, ring: PackedVector2Array) -> bool:
+	if b.has("k") or ring.size() < 3:
+		return false
+	var area := absf(_signed_area(ring))
+	return area >= HOME_MIN_AREA and area <= HOME_MAX_AREA
+
+
+## A yard (RealYards.plan): fence pieces with posts at their ends and at the gate.
+## Precast concrete panels and steel palisade are textured panels; low walls are plastered in the house's paint.
+static func _yard(plan: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:
+	var kind := str(plan.kind)
+	var height := float(plan.height)
+	var paint: String = WALL_PAINTS[seed_value % WALL_PAINTS.size()]
+	var plaster := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
+	var coping := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
+	var post_tool := coping if kind == "precast" else plaster
+	for seg: Array in plan.segments:
+		var a: Vector2 = seg[0]
+		var b: Vector2 = seg[1]
+		match kind:
+			"precast":
+				_fence_panel(_tool("fence_precast", surfaces, materials, PixelMaterials.panel("fence_precast", Color.WHITE, true)), a, b, 0.0, height, 2.0)
+			"palisade":
+				_fence_panel(_tool("fence_palisade", surfaces, materials, PixelMaterials.panel("fence_palisade", Color.WHITE, true)), a, b, 0.0, height, 2.0)
+			"low_wall":
+				_low_wall(plaster, coping, a, b, height)
+			"wall_palisade":
+				_low_wall(plaster, coping, a, b, 0.6)
+				_fence_panel(_tool("fence_palisade", surfaces, materials, PixelMaterials.panel("fence_palisade", Color.WHITE, true)), a, b, 0.6, height, 2.0)
+		var a0 := _v(a, 0.0)
+		var b0 := _v(b, 0.0)
+		var a1 := _v(a, height)
+		var b1 := _v(b, height)
+		collision.append_array([a0, a1, b1, a0, b1, b0])
+	for p: Vector2 in plan.posts:
+		_post(post_tool, coping, p, height + 0.15)
+
+
+## A see-through fence panel from a to b, y0 to y1, its texture repeating every `tile` metres along it.
+static func _fence_panel(st: SurfaceTool, a: Vector2, b: Vector2, y0: float, y1: float, tile: float) -> void:
+	var u := a.distance_to(b) / tile
+	var corners := [_v(a, y0), _v(b, y0), _v(b, y1), _v(a, y1)]
+	var uvs := [Vector2(0, 1), Vector2(u, 1), Vector2(u, 0), Vector2(0, 0)]
+	for k: int in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[k])
+		st.add_vertex(corners[k])
+
+
+## A plastered wall 0.2 m thick from a to b with a concrete cap.
+static func _low_wall(plaster: SurfaceTool, coping: SurfaceTool, a: Vector2, b: Vector2, height: float) -> void:
+	var t := (b - a).normalized()
+	var side := Vector2(-t.y, t.x) * 0.1
+	_quad(plaster, _v(a + side, 0.0), _v(b + side, 0.0), height, _v(side, 0.0))
+	_quad(plaster, _v(a - side, 0.0), _v(b - side, 0.0), height, _v(-side, 0.0))
+	strip(coping, PackedVector2Array([a, b]), 0.26, height)
+
+
+## A square post 0.35 m wide with a concrete cap, turned to no particular direction (it is square).
+static func _post(st: SurfaceTool, cap: SurfaceTool, p: Vector2, height: float) -> void:
+	var r := 0.175
+	var c := [p + Vector2(-r, -r), p + Vector2(r, -r), p + Vector2(r, r), p + Vector2(-r, r)]
+	for i in 4:
+		var q0: Vector2 = c[i]
+		var q1: Vector2 = c[(i + 1) % 4]
+		_quad(st, _v(q0, 0.0), _v(q1, 0.0), height, _v((q0 + q1) * 0.5 - p, 0.0))
+	_up(cap, _v(c[0], height), _v(c[1], height), _v(c[2], height))
+	_up(cap, _v(c[0], height), _v(c[2], height), _v(c[3], height))
 
 
 ## A vertical wall face from a to c (both at ground height y), `height` tall, looking towards `out`.

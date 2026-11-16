@@ -2435,6 +2435,29 @@ func _test_real_world_units() -> void:
 	var mid_part := RealChunkBuilder.sub_line(bend, 5.0, 30.0)
 	_check(mid_part.size() == 3 and mid_part[0].is_equal_approx(Vector2(5, 0)) and mid_part[2].is_equal_approx(Vector2(20, 10)),
 		"a road line can be cut to the part between 5 m and 30 m along it")
+	# Yards: the game's own homes keep their gate spot (5 m out) outside the fence and the yard dog's run inside.
+	var ykey := data.chunk_at(Vector3(-150, 0, -128))
+	var yfronts := data.home_fronts(ykey)
+	var yrings := data.outlines(ykey)
+	var story_plan := {}
+	for i: int in yfronts:
+		story_plan = RealYards.plan(yrings[i], yfronts[i], data.around(ykey, "road_strips"), data.around(ykey, "outlines"), [], true, 1)
+		if not story_plan.is_empty():
+			break
+	_check(not story_plan.is_empty() and float(story_plan.depth) >= 3.8 and float(story_plan.depth) <= 4.4 and story_plan.segments.size() <= 2,
+		"a story home's fence stands between its dog's yard (3.5 m) and its gate spot (5 m), open at the sides (depth %.1f)" % float(story_plan.get("depth", 0.0)))
+	var fresh := RealDistrictData.new()
+	fresh.load_meta()
+	var ty := Time.get_ticks_usec()
+	var chunk_yards := fresh.yards(ykey)
+	var yard_ms := (Time.get_ticks_usec() - ty) / 1000.0
+	_check(yard_ms < 250.0, "working out a piece's yards from scratch is quick (budget 250 ms, took %.0f)" % yard_ms)
+	var built_stats := {}
+	var yard_node := RealChunkBuilder.build(ykey, data.load_chunk(ykey), built_stats, data.around(ykey, "road_lines"), {}, data.around(ykey, "outlines"), chunk_yards)
+	var yard_parts: Array = yard_node.get_children().map(func(c): return str(c.name))
+	_check(int(built_stats.yards) == chunk_yards.size() and chunk_yards.size() > 5 and yard_parts.any(func(n): return n.begins_with("Mesh_fence")),
+		"the Excelsior Street piece builds its yards' fences (%d yards)" % chunk_yards.size())
+	yard_node.free()
 	var side := RealChunkBuilder.offset_line(bend, 2.0)
 	_check(side[0].is_equal_approx(Vector2(0, 2)) and side[1].is_equal_approx(Vector2(18, 2)),
 		"an edge line runs beside the road line and turns its corners inside (%s)" % [side])
@@ -2579,6 +2602,49 @@ func _test_real_people_and_traffic() -> void:
 	print("  (starting homes with no way out: %d)" % pockets)
 	_check(reached >= tried * 0.85 and longest > 250.0, "walking routes join the homes, across several pieces (%d of %d reached, the furthest %.0f m away)" % [reached, tried, longest])
 	_check(through == 0, "the routes go round the buildings, never through one (%d bad points)" % through)
+	# Yards: many homes have a fence; the family walks out through the gate, never through a fence.
+	var yard_list: Array = []
+	var fences: Array = []
+	var fronted := 0
+	for key: Vector2i in world.nav_regions:
+		var plans := data.yards(key)
+		fronted += data.home_fronts(key).size()
+		for i: int in plans:
+			yard_list.append({"front": data.home_fronts(key)[i], "plan": plans[i]})
+		fences.append_array(data.fence_rings(key))
+	var kinds := {}
+	for y: Dictionary in yard_list:
+		kinds[y.plan.kind] = true
+	_check(yard_list.size() > fronted * 0.3 and kinds.size() == 4, "many homes have a front fence or wall (%d of %d), in all four styles (%s)" % [yard_list.size(), fronted, kinds.keys()])
+	var out_tried := 0
+	var out_ok := 0
+	var fence_hits := 0
+	for k in range(0, yard_list.size(), maxi(1, yard_list.size() / 40)):
+		var f: Dictionary = yard_list[k].front
+		var plan: Dictionary = yard_list[k].plan
+		var step: Vector2 = f.mid + f.normal * RealChunkBuilder.DOOR_OUT
+		var piece: Array = plan.segments[0]   # aim beyond the middle of a fence piece: a straight line would cross it
+		var outside: Vector2 = ((piece[0] as Vector2) + (piece[1] as Vector2)) * 0.5 + f.normal * 1.5
+		var a := Vector3(step.x, 0, step.y)
+		var b := Vector3(outside.x, 0, outside.y)
+		var on_nav := NavigationServer3D.map_get_closest_point(map, a)
+		if Vector2(on_nav.x, on_nav.z).distance_to(step) > 0.3:
+			continue   # a doorstep the bake could not reach (hemmed in by the next piece's outline)
+		out_tried += 1
+		var path := RealNav.long_path(map, a, b)
+		var length := 0.0
+		for i in path.size() - 1:
+			length += path[i].distance_to(path[i + 1])
+			for t in [0.25, 0.5, 0.75]:
+				var p := path[i].lerp(path[i + 1], t)
+				if fences.any(func(r): return RealChunkBuilder.point_in_ring(Vector2(p.x, p.z), r)):
+					fence_hits += 1
+		var end := path[path.size() - 1] if path.size() >= 2 else a
+		var beyond := (Vector2(end.x, end.z) - (plan.gate as Vector2)).dot(f.normal)   # past the fence line, on the street side
+		if beyond > 0.5 and length < float(plan.depth) + 12.0:
+			out_ok += 1
+	_check(out_tried >= 10 and out_ok >= out_tried * 0.9, "a fenced home's family walks out through its gate to the street (%d of %d get past the fence line within a few metres)" % [out_ok, out_tried])
+	_check(fence_hits == 0, "nobody's route passes through a fence (%d bad points)" % fence_hits)
 	# Residents.
 	var people := RealPopulation.new()
 	root.add_child(people)
@@ -2738,6 +2804,41 @@ func _test_real_homes_units() -> void:
 				bad_street.append("%s (%s)" % [h.id, h.street])
 	_check(homes == 102 and no_real.is_empty() and dup.is_empty(), "all %d families live in their own real house (%s %s)" % [homes, no_real, dup])
 	_check(bad_street.is_empty(), "every address is on a real street of Westridge (%s)" % [bad_street])
+	# Yards never block a family's way out: no fence crosses the walk-out line from their front door.
+	var keys := {}
+	var story_lanes := {}
+	for d in catalog.districts:
+		var f := str(d.get("data", ""))
+		if f.is_empty():
+			continue
+		var area: Dictionary = DataFiles.load_json(f)
+		for h in DataFiles.load_json(str(area.houses_file)).houses:
+			var front := data.house_front(str(h.real_id))
+			if front.is_empty():
+				continue
+			data.story[str(h.real_id)] = true
+			var step: Vector2 = front.mid + front.normal * RealChunkBuilder.DOOR_OUT
+			story_lanes[str(h.id)] = [step, step + front.normal * RealYards.LANE]
+			var parts := str(h.real_id).split("_")
+			keys[Vector2i(int(parts[1]), int(parts[2]))] = true
+	var blocked_doors := []
+	var fence_pieces := {}
+	for key: Vector2i in keys:
+		for dx in [-1, 0, 1]:
+			for dz in [-1, 0, 1]:
+				var k2: Vector2i = key + Vector2i(dx, dz)
+				if not fence_pieces.has(k2):
+					fence_pieces[k2] = data.fence_rings(k2)
+	for hid: String in story_lanes:
+		var lane: Array = story_lanes[hid]
+		for pieces: Array in fence_pieces.values():
+			for ring: PackedVector2Array in pieces:
+				var a := (ring[0] + ring[3]) * 0.5
+				var b := (ring[1] + ring[2]) * 0.5
+				# (a home's own front fence stops either side of its gate, so it never crosses its own lane)
+				if Geometry2D.segment_intersects_segment(a, b, lane[0], lane[1]) != null:
+					blocked_doors.append(hid)
+	_check(blocked_doors.is_empty(), "no fence crosses the way straight out of a family's front door (%s)" % [blocked_doors])
 
 
 func _test_real_map_units() -> void:
