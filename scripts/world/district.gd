@@ -202,6 +202,13 @@ func _build_real_world() -> void:
 					real.keep_nav[Vector2i(cx, cz)] = true
 
 
+## Game minutes per real second in the real Westridge. The old districts were a few hundred metres
+## across, so one real second per game minute (1.0) suited them; people now walk hundreds of metres
+## to the next shop, which at that rate would take hours of game time. 0.25 makes a day last 96
+## real minutes and a 500 m walk about an hour and a half of game time. (Tests set it back to 1.0.)
+static var real_clock_rate := 0.25
+
+
 ## Waits for the kept navigation to be baked and taken in by the map, then brings the world to life.
 func _await_real_navigation() -> void:
 	var started := Time.get_ticks_msec()
@@ -211,6 +218,7 @@ func _await_real_navigation() -> void:
 	if not real.keep_nav_ready():
 		push_error("Real-world navigation was not ready after 3 minutes; NPC movement may fail.")
 	destinations.navigation_map = get_world_3d().navigation_map
+	director.clock.minutes_per_second = real_clock_rate
 	_spawn_residents()
 	_spawn_vehicles()
 	dogs = DogPack.new()

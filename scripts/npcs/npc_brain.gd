@@ -299,6 +299,11 @@ func _any_entry_allowed() -> bool:
 	return false
 
 
+## Starts the pending call straight away (from any state); the commands for the resident to run.
+func take_call() -> Array:
+	return _go_to_next("called by the boss")
+
+
 func _go_to_next(reason := "") -> Array:
 	_current_event = {}
 	if not pending_event.is_empty():

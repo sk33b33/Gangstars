@@ -467,11 +467,15 @@ func _setup_audio() -> void:
 ## When the tracked objective needs the crew beside the player (a crew hold), every recruit
 ## who isn't already following is called over (a pending follow entry; recruits at home come out).
 func _call_crew_if_needed() -> void:
-	var m := missions.tracked_mission()
-	if m == null:
-		return
-	var o := missions.current_objective(m.id)
-	if str(o.get("type", "")) != "hold" or not bool(o.get("with_crew", false)):
+	# Any active mission whose current step is a hold "with your crew" calls them, tracked or not
+	# (with several missions running, the tracked one may be something else).
+	var wants_crew := false
+	for id in missions.active:
+		var o: Dictionary = missions.current_objective(str(id))
+		if str(o.get("type", "")) == "hold" and bool(o.get("with_crew", false)):
+			wants_crew = true
+			break
+	if not wants_crew:
 		return
 	for npc_id in progression.recruited_crew_ids:
 		var r: Resident = district.residents.get(npc_id)
@@ -486,6 +490,8 @@ func _call_crew_if_needed() -> void:
 			r.brain.timer = minf(r.brain.timer, 1.0)
 		elif r.brain.state in [NpcBrain.State.AT_DESTINATION, NpcBrain.State.SOCIALIZING, NpcBrain.State.GUARDING]:
 			r.brain.timer = 0.0
+		elif r.brain.state in [NpcBrain.State.TRAVELLING, NpcBrain.State.RETURNING_HOME] and r.global_position.distance_to(player.global_position) > 15.0:
+			r.take_call()   # on the way somewhere else (the walk across Westridge is long): turn round now
 
 
 ## Announces district changes as the player crosses into another area.

@@ -71,6 +71,7 @@ var near_nudges := 0
 var unsticks := 0
 var travel_time := 0.0
 var max_travel_time := 0.0
+var sim_tier_was_mid := false
 var _trip_limit := MAX_TRIP_TIME
 
 var _think_accum := 0.0
@@ -216,6 +217,14 @@ func set_tier(tier: String) -> void:
 		collision_mask &= ~(LAYER_NPCS | LAYER_VEHICLES)
 		_ghost_timer = GHOST_TIME
 	sim_tier = tier
+	# Mid-distance people have no avoidance (it is too costly for everyone), so two of them meeting
+	# in a narrow gap between houses would block each other for good: they walk through one another
+	# until they are near you again (people only ever block people, never walls or cars).
+	if tier == "mid":
+		collision_mask &= ~LAYER_NPCS
+	elif tier == "near" and sim_tier_was_mid:
+		_ghost_timer = GHOST_TIME   # collide with people again only once clear of them (no shoving apart)
+	sim_tier_was_mid = tier == "mid"
 	_update_avoidance()
 	if tier != "near":
 		_bubble.visible = false
@@ -377,7 +386,7 @@ func _physics_process(delta: float) -> void:
 			if _overlaps_body():
 				_ghost_timer = 0.5  # still inside someone: wait until we've walked clear
 			else:
-				collision_mask |= LAYER_NPCS | LAYER_VEHICLES
+				collision_mask |= LAYER_VEHICLES | (0 if sim_tier == "mid" else LAYER_NPCS)
 	var desired := Vector3.ZERO
 	if _unstick_timer > 0.0:
 		# Step clear of whatever we are wedged against, then resume the path.
@@ -600,6 +609,14 @@ func _door_blocked() -> bool:
 		_door_query.exclude = [get_rid()]
 	_door_query.transform = Transform3D(Basis(), destinations.anchor_position(home_door_id) + Vector3(0, 0.9, 0))
 	return not get_world_3d().direct_space_state.intersect_shape(_door_query, 1).is_empty()
+
+
+## The boss called while this person was walking somewhere else: drop that trip and go to them now.
+func take_call() -> void:
+	if brain.pending_event.is_empty():
+		return
+	for cmd in brain.take_call():
+		_run(cmd)
 
 
 func _run(cmd: Dictionary) -> void:

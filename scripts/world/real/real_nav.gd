@@ -6,7 +6,7 @@ extends RefCounted
 ## regions of neighbouring chunks meet edge to edge. Design: design/gdd/real_world.md.
 
 const CELL := 0.25
-const AGENT_RADIUS := 0.5
+const AGENT_RADIUS := 0.6
 const BORDER := 1.0          # > agent radius, a multiple of the cell size
 
 

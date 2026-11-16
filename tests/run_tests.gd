@@ -32,6 +32,7 @@ func _check(cond: bool, what: String) -> void:
 
 
 func _run() -> void:
+	District.real_clock_rate = 1.0   # the checks are timed for one game minute per real second; the walks that need the game's slower real clock set it themselves
 	if _args.has("real-only"):   # --real-only: just the real Westridge world (quick while working on it)
 		_test_real_world_units()
 		await _test_real_world_streaming()
@@ -906,10 +907,12 @@ func _test_kalkbos_in_game(main: Node, district: District, player: Player) -> vo
 	player.global_position = district.destinations.anchor_position("kalk_lookout") + Vector3(0, 0.1, 0)
 	player.snap_camera()
 	session.police.turf_provocation = not _real
+	_slow_clock(district, true)
 	for i in 60 * (900 if _real else 400):
 		if missions.is_completed("quarry_night"):
 			break
 		await physics_frame
+	_slow_clock(district, false)
 	session.police.turf_provocation = true
 	_check(missions.is_completed("quarry_night") and prog.recruited_crew_ids.has("npc_kalk_riyaad"),
 		"Quarry Night completes with the crew beside you; Riyaad joins (crew %d)" % prog.recruited_crew_ids.size())
@@ -1007,6 +1010,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 	player.global_position = field + Vector3(0, 0.1, 0)
 	player.snap_camera()
 	session.police.turf_provocation = not _real   # which rivals happen to be at the field is the map's business; the hold is what's tested
+	_slow_clock(district, true)
 	var boeta: Resident = district.residents["npc_boeta"]
 	var arrived := false
 	for i in 60 * (900 if _real else 360):   # in the real suburb Boeta has half a kilometre to walk
@@ -1020,6 +1024,7 @@ func _test_phase7_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(arrived, "Boeta follows the player from Westridge to the Lentegeur field")
 	session.police.turf_provocation = true
+	_slow_clock(district, false)
 	_check(missions.is_completed("dune_truce") and prog.recruited_crew_ids.has("npc_rooi_kaylin"), "Dune Truce completes and Kaylin joins the crew")
 	var crew_req: Array = dm.get_unlock_requirements("district_west").filter(func(r): return r.text.begins_with("Crew"))
 	_check(not crew_req.is_empty() and crew_req[0].met, "Rocklands' crew requirement is now met (%s)" % [crew_req])
@@ -2598,6 +2603,13 @@ func _test_real_world_streaming() -> void:
 	await process_frame
 
 
+## The real Westridge's own, slower clock (0.25 game minutes per second) for the checks that depend
+## on how long a walk across town takes; the rest of the suite runs at 1.0.
+func _slow_clock(district: District, on: bool) -> void:
+	if _real:
+		district.director.clock.minutes_per_second = 0.25 if on else 1.0
+
+
 ## Where a check stands the player. The old districts use their fixed spots; the real Westridge
 ## uses the same kinds of place around the safehouse: the pavement at your gate, the middle of your
 ## street, and open ground (the park) away from any road.
@@ -3949,12 +3961,14 @@ func _test_district() -> void:
 	# Night: 17:00 -> 01:00 (two hours after the latest curfew). Crew patrol/follow; residents go home by curfew.
 	district.destinations.set_enabled("poi_shop", true)
 	director.ambient_incidents = false
-	director.clock.set_hour(17.0)
+	director.clock.set_hour(20.0 if _real else 17.0)
+	_slow_clock(district, true)
 	var night_seen := {}
-	for f in 60 * 60 * (10 if _real else 8):   # (real streets: the longest walks home take an extra couple of hours)
+	for f in 60 * 60 * (20 if _real else 8):   # (the real clock runs 0.25 game minutes per second: 20:00 to 01:00 is 20 real minutes)
 		if f % 60 == 0:
 			_sample_states(district, night_seen, tiers)
 		await physics_frame
+	_slow_clock(district, false)
 	print("  evening states seen: %s (clock %s)" % [night_seen, director.clock.label()])
 	_check(night_seen.has("PATROLLING"), "crew leader patrols in the evening")
 	_check(night_seen.has("FOLLOWING"), "second crew member follows the leader")
