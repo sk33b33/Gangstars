@@ -279,6 +279,8 @@ def main(raw, ms_file):
     print(dict(counts)); print("chunks", len(keys), "streets", len(street_names), "landmarks", len(landmarks), "bytes", size)
     import classify_buildings   # unnamed outlines in school grounds, shops, sports grounds, parks
     classify_buildings.main(OUT)
+    import clear_roads   # pull the outlines that reach onto a street back off it
+    clear_roads.main(OUT)
 
 
 if __name__ == "__main__":

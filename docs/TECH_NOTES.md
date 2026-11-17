@@ -593,3 +593,7 @@ with the origin until then). Screenshots with people: `--wait=100 --cam-resident
 - Lighten the Mixamo downloads: `blender -b --factory-startup --python tools/blender/lighten_mixamo.py`, then
   `godot --headless --path . --import`, `-s tools/godot/build_npc_materials.gd`, import again, `-s tools/godot/build_remy_model.gd`.
 - Quick check: `tests/run.sh --remy-only`. Picture: playground with `-- --bodies`.
+
+### Buildings off the road (2026-11-17)
+`python3 tools/osm/clear_roads.py [--dry]` pulls building corners off streets (carriageway half width + 0.5 m kerb). Safe to run again.
+The check is in `_test_real_world_units` (`tests/run.sh --real-only`).

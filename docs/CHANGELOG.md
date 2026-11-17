@@ -1,5 +1,11 @@
 # Changelog
 
+## Houses no longer stand in the road (2026-11-17)
+- The house outlines (Microsoft footprints) and the streets (OpenStreetMap) disagree by a metre or two, so 163 of 5,505 buildings
+  had a corner on or within 0.5 m of a carriageway (up to 2.8 m onto a street, a roof and wall standing in the road).
+  `tools/osm/clear_roads.py` (also run by `build_westridge.py`) moves those corners straight off the street; 58 chunk files changed.
+- New check: no building corner stands on a carriageway (seen failing first: 77 corners on the old data).
+
 ## Residents wear the Mixamo bodies (2026-11-17)
 - `NpcBodyModel` (extends `RemyPlayerModel`) answers the old `CharacterModel` calls; `NpcBodies` picks the body (police Leonard, crew
   James or Meegan, others by id and sex). Residents, the interiors' stand-ins and the vendors use it

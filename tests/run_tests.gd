@@ -2806,6 +2806,36 @@ func _test_real_world_units() -> void:
 	print("== real Westridge world")
 	var data := RealDistrictData.new()
 	_check(data.load_meta(), "the real Westridge data loads")
+	# No house or building corner stands on a carriageway (the footprints and the streets come from different sources:
+	# tools/osm/clear_roads.py pulls the corners off a street; seen failing before it: 163 buildings).
+	var road_segs := {}
+	for key: Vector2i in data.chunk_keys:
+		var list: Array = []
+		for r in data.load_chunk(key).get("roads", []):
+			if str(r.c) == "path" or r.p.size() < 2:
+				continue
+			for i in r.p.size() - 1:
+				var a := Vector2(r.p[i][0], r.p[i][1])
+				var b := Vector2(r.p[i + 1][0], r.p[i + 1][1])
+				var hw := float(r.w) * 0.5
+				list.append([a, b, hw, Rect2(a, Vector2.ZERO).expand(b).grow(hw)])
+		road_segs[key] = list
+	var on_road := 0
+	for key: Vector2i in data.chunk_keys:
+		var near_segs: Array = []
+		for dx in range(-1, 2):
+			for dz in range(-1, 2):
+				near_segs.append_array(road_segs.get(key + Vector2i(dx, dz), []))
+		for bld in data.load_chunk(key).get("buildings", []):
+			for c in bld.p:
+				var pt := Vector2(c[0], c[1])
+				for s in near_segs:
+					if (s[3] as Rect2).has_point(pt):
+						var closest := Geometry2D.get_closest_point_to_segment(pt, s[0], s[1])
+						if pt.distance_to(closest) < float(s[2]) - 0.1:
+							on_road += 1
+							break
+	_check(on_road == 0, "no building corner stands on a carriageway (%d do)" % on_road)
 	_check(data.bounds.size.x > 1500.0 and data.bounds.size.y > 2000.0, "it is the whole suburb (%.1f x %.1f km)" % [data.bounds.size.x / 1000.0, data.bounds.size.y / 1000.0])
 	_check(int(data.counts.get("buildings", 0)) > 5000, "it has the real building outlines (%d)" % int(data.counts.get("buildings", 0)))
 	for n in ["Excelsior Street", "Rhone Way", "Wespoort Drive", "Park Avenue", "De Duin Avenue", "Silverhurst Street"]:
