@@ -8,6 +8,7 @@ extends SceneTree
 ##     in    : StateMachine "loco"
 ##               Grounded  = BlendTree( BlendSpace1D "gait": Idle 0, Walk 1, Run 2, Sprint 3  ->  TimeScale "speed" )
 ##               JumpStart / JumpAir / JumpLand = three pieces of the Jump clip (take-off, air, landing)
+##               FallDown / Lying / StandUp = knocked out (the clips are played in place by RemyModel)
 ##     blend : Aim_Hold (a steady frame of Pistol_Aim)
 const OUT := "res://scenes/characters/remy/"
 const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
@@ -62,7 +63,17 @@ func _loco() -> AnimationNodeStateMachine:
 	sm.add_node("JumpStart", _anim("Jump", 0.25, 0.25), Vector2(300, -80))
 	sm.add_node("JumpAir", _anim("Jump", 0.5, 0.75), Vector2(500, 0))
 	sm.add_node("JumpLand", _anim("Jump", 1.25, 0.4), Vector2(300, 80))
+	# Knocked out: fall (2.3 s), lie (a held frame), get up (1.7 s). RemyModel.fall_down() / stand_up() travel there.
+	sm.add_node("FallDown", _anim("Fall_Down"), Vector2(-300, -80))
+	sm.add_node("Lying", _anim("Lying"), Vector2(-300, 0))
+	sm.add_node("StandUp", _anim("Stand_Up"), Vector2(-300, 80))
 	sm.add_transition("Start", "Grounded", _tr())
+	for from in ["Grounded", "JumpStart", "JumpAir", "JumpLand"]:
+		sm.add_transition(from, "FallDown", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED, false, 0.1))
+	sm.add_transition("FallDown", "Lying", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO, true, 0.05))
+	sm.add_transition("FallDown", "StandUp", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED, false, 0.2))
+	sm.add_transition("Lying", "StandUp", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED, false, 0.25))
+	sm.add_transition("StandUp", "Grounded", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO, true, 0.2))
 	sm.add_transition("Grounded", "JumpStart", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED, false, 0.05))
 	sm.add_transition("JumpStart", "JumpAir", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO, true, 0.05))
 	sm.add_transition("Grounded", "JumpAir", _tr(AnimationNodeStateMachineTransition.ADVANCE_MODE_ENABLED, false, 0.15))   # walked off a ledge

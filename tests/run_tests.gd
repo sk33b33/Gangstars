@@ -2169,15 +2169,15 @@ func _test_remy() -> void:
 	print("== Remy character")
 	const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
 	# The uploaded file is untouched (all settings live in its .import file and in separate resources).
-	_check(FileAccess.get_sha256(GLB) == "bce0076a2c3001df0a2fcffaee30ac75e4ebe047f76eab6933c7ebf2adeb0d2a", "Remy_Animations_Mobile.glb is exactly the file that was uploaded")
+	_check(FileAccess.get_sha256(GLB) == "a4d6228e2bece306352a2f36aa0756488466b34791b367de7aaca801a16e12a8", "Remy_Animations_Mobile.glb is exactly the file that was uploaded")
 	# Import: loops, alpha, compression.
 	var imported := (load(GLB) as PackedScene).instantiate()
 	var ap := imported.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	var loops := {}
 	for clip in ap.get_animation_list():
 		loops[clip] = ap.get_animation(clip).loop_mode
-	_check(ap.get_animation_list().size() == 6 and loops.Idle == Animation.LOOP_LINEAR and loops.Walk == Animation.LOOP_LINEAR and loops.Run == Animation.LOOP_LINEAR and loops.Sprint == Animation.LOOP_LINEAR \
-		and loops.Pistol_Aim == Animation.LOOP_LINEAR and loops.Jump == Animation.LOOP_NONE, "Idle, Walk, Run, Sprint and Pistol_Aim loop; Jump plays once (%s)" % [loops])
+	_check(ap.get_animation_list().size() == 8 and loops.Idle == Animation.LOOP_LINEAR and loops.Fall_Down == Animation.LOOP_NONE and loops.Stand_Up == Animation.LOOP_NONE and loops.Walk == Animation.LOOP_LINEAR and loops.Run == Animation.LOOP_LINEAR and loops.Sprint == Animation.LOOP_LINEAR \
+		and loops.Pistol_Aim == Animation.LOOP_LINEAR and loops.Jump == Animation.LOOP_NONE, "Idle, Walk, Run, Sprint and Pistol_Aim loop; Jump, Fall_Down and Stand_Up play once (%s)" % [loops])
 	var alpha_ok := true
 	var compressed := true
 	var back_cull := 0
@@ -2250,6 +2250,35 @@ func _test_remy() -> void:
 		if seen.is_empty() or seen[-1] != s:
 			seen.append(s)
 	_check(seen == ["JumpStart", "JumpAir", "JumpLand", "Grounded"] and top > 1.25, "a jump goes take-off, air, landing, back to the ground, and the hips rise to %.2f m (%s)" % [top, seen])
+	# Knocked out and back up, on the spot (the clips carry root motion; it is taken out).
+	var head := m.skeleton.find_bone("mixamorig_Head")
+	var at_start := m.skeleton.to_global(m.skeleton.get_bone_global_pose(hips).origin)
+	m.fall_down()
+	var states := []
+	for i in 200:
+		m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+		await physics_frame
+		var s2 := str(m.state_name())
+		if states.is_empty() or states[-1] != s2:
+			states.append(s2)
+	await process_frame
+	var flat_hips := m.skeleton.to_global(m.skeleton.get_bone_global_pose(hips).origin)
+	var flat_head := m.skeleton.to_global(m.skeleton.get_bone_global_pose(head).origin)
+	_check(states == ["FallDown", "Lying"] and m.is_down() and flat_head.y < 0.7 and Vector2(flat_hips.x - at_start.x, flat_hips.z - at_start.z).length() < 0.3,
+		"fall_down plays the fall and holds the lying pose on the spot (head %.2f m up, hips moved %.2f m; %s)" % [flat_head.y, Vector2(flat_hips.x - at_start.x, flat_hips.z - at_start.z).length(), states])
+	m.jump()
+	_check(m.is_down(), "a knocked-out character cannot jump")
+	m.stand_up()
+	states = []
+	for i in 200:
+		m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+		await physics_frame
+		var s3 := str(m.state_name())
+		if states.is_empty() or states[-1] != s3:
+			states.append(s3)
+	await process_frame
+	var up_head2 := m.skeleton.to_global(m.skeleton.get_bone_global_pose(head).origin)
+	_check(states == ["StandUp", "Grounded"] and up_head2.y > 1.4, "stand_up plays the get-up and returns to the normal gaits (head %.2f m up; %s)" % [up_head2.y, states])
 	# Dressing it: NPCs differ without touching the shared materials.
 	var other: RemyModel = scene.instantiate()
 	add_child_to_root(other)
@@ -3670,15 +3699,23 @@ func _test_remy_as_player(main: Node, district: District, player: Player) -> voi
 	for i in 60:
 		await physics_frame
 	_check(walking_gait > 1.5 and walking_gait < 2.5 and sprinting_gait > 2.8 and m.remy.gait < 0.2, "walking runs the Run clip at the player's pace, sprinting plays Sprint, stopping goes to idle (%.1f, %.1f)" % [walking_gait, sprinting_gait])
-	# Knocked out: he falls on his back and gets up again.
+	# Knocked out: he plays the fall, lies there (on the spot, not a metre away) and gets up again when he wakes.
+	var hips := m.remy.skeleton.find_bone("mixamorig_Hips")
+	var head := m.remy.skeleton.find_bone("mixamorig_Head")
+	var spot := m.remy.skeleton.to_global(m.remy.skeleton.get_bone_global_pose(hips).origin)
 	m.base_pose = "down"
-	for i in 40:
+	for i in 200:
 		await physics_frame
-	var lying := absf(m.remy.rotation.x - PI * 0.5) < 0.05
+	var lying_hips := m.remy.skeleton.to_global(m.remy.skeleton.get_bone_global_pose(hips).origin)
+	var lying_head := m.remy.skeleton.to_global(m.remy.skeleton.get_bone_global_pose(head).origin)
+	var lying: bool = m.remy.state_name() == &"Lying" and m.remy.is_down() and lying_head.y - player.global_position.y < 0.7 \
+		and Vector2(lying_hips.x - spot.x, lying_hips.z - spot.z).length() < 0.3
 	m.base_pose = ""
-	for i in 40:
+	for i in 200:
 		await physics_frame
-	_check(lying and absf(m.remy.rotation.x) < 0.05, "knocked out he lies on his back, and stands again when he wakes")
+	var up_head := m.remy.skeleton.to_global(m.remy.skeleton.get_bone_global_pose(head).origin)
+	_check(lying and m.remy.state_name() == &"Grounded" and up_head.y - player.global_position.y > 1.4,
+		"knocked out he falls and lies on the spot (head %.2f m up), then stands again when he wakes (head %.2f m up)" % [lying_head.y - player.global_position.y, up_head.y - player.global_position.y])
 	# Facing: the Player's own convention (+Z is the front) points him the way he walks.
 	player.pivot.rotation.y = 0.0
 	Input.action_press("move_forward")

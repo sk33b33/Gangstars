@@ -46,7 +46,10 @@ else in the game changed: `set_weapon`, `draw_weapon`, `aiming`, `animate`, `muz
 | `Sprint` | 0.57 s | yes | 6.0 m/s (`AUTHORED_SPRINT`; your note said 5.5) | in place; quicker steps than Run |
 | `Jump` | 1.93 s | no | | crouch to 0.4 s, apex 0.8 s, feet down about 1.3 s |
 | `Pistol_Aim` | 7.13 s | yes | | raises the gun by 0.5 s, holds until about 1 s, then lowers it |
-| `Idle` | 10.0 s | yes | | breathing idle (added to the glb in the second upload) |
+| `Idle` | 10.0 s | yes | | breathing idle |
+| `Fall_Down` | 2.3 s | | | knocked out; carries ~1 m of root motion, so `RemyModel` plays an in-place copy |
+| `Stand_Up` | 1.7 s | | | getting up; also played in place |
+| `Lying` | | yes | | **made at start-up: the last frame of Fall_Down, held** |
 | `Aim_Hold` | | yes | | made at start-up: Pistol_Aim at 0.75 s held |
 
 - The clip's play speed is `actual speed / authored speed`, so the feet do not skate (`RemyModel.play_speed`).
@@ -134,9 +137,13 @@ one AnimationTree per character. Still to do for crowds:
 
 ## What is missing
 
-- **Falling and standing up.** The glb has only Idle added; no fall or get-up clip is in it yet (knocked out still tips the
-  model over and back).
 - Strafe and backwards walking (aiming while moving sideways plays the forward walk), a turn-in-place, a falling-hard
-  landing, hit and death clips, a firing recoil.
+  landing, hit clips, a firing recoil.
 - A cheaper LOD model for crowds (above).
 - Wiring Remy into the game's `Player`/`Resident` (decision pending).
+
+## Knocked out (Fall_Down, Lying, Stand_Up)
+`RemyModel.fall_down()` plays Fall_Down and then holds `Lying`; `stand_up()` plays Stand_Up and returns to the gaits (walking
+off during the last 0.7 s cuts it short). `is_down()` says whether he is falling or lying. The glb's two clips drift about
+a metre across the ground (root motion), so the library plays copies whose hips keep their start position on the ground
+(the Mixamo hips track: local X and Y are the ground, Z the height). `RemyPlayerModel.base_pose = "down"` / `""` call them.

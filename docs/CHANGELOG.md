@@ -1,5 +1,10 @@
 # Changelog
 
+## Remy falls and gets up (2026-11-17)
+- The glb now has `Fall_Down` and `Stand_Up`. Knocked out plays the fall, lies on the spot and stands up when the player wakes
+  (`RemyModel.fall_down() / stand_up() / is_down()`, new states FallDown, Lying, StandUp in the AnimationTree). Both clips are
+  played in place: their ~1 m of root motion is taken out of the hips so the body stays under the player.
+
 ## Remy has a real Idle (2026-11-17)
 - The updated `Remy_Animations_Mobile.glb` carries a 10 s breathing `Idle` (looping). It replaces the held Walk frame at the
   bottom of the gait blend, so standing still looks like standing still. Not in the glb yet: falling and standing up.

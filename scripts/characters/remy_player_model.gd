@@ -11,7 +11,7 @@ extends Node3D
 var remy: RemyModel
 var weapon := ""
 var weapon_drawn := false
-## Knocked out: "down" lays the character on their back.
+## Knocked out: "down" plays the fall and lies there; "" gets up again.
 var base_pose := "":
 	set(value):
 		base_pose = value
@@ -24,7 +24,6 @@ var aiming := false:
 
 var _gun: MeshInstance3D
 var _body: CharacterBody3D
-var _down_tween: Tween
 
 
 func _ready() -> void:
@@ -123,8 +122,9 @@ func is_waving() -> bool:
 
 
 func _lay_down(down: bool) -> void:
-	if _down_tween and _down_tween.is_valid():
-		_down_tween.kill()
-	_down_tween = create_tween().set_parallel(true)
-	_down_tween.tween_property(remy, "rotation:x", PI * 0.5 if down else 0.0, 0.3 if down else 0.4)   # falls on their back
-	_down_tween.tween_property(remy, "position:y", 0.22 if down else 0.0, 0.3)
+	if remy == null:
+		return
+	if down:
+		remy.fall_down()
+	else:
+		remy.stand_up()

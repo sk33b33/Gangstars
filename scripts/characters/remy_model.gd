@@ -46,6 +46,7 @@ var _aim := 0.0
 var _aim_target := 0.0
 var _clock := 0.0                  # seconds of simulated time (the sum of the deltas): not the wall clock, so tests and slow frames agree
 var _jumped_at := -10.0
+var _stood_at := -10.0
 
 
 func _ready() -> void:
@@ -73,7 +74,27 @@ static func _make_library(imported: AnimationPlayer) -> AnimationLibrary:
 	for clip in imported.get_animation_list():
 		lib.add_animation(clip, imported.get_animation(clip))
 	lib.add_animation("Aim_Hold", _held_pose(imported.get_animation("Pistol_Aim"), AIM_FRAME_TIME))
+	# Knocked out: the glb's fall and get-up carry about a metre of root motion each, but the player's body stays where
+	# it is, so both are played in place (the hips keep their start position on the ground plane).
+	var fall := _in_place(imported.get_animation("Fall_Down"))
+	lib.add_animation("Fall_Down", fall)
+	lib.add_animation("Lying", _held_pose(fall, fall.length))
+	lib.add_animation("Stand_Up", _in_place(imported.get_animation("Stand_Up")))
 	return lib
+
+
+## A copy of `src` whose hips stay over their first position (the Mixamo hips track: local X and Y lie on the ground,
+## Z is the height), so a clip with root motion plays on the spot.
+static func _in_place(src: Animation) -> Animation:
+	var a := src.duplicate() as Animation
+	for i in a.get_track_count():
+		if a.track_get_type(i) != Animation.TYPE_POSITION_3D or not str(a.track_get_path(i)).ends_with("mixamorig_Hips"):
+			continue
+		var first: Vector3 = a.track_get_key_value(i, 0)
+		for k in a.track_get_key_count(i):
+			var v: Vector3 = a.track_get_key_value(i, k)
+			a.track_set_key_value(i, k, Vector3(first.x, first.y, v.z))
+	return a
 
 
 ## A one-key-per-track copy of `src` at time `t`: the same pose, held. (Used for the steady aim pose.)
@@ -109,15 +130,44 @@ func update_locomotion(speed: float, sprinting: bool, on_floor: bool, delta: flo
 	_aim = move_toward(_aim, _aim_target, aim_response * delta)
 	tree.set("parameters/aim/blend_amount", _aim)
 	_clock += delta
+	var state := _playback.get_current_node()
+	if state == &"FallDown" or state == &"Lying":
+		return
+	if state == &"StandUp":
+		if speed > run_speed * 0.5 and _clock - _stood_at > 1.0:
+			_playback.travel(&"Grounded")   # walking off cuts the get-up short
+		return
 	if not on_floor and _playback.get_current_node() == &"Grounded" and _clock - _jumped_at > 0.3:
 		_playback.travel(&"JumpAir")   # walked off a ledge (not the first frames of a jump: it is already on its way)
 	tree.set("parameters/loco/conditions/landed", on_floor and _clock - _jumped_at > 0.2)
+
+
+## Knocked out: falls (Fall_Down), then lies there until stand_up(). Lowers the gun arm.
+func fall_down() -> void:
+	_aim_target = 0.0
+	_aim = 0.0
+	_playback.travel(&"FallDown")
+
+
+## Gets up again (Stand_Up), then back to the normal gaits. Does nothing if not down.
+func stand_up() -> void:
+	if is_down():
+		_stood_at = _clock
+		_playback.travel(&"StandUp")
+
+
+## Falling or lying (knocked out).
+func is_down() -> bool:
+	var s := _playback.get_current_node()
+	return s == &"FallDown" or s == &"Lying"
 
 
 ## Plays the take-off. (The player applies the jump velocity at the same moment, so it never feels delayed.)
 func jump() -> void:
 	_jumped_at = _clock
 	tree.set("parameters/loco/conditions/landed", false)
+	if is_down() or _playback.get_current_node() == &"StandUp":
+		return
 	_playback.travel(&"JumpStart")
 
 
@@ -130,7 +180,7 @@ func is_aiming() -> bool:
 	return _aim_target > 0.5
 
 
-## The state the locomotion machine is in: Grounded, JumpStart, JumpAir or JumpLand.
+## The state the locomotion machine is in: Grounded, JumpStart, JumpAir, JumpLand, FallDown, Lying or StandUp.
 func state_name() -> StringName:
 	return _playback.get_current_node()
 
