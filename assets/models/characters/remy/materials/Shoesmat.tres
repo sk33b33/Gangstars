@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" load_steps=3 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/characters/Remy_Animations_Mobile_Remy_Shoes_Diffuse.png" id="1_c6dhj"]
+[ext_resource type="Texture2D" path="res://assets/models/characters/Remy_Animations_Mobile_Remy_Shoes_Gloss.png" id="2_01r7x"]
+
+[resource]
+resource_name = "Shoesmat"
+albedo_texture = ExtResource("1_c6dhj")
+metallic_texture_channel = 2
+roughness_texture = ExtResource("2_01r7x")
+roughness_texture_channel = 1
+normal_scale = 0.0

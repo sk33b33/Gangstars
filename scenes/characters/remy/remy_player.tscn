@@ -1,0 +1,38 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/remy_player.gd" id="1_player"]
+[ext_resource type="PackedScene" path="res://scenes/characters/remy/remy_model.tscn" id="2_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.3
+height = 1.8
+
+[node name="RemyPlayer" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 1
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="RemyModel" parent="." instance=ExtResource("2_model")]
+
+[node name="CameraPivot" type="Node3D" parent="."]
+physics_interpolation_mode = 2
+top_level = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="Pitch" type="Node3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.9553365, 0.2955202, 0, -0.2955202, 0.9553365, 0, 0, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot/Pitch"]
+collision_mask = 1
+spring_length = 4.0
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/Pitch/SpringArm3D"]
+current = true
+fov = 70.0
+near = 0.1
+far = 400.0

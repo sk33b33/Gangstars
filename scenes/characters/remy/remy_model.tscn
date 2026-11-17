@@ -1,0 +1,52 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/remy_model.gd" id="1_fgbcy"]
+[ext_resource type="PackedScene" path="res://assets/models/characters/Remy_Animations_Mobile.glb" id="2_qjedo"]
+[ext_resource type="AnimationNodeBlendTree" path="res://scenes/characters/remy/remy_anim_tree.tres" id="3_4mpwk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h4wuw"]
+albedo_color = Color(0.16862746, 0.1764706, 0.2, 1)
+roughness = 0.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_0n3n7"]
+size = Vector3(0.03, 0.034, 0.19)
+
+[sub_resource type="BoxMesh" id="BoxMesh_v7jbx"]
+size = Vector3(0.028, 0.09, 0.04)
+
+[node name="RemyModel" type="Node3D"]
+script = ExtResource("1_fgbcy")
+
+[node name="Remy" type="Node3D" parent="." instance=ExtResource("2_qjedo")]
+transform = Transform3D(-0.5, 0, -4.371139e-08, 0, 0.5, 0, 4.371139e-08, 0, -0.5, 0, 0, 0)
+
+[node name="Anims" type="AnimationPlayer" parent="."]
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+active = false
+tree_root = ExtResource("3_4mpwk")
+anim_player = NodePath("../Anims")
+parameters/loco/conditions/landed = false
+parameters/loco/Grounded/gait/blend_position = 0.0
+parameters/loco/Grounded/speed/scale = 1.0
+parameters/aim/blend_amount = 0.0
+
+[node name="RightHandAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_RightHand"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Pistol" type="Node3D" parent="RightHandAttachment"]
+transform = Transform3D(18.99285, 192.2259, -51.8505, 125.402916, 28.905457, 153.09663, 154.63951, -47.04973, -117.78346, 11.15, 17.32, -2.73)
+
+[node name="Slide" type="MeshInstance3D" parent="RightHandAttachment/Pistol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0.07)
+material_override = SubResource("StandardMaterial3D_h4wuw")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_0n3n7")
+
+[node name="Grip" type="MeshInstance3D" parent="RightHandAttachment/Pistol"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.058, 0)
+material_override = SubResource("StandardMaterial3D_h4wuw")
+cast_shadow = 0
+mesh = SubResource("BoxMesh_v7jbx")

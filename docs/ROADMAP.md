@@ -183,6 +183,10 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 - [ ] Run its playtest / balance / cut-and-polish routines on the survival layer once a person has played it.
 - [ ] Survival follow-ups: nicer bin/crate models, searchable cupboards indoors, missions that use items and skills.
 
+## Remy character (2026-11-17)
+- [x] Import, reusable model + AnimationTree, third-person player, touch controls, aim + gun placeholder, NPC outfits, playground.
+- [ ] A real Idle clip; strafe and backwards clips; cheaper NPC version (LOD); decide whether Remy replaces the game's Player and Residents.
+
 ## UI cleanup (requested 2026-11-17)
 - [x] Menu: Back to game button + Android back key; Edit touch controls (drag, tap to select + x to remove, add button, reset). design/gdd/touch_controls.md
 - [ ] Next UI ideas: resize buttons, move the sticks, a layout per hand (left/right), tidier HUD text on small screens.

@@ -1,5 +1,18 @@
 # Changelog
 
+## Remy: a rigged Mixamo character, ready for the player and NPCs (2026-11-17)
+- Imported `Remy_Animations_Mobile.glb` (uploaded to `assets/models/characters/`, never edited): loops set (Walk, Run,
+  Sprint and Pistol_Aim loop, Jump once), hair and eyelashes on alpha scissor, textures VRAM compressed
+  (ETC2/ASTC on for Android), editable materials (no metallic or strength-0 normal texture, back-face culling on closed meshes).
+- `remy_model.tscn`: one skeleton, one AnimationTree (gait blend Idle/Walk/Run/Sprint with the clip speed tied to the
+  ground speed, a 3-piece jump, upper-body aim blend), the model scaled to 1.8 m and turned to face -Z, a placeholder
+  pistol on a BoneAttachment3D at `mixamorig_RightHand`, outfits (`RemyOutfit`) and part replacement for NPCs.
+- `remy_player.tscn`: CharacterBody3D, 1.8 m capsule, SpringArm3D camera; camera-relative movement, sprint, jump, turning,
+  aim facing the camera. Uses the project's input actions and TouchControls (now accepts any player node).
+- `scenes/dev/remy_playground.tscn`: test world with 5 demo NPCs. The game's own Player is unchanged.
+- **No Idle clip exists:** Walk's first frame is held as a temporary idle.
+- 31 new checks (`tests/run.sh --remy-only`). Notes: `scenes/characters/remy/README.md`.
+
 ## Android controls: a way back and an editable layout (2026-11-17)
 - **Back to game:** a big button always at the top of the menu (it no longer scrolls away), and the Android back key now
   works: it finishes the editor, closes the menu, or opens the menu while you play.

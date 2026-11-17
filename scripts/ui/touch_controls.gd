@@ -19,7 +19,8 @@ const DEAD := 0.15
 const DRAG_SLOP := 10.0          # a touch that moves less than this is a tap (edit mode)
 const BADGE_RADIUS := 15.0       # the small x that appears on a selected button
 
-var player: Player
+## The player node: the game's Player or a RemyPlayer (anything with input_enabled, mouse_look_enabled and auto_lock).
+var player
 var enabled := false
 var _draw_node: Control
 var _touches := {}           # touch index -> "move" | "look" | button id
@@ -41,7 +42,7 @@ var _picker: PanelContainer
 var _picker_list: VBoxContainer
 
 
-func setup(p_player: Player, force := false) -> void:
+func setup(p_player: Node3D, force := false) -> void:
 	player = p_player
 	layer = 8
 	enabled = force or DisplayServer.is_touchscreen_available()
@@ -99,7 +100,7 @@ func _process(_delta: float) -> void:
 		visible = true
 		_draw_node.queue_redraw()
 		return
-	var show_now := enabled and player != null and player.input_enabled
+	var show_now: bool = enabled and player != null and player.input_enabled
 	if show_now != _was_visible:
 		_was_visible = show_now
 		visible = show_now

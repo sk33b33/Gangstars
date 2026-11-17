@@ -36,6 +36,13 @@ func _run() -> void:
 			print("  failed: ", f)
 		quit(0 if _failed.is_empty() else 1)
 		return
+	if _args.has("remy-only"):   # --remy-only: just the Remy character (quick while working on it)
+		await _test_remy()
+		print("\n%d passed, %d failed" % [_passed, _failed.size()])
+		for f in _failed:
+			print("  failed: ", f)
+		quit(0 if _failed.is_empty() else 1)
+		return
 	if _args.has("phone-only"):   # --phone-only: just the phone-profile game (quick while tuning it)
 		await _test_phone_game()
 		print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -80,6 +87,7 @@ func _run() -> void:
 	await _test_real_world_streaming()
 	_test_survival_units()
 	_test_touch_layout_units()
+	await _test_remy()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
 		await _test_real_people_and_traffic()
@@ -2154,6 +2162,234 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 	session.progression.flags["tutorial_done"] = true
 	if not started.is_empty():
 		session.missions.active.erase(started)
+
+
+## The Remy character (scenes/characters/remy/, scripts/characters/remy_*.gd, design in scenes/characters/remy/README.md).
+func _test_remy() -> void:
+	print("== Remy character")
+	const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
+	# The uploaded file is untouched (all settings live in its .import file and in separate resources).
+	_check(FileAccess.get_sha256(GLB) == "441d9103ba4ee8e17ec2da4e9afd0e3754be7dba4518f0f47baa41185eaf63fc", "Remy_Animations_Mobile.glb is exactly the file that was uploaded")
+	# Import: loops, alpha, compression.
+	var imported := (load(GLB) as PackedScene).instantiate()
+	var ap := imported.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var loops := {}
+	for clip in ap.get_animation_list():
+		loops[clip] = ap.get_animation(clip).loop_mode
+	_check(ap.get_animation_list().size() == 5 and loops.Walk == Animation.LOOP_LINEAR and loops.Run == Animation.LOOP_LINEAR and loops.Sprint == Animation.LOOP_LINEAR \
+		and loops.Pistol_Aim == Animation.LOOP_LINEAR and loops.Jump == Animation.LOOP_NONE, "Walk, Run, Sprint and Pistol_Aim loop; Jump plays once (%s)" % [loops])
+	var alpha_ok := true
+	var compressed := true
+	var back_cull := 0
+	for mi in imported.find_children("*", "MeshInstance3D", true, false):
+		var mat := (mi as MeshInstance3D).mesh.surface_get_material(0) as BaseMaterial3D
+		var cut_out := mi.name in ["Hair", "Eyelashes"]
+		alpha_ok = alpha_ok and (mat.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR) == cut_out
+		compressed = compressed and mat.albedo_texture is CompressedTexture2D and mat.metallic_texture == null and mat.roughness_texture != null
+		back_cull += 1 if mat.cull_mode == BaseMaterial3D.CULL_BACK else 0
+	_check(alpha_ok, "hair and eyelashes use alpha scissor (no sorting trouble); everything else is opaque")
+	_check(compressed and back_cull == 5, "textures are imported compressed, no metallic texture is read, and closed meshes cull back faces (%d of 7 meshes)" % back_cull)
+	var vram := true
+	for f in DirAccess.get_files_at("res://assets/models/characters/"):
+		if f.begins_with("Remy_Animations_Mobile_") and f.ends_with(".png.import"):
+			vram = vram and FileAccess.get_file_as_string("res://assets/models/characters/" + f).contains("compress/mode=2")
+	_check(vram and ProjectSettings.get_setting("rendering/textures/vram_compression/import_etc2_astc", false), "every Remy texture is VRAM compressed, and ETC2/ASTC is on for Android")
+	imported.free()
+	# The model scene.
+	var scene := load("res://scenes/characters/remy/remy_model.tscn") as PackedScene
+	var m: RemyModel = scene.instantiate()
+	add_child_to_root(m)
+	await process_frame
+	_check(m.find_children("*", "AnimationTree", true, false).size() == 1 and m.find_children("*", "AnimationPlayer", true, false).size() == 1, "one AnimationTree and one AnimationPlayer per character")
+	_check(m.anims.has_animation("Idle_Temp") and m.anims.has_animation("Aim_Hold") and m.anims.get_animation("Idle_Temp").get_track_count() == m.anims.get_animation("Walk").get_track_count(), "the temporary idle (Walk's first frame held) and the aim hold exist")
+	var lo := 1e9
+	var hi := -1e9
+	for i in m.skeleton.get_bone_count():
+		var y := (m.skeleton.global_transform * m.skeleton.get_bone_global_pose(i).origin).y
+		lo = minf(lo, y)
+		hi = maxf(hi, y)
+	_check(hi - lo > 1.65 and hi - lo < 1.95 and m.skeleton.find_bone("mixamorig_RightHand") >= 0, "the model stands %.2f m tall (the glb is twice that; the scene scales it) on a Mixamo skeleton" % (hi - lo))
+	var att := m.get_node("RightHandAttachment") as BoneAttachment3D
+	_check(att.bone_name == "mixamorig_RightHand" and m.pistol != null and absf(m.pistol.global_transform.basis.get_scale().x - 1.0) < 0.05, "the placeholder pistol hangs on the right hand at real size (scale %.2f)" % m.pistol.global_transform.basis.get_scale().x)
+	# Gaits and animation speed.
+	_check(is_zero_approx(RemyModel.gait_for(0.0, false, 1.7, 4.0, 6.0)) and is_equal_approx(RemyModel.gait_for(1.7, false, 1.7, 4.0, 6.0), 1.0) and is_equal_approx(RemyModel.gait_for(4.0, false, 1.7, 4.0, 6.0), 2.0) \
+		and is_equal_approx(RemyModel.gait_for(6.0, true, 1.7, 4.0, 6.0), 3.0) and is_equal_approx(RemyModel.gait_for(6.0, false, 1.7, 4.0, 6.0), 2.0) and is_equal_approx(RemyModel.gait_for(2.85, false, 1.7, 4.0, 6.0), 1.5), "standing is gait 0, walk 1, run 2, sprint 3 (and 1.5 halfway between walk and run)")
+	_check(is_equal_approx(RemyModel.play_speed(1.0, 1.7), 1.0) and absf(RemyModel.play_speed(2.0, 4.0) - 4.0 / 5.5) < 0.001 and absf(RemyModel.play_speed(3.0, 6.0) - 1.0) < 0.001 and is_equal_approx(RemyModel.play_speed(0.0, 0.0), 1.0),
+		"the animation speed is actual speed over authored speed (run at 4 m/s plays at %.2f)" % RemyModel.play_speed(2.0, 4.0))
+	# Driving the tree (the physics step is fixed at 60 Hz in the test run).
+	var rhand := m.skeleton.find_bone("mixamorig_RightHand")
+	var hand_y := func() -> float: return (m.skeleton.global_transform * m.skeleton.get_bone_global_pose(rhand).origin).y
+	for i in 20:
+		m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+		await physics_frame
+	await process_frame
+	var low: float = hand_y.call()
+	m.set_aiming(true)
+	for i in 40:
+		m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+		await physics_frame
+	await process_frame
+	_check(m.is_aiming() and float(hand_y.call()) > low + 0.3 and float(m.tree.get("parameters/aim/blend_amount")) > 0.99, "aiming raises the gun arms (hand %.2f m to %.2f m) and holds them there" % [low, float(hand_y.call())])
+	m.set_aiming(false)
+	m.update_locomotion(1.7, false, true, 1.0 / 60.0)
+	_check(m.gait > 0.0 and is_equal_approx(float(m.tree.get("parameters/loco/Grounded/speed/scale")), RemyModel.play_speed(m.gait, 1.7)), "moving blends towards Walk and sets the clip speed to match the ground speed")
+	for i in 40:
+		m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+		await physics_frame
+	m.jump()
+	var seen := []
+	var hips := m.skeleton.find_bone("mixamorig_Hips")
+	var top := 0.0
+	for i in 130:
+		m.update_locomotion(0.0, false, i < 3 or i > 60, 1.0 / 60.0)   # in the air from 0.05 s to 1 s
+		await physics_frame
+		if i % 3 == 0:
+			await process_frame
+			top = maxf(top, (m.skeleton.global_transform * m.skeleton.get_bone_global_pose(hips).origin).y)
+		var s := str(m.state_name())
+		if seen.is_empty() or seen[-1] != s:
+			seen.append(s)
+	_check(seen == ["JumpStart", "JumpAir", "JumpLand", "Grounded"] and top > 1.25, "a jump goes take-off, air, landing, back to the ground, and the hips rise to %.2f m (%s)" % [top, seen])
+	# Dressing it: NPCs differ without touching the shared materials.
+	var other: RemyModel = scene.instantiate()
+	add_child_to_root(other)
+	await process_frame
+	var base_top := m.part("Tops").mesh.surface_get_material(0) as StandardMaterial3D
+	var outfit := RemyOutfit.new()
+	outfit.tops_tint = Color("#d6403e")
+	outfit.hair_tint = Color("#c9a14a")
+	outfit.skin_tint = Color("#8d5a3b")
+	outfit.hidden = PackedStringArray(["Shoes"])
+	other.apply_outfit(outfit)
+	var worn := other.part("Tops").get_surface_override_material(0) as StandardMaterial3D
+	_check(worn != null and worn.albedo_color == Color("#d6403e") and worn != base_top and base_top.albedo_color == Color.WHITE and m.part("Tops").get_surface_override_material(0) == null and not other.part("Shoes").visible and m.part("Shoes").visible,
+		"an outfit changes one NPC's clothes and hides parts without touching the others or the shared materials")
+	var spare := other.part("Tops").duplicate() as MeshInstance3D
+	m.replace_part("Bottoms", spare)
+	_check(m.part("Bottoms").mesh == spare.mesh and m.part("Bottoms").skin == spare.skin, "another mesh on the same skeleton can replace a part (a different top, a female body)")
+	spare.free()
+	m.set_animation_enabled(false)
+	_check(not m.tree.active, "a far-away NPC's animation can be switched off")
+	other.queue_free()
+	m.queue_free()
+	await process_frame
+	await _test_remy_player()
+
+
+func add_child_to_root(n: Node) -> void:
+	root.add_child(n)
+
+
+## RemyPlayer on a small floor: camera-relative movement, sprint, jump, facing, aiming, touch controls.
+func _test_remy_player() -> void:
+	var floor_body := StaticBody3D.new()
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(200, 1, 200)
+	shape.shape = box
+	shape.position.y = -0.5
+	floor_body.add_child(shape)
+	root.add_child(floor_body)
+	var p: RemyPlayer = (load("res://scenes/characters/remy/remy_player.tscn") as PackedScene).instantiate()
+	root.add_child(p)
+	p.position = Vector3(0, 0.05, 0)
+	p.snap_camera()
+	for i in 8:
+		await physics_frame
+	_check(p.is_on_floor() and p.model.is_inside_tree() and p.camera.current and p.spring_arm != null, "the player scene stands on the floor with its model and a SpringArm3D camera")
+	var cap := (p.get_node("CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D
+	_check(absf(cap.height - 1.8) < 0.01, "the collision capsule is 1.8 m tall")
+	# Forward is where the camera looks (-Z at yaw 0); the model turns to face the way it goes.
+	Input.action_press("move_forward")
+	for i in 90:
+		await physics_frame
+	var after_run := p.global_position
+	var speed := Vector2(p.velocity.x, p.velocity.z).length()
+	_check(after_run.z < -3.0 and absf(after_run.x) < 0.3 and absf(speed - p.run_speed) < 0.2, "forward moves along the camera's forward at run speed (%.1f m/s, z %.1f)" % [speed, after_run.z])
+	_check(absf(angle_difference(p.model.rotation.y, 0.0)) < 0.2, "the model faces the way it moves")
+	Input.action_press("sprint")
+	for i in 60:
+		await physics_frame
+	var sprint := Vector2(p.velocity.x, p.velocity.z).length()
+	_check(p.sprinting and absf(sprint - p.sprint_speed) < 0.2 and p.model.gait > 2.9, "sprint raises the speed to %.1f m/s and the gait to Sprint" % sprint)
+	Input.action_release("sprint")
+	Input.action_release("move_forward")
+	for i in 60:
+		await physics_frame
+	_check(Vector2(p.velocity.x, p.velocity.z).length() < 0.05 and p.model.gait < 0.1, "letting go stops it and the gait returns to idle")
+	# Camera-relative: turn the camera a quarter turn left; forward now goes along -X.
+	p.pivot.rotation.y = PI * 0.5
+	var start := p.global_position
+	Input.action_press("move_forward")
+	for i in 60:
+		await physics_frame
+	var moved := p.global_position - start
+	_check(moved.x < -2.0 and absf(moved.z) < 0.6, "movement is relative to where the camera looks (moved %s)" % [moved.snapped(Vector3.ONE * 0.1)])
+	Input.action_release("move_forward")
+	for i in 40:
+		await physics_frame
+	# Jump: up, then down again, with the animation following.
+	var landed := []
+	p.landed.connect(func(): landed.append(true))
+	Input.action_press("jump")
+	await physics_frame
+	Input.action_release("jump")
+	var peak := 0.0
+	var states := []
+	for i in 120:
+		await physics_frame
+		peak = maxf(peak, p.global_position.y)
+		var s := str(p.model.state_name())
+		if states.is_empty() or states[-1] != s:
+			states.append(s)
+	_check(peak > 0.8 and p.is_on_floor() and not landed.is_empty() and states.has("JumpAir"), "jump leaves the floor (%.2f m up), lands, and plays the jump animation (%s)" % [peak, states])
+	# Aim: the model faces where the camera looks, and walks slowly.
+	p.pivot.rotation.y = 0.0
+	await physics_frame
+	Input.action_press("aim")
+	for i in 60:
+		await physics_frame
+	_check(p.aiming and p.model.is_aiming() and absf(angle_difference(p.model.rotation.y, 0.0)) < 0.1, "aiming turns the character to face the camera direction and raises the gun")
+	Input.action_press("move_left")
+	for i in 60:
+		await physics_frame
+	var side_speed := Vector2(p.velocity.x, p.velocity.z).length()
+	_check(side_speed < p.aim_speed + 0.1 and absf(angle_difference(p.model.rotation.y, 0.0)) < 0.15, "while aiming it strafes at walking pace (%.1f m/s) and keeps facing the camera" % side_speed)
+	Input.action_release("move_left")
+	Input.action_release("aim")
+	# Touch controls: off on a PC and then harmless; on, they drive the same actions.
+	var touch := TouchControls.new()
+	root.add_child(touch)
+	touch.setup(p)
+	_check(not touch.enabled and p.mouse_look_enabled and not touch.visible and not InputMap.action_get_events("fire").filter(func(e): return e is InputEventMouseButton).is_empty(),
+		"on a PC the touch controls stay hidden and leave the mouse and keys alone")
+	touch.enabled = true
+	p.mouse_look_enabled = false
+	for i in 3:
+		await process_frame
+	_check(touch.visible and touch._button("jump") != null and touch._button("sprint") != null and touch._button("aim") != null and touch._stick_centre("move").x > 0.0,
+		"on a touchscreen the stick and the jump, sprint and aim buttons show")
+	var at := p.global_position
+	touch._stick_pos["move"] = Vector2(0, -TouchControls.STICK_RADIUS)   # the left stick pushed to the top
+	await process_frame
+	await process_frame
+	for i in 40:
+		await physics_frame
+	_check(p.global_position.distance_to(at) > 1.0 and Input.get_action_strength("move_forward") > 0.9, "pushing the touch stick up moves the player (%.1f m)" % p.global_position.distance_to(at))
+	touch._stick_pos["move"] = Vector2.ZERO
+	await process_frame
+	await process_frame
+	touch.free()
+	p.free()
+	floor_body.free()
+	# The playground scene opens and has its player and its NPCs.
+	var play := (load("res://scenes/dev/remy_playground.tscn") as PackedScene).instantiate()
+	root.add_child(play)
+	for i in 5:
+		await process_frame
+	_check(play.player != null and play.npcs.size() == 5 and play.touch != null, "the playground scene builds its player, five NPCs and the touch controls")
+	play.free()
+	await process_frame
 
 
 func _test_touch_layout_units() -> void:

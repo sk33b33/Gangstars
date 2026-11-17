@@ -580,3 +580,11 @@ with the origin until then). Screenshots with people: `--wait=100 --cam-resident
 - Screenshots: `-- --touch --edit-controls [--edit-select=<id> --edit-remove=<id> --edit-picker]`, `-- --touch --pause-menu`.
 - Quick check: `tests/run.sh --only=touch` (boots the game, so about 10 minutes); the layout logic is in `--units-only`.
 - Android back key: `quit_on_go_back=false` in `project.godot`, handled in `Main._notification`.
+
+### Remy (2026-11-17)
+- Quick check: `tests/run.sh --remy-only` (about 30 s). Screenshots: open the playground with
+  `godot --path . scenes/dev/remy_playground.tscn -- --shot=res://tests/output/x.png --shot-delay=3 --cam=x,y,z,tx,ty,tz`
+  (`--fixed-fps 60` makes the animation timing the same as on a phone-speed machine; add `--hold=move_forward,sprint`).
+- Godot renames Mixamo bones (`mixamorig:Hips` becomes `mixamorig_Hips`).
+- AnimationNodeAnimation custom timelines need `stretch_time_scale = false` or the slice never plays properly (4.5.1).
+- Rebuild the generated resources: `godot --headless --path . -s tools/godot/build_remy_model.gd`.

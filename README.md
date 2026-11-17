@@ -80,3 +80,7 @@ thirsty and tired: buy food at shops, search bins and crates, sleep at your safe
 The turf map (M) can show all of Mitchells Plain with its real main roads.
 
 **World:** the game starts in the real Westridge; there is no separate preview any more.
+
+**Remy character (Mixamo):** a rigged third-person character with walk, run, sprint, jump and aim, a reusable model for
+NPCs and its own test world: open `scenes/dev/remy_playground.tscn` and press F6. Notes, animation names, speeds, the
+gun attachment and what is missing (Idle): `scenes/characters/remy/README.md`. Not wired into the game's own player yet.
