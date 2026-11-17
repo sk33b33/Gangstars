@@ -18,6 +18,11 @@ const IDLE_BLEND := 0.35        # below this speed (m/s) the idle pose fades int
 const SWITCH_WINDOW := 0.3      # Walk fades into Run over (walk + run) / 2, plus and minus this
 const SLOTS := ["Body", "Tops", "Bottoms", "Shoes", "Hair", "Eyes", "Eyelashes"]
 const SKELETON_PATH := "Remy/Armature/Skeleton3D"
+const REMY_GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
+const HIPS := "mixamorig_Hips"
+## Part names of the other Mixamo bodies (scenes/characters/npc) for each slot: their meshes are called Ch21_Shirt, Ch31_Sweater...
+const SLOT_NAMES := {"Body": ["Body"], "Tops": ["Shirt", "Sweater", "Suit", "Top", "Jacket", "Collar"], "Bottoms": ["Pants", "Skirt", "Shorts"],
+	"Shoes": ["Shoes", "Heels"], "Hair": ["Hair"], "Eyelashes": ["Eyelashes", "Eyelasshes"]}
 ## Jump clip (1.93 s): crouch to 0.4 s, apex 0.8 s, feet back on the ground about 1.3 s. It is played in three pieces
 ## (see tools/godot/build_remy_model.gd): take-off, air (held while falling), landing.
 ## Pistol_Aim (7.1 s) raises the gun by 0.5 s, holds it steady until about 1 s, then lowers it. The hold is this moment of it.
@@ -27,6 +32,9 @@ const AIM_FRAME_TIME := 0.75
 @export var walk_speed := 1.7
 @export var run_speed := 4.0
 @export var sprint_speed := 6.0
+## "" for Remy. For another Mixamo body (James, Kate...) the name that keys its retargeted copy of the clips: their rest poses
+## and size differ from Remy's, so the shared clips are corrected once per body (see _retarget).
+@export var rig_key := ""
 ## How fast the gait and the aim blend follow what the player is doing (per second).
 @export var gait_response := 8.0
 @export var aim_response := 10.0
@@ -39,7 +47,9 @@ var sling: Node3D                  # where a long gun rides on the back (barrel 
 var pistol: Node3D                 # the placeholder gun: RightHandAttachment (a BoneAttachment3D on mixamorig_RightHand) > Pistol
 var gait := 0.0                    # 0 idle, 1 walk, 2 run, 3 sprint (blended)
 
-static var _library: AnimationLibrary   # shared by every Remy: the six clips (Idle, Walk, Run, Sprint, Jump, Pistol_Aim) plus the aim hold
+static var _library: AnimationLibrary   # shared by every Remy: the clips plus the held poses
+static var _remy_rest: Dictionary = {}   # bone name -> Remy's rest Transform3D (for retargeting)
+static var _retargeted: Dictionary = {}  # rig_key -> AnimationLibrary
 
 var _playback: AnimationNodeStateMachinePlayback
 var _aim := 0.0
@@ -56,15 +66,70 @@ func _ready() -> void:
 	pistol = get_node_or_null("RightHandAttachment/Pistol") as Node3D
 	holster = get_node_or_null("HipAttachment/Holster") as Node3D
 	sling = get_node_or_null("BackAttachment/Sling") as Node3D
-	var imported := $Remy/AnimationPlayer as AnimationPlayer
 	if _library == null:
-		_library = _make_library(imported)
-	anims.add_animation_library("", _library)
+		_load_base()
+	var lib := _library
+	if rig_key != "":
+		if not _retargeted.has(rig_key):
+			_retargeted[rig_key] = _retarget(_library, skeleton)
+		lib = _retargeted[rig_key]
+	anims.add_animation_library("", lib)
 	anims.root_node = anims.get_path_to($Remy)   # the clips' track paths start at the glb's root
 	tree.anim_player = tree.get_path_to(anims)
 	tree.active = true
 	_playback = tree.get("parameters/loco/playback") as AnimationNodeStateMachinePlayback
-	imported.queue_free()   # the glb's own player is not needed: one AnimationTree drives the skeleton
+	var imported := get_node_or_null("Remy/AnimationPlayer")
+	if imported:
+		imported.queue_free()   # the glb's own player is not needed: one AnimationTree drives the skeleton
+
+
+## Loads the clips once from the Remy glb (its own scene is instantiated and thrown away again).
+static func _load_base() -> void:
+	var glb := (load(REMY_GLB) as PackedScene).instantiate()
+	var player := glb.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	var sk := glb.get_node("Armature/Skeleton3D") as Skeleton3D
+	for b in sk.get_bone_count():
+		_remy_rest[sk.get_bone_name(b)] = sk.get_bone_rest(b)
+	_library = _make_library(player)
+	glb.free()
+
+
+## A copy of the library for another Mixamo body. Clips store absolute bone rotations, so the difference between that body's
+## rest pose and Remy's is applied to every key (q' = rest' * rest^-1 * q), and the hips' travel is scaled by the ratio of the
+## hips heights (Remy's glb is twice life size). The other bones' position tracks are dropped: they only repeat Remy's own
+## bone lengths. Bones the body does not have (the eyes) are skipped.
+static func _retarget(base: AnimationLibrary, skel: Skeleton3D) -> AnimationLibrary:
+	var lib := AnimationLibrary.new()
+	var hips_rest: Transform3D = skel.get_bone_rest(skel.find_bone(HIPS))
+	var ratio := hips_rest.origin.length() / (_remy_rest[HIPS] as Transform3D).origin.length()
+	for clip in base.get_animation_list():
+		var src := base.get_animation(clip)
+		var a := Animation.new()
+		a.length = src.length
+		a.loop_mode = src.loop_mode
+		for i in src.get_track_count():
+			var kind := src.track_get_type(i)
+			if kind != Animation.TYPE_POSITION_3D and kind != Animation.TYPE_ROTATION_3D:
+				continue
+			var path := src.track_get_path(i)
+			var bone := String(path.get_concatenated_subnames())
+			var b := skel.find_bone(bone)
+			if b < 0 or not _remy_rest.has(bone) or (kind == Animation.TYPE_POSITION_3D and bone != HIPS):
+				continue
+			var rest: Transform3D = skel.get_bone_rest(b)
+			var remy_rest: Transform3D = _remy_rest[bone]
+			var n := a.add_track(kind)
+			a.track_set_path(n, path)
+			a.track_set_interpolation_type(n, src.track_get_interpolation_type(i))
+			var fix := rest.basis.get_rotation_quaternion() * remy_rest.basis.get_rotation_quaternion().inverse()
+			for k in src.track_get_key_count(i):
+				var time := src.track_get_key_time(i, k)
+				if kind == Animation.TYPE_ROTATION_3D:
+					a.rotation_track_insert_key(n, time, fix * (src.track_get_key_value(i, k) as Quaternion))
+				else:
+					a.position_track_insert_key(n, time, rest.origin + ((src.track_get_key_value(i, k) as Vector3) - remy_rest.origin) * ratio)
+		lib.add_animation(clip, a)
+	return lib
 
 
 ## The shared library: the glb's clips by reference (no copies), plus a held pose made from them:
@@ -220,7 +285,14 @@ func set_animation_enabled(on: bool) -> void:
 
 ## The MeshInstance3D of a slot ("Body", "Tops", "Bottoms", "Shoes", "Hair", "Eyes", "Eyelashes").
 func part(slot: String) -> MeshInstance3D:
-	return skeleton.get_node_or_null(slot) as MeshInstance3D
+	var mi := skeleton.get_node_or_null(slot) as MeshInstance3D
+	if mi != null or rig_key == "":
+		return mi
+	for child in skeleton.get_children():   # another Mixamo body: its meshes are named Ch21_Shirt and so on
+		for word: String in SLOT_NAMES.get(slot, []):
+			if child is MeshInstance3D and child.name.ends_with(word):
+				return child as MeshInstance3D
+	return null
 
 
 ## Gives a part its own copy of the material (made once) so one NPC can differ from the others.

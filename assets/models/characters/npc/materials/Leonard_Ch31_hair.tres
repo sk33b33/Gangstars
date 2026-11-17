@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" load_steps=2 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/models/characters/npc/Leonard_Ch31_1002_Diffuse.png" id="1_1pm6e"]
+
+[resource]
+resource_name = "Ch31_hair"
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+albedo_texture = ExtResource("1_1pm6e")
+metallic_specular = 0.12
+roughness = 0.9

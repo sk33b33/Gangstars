@@ -2302,7 +2302,92 @@ func _test_remy() -> void:
 	other.queue_free()
 	m.queue_free()
 	await process_frame
+	await _test_npc_bodies()
 	await _test_remy_player()
+
+
+## The five other Mixamo bodies (James, Kate, Leonard, Louise, Meegan) that residents will wear: life size, light, matte, and
+## driven by Remy's clips after retargeting (scenes/characters/npc, tools/blender/lighten_mixamo.py).
+func _test_npc_bodies() -> void:
+	print("== Mixamo NPC bodies")
+	var names := ["James", "Kate", "Leonard", "Louise", "Meegan"]
+	_check(FileAccess.file_exists("res://assets/models/characters/npc/source/.gdignore"), "the original Mixamo downloads sit in a .gdignore folder (Godot does not import them)")
+	var heavy := 0
+	var heights := []
+	var hip_heights := []
+	var tall_end := 0
+	var matte := true
+	var two_sided := true
+	var scissor := true
+	var compressed := true
+	var states_ok := true
+	var no_boxes := true
+	var in_place := true
+	for n in names:
+		var m: RemyModel = (load("res://scenes/characters/npc/%s_model.tscn" % n.to_lower()) as PackedScene).instantiate()
+		add_child_to_root(m)
+		await process_frame
+		var tri := 0
+		for mi in m.skeleton.find_children("*", "MeshInstance3D", false, false):
+			var mesh := (mi as MeshInstance3D).mesh
+			for s in mesh.get_surface_count():
+				tri += mesh.surface_get_array_index_len(s) / 3
+				var mat := mesh.surface_get_material(s) as StandardMaterial3D
+				matte = matte and mat != null and mat.roughness_texture == null and mat.metallic_texture == null and mat.roughness >= 0.8 and mat.metallic == 0.0
+				two_sided = two_sided and mat.cull_mode == BaseMaterial3D.CULL_DISABLED
+				var hairy := mat.resource_name.to_lower().contains("hair") or mat.resource_name.to_lower().contains("eyelash")
+				scissor = scissor and (mat.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR) == hairy
+				compressed = compressed and mat.albedo_texture is CompressedTexture2D
+		if tri > 30000:
+			heavy += 1
+		no_boxes = no_boxes and m.pistol != null and m.pistol.get_child_count() == 0
+		for i in 30:
+			m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+			await physics_frame
+		await process_frame
+		var head := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Head")).origin)
+		var hips := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Hips")).origin)
+		var foot := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_LeftFoot")).origin)
+		heights.append(snappedf(head.y, 0.01))
+		hip_heights.append(snappedf(hips.y, 0.01))
+		tall_end += 1 if foot.y < 0.25 else 0
+		# Standing still plays the Idle, running keeps the feet near the ground and the head up.
+		for i in 60:
+			m.update_locomotion(4.0, false, true, 1.0 / 60.0)
+			await physics_frame
+		await process_frame
+		var run_head := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Head")).origin)
+		states_ok = states_ok and m.gait > 1.8 and run_head.y > 1.3 and run_head.y < 1.9
+		# Knocked out: falls and lies on the spot, then gets up.
+		var spot := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Hips")).origin)
+		m.fall_down()
+		for i in 200:
+			m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+			await physics_frame
+		await process_frame
+		var lay := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Head")).origin)
+		var lay_hips := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Hips")).origin)
+		in_place = in_place and m.is_down() and lay.y < 0.6 and Vector2(lay_hips.x - spot.x, lay_hips.z - spot.z).length() < 0.4
+		m.stand_up()
+		for i in 200:
+			m.update_locomotion(0.0, false, true, 1.0 / 60.0)
+			await physics_frame
+		await process_frame
+		var up := m.skeleton.to_global(m.skeleton.get_bone_global_pose(m.skeleton.find_bone("mixamorig_Head")).origin)
+		in_place = in_place and not m.is_down() and up.y > 1.3
+		m.queue_free()
+		await process_frame
+	_check(heavy == 0, "each body is under 30,000 triangles (Mixamo's own were 50,000 to 59,000)")
+	_check(matte and two_sided and scissor and compressed, "their materials are matte (no gloss or metallic map), two-sided, with alpha scissor only on hair and eyelashes, and compressed textures")
+	var tall := true
+	for h in heights:
+		tall = tall and h > 1.45 and h < 1.9
+	var hips_ok := true
+	for h in hip_heights:
+		hips_ok = hips_ok and h > 0.85 and h < 1.1
+	_check(tall and hips_ok and tall_end == 5, "standing, each is life size (heads %s m, hips %s m) with the feet on the ground" % [heights, hip_heights])
+	_check(states_ok, "running at 4 m/s plays the retargeted Run clip (head 1.3 to 1.9 m up)")
+	_check(in_place and no_boxes, "each falls, lies on the spot and gets up again, and carries no box gun in the hand")
 
 
 func add_child_to_root(n: Node) -> void:

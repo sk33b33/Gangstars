@@ -14,6 +14,8 @@ const OUT := "res://scenes/characters/remy/"
 const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
 const SKELETON := "Armature/Skeleton3D"
 const XFADE := 0.12
+const NPC_DIR := "res://assets/models/characters/npc/"
+const NPC_BODIES := ["James", "Kate", "Leonard", "Louise", "Meegan"]
 
 
 func _anim(clip: String, start := 0.0, length := 0.0, loop := Animation.LOOP_NONE) -> AnimationNodeAnimation:
@@ -113,18 +115,18 @@ func _tree(skeleton: Skeleton3D) -> AnimationNodeBlendTree:
 
 ## The placeholder pistol: a slide and a grip made of boxes, 1 unit = 1 metre, under a node scaled to cancel the
 ## armature's 0.01 and the model's 0.5 (so 200). Move and turn "Pistol" in the editor until it sits in the hand.
-func _pistol() -> Node3D:
+func _pistol(unit := 200.0, boxes := true) -> Node3D:
 	var pistol := Node3D.new()
 	pistol.name = "Pistol"
-	pistol.scale = Vector3.ONE * 200.0
+	pistol.scale = Vector3.ONE * unit
 	# Worked out in the aim pose: barrel along the character's forward, slide up, grip in the palm (units are 1/200 m
 	# because of the scale: the palm is 15.6 units, about 8 cm, along the finger direction, which is the bone's +Y).
-	pistol.position = Vector3(11.15, 17.32, -2.73)
+	pistol.position = Vector3(11.15, 17.32, -2.73) * (unit / 200.0)   # bone units: half as many for a life-size skeleton
 	pistol.rotation_degrees = Vector3(-49.95, -156.24, 77.02)
 	var metal := StandardMaterial3D.new()
 	metal.albedo_color = Color("#2b2d33")
 	metal.roughness = 0.6
-	for spec in [["Slide", Vector3(0.03, 0.034, 0.19), Vector3(0.0, 0.0, 0.07)], ["Grip", Vector3(0.028, 0.09, 0.04), Vector3(0.0, -0.058, 0.0)]]:
+	for spec in ([["Slide", Vector3(0.03, 0.034, 0.19), Vector3(0.0, 0.0, 0.07)], ["Grip", Vector3(0.028, 0.09, 0.04), Vector3(0.0, -0.058, 0.0)]] if boxes else []):
 		var mi := MeshInstance3D.new()
 		mi.name = spec[0]
 		var box := BoxMesh.new()
@@ -145,7 +147,7 @@ func _bone_in_model(remy: Node3D, skeleton: Skeleton3D, bone: String) -> Transfo
 
 ## A BoneAttachment3D on `bone` with a child node scaled 200 (1 unit = 1 metre inside it), placed so that the node's
 ## axes are `axes` (a Basis in model space: Z is the gun's barrel, Y its top) at `offset` metres from the bone.
-func _carry(root: Node3D, remy: Node3D, skeleton: Skeleton3D, bone: String, attach_name: String, node_name: String, axes: Basis, offset: Vector3) -> void:
+func _carry(root: Node3D, remy: Node3D, skeleton: Skeleton3D, bone: String, attach_name: String, node_name: String, axes: Basis, offset: Vector3, unit := 200.0) -> void:
 	var attach := BoneAttachment3D.new()
 	attach.name = attach_name
 	attach.use_external_skeleton = true
@@ -156,26 +158,20 @@ func _carry(root: Node3D, remy: Node3D, skeleton: Skeleton3D, bone: String, atta
 	var b := _bone_in_model(remy, skeleton, bone).basis.orthonormalized()
 	var node := Node3D.new()
 	node.name = node_name
-	node.transform = Transform3D(Basis(b.inverse() * axes).scaled(Vector3.ONE * 200.0), b.inverse() * offset * 200.0)
+	node.transform = Transform3D(Basis(b.inverse() * axes).scaled(Vector3.ONE * unit), b.inverse() * offset * unit)
 	attach.add_child(node)
 	node.owner = root
 
 
-func _init() -> void:
-	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
-	var glb := (load(GLB) as PackedScene).instantiate()
-	var skeleton := glb.get_node(SKELETON) as Skeleton3D
-	var tree_root := _tree(skeleton)
-	var err := ResourceSaver.save(tree_root, OUT + "remy_anim_tree.tres")
-	print("tree: ", error_string(err))
-	glb.free()
-
+## One model scene: the glb (turned to face -Z, scaled), the AnimationPlayer and tree, and where a gun rides.
+func _model(root_name: String, glb_path: String, model_scale: float, rig_key: String, out_path: String) -> void:
 	var root := Node3D.new()
-	root.name = "RemyModel"
+	root.name = root_name
 	root.set_script(load("res://scripts/characters/remy_model.gd"))
-	var remy := (load(GLB) as PackedScene).instantiate() as Node3D
+	root.set("rig_key", rig_key)
+	var remy := (load(glb_path) as PackedScene).instantiate() as Node3D
 	remy.name = "Remy"
-	remy.transform = Transform3D(Basis(Vector3.UP, PI).scaled(Vector3.ONE * 0.5), Vector3.ZERO)   # faces -Z, 1.8 m tall
+	remy.transform = Transform3D(Basis(Vector3.UP, PI).scaled(Vector3.ONE * model_scale), Vector3.ZERO)   # faces -Z, 1.8 m tall
 	root.add_child(remy)
 	remy.owner = root
 	var anims := AnimationPlayer.new()
@@ -198,7 +194,7 @@ func _init() -> void:
 	attach.bone_name = "mixamorig_RightHand"
 	root.add_child(attach)
 	attach.owner = root
-	var pistol := _pistol()
+	var pistol := _pistol(100.0 / model_scale, rig_key == "")   # (the others get their guns from WeaponLibrary, no box placeholder)
 	attach.add_child(pistol)
 	pistol.owner = root
 	for mi in pistol.get_children():
@@ -206,14 +202,30 @@ func _init() -> void:
 	# Where a weapon rides when it is not in the hand: a pistol in a holster on the right hip (barrel down, slide to the
 	# front), a long gun slung across the back (barrel up). (The model faces -Z, its right is +X, its back is +Z.)
 	var skeleton_node := remy.get_node(SKELETON) as Skeleton3D
+	var unit := 100.0 / model_scale   # a node this scaled measures 1 unit = 1 metre (the armature is 0.01)
 	_carry(root, remy, skeleton_node, "mixamorig_Hips", "HipAttachment", "Holster",
-		Basis(Vector3(-1, 0, 0), Vector3(0, 0, -1), Vector3(0, -1, 0)), Vector3(0.2, -0.04, -0.02))
+		Basis(Vector3(-1, 0, 0), Vector3(0, 0, -1), Vector3(0, -1, 0)), Vector3(0.2, -0.04, -0.02), unit)
 	var barrel := Vector3(0.25, 0.97, 0).normalized()
 	var top := Vector3(0, 0, 1)
 	_carry(root, remy, skeleton_node, "mixamorig_Spine2", "BackAttachment", "Sling",
-		Basis(top.cross(barrel).normalized(), top, barrel), Vector3(0.0, 0.0, 0.17))
+		Basis(top.cross(barrel).normalized(), top, barrel), Vector3(0.0, 0.0, 0.17), unit)
 	var packed := PackedScene.new()
 	print("pack: ", error_string(packed.pack(root)))
-	print("save: ", error_string(ResourceSaver.save(packed, OUT + "remy_model.tscn")))
+	print("save: ", error_string(ResourceSaver.save(packed, out_path)))
 	root.free()
+
+
+func _init() -> void:
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
+	var glb := (load(GLB) as PackedScene).instantiate()
+	var skeleton := glb.get_node(SKELETON) as Skeleton3D
+	var tree_root := _tree(skeleton)
+	var err := ResourceSaver.save(tree_root, OUT + "remy_anim_tree.tres")
+	print("tree: ", error_string(err))
+	glb.free()
+	_model("RemyModel", GLB, 0.5, "", OUT + "remy_model.tscn")   # Remy's glb is twice life size
+	# The five other Mixamo bodies (tools/blender/lighten_mixamo.py makes the glbs) are life size.
+	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://scenes/characters/npc/"))
+	for n in NPC_BODIES:
+		_model(n + "Model", NPC_DIR + n + ".glb", 1.0, n, "res://scenes/characters/npc/%s_model.tscn" % n.to_lower())
 	quit()

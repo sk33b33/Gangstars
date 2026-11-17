@@ -147,3 +147,20 @@ one AnimationTree per character. Still to do for crowds:
 off during the last 0.7 s cuts it short). `is_down()` says whether he is falling or lying. The glb's two clips drift about
 a metre across the ground (root motion), so the library plays copies whose hips keep their start position on the ground
 (the Mixamo hips track: local X and Y are the ground, Z the height). `RemyPlayerModel.base_pose = "down"` / `""` call them.
+
+## The five NPC bodies (James, Kate, Leonard, Louise, Meegan)
+Scenes: `scenes/characters/npc/<name>_model.tscn` (script `RemyModel`, `rig_key` = the name), built by
+`tools/godot/build_remy_model.gd` like Remy's. They are other Mixamo downloads on the same skeleton, so Remy's clips drive them.
+- **Source and lightening.** The files as downloaded are in `assets/models/characters/npc/source/` (a `.gdignore` keeps Godot
+  from importing them). `tools/blender/lighten_mixamo.py` (`blender -b --factory-startup --python ...`) writes the game's
+  `npc/<Name>.glb`: about 45% of the triangles (50,000 to 59,000 become 24,000 to 28,000) and only the Diffuse texture per
+  material (Mixamo's Specular, Glossiness and Normal maps made them shiny; the files drop from 7 to 9 MB to 3 to 4 MB).
+- **Materials.** `tools/godot/build_npc_materials.gd` writes `npc/materials/<Name>_<material>.tres` (matte, two-sided, hair and
+  eyelashes alpha scissor) and the glb's `.import` uses them. Textures are 1024 px, VRAM compressed.
+- **Size.** They are life size (the Remy file is twice life size), so the model scene scale is 1, not 0.5.
+- **Animation.** `RemyModel._retarget` makes one copy of the clips per body (cached by `rig_key`): every rotation key is corrected
+  by the difference between that body's rest pose and Remy's (q' = rest' * rest^-1 * q), the hips' travel is scaled by the hips
+  height ratio, and the other position tracks are dropped. Idle, Walk, Run, Sprint, Jump, aim, fall and get-up all work.
+- **Parts.** `part("Tops")` etc. find `Ch21_Shirt`, `Ch31_Sweater`, `Ch07_Suit`... by name (James is one mesh, so he has none).
+- **Not wired to residents yet.** Residents still use the old `CharacterModel`; see the roadmap.
+- Look at them: `godot --path . scenes/dev/remy_playground.tscn -- --bodies --shot=res://tests/output/x.png --cam=0,1.5,0.5,0,1,-6`.

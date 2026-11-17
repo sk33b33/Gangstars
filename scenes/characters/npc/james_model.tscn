@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/remy_model.gd" id="1_3km8f"]
+[ext_resource type="PackedScene" path="res://assets/models/characters/npc/James.glb" id="2_u0wsn"]
+[ext_resource type="AnimationNodeBlendTree" path="res://scenes/characters/remy/remy_anim_tree.tres" id="3_8ge2m"]
+
+[node name="JamesModel" type="Node3D"]
+script = ExtResource("1_3km8f")
+rig_key = "James"
+
+[node name="Remy" type="Node3D" parent="." instance=ExtResource("2_u0wsn")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, 0, 0)
+
+[node name="Anims" type="AnimationPlayer" parent="."]
+
+[node name="AnimationTree" type="AnimationTree" parent="."]
+active = false
+tree_root = ExtResource("3_8ge2m")
+anim_player = NodePath("../Anims")
+parameters/loco/conditions/landed = false
+parameters/loco/Grounded/gait/blend_position = 0.0
+parameters/loco/Grounded/speed/scale = 1.0
+parameters/aim/blend_amount = 0.0
+
+[node name="RightHandAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_RightHand"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Pistol" type="Node3D" parent="RightHandAttachment"]
+transform = Transform3D(9.496425, 96.11295, -25.92525, 62.701458, 14.452728, 76.54832, 77.319756, -23.524864, -58.89173, 5.575, 8.66, -1.365)
+
+[node name="HipAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_Hips"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Holster" type="Node3D" parent="HipAttachment"]
+transform = Transform3D(100, -8.742278e-06, 0, 3.1264824e-12, 3.576279e-05, -100, 8.742278e-06, 100, 3.576279e-05, -20, -3.999999, 1.9999995)
+
+[node name="BackAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_Spine2"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Sling" type="Node3D" parent="BackAttachment"]
+transform = Transform3D(96.83552, 8.7422795e-06, -24.957605, 24.931768, 4.54905, 96.73527, 1.1353425, -99.89647, 4.405094, 1.4861877e-06, 0.7733385, -16.9824)

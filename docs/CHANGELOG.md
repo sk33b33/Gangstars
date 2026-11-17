@@ -1,5 +1,11 @@
 # Changelog
 
+## Five more Mixamo bodies for NPCs (2026-11-17)
+- James, Kate, Leonard, Louise and Meegan (uploaded as GLBs) are in `assets/models/characters/npc/`: lightened with
+  `tools/blender/lighten_mixamo.py` (about 25,000 triangles each, Diffuse only), matte two-sided materials, and one model
+  scene each (`scenes/characters/npc/`). `RemyModel` retargets Remy's clips onto them (idle, walk, run, sprint, jump, aim,
+  fall, get-up). Residents do not wear them yet.
+
 ## Remy: matte, no see-through spots (2026-11-17)
 - Materials: two-sided instead of back-face culled (gaps at sleeve, collar and trouser openings), and matte: the glb's Gloss maps
   were used as roughness and made skin and clothes shiny with white highlight specks, so each material now has one roughness

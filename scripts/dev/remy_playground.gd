@@ -153,8 +153,11 @@ func _build_npcs() -> void:
 		{"skin": Color("#a7754f"), "top": Color("#c8327a"), "bottom": Color("#1d1b24"), "shoes": Color("#e0b02a"), "hair": Color("#4a2f22")},
 	]
 	var gaits := [[0.0, false], [1.7, false], [4.0, false], [6.0, true], [0.0, false]]
+	var bodies := ["james", "kate", "leonard", "louise", "meegan"]
 	for i in 5:
 		var m: RemyModel = MODEL_SCENE.instantiate()
+		if _args.has("bodies"):   # --bodies: the five Mixamo NPC bodies instead of Remy in five outfits
+			m = (load("res://scenes/characters/npc/%s_model.tscn" % bodies[i]) as PackedScene).instantiate()
 		add_child(m)
 		m.position = Vector3(-4.0 + i * 2.0, 0.0, -6.0)
 		m.rotation.y = 0.0   # faces -Z; the player starts south of them, looking north
@@ -165,7 +168,8 @@ func _build_npcs() -> void:
 		outfit.bottoms_tint = look.bottom
 		outfit.shoes_tint = look.shoes
 		outfit.hair_tint = look.hair
-		m.apply_outfit(outfit)
+		if not _args.has("bodies"):
+			m.apply_outfit(outfit)
 		if i == 4:
 			m.set_aiming(true)
 		npcs.append({"model": m, "speed": gaits[i][0], "sprint": gaits[i][1]})

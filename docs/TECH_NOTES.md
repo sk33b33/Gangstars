@@ -588,3 +588,8 @@ with the origin until then). Screenshots with people: `--wait=100 --cam-resident
 - Godot renames Mixamo bones (`mixamorig:Hips` becomes `mixamorig_Hips`).
 - AnimationNodeAnimation custom timelines need `stretch_time_scale = false` or the slice never plays properly (4.5.1).
 - Rebuild the generated resources: `godot --headless --path . -s tools/godot/build_remy_model.gd`.
+
+### NPC bodies (2026-11-17)
+- Lighten the Mixamo downloads: `blender -b --factory-startup --python tools/blender/lighten_mixamo.py`, then
+  `godot --headless --path . --import`, `-s tools/godot/build_npc_materials.gd`, import again, `-s tools/godot/build_remy_model.gd`.
+- Quick check: `tests/run.sh --remy-only`. Picture: playground with `-- --bodies`.
