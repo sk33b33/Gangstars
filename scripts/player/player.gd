@@ -32,7 +32,8 @@ var vibration := true
 @onready var pitch: Node3D = $CameraPivot/Pitch
 @onready var spring_arm: SpringArm3D = $CameraPivot/Pitch/SpringArm3D
 @onready var camera: Camera3D = $CameraPivot/Pitch/SpringArm3D/Camera3D
-@onready var model: CharacterModel = $Model
+## Remy (RemyPlayerModel) answers the same few calls the old CharacterModel did: set_weapon, draw_weapon, aiming, animate, muzzle_position, flinch, base_pose, build.
+@onready var model: RemyPlayerModel = $Model
 @onready var sensor: Area3D = $InteractionSensor
 
 var current_target: Interactable
@@ -206,6 +207,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y = 0.0
 		if _pressed("jump"):
 			velocity.y = jump_velocity
+			model.jump()
 	else:
 		velocity.y -= GRAVITY * delta
 	move_and_slide()

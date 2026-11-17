@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/characters/remy_player_model.gd" id="1_wrap"]
+[ext_resource type="PackedScene" path="res://scenes/characters/remy/remy_model.tscn" id="2_remy"]
+
+[node name="Model" type="Node3D"]
+script = ExtResource("1_wrap")
+
+[node name="RemyModel" parent="." instance=ExtResource("2_remy")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, 0, 0)

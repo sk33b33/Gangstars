@@ -126,6 +126,30 @@ func _pistol() -> Node3D:
 	return pistol
 
 
+## The transform of a bone's rest pose in the model scene (the glb instance is turned round and scaled 0.5 there).
+func _bone_in_model(remy: Node3D, skeleton: Skeleton3D, bone: String) -> Transform3D:
+	var armature := remy.get_node("Armature") as Node3D
+	return remy.transform * armature.transform * skeleton.transform * skeleton.get_bone_global_rest(skeleton.find_bone(bone))
+
+
+## A BoneAttachment3D on `bone` with a child node scaled 200 (1 unit = 1 metre inside it), placed so that the node's
+## axes are `axes` (a Basis in model space: Z is the gun's barrel, Y its top) at `offset` metres from the bone.
+func _carry(root: Node3D, remy: Node3D, skeleton: Skeleton3D, bone: String, attach_name: String, node_name: String, axes: Basis, offset: Vector3) -> void:
+	var attach := BoneAttachment3D.new()
+	attach.name = attach_name
+	attach.use_external_skeleton = true
+	attach.external_skeleton = NodePath("../Remy/" + SKELETON)
+	attach.bone_name = bone
+	root.add_child(attach)
+	attach.owner = root
+	var b := _bone_in_model(remy, skeleton, bone).basis.orthonormalized()
+	var node := Node3D.new()
+	node.name = node_name
+	node.transform = Transform3D(Basis(b.inverse() * axes).scaled(Vector3.ONE * 200.0), b.inverse() * offset * 200.0)
+	attach.add_child(node)
+	node.owner = root
+
+
 func _init() -> void:
 	DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(OUT))
 	var glb := (load(GLB) as PackedScene).instantiate()
@@ -168,6 +192,15 @@ func _init() -> void:
 	pistol.owner = root
 	for mi in pistol.get_children():
 		mi.owner = root
+	# Where a weapon rides when it is not in the hand: a pistol in a holster on the right hip (barrel down, slide to the
+	# front), a long gun slung across the back (barrel up). (The model faces -Z, its right is +X, its back is +Z.)
+	var skeleton_node := remy.get_node(SKELETON) as Skeleton3D
+	_carry(root, remy, skeleton_node, "mixamorig_Hips", "HipAttachment", "Holster",
+		Basis(Vector3(-1, 0, 0), Vector3(0, 0, -1), Vector3(0, -1, 0)), Vector3(0.2, -0.04, -0.02))
+	var barrel := Vector3(0.25, 0.97, 0).normalized()
+	var top := Vector3(0, 0, 1)
+	_carry(root, remy, skeleton_node, "mixamorig_Spine2", "BackAttachment", "Sling",
+		Basis(top.cross(barrel).normalized(), top, barrel), Vector3(0.0, 0.0, 0.17))
 	var packed := PackedScene.new()
 	print("pack: ", error_string(packed.pack(root)))
 	print("save: ", error_string(ResourceSaver.save(packed, OUT + "remy_model.tscn")))

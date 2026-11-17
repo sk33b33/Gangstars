@@ -185,7 +185,8 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 
 ## Remy character (2026-11-17)
 - [x] Import, reusable model + AnimationTree, third-person player, touch controls, aim + gun placeholder, NPC outfits, playground.
-- [ ] A real Idle clip; strafe and backwards clips; cheaper NPC version (LOD); decide whether Remy replaces the game's Player and Residents.
+- [x] Remy is the game's player (2026-11-17).
+- [ ] A real Idle clip; hit, kick, wave, fall clips; strafe and backwards clips; cheaper NPC version (LOD); Remy for Residents (decision pending).
 
 ## UI cleanup (requested 2026-11-17)
 - [x] Menu: Back to game button + Android back key; Edit touch controls (drag, tap to select + x to remove, add button, reset). design/gdd/touch_controls.md

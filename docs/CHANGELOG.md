@@ -1,5 +1,14 @@
 # Changelog
 
+## Remy is the player (2026-11-17)
+- The game's `Player` now shows Remy (`scenes/characters/player.tscn`: the `Model` node is `remy_player_model.tscn`).
+  Combat, interaction, camera, driving, touch controls, saves and the tests use the same `Player` script (one new line:
+  `model.jump()`).
+- `RemyPlayerModel` gives Remy the old model's calls. The pistol and shotgun of `WeaponLibrary` are in the hands when drawn,
+  a pistol rides on the right hip, a shotgun on the back. Crew colours tint his top and bottoms. Knocked out lays him on his back.
+- Not there yet: hit flinch, kick and wave clips, the old model's cap, hair and face options, a real Idle.
+- Remy's idle is Walk's first frame (a mid-stride pose) until a real Idle clip is added.
+
 ## Remy: a rigged Mixamo character, ready for the player and NPCs (2026-11-17)
 - Imported `Remy_Animations_Mobile.glb` (uploaded to `assets/models/characters/`, never edited): loops set (Walk, Run,
   Sprint and Pistol_Aim loop, Jump once), hair and eyelashes on alpha scissor, textures VRAM compressed

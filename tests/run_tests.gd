@@ -3604,6 +3604,91 @@ func _test_touch_editor_in_game(main: Node, district: District, player: Player) 
 	await process_frame
 
 
+## Remy as the game's own player (scenes/characters/player.tscn): the same Player, with Remy for a body.
+func _test_remy_as_player(main: Node, district: District, player: Player) -> void:
+	print("== Remy as the player")
+	var m: RemyPlayerModel = player.model
+	_check(m is RemyPlayerModel and m.remy.tree.active and m.remy.skeleton.find_bone("mixamorig_RightHand") >= 0, "the game's player is Remy (one AnimationTree, Mixamo skeleton)")
+	var cap := (player.get_node("CollisionShape3D") as CollisionShape3D).shape as CapsuleShape3D
+	_check(absf(cap.height - 1.8) < 0.01 and absf(m.remy.skeleton.global_position.y) < 0.2 and is_equal_approx(m.remy.walk_speed, 1.7) and is_equal_approx(m.remy.run_speed, player.walk_speed) and is_equal_approx(m.remy.sprint_speed, player.sprint_speed),
+		"he stands in the 1.8 m capsule and his gaits follow the player's walk and sprint speeds")
+	player.input_enabled = true
+	player.global_position = _place(district, "open")
+	player.snap_camera()
+	for i in 30:
+		await physics_frame
+	# Weapons: slung or holstered when away, in the hands when drawn.
+	m.set_weapon("shotgun")
+	_check(m._gun != null and m._gun.get_parent() == m.remy.sling and not m.weapon_drawn, "a shotgun hangs across his back")
+	m.draw_weapon(true)
+	_check(m._gun.get_parent() == m.remy.pistol and m.muzzle_position().distance_to(player.global_position) > 0.5, "drawn, it is in his hands and the muzzle is out in front (%.1f m)" % m.muzzle_position().distance_to(player.global_position))
+	m.set_weapon("pistol")
+	_check(m._gun.get_parent() == m.remy.holster, "a pistol sits in the holster on his hip")
+	var kept_weapon := player.weapon
+	player.weapon = "pistol"
+	m.set_weapon("pistol")
+	Input.action_press("aim")
+	for i in 40:
+		await physics_frame
+	var aimed: bool = m.remy.is_aiming() and m._gun.get_parent() == m.remy.pistol
+	Input.action_release("aim")
+	for i in 40:
+		await physics_frame
+	_check(aimed and not m.remy.is_aiming(), "holding aim raises his arms with the pistol in hand, letting go lowers them")
+	player.weapon = kept_weapon
+	m.set_weapon(kept_weapon)
+	# Crew colours tint him; the weapon is kept.
+	var before := player.weapon
+	player.wear_colours(Color("#d6403e"), Color("#a63a4c"), "tortel_crew")
+	var tint := m.remy.part("Tops").get_surface_override_material(0) as StandardMaterial3D
+	_check(tint != null and tint.albedo_color.r > tint.albedo_color.b and player.weapon == before and m.weapon == before, "crew colours tint his top and keep the weapon")
+	# Jump: the Player's jump plays Remy's take-off, air and landing.
+	var states: Array = []
+	Input.action_press("jump")
+	await physics_frame
+	Input.action_release("jump")
+	var peak := 0.0
+	var start_y := player.global_position.y
+	for i in 120:
+		await physics_frame
+		peak = maxf(peak, player.global_position.y - start_y)
+		var s := str(m.remy.state_name())
+		if states.is_empty() or states[-1] != s:
+			states.append(s)
+	_check(peak > 0.5 and states.has("JumpStart") and states.has("JumpAir") and states[-1] == "Grounded", "jumping plays take-off, air and landing (%.1f m up, %s)" % [peak, states])
+	# Walking: the gait follows the speed.
+	Input.action_press("move_forward")
+	for i in 60:
+		await physics_frame
+	var walking_gait := m.remy.gait
+	Input.action_press("sprint")
+	for i in 60:
+		await physics_frame
+	var sprinting_gait := m.remy.gait
+	Input.action_release("sprint")
+	Input.action_release("move_forward")
+	for i in 60:
+		await physics_frame
+	_check(walking_gait > 1.5 and walking_gait < 2.5 and sprinting_gait > 2.8 and m.remy.gait < 0.2, "walking runs the Run clip at the player's pace, sprinting plays Sprint, stopping goes to idle (%.1f, %.1f)" % [walking_gait, sprinting_gait])
+	# Knocked out: he falls on his back and gets up again.
+	m.base_pose = "down"
+	for i in 40:
+		await physics_frame
+	var lying := absf(m.remy.rotation.x - PI * 0.5) < 0.05
+	m.base_pose = ""
+	for i in 40:
+		await physics_frame
+	_check(lying and absf(m.remy.rotation.x) < 0.05, "knocked out he lies on his back, and stands again when he wakes")
+	# Facing: the Player's own convention (+Z is the front) points him the way he walks.
+	player.pivot.rotation.y = 0.0
+	Input.action_press("move_forward")
+	for i in 40:
+		await physics_frame
+	var facing := player.facing_dir()
+	Input.action_release("move_forward")
+	_check(facing.dot(Vector3(0, 0, -1)) > 0.9 and (m.remy.global_basis * Vector3(0, 0, -1)).dot(Vector3(0, 0, -1)) > 0.9, "he faces the way he walks (the model's front is the direction the Player expects)")
+
+
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var missions := session.missions
@@ -4563,10 +4648,13 @@ func _test_district() -> void:
 			await _test_gamepad_in_game(main, district, player)
 		elif only == "dormant":
 			await _test_dormant_in_game(main, district, player)
+		elif only == "remyplayer":
+			await _test_remy_as_player(main, district, player)
 		elif only == "touch":
 			await _test_touch_in_game(main, district, player)
 			await _test_touch_editor_in_game(main, district, player)
 		return
+	await _test_remy_as_player(main, district, player)
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
 	await _test_turf_in_game(main, district, player)

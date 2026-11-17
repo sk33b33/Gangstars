@@ -1,8 +1,26 @@
 # Remy (Mixamo character)
 
 A rigged Mixamo character with five animations, set up as a reusable model for the player and for NPCs.
-It is **not wired into the game yet**: the game's own `Player` (`scripts/player/player.gd`) is untouched, and Remy has
-its own player (`remy_player.tscn`) and a test world. Try it: open `scenes/dev/remy_playground.tscn`, press F6.
+**Remy is the game's player** (2026-11-17): `scenes/characters/player.tscn`'s `Model` node is now
+`remy_player_model.tscn`. The game's `Player` script is unchanged (combat, interaction, camera, driving, touch, saves),
+except for one `model.jump()` call. Remy also has his own stand-alone player (`remy_player.tscn`) and a test world:
+open `scenes/dev/remy_playground.tscn`, press F6.
+
+## Remy as the game's player
+
+`RemyPlayerModel` (`scripts/characters/remy_player_model.gd`) answers the calls the old `CharacterModel` did, so nothing
+else in the game changed: `set_weapon`, `draw_weapon`, `aiming`, `animate`, `muzzle_position`, `flinch`, `base_pose`,
+`build`, `rotation.y` (the Player turns it so that +Z is where the character faces; the RemyModel inside is turned round).
+- **Weapons** come from `WeaponLibrary` (pistol, shotgun): in the hands while drawn or aiming, then a pistol rides in a
+  holster on the right hip (`HipAttachment/Holster`) and a shotgun is slung across the back (`BackAttachment/Sling`).
+  The box pistol of the playground is hidden. Placement values are in `tools/godot/build_remy_model.gd`.
+- **Crew colours** (`Player.wear_colours`) tint the top and bottoms and the skin tone tints the body. The cap and the old
+  model's hair, face and trouser options do not exist on Remy.
+- **Gaits** follow the Player's own speeds: its walk (3.4 m/s) is Remy's Run clip, a gentle push still plays Walk,
+  its sprint (6.5 m/s) plays Sprint.
+- **Knocked out** lays Remy on his back (a tween: there is no fall clip). **Hit flinch, kick, wave:** nothing plays yet
+  (no clips).
+- Aiming is the Player's own (RMB / LT / the AIM button); `Aim_Hold` raises the arms.
 
 ## Files
 

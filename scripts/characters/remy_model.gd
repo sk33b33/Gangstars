@@ -35,6 +35,8 @@ const AIM_FRAME_TIME := 0.75
 var tree: AnimationTree
 var anims: AnimationPlayer
 var skeleton: Skeleton3D
+var holster: Node3D                # where a pistol rides on the right hip (barrel down)
+var sling: Node3D                  # where a long gun rides on the back (barrel up)
 var pistol: Node3D                 # the placeholder gun: RightHandAttachment (a BoneAttachment3D on mixamorig_RightHand) > Pistol
 var gait := 0.0                    # 0 idle, 1 walk, 2 run, 3 sprint (blended)
 
@@ -52,6 +54,8 @@ func _ready() -> void:
 	anims = $Anims
 	skeleton = get_node(SKELETON_PATH) as Skeleton3D
 	pistol = get_node_or_null("RightHandAttachment/Pistol") as Node3D
+	holster = get_node_or_null("HipAttachment/Holster") as Node3D
+	sling = get_node_or_null("BackAttachment/Sling") as Node3D
 	var imported := $Remy/AnimationPlayer as AnimationPlayer
 	if _library == null:
 		_library = _make_library(imported)

@@ -50,3 +50,19 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.058, 0)
 material_override = SubResource("StandardMaterial3D_h4wuw")
 cast_shadow = 0
 mesh = SubResource("BoxMesh_v7jbx")
+
+[node name="HipAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_Hips"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Holster" type="Node3D" parent="HipAttachment"]
+transform = Transform3D(200, -1.7484555e-05, 0, 0, 0, -200, 1.7484555e-05, 200, 0, -40, -8, 3.9999967)
+
+[node name="BackAttachment" type="BoneAttachment3D" parent="."]
+bone_name = "mixamorig_Spine2"
+use_external_skeleton = true
+external_skeleton = NodePath("../Remy/Armature/Skeleton3D")
+
+[node name="Sling" type="Node3D" parent="BackAttachment"]
+transform = Transform3D(192.71744, 1.7043205e-05, -53.47896, 53.091187, -24.040798, 191.32007, -6.4283667, -198.54985, -23.165407, 2.8973448e-06, -4.086936, -33.753475)
