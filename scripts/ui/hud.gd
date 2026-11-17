@@ -33,6 +33,11 @@ func _ready() -> void:
 	_clock = _label(Vector2(16, 70), 26)
 	_stats = _label(Vector2(16, 104), 22)
 	_tracker = _label(Vector2(16, 140), 20)
+	# The long tabs (area and controls, money and rep, the mission) are gone from the screen: the clock sits top left with the
+	# mini map under it, money is a coin under the health, the rest is in the phone. Their texts stay for the phone and the tests.
+	_title.visible = false
+	_stats.visible = false
+	_tracker.visible = false
 	_combat = _label(Vector2.ZERO, 24)
 	_combat.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
 	_combat.offset_left = -260
@@ -56,9 +61,11 @@ func _ready() -> void:
 	_stats.add_theme_stylebox_override("normal", panel_style(Color("#27ae60")))
 	_tracker.add_theme_stylebox_override("normal", panel_style(Color("#ffd75e"), 0.62))
 	_title.position = Vector2(12, 8)
-	_clock.position = Vector2(12, 78)
+	_clock.position = Vector2(12, 8)
 	_stats.position = Vector2(12, 120)
 	_tracker.position = Vector2(12, 164)
+	_build_money()
+	_build_minimap()
 	_build_compass()
 	_build_vignette()
 	_build_menu()
@@ -124,6 +131,8 @@ func combat_text() -> String:
 func set_stats(p: ProgressionState) -> void:
 	_stats_base = "R%d   ·   Rep %d   ·   Crew %d (influence %d)" % [p.cash, p.reputation, p.recruited_crew_ids.size(), p.crew_influence]
 	_stats.text = _stats_base if _survival_text.is_empty() else _stats_base + "   ·   " + _survival_text
+	if _cash_label:
+		_cash_label.text = "%d" % p.cash
 
 
 var _stats_base := ""
@@ -136,6 +145,13 @@ func set_survival(text: String) -> void:
 		return
 	_survival_text = text
 	_stats.text = _stats_base if text.is_empty() else _stats_base + "   ·   " + text
+	if _need_label:
+		_need_label.text = text
+		_need_label.visible = not text.is_empty()
+
+
+func survival_text() -> String:
+	return _survival_text
 
 
 func stats_text() -> String:
@@ -301,8 +317,8 @@ func _process(delta: float) -> void:
 		_caption_timer -= delta
 		if _caption_timer <= 0.0:
 			_caption.visible = false
-	for l: Label in [_tracker, _stats]:   # no empty glass panels
-		l.visible = not l.text.is_empty()
+	if _money_box:   # sits under the health (and the heat stars when there are some)
+		_money_box.offset_top = _combat.offset_top + _combat.get_combined_minimum_size().y + 4.0
 	if _help_timer > 0.0:
 		_help_timer -= delta
 		if _help_timer <= 0.0:
@@ -333,6 +349,54 @@ static func panel_style(accent := Color("#ffd75e"), alpha := 0.55) -> StyleBoxFl
 	return sb
 
 
+var _money_box: HBoxContainer
+var _cash_label: Label
+var _need_label: Label
+var minimap: MiniMap
+
+
+## The R5 coin and the money total, top right under the health.
+func _build_money() -> void:
+	_money_box = HBoxContainer.new()
+	_money_box.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_money_box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_money_box.offset_left = -200
+	_money_box.offset_right = -16
+	_money_box.offset_top = 52
+	_money_box.alignment = BoxContainer.ALIGNMENT_END
+	_money_box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_money_box.add_theme_constant_override("separation", 8)
+	add_child(_money_box)
+	_money_box.add_child(CoinIcon.new())
+	_cash_label = Label.new()
+	_cash_label.add_theme_font_size_override("font_size", 24)
+	_cash_label.add_theme_color_override("font_outline_color", Color.BLACK)
+	_cash_label.add_theme_constant_override("outline_size", 6)
+	_cash_label.text = "0"
+	_money_box.add_child(_cash_label)
+	# Hunger, thirst, tiredness and wounds show here only when they need attention.
+	_need_label = _label(Vector2.ZERO, 16)
+	_need_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_need_label.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_need_label.offset_left = -300
+	_need_label.offset_right = -16
+	_need_label.offset_top = 96
+	_need_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_need_label.add_theme_color_override("font_color", Color("#ffb86b"))
+	_need_label.visible = false
+
+
+## The translucent map under the clock.
+func _build_minimap() -> void:
+	minimap = MiniMap.new()
+	minimap.position = Vector2(12, 52)
+	add_child(minimap)
+
+
+func setup_minimap(data: RealDistrictData, player: Node3D, markers := Callable()) -> void:
+	minimap.setup(data, player, markers)
+
+
 const POINTS := ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
 var _compass: Label
 var _vignette: ColorRect
@@ -343,7 +407,7 @@ func _build_compass() -> void:
 	_compass.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_compass.offset_left = -190
 	_compass.offset_right = 190
-	_compass.offset_top = 76
+	_compass.offset_top = 8   # right at the top of the screen now the long tabs are gone
 	_compass.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_compass.add_theme_stylebox_override("normal", panel_style(Color("#d9c49a"), 0.5))
 	_compass.add_theme_color_override("font_color", Color("#f4efe2"))
@@ -418,7 +482,7 @@ func show_tip(title: String, text: String, footer: String) -> void:
 		_tip.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 		_tip.offset_left = -560
 		_tip.offset_right = -16
-		_tip.offset_top = 64
+		_tip.offset_top = 130
 		_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_tip.add_theme_stylebox_override("normal", panel_style(Color("#9fd8b8"), 0.72))
 		_tip.mouse_filter = Control.MOUSE_FILTER_STOP   # a tap on the card skips the tips (touch)

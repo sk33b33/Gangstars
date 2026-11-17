@@ -27,6 +27,12 @@ var _side: VBoxContainer
 var _world_rect := Rect2()
 var _map_scale := 1.0
 var _map_offset := Vector2.ZERO
+## Pinch, drag and zoom: `_zoom` 1 shows the whole suburb; `_pan` moves the picture (canvas pixels). The two buttons and the
+## mouse wheel do the same for the mouse and the pad.
+const ZOOM_MAX := 12.0
+var _zoom := 1.0
+var _pan := Vector2.ZERO
+var _touches := {}   # finger index -> screen position
 
 
 func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -> void:
@@ -58,7 +64,9 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 	_canvas = Control.new()
 	_canvas.custom_minimum_size = MAP_SIZE
 	_canvas.draw.connect(_draw_map)
+	_canvas.clip_contents = true   # zoomed in, the map stays inside its frame
 	row.add_child(_canvas)
+	_zoom_buttons()
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(420, 600)
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
@@ -76,6 +84,7 @@ func setup(p_district: District, p_manager: DistrictManager, p_player: Node3D) -
 
 
 func open() -> void:
+	reset_view()
 	refresh()
 	visible = true
 
@@ -199,7 +208,115 @@ func _add_legend() -> void:
 
 
 func _to_map(p: Vector3) -> Vector2:
-	return _map_offset + (Vector2(p.x, p.z) - _world_rect.position) * _map_scale
+	var base := _map_offset + (Vector2(p.x, p.z) - _world_rect.position) * _map_scale
+	var mid := MAP_SIZE * 0.5
+	return (base - mid) * _zoom + mid + _pan
+
+
+# ------------------------------------------------------------------ pinch, drag and zoom
+
+func reset_view() -> void:
+	_zoom = 1.0
+	_pan = Vector2.ZERO
+	_touches.clear()
+	if _canvas:
+		_canvas.queue_redraw()
+
+
+func zoom_level() -> float:
+	return _zoom
+
+
+## Zooms by `factor` keeping the canvas point `focal` where it is under the finger or cursor.
+func zoom_at(factor: float, focal: Vector2) -> void:
+	var new_zoom := clampf(_zoom * factor, 1.0, ZOOM_MAX)
+	var f := new_zoom / _zoom
+	var mid := MAP_SIZE * 0.5
+	_pan = focal - mid - (focal - mid - _pan) * f
+	_zoom = new_zoom
+	_clamp_pan()
+	_canvas.queue_redraw()
+
+
+func pan_by(delta: Vector2) -> void:
+	_pan += delta
+	_clamp_pan()
+	_canvas.queue_redraw()
+
+
+## The picture may not be dragged right off the frame: at most to its own edge.
+func _clamp_pan() -> void:
+	var limit := MAP_SIZE * (_zoom - 1.0) * 0.5 + MAP_SIZE * 0.15
+	_pan = Vector2(clampf(_pan.x, -limit.x, limit.x), clampf(_pan.y, -limit.y, limit.y))
+	if _zoom <= 1.001:
+		_pan = Vector2.ZERO
+
+
+func _zoom_buttons() -> void:
+	var box := VBoxContainer.new()
+	box.position = Vector2(MAP_SIZE.x - 52, 8)
+	for spec in [["+", 1.5], ["−", 1.0 / 1.5]]:
+		var b := Button.new()
+		b.text = str(spec[0])
+		b.custom_minimum_size = Vector2(44, 44)
+		b.focus_mode = Control.FOCUS_NONE
+		var factor: float = spec[1]
+		b.pressed.connect(func(): zoom_at(factor, MAP_SIZE * 0.5))
+		box.add_child(b)
+	var home := Button.new()
+	home.text = "⌂"
+	home.custom_minimum_size = Vector2(44, 44)
+	home.focus_mode = Control.FOCUS_NONE
+	home.pressed.connect(reset_view)
+	box.add_child(home)
+	_canvas.add_child(box)
+
+
+func _canvas_point(screen: Vector2) -> Vector2:
+	return _canvas.get_global_transform().affine_inverse() * screen
+
+
+func _input(event: InputEvent) -> void:
+	if not visible or _canvas == null:
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed and _canvas.get_global_rect().has_point(event.position):
+			_touches[event.index] = event.position
+		elif not event.pressed:
+			_touches.erase(event.index)
+	elif event is InputEventScreenDrag and _touches.has(event.index):
+		_touch_drag(event)
+		get_viewport().set_input_as_handled()
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.pressed:
+		if _canvas.get_global_rect().has_point(event.position):
+			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+				zoom_at(1.25, _canvas_point(event.position))
+			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+				zoom_at(0.8, _canvas_point(event.position))
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		if _canvas.get_global_rect().has_point(event.position):
+			pan_by(event.relative)
+	elif event is InputEventMagnifyGesture and _canvas.get_global_rect().has_point(event.position):
+		zoom_at(event.factor, _canvas_point(event.position))
+
+
+## One finger drags the map, two fingers pinch it (and move it with the middle of the two).
+func _touch_drag(event: InputEventScreenDrag) -> void:
+	if _touches.size() < 2:
+		_touches[event.index] = event.position
+		pan_by(event.relative)
+		return
+	var ids: Array = _touches.keys()
+	var before_a: Vector2 = _touches[ids[0]]
+	var before_b: Vector2 = _touches[ids[1]]
+	_touches[event.index] = event.position
+	var after_a: Vector2 = _touches[ids[0]]
+	var after_b: Vector2 = _touches[ids[1]]
+	var d0 := before_a.distance_to(before_b)
+	var d1 := after_a.distance_to(after_b)
+	if d0 > 8.0 and d1 > 8.0:
+		zoom_at(d1 / d0, _canvas_point((after_a + after_b) * 0.5))
+	pan_by(((after_a + after_b) - (before_a + before_b)) * 0.5)
 
 
 ## The map: the real suburb with its streets, the game's homes by turf state, the parts

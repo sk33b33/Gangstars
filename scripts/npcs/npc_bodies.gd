@@ -7,7 +7,8 @@ const MEN: PackedStringArray = ["James", "Leonard"]
 const WOMEN: PackedStringArray = ["Kate", "Louise", "Meegan"]
 ## Crew in hoodie and headphones, the police in the dark sweater.
 const CREW := {"man": "James", "woman": "Meegan"}
-const POLICE := "Leonard"
+const POLICE := "Leonard"          # the men of the SAPS
+const POLICE_WOMAN := "Kate"       # the women of the SAPS
 
 static var enabled := true
 
@@ -15,7 +16,7 @@ static var enabled := true
 ## The body name for a person: crew and police have their own, everyone else is picked by their id.
 static func pick(id: String, role: String, woman: bool) -> String:
 	if role == "police":
-		return POLICE
+		return POLICE_WOMAN if woman else POLICE
 	if role == "crew":
 		return CREW.woman if woman else CREW.man
 	var pool := WOMEN if woman else MEN
@@ -30,6 +31,7 @@ static func create(data: NpcData) -> NpcBodyModel:
 static func make(id: String, role: String, woman: bool) -> NpcBodyModel:
 	var m := NpcBodyModel.new()
 	m.setup_body(pick(id, role, woman))
+	m.police = role == "police"
 	return m
 
 

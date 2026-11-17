@@ -108,6 +108,8 @@ func _ready() -> void:
 		tutorial.restart())
 	apply_settings()
 	hud.show_message("Welcome to Westridge. You've just moved into 13 Excelsior Street.")
+	if district.real != null and district.real.data != null:
+		hud.setup_minimap(district.real.data, player, session.minimap_markers)
 	session.begin(_args.has("load") or (auto_load and not _args.has("new-game") and not _args.has("shot")))
 	if session.progression.crew_id.is_empty():
 		if _args.has("crew"):

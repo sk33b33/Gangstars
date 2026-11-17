@@ -328,12 +328,13 @@ func street_context(key: Vector2i) -> Dictionary:
 				var line := RealChunkBuilder._line(r.p)
 				if line.size() < 2:
 					continue
-				var entry := [RealStreetDecor.rank(str(r.c)), float(r.w)]
-				for end in [line[0], line[line.size() - 1]]:
-					var nk := RealStreetDecor.node_key(end)
+				for end_i: int in [0, line.size() - 1]:
+					# [class rank, width, street name, direction leaving the junction along this piece, class]
+					var away := (line[1] - line[0]).normalized() if end_i == 0 else (line[line.size() - 2] - line[end_i]).normalized()
+					var nk := RealStreetDecor.node_key(line[end_i])
 					if not nodes.has(nk):
 						nodes[nk] = []
-					nodes[nk].append(entry)
+					nodes[nk].append([RealStreetDecor.rank(str(r.c)), float(r.w), str(r.get("n", "")), away, str(r.c)])
 				if str(r.c) == "main" and int(r.get("o", 0)) != 0:
 					oneways.append({"line": line, "w": float(r.w), "n": str(r.get("n", ""))})
 	var crossings: Array = []
@@ -359,7 +360,7 @@ func street_context(key: Vector2i) -> Dictionary:
 							best = {"at": q, "dir": (line[i + 1] - line[i]).normalized(), "w": float(r.w), "chunk": k2, "kind": str(l.kind)}
 		if not best.is_empty() and best.chunk == key:
 			crossings.append(best)
-	_street_ctx[key] = {"nodes": nodes, "crossings": crossings, "oneways": oneways, "lamps": lamps}
+	_street_ctx[key] = {"key": key, "nodes": nodes, "crossings": crossings, "oneways": oneways, "lamps": lamps}
 	return _street_ctx[key]
 
 

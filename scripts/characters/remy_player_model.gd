@@ -22,6 +22,9 @@ var aiming := false:
 		if remy:
 			remy.set_aiming(aiming)
 
+## The hand's node (RightHandAttachment/Pistol) was tuned for a placeholder whose origin is the top of the grip; the weapon mesh's
+## origin is the middle of the gun (grip centre 4 cm below the slide's), so the mesh is moved down and back to put the grip in the palm.
+const PISTOL_IN_HAND := Vector3(0.0, -0.04, 0.0)
 var _gun: MeshInstance3D
 var _body: CharacterBody3D
 
@@ -95,6 +98,8 @@ func _place_gun() -> void:
 	_gun.transform = Transform3D(Basis(), Vector3(0, 0, 0.0))
 	if weapon_drawn and long_gun:
 		_gun.position = Vector3(0, -0.02, 0.1)   # the stock near the hands, the barrel out in front
+	elif weapon_drawn:
+		_gun.position = PISTOL_IN_HAND
 
 
 ## World position of the muzzle (for tracers), or the chest if unarmed.

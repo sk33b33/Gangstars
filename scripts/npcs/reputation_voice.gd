@@ -11,11 +11,16 @@ const LEGEND := ["Is it really you? The whole Plain knows your name.", "Respect,
 const WARY := ["Mm. I've heard things about you.", "Keep walking, please.", "I don't want trouble."]
 const FRIEND := ["Ag, my friend! Come, come.", "Ja nee, look who it is!", "There's always tea for you."]
 const COLD := ["I've got nothing to say to you.", "Hmph.", "You've got some nerve."]
+## What the men on the street call out to a stranger or a friend they are not at odds with (Cape Flats greetings).
+const MALE_GREETINGS := ["Awe mybru!", "Aweza!", "Ahoy!"]
 const HEAT := ["Police are looking for you! Go!", "Not near my gate, please!", "Skarrel, quick!"]
 
 
 ## Returns {"line": String, "wave": bool}. heat is the police star level (0-5).
-static func greet(reputation: int, relationship: int, heat: int, rng: RandomNumberGenerator) -> Dictionary:
+static func greet(reputation: int, relationship: int, heat: int, rng: RandomNumberGenerator, man := false) -> Dictionary:
+	# A man who is not afraid of you or cold to you often just calls out a greeting.
+	if man and heat < 3 and relationship > -10 and reputation >= 0 and rng.randf() < 0.5:
+		return {"line": MALE_GREETINGS[rng.randi() % MALE_GREETINGS.size()], "wave": true}
 	if heat >= 3:
 		return {"line": HEAT[rng.randi() % HEAT.size()], "wave": false}
 	if relationship <= -10:

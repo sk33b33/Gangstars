@@ -75,7 +75,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 	var props := {}   # prop name -> Array[Transform3D], built as one MultiMesh each
 	var humps: Array = []
 	if ctx.has("street"):
-		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props, humps)
+		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props, humps, root)
 	stats["humps"] = humps
 	for at in lamp_points(chunk.get("roads", [])):
 		var steel := _tool("steel", surfaces, materials, PixelMaterials.flat(Color("#7d828c")))
@@ -348,21 +348,16 @@ static func _road(r: Dictionary, surfaces: Dictionary, materials: Dictionary, ro
 			while t + 2.0 < length:
 				ribbon(paint, PackedVector2Array([line[i] + dir * t, line[i] + dir * (t + 2.0)]), 0.15, Y_PAINT)
 				t += 7.0
+	# The street's name for the HUD and "which street am I on": an invisible marker (the street names you read in the world are on
+	# the concrete slabs at the junction corners, RealStreetDecor._street_slabs).
 	var road_name := str(r.get("n", ""))
 	if not road_name.is_empty() and _length(line) > 35.0:
 		var mid := line[line.size() / 2]
-		var label := Label3D.new()
-		label.text = road_name.to_upper()
-		label.font_size = 40
-		label.pixel_size = 0.008
-		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		label.modulate = Color.WHITE
-		label.outline_modulate = Color("#1f5d3a")
-		label.outline_size = 14
-		label.position = Vector3(mid.x, 3.2, mid.y)
-		label.visibility_range_end = 70.0
-		label.set_meta("street", road_name)
-		root.add_child(label)
+		var tag := Node3D.new()
+		tag.name = "StreetName"
+		tag.position = Vector3(mid.x, 0.0, mid.y)
+		tag.set_meta("street", road_name)
+		root.add_child(tag)
 
 
 static func _length(line: PackedVector2Array) -> float:
@@ -478,7 +473,7 @@ static func _semi(ring: PackedVector2Array, centre: Vector2, h: float, rect: Dic
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
-		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
+		var out := _v(edge_out(ring, p0, p1), 0.0)
 		var s0 := (p0 - c).dot(u) - split
 		var s1 := (p1 - c).dot(u) - split
 		var pieces: Array = [[p0, p1, s0 + s1]]
@@ -526,7 +521,7 @@ static func wall_ring(ring: PackedVector2Array, centre: Vector2, h: float, walls
 		var p1 := ring[(i + 1) % ring.size()]
 		var a := _v(p0, 0.0)
 		var c := _v(p1, 0.0)
-		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
+		var out := _v(edge_out(ring, p0, p1), 0.0)
 		_quad(walls, a, c, h + parapet, out)
 		collision.append_array([a, _v(p0, h), _v(p1, h), a, _v(p1, h), c])
 		if plinth != null:
@@ -573,7 +568,7 @@ static func home_front(ring: PackedVector2Array, near_roads: Array, rings: Array
 			continue
 		var tangent := (p1 - p0).normalized()
 		var normal := Vector2(-tangent.y, tangent.x)
-		if normal.dot(mid - centre) < 0.0:
+		if normal.dot(edge_out(ring, p0, p1)) < 0.0:
 			normal = -normal
 		var step := mid + normal * DOOR_OUT
 		var hemmed := false
@@ -608,7 +603,7 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 		var mid := (p0 + p1) * 0.5
 		var tangent := (p1 - p0) / maxf(length, 0.001)
 		var normal := Vector2(-tangent.y, tangent.x)
-		if normal.dot(mid - centre) < 0.0:
+		if normal.dot(edge_out(ring, p0, p1)) < 0.0:
 			normal = -normal
 		var top := minf(2.15, h - 0.4)
 		if i == best:
@@ -871,6 +866,15 @@ static func _wall_normal(p0: Vector2, p1: Vector2, out: Vector3) -> Vector2:
 	var t := (p1 - p0).normalized()
 	var n := Vector2(-t.y, t.x)
 	return n if n.dot(Vector2(out.x, out.z)) >= 0.0 else -n
+
+
+## The unit normal of the outline's edge p0-p1 pointing out of the building. Worked out from the outline's winding, so it is right
+## for L, T and U shapes too (the old test "away from the centre" turned the walls round the inside of a bend inward, and
+## a wall facing inward is not drawn from the street: houses with missing walls).
+static func edge_out(ring: PackedVector2Array, p0: Vector2, p1: Vector2) -> Vector2:
+	var t := (p1 - p0).normalized()
+	var n := Vector2(t.y, -t.x)   # outward for a counter-clockwise outline
+	return n if _signed_area(ring) > 0.0 else -n
 
 
 static func _signed_area(ring: PackedVector2Array) -> float:

@@ -70,7 +70,7 @@ static func hump_distance(r: Dictionary) -> float:
 ## Adds the street details of a chunk. `props`: {prop name: Array[Transform3D]} filled for the
 ## builder's MultiMeshes (trees).
 ## `humps`: receives the speed humps' middle points (Vector2), for cars to slow down at.
-static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, props: Dictionary, humps: Array = []) -> void:
+static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, props: Dictionary, humps: Array = [], root: Node3D = null) -> void:
 	var lamps: PackedVector3Array = ctx.get("lamps", PackedVector3Array())
 	for r: Dictionary in roads:
 		var cls := str(r.c)
@@ -101,6 +101,90 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 			_street_trees(line, width, pave, lamps, poles, rng, props)
 	for c: Dictionary in ctx.get("crossings", []):
 		_zebra(c.at, c.dir, float(c.w), surfaces, materials)
+	_street_slabs(roads, ctx, surfaces, materials, root)
+
+
+# ------------------------------------------------------------------ street name slabs
+
+const SLAB_COLOR := "#d9d5ca"
+const SLAB_FOOT := "#a8a398"
+const ABBREV := {"Street": "St", "Avenue": "Ave", "Road": "Rd", "Close": "Cl", "Drive": "Dr", "Crescent": "Cres", "Court": "Ct", "Place": "Pl", "Way": "Way", "Lane": "Ln"}
+
+
+## "Excelsior Street" -> "EXCELSIOR ST": the names are short enough for a small slab.
+static func short_name(street: String) -> String:
+	var words := street.split(" ")
+	if words.size() > 1 and ABBREV.has(words[words.size() - 1]):
+		words[words.size() - 1] = ABBREV[words[words.size() - 1]]
+	return " ".join(words).to_upper()
+
+
+## A squat white-painted concrete slab on the pavement corner of a junction, the two street names on both faces (the way
+## suburban South African corners are marked). One per junction, placed by the chunk the junction lies in.
+static func _street_slabs(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+	var nodes: Dictionary = ctx.get("nodes", {})
+	var chunk_key: Vector2i = ctx.get("key", Vector2i(9999, 9999))
+	var size := 200.0
+	var done := {}
+	for r: Dictionary in roads:
+		var line := RealChunkBuilder._line(r.p)
+		if line.size() < 2 or not str(r.c) in ["street", "collector", "main"]:
+			continue
+		for end: Vector2 in [line[0], line[line.size() - 1]]:
+			var nk := node_key(end)
+			if done.has(nk):
+				continue
+			done[nk] = true
+			if Vector2i(floori(end.x / size), floori(end.y / size)) != chunk_key:
+				continue   # the neighbour chunk places its own
+			var pair := _slab_pair(nodes.get(nk, []))
+			if pair.is_empty():
+				continue
+			_slab(end, pair[0], pair[1], surfaces, materials, root)
+
+
+## Two entries of a junction with different street names (the biggest roads first), or [].
+static func _slab_pair(entries: Array) -> Array:
+	var named: Array = entries.filter(func(e: Array): return int(e[0]) >= 2 and not str(e[2]).is_empty())
+	named.sort_custom(func(a: Array, b: Array): return int(a[0]) > int(b[0]))
+	for i in named.size():
+		for j in range(i + 1, named.size()):
+			if str(named[i][2]) != str(named[j][2]) and absf((named[i][3] as Vector2).dot(named[j][3])) < 0.8:
+				return [named[i], named[j]]
+	return []
+
+
+static func _slab(node: Vector2, a: Array, b: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+	var da: Vector2 = a[3]
+	var db: Vector2 = b[3]
+	var kerb := RealChunkBuilder.KERB_WIDTH
+	# The pavement corner between the two streets: clear of both carriageways and their kerbs.
+	var corner := node + da * (float(b[1]) * 0.5 + kerb + 0.7) + db * (float(a[1]) * 0.5 + kerb + 0.7)
+	var n := -(da + db).normalized()   # the face towards the junction
+	var u := left_of(n)
+	var concrete := _flat("slab", SLAB_COLOR, surfaces, materials)
+	RealLandmarks._obox(_flat("slab_foot", SLAB_FOOT, surfaces, materials), corner, u, Vector2(0.36, 0.14), 0.0, 0.12)
+	RealLandmarks._obox(concrete, corner, u, Vector2(0.33, 0.055), 0.12, 0.72)
+	if root == null:
+		return
+	var text := "%s\n%s" % [short_name(str(a[2])), short_name(str(b[2]))]
+	for side: float in [1.0, -1.0]:
+		var face := n * side
+		var label := Label3D.new()
+		label.text = text
+		label.font_size = 26
+		label.pixel_size = 0.0034
+		label.shaded = false
+		label.double_sided = false
+		label.modulate = Color("#1d1b24")
+		label.outline_size = 0
+		label.line_spacing = -4.0
+		label.position = Vector3(corner.x + face.x * 0.062, 0.45, corner.y + face.y * 0.062)
+		var z := Vector3(face.x, 0, face.y)
+		label.basis = Basis(Vector3.UP.cross(z), Vector3.UP, z)
+		label.visibility_range_end = 28.0
+		label.set_meta("street_slab", true)
+		root.add_child(label)
 
 
 # ------------------------------------------------------------------ helpers
@@ -118,6 +202,22 @@ static func _flat(key: String, color: String, surfaces: Dictionary, materials: D
 
 static func _decal_tool(tex: String, surfaces: Dictionary, materials: Dictionary) -> SurfaceTool:
 	return RealChunkBuilder._tool("decal_" + tex, surfaces, materials, PixelMaterials.panel(tex, Color.WHITE, true))
+
+
+## A textured rectangle standing on end, facing `normal` (the way the sign looks, towards whoever reads it), centred on `mid`,
+## `width` across, from y0 to y1, with the texture the right way round and not mirrored: a viewer looking at it has the viewer's
+## right = left_of(normal) (x east, z south). (RealChunkBuilder._panel is for walls: its flip rule mirrors a sign on a pole.)
+static func face_quad(st: SurfaceTool, mid: Vector2, normal: Vector2, width: float, y0: float, y1: float) -> void:
+	var right := left_of(normal)
+	var m := mid + normal * 0.03
+	var bl := m - right * width * 0.5
+	var br := m + right * width * 0.5
+	var corners := [Vector3(bl.x, y0, bl.y), Vector3(br.x, y0, br.y), Vector3(br.x, y1, br.y), Vector3(bl.x, y1, bl.y)]
+	var uvs := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
+	for k: int in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[k])
+		st.set_normal(Vector3(normal.x, 0, normal.y))
+		st.add_vertex(corners[k])
 
 
 ## The point `dist` metres along the polyline and the direction there.
@@ -168,15 +268,19 @@ static func _hump(line: PackedVector2Array, dist: float, width: float, surfaces:
 	var st := RealChunkBuilder._tool("hump", surfaces, materials, PixelMaterials.panel("speed_hump"))
 	var y0 := RealChunkBuilder.Y_ROAD + 0.002
 	var steps := [[-HUMP_LENGTH * 0.5, y0], [-HUMP_LENGTH * 0.25, y0 + HUMP_HEIGHT], [HUMP_LENGTH * 0.25, y0 + HUMP_HEIGHT], [HUMP_LENGTH * 0.5, y0]]
-	var u := half_w * 2.0 / 2.0   # stripes repeat every 2 m across
+	# The stripe texture is 32 x 8 px; one tile is 4 m across and 1 m along, so a pixel is 12.5 cm both ways and the slanted stripes keep
+	# their angle on the ramps and the top alike (the texture is mapped by metres, not stretched to each piece).
+	var u := half_w * 2.0 / 4.0
 	for k in 3:
 		var a: Array = steps[k]
 		var b: Array = steps[k + 1]
+		var v0 := float(a[0]) + HUMP_LENGTH * 0.5
+		var v1 := float(b[0]) + HUMP_LENGTH * 0.5
 		var p0 := c + d * float(a[0])
 		var p1 := c + d * float(b[0])
 		var quad := [Vector3((p0 + left * half_w).x, a[1], (p0 + left * half_w).y), Vector3((p0 - left * half_w).x, a[1], (p0 - left * half_w).y),
 			Vector3((p1 - left * half_w).x, b[1], (p1 - left * half_w).y), Vector3((p1 + left * half_w).x, b[1], (p1 + left * half_w).y)]
-		var uvs := [Vector2(0, 0), Vector2(u, 0), Vector2(u, 1), Vector2(0, 1)]
+		var uvs := [Vector2(0, v0), Vector2(u, v0), Vector2(u, v1), Vector2(0, v1)]
 		for i: int in [0, 1, 2, 0, 2, 3]:
 			st.set_uv(uvs[i])
 			st.add_vertex(quad[i])
@@ -210,7 +314,14 @@ static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, n
 		var left := left_of(inward)
 		var at := e - inward * back
 		RealChunkBuilder.strip(_flat("paint", PAINT, surfaces, materials), PackedVector2Array([at, at + left * (width * 0.5 - 0.3)]), 0.4, RealChunkBuilder.Y_PAINT)
-		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 2.6 + left * width * 0.25, inward, 1.3, 2.6, Y_ROAD_DECAL)
+		# STOP is read from the driver's seat (the texture's top is the far end, the stop line): 1 m wide, 3 m long.
+		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 2.5 + left * width * 0.25, inward, 1.0, 3.0, Y_ROAD_DECAL)
+		# The sign itself: a red octagon on a pole at the kerb beside the stop line, facing the arriving driver.
+		var pole_at := at + left * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.55)
+		RealLandmarks._obox(_flat("steel", RealLandmarks.STEEL, surfaces, materials), pole_at, left, Vector2(0.035, 0.035), 0.0, 2.3)
+		var facing := -inward
+		var sign_tool := RealChunkBuilder._tool("panel_sign_stop", surfaces, materials, PixelMaterials.panel("sign_stop", Color.WHITE, true))
+		face_quad(sign_tool, pole_at, facing, 0.75, 1.55, 2.3)
 
 
 ## Zebra stripes across the whole road, 3 m long, every metre.
@@ -394,7 +505,7 @@ static func _shelter(line: PackedVector2Array, width: float, length: float, rng:
 	var tex := "sign_bus" if rng.randi() % 2 == 0 else "sign_taxi"
 	var sign := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
 	for s: float in [1.0, -1.0]:
-		RealChunkBuilder._panel(sign, sign_at, left * s, d * s, 0.5, 2.1, 2.6)
+		face_quad(sign, sign_at, d * s, 0.5, 2.1, 2.6)
 
 
 ## Trees along both sides of the street at the back of the verge, clear of lamps and power poles.

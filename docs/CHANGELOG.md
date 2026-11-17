@@ -1,5 +1,28 @@
 # Changelog
 
+## Westridge details, HUD and people (2026-11-17)
+- **Houses with missing walls.** Each wall was faced away from the building's centre, which is wrong for L and U shapes: 2,437
+  walls of 1,370 buildings (a quarter of them) faced inward and were not drawn from the street. `RealChunkBuilder.edge_out`
+  works the outward side out from the outline's winding (also used for doors, windows, bands and murals).
+- **Road signs.** A red octagonal STOP sign on a pole at each stop line, facing the driver. The STOP painted on the road was
+  truncated and ran the wrong way: it now reads from the driver's seat (S nearest, P at the stop line). Speed humps are slanted
+  white stripes on dark asphalt, mapped by metres so the slant keeps its angle. A new `face_quad` draws signs on a pole the right
+  way round (the wall panel helper mirrored them).
+- **Street name slabs.** A squat white-painted concrete slab at the pavement corner of each junction with the two street names
+  ("EXCELSIOR ST / EXCELSIOR CL") on both faces; the floating name labels are gone. (I could not find a source describing the
+  Mitchells Plain slabs: they follow the suburban South African corner block as I know it. Tell me what they look like and I will
+  change them.)
+- **HUD.** Removed the area and controls tab, the money/rep/crew tab and the mission tab. Day and time are top left with a
+  translucent mini map under it (streets, you as a white arrow, gold dots for the mission and people who have one for you, blue for
+  the SAPS). Money is an R5 coin with the total under the health. Hunger, thirst and the like show under the money only when they
+  matter. The compass is at the very top. The phone has a new Status page: money, reputation, crew, needs and the mission.
+- **Map menu.** Pinch with two fingers, drag with one, mouse wheel, and +, - and home buttons (1x to 12x).
+- **People.** Men call out "Awe mybru!", "Aweza!" or "Ahoy!" when you walk up (not when afraid of or cold to you, not women). The
+  SAPS wear a flat navy uniform with POLICE on the chest and the back (it follows the body), and are men (Leonard) and women (Kate):
+  five of the ten officers are women now.
+- **Remy's pistol.** The weapon mesh's origin is the middle of the gun, not the top of the grip like the placeholder the hand was
+  tuned for: it is moved 4 cm so the grip sits in the palm.
+
 ## Houses no longer stand in the road (2026-11-17)
 - The house outlines (Microsoft footprints) and the streets (OpenStreetMap) disagree by a metre or two, so 163 of 5,505 buildings
   had a corner on or within 0.5 m of a carriageway (up to 2.8 m onto a street, a roof and wall standing in the road).

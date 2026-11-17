@@ -524,8 +524,10 @@ sprite("manhole", { w: 12, h: 12 },
   circ(5, 5, 5, "#3a3d46"), circ(5, 5, 4, "#565a64"), hline(2, 3, 7, "#3a3d46"), hline(2, 5, 7, "#3a3d46"), hline(2, 7, 7, "#3a3d46"))
 sprite("drain_grate", { w: 16, h: 6 },
   rect(0, 0, 16, 6, "#1d1b24"), (c) => { for (let x = 1; x < 16; x += 2) c.vline(x, 1, 4, "#565a64") })
+// Mitchells Plain speed hump: slanted white stripes (not straight across) on dark asphalt.
 sprite("speed_hump", { w: 32, h: 8 },
-  (c) => { for (let x = 0; x < 32; x += 8) { c.rect(x, 0, 4, 8, "#f2c43a"); c.rect(x + 4, 0, 4, 8, "#1d1b24") } })
+  rect(0, 0, 32, 8, "#2b2b30"),
+  (c) => { for (let x = -8; x < 36; x += 8) c.poly([x, 8, x + 4, 8, x + 12, 0, x + 8, 0], "#f1eee8") })
 sprite("crack_a", { w: 24, h: 24 },
   line(2, 22, 7, 15, "#5a5550"), line(7, 15, 9, 9, "#5a5550"), line(9, 9, 14, 6, "#5a5550"), line(14, 6, 21, 1, "#5a5550"),
   line(9, 9, 5, 4, "#6d6862"), line(7, 15, 12, 17, "#6d6862"))
@@ -598,16 +600,25 @@ pal({ "<": "#6f8a3f", ">": "#93ab5c" })
 sprite("median_grass", { w: 32, h: 32 },
   rect(0, 0, 32, 32, "#7f9a4c"), noise(0, 0, 32, 32, "<", 0.12, 9), noise(0, 0, 32, 32, ">", 0.08, 4),
   ellipse(9, 22, 5, 3, "#b9a57e"), ellipse(10, 22, 3, 2, "#c9b68c"), ellipse(25, 8, 3, 2, "#b9a57e"))
-// STOP painted on the lane before a stop line (read from the driver's seat: letters stretched along the road).
-sprite("stop_text", { w: 16, h: 32 },
+// STOP painted on the lane before a stop line, read from the driver's seat: the texture's top is the far end (the stop line), so
+// P is at the top and S at the bottom nearest the driver; the letters stand upright with their tops towards the junction.
+sprite("stop_text", { w: 16, h: 48 },
   (c) => {
     const W = "#f1eee8"
+    // P
+    c.rect(3, 0, 2, 10, W); c.rect(3, 0, 10, 2, W); c.rect(11, 0, 2, 6, W); c.rect(3, 4, 10, 2, W)
+    // O
+    c.rect(3, 12, 10, 2, W); c.rect(3, 20, 10, 2, W); c.rect(3, 12, 2, 10, W); c.rect(11, 12, 2, 10, W)
+    // T
+    c.rect(3, 24, 10, 2, W); c.rect(7, 24, 2, 10, W)
     // S
-    c.rect(3, 1, 10, 2, W); c.rect(3, 3, 2, 3, W); c.rect(3, 6, 10, 2, W); c.rect(11, 8, 2, 3, W); c.rect(3, 11, 10, 2, W)
-  },
-  (c) => { const W = "#f1eee8"; c.rect(3, 14, 10, 2, W); c.rect(7, 16, 2, 5, W) },
-  (c) => { const W = "#f1eee8"; c.rect(3, 22, 10, 2, W); c.rect(3, 24, 2, 3, W); c.rect(11, 24, 2, 3, W); c.rect(3, 27, 10, 2, W) },
-  (c) => { const W = "#f1eee8"; c.rect(3, 30, 2, 2, W); c.rect(5, 30, 6, 1, W) })
+    c.rect(3, 36, 10, 2, W); c.rect(3, 38, 2, 3, W); c.rect(3, 40, 10, 2, W); c.rect(11, 42, 2, 3, W); c.rect(3, 44, 10, 2, W)
+  })
+// The red octagonal STOP sign on a pole.
+sprite("sign_stop", { w: 24, h: 24 },
+  poly([7, 0, 16, 0, 23, 7, 23, 16, 16, 23, 7, 23, 0, 16, 0, 7], "#f1eee8"),
+  poly([8, 2, 15, 2, 21, 8, 21, 15, 15, 21, 8, 21, 2, 15, 2, 8], "#c8201e"),
+  text(12, 9, "STOP", "#f1eee8", { align: "c" }))
 // Oil drip under where cars park: dark, soft-edged, with a sheen ring.
 sprite("oil_stain", { w: 16, h: 16 },
   ellipse(8, 8, 6, 5, "#2e2c2a"), ellipse(7, 8, 4, 3, "#24221f"), ellipse(10, 6, 2, 1, "#3d3b3a"), px(13, 11, "#2e2c2a"), px(3, 4, "#2e2c2a"))

@@ -78,7 +78,9 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	for n: Dictionary in npcs:
-		if n.has("nb"):
+		if n.has("wm"):
+			(n.wm as RemyPlayerModel).animate(delta, 0.0)
+		elif n.has("nb"):
 			(n.nb as NpcBodyModel).animate(delta, 0.0)
 		else:
 			(n.model as RemyModel).update_locomotion(float(n.speed), bool(n.sprint), true, delta)
@@ -148,6 +150,15 @@ func _build_world() -> void:
 
 ## Five NPCs in a row: standing, walking, running, sprinting and aiming, each in a different outfit.
 func _build_npcs() -> void:
+	if _args.has("wm"):   # --wm=pistol|shotgun: the game player's own model (RemyPlayerModel) with a real weapon drawn and aimed
+		var wm := (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate() as RemyPlayerModel
+		add_child(wm)
+		wm.position = Vector3(0, 0, -2)   # faces +Z
+		wm.set_weapon(str(_args.wm))
+		wm.draw_weapon(true)
+		wm.aiming = true
+		npcs.append({"model": wm.remy, "speed": 0.0, "sprint": false, "wm": wm})
+		return
 	var looks := [
 		{"skin": Color("#c89b7b"), "top": Color("#d6403e"), "bottom": Color("#3a3d46"), "shoes": Color("#f1eee8"), "hair": Color("#6b4a33")},
 		{"skin": Color("#8d5a3b"), "top": Color("#2b6fb5"), "bottom": Color("#7d8a63"), "shoes": Color("#1d1b24"), "hair": Color("#1d1b24")},

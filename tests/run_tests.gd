@@ -1292,7 +1292,12 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	district.director.ambient_incidents = false
 	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
 	_check(cops.size() == 10 and cops.all(func(r): return r.model.weapon in ["pistol", "shotgun"]), "10 armed officers (%d)" % cops.size())
-	_check(cops.all(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE), "officers wear the police body")
+	var cop_men := cops.filter(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE).size()
+	var cop_women := cops.filter(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE_WOMAN).size()
+	_check(cop_men >= 3 and cop_women >= 3 and cop_men + cop_women == cops.size(), "the SAPS are both men and women (%d men, %d women), in their own bodies" % [cop_men, cop_women])
+	var uniformed := cops.all(func(r): return r.model.police and r.model.skeleton().find_children("PoliceFront", "BoneAttachment3D", false, false).size() == 1 \
+		and (r.model.skeleton().get_node("PoliceBack").get_child(0) as Label3D).text == "POLICE")
+	_check(uniformed, "every officer has POLICE on the chest and the back, riding on the spine")
 	for i in 240:
 		await physics_frame
 	_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
@@ -1848,6 +1853,15 @@ func _test_life_units() -> void:
 	_check(not wary.line.is_empty() and ReputationVoice.WARY.has(wary.line) and ReputationVoice.LEGEND.has(legend.line) and ReputationVoice.FRIEND.has(friend.line),
 		"people greet you by how well they know you")
 	_check(not cold.wave and not hot.wave and ReputationVoice.HEAT.has(hot.line) and legend.wave, "people turn away when they dislike you or the police are on you")
+	var said := {}
+	var man_hot_ok := true
+	var woman_never := true
+	for i in 300:
+		said[ReputationVoice.greet(10, 0, 0, rng, true).line] = true
+		man_hot_ok = man_hot_ok and not ReputationVoice.MALE_GREETINGS.has(ReputationVoice.greet(10, 0, 4, rng, true).line) and not ReputationVoice.MALE_GREETINGS.has(ReputationVoice.greet(10, -20, 0, rng, true).line)
+		woman_never = woman_never and not ReputationVoice.MALE_GREETINGS.has(ReputationVoice.greet(10, 0, 0, rng, false).line)
+	_check(ReputationVoice.MALE_GREETINGS == ["Awe mybru!", "Aweza!", "Ahoy!"] and ReputationVoice.MALE_GREETINGS.all(func(g): return said.has(g)) and man_hot_ok and woman_never,
+		"the men call out Awe mybru, Aweza or Ahoy to someone they are not afraid of or cold to")
 	var life := MissionData.load_file(GameSession.LIFE_MISSIONS_FILE)
 	_check(life.size() == 3 and life.any(func(m): return m.objectives.any(func(o): return o.type == "follow")), "daily-life missions load, including a follow mission")
 	var story := MissionData.load_file(GameSession.STORY_MISSIONS_FILE)
@@ -2802,6 +2816,13 @@ func _test_survival_in_game(main: Node, district: District, player: Player) -> v
 
 ## The whole real Westridge: data, the builder that follows real street lines and outlines, and
 ## loading in pieces (design/gdd/real_world.md).
+func _reversed(ring: PackedVector2Array) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in range(ring.size() - 1, -1, -1):
+		out.append(ring[i])
+	return out
+
+
 func _test_real_world_units() -> void:
 	print("== real Westridge world")
 	var data := RealDistrictData.new()
@@ -2836,6 +2857,33 @@ func _test_real_world_units() -> void:
 							on_road += 1
 							break
 	_check(on_road == 0, "no building corner stands on a carriageway (%d do)" % on_road)
+	# Every wall faces out of its building, including the walls round the inside of an L or U shape (a wall facing in is not drawn
+	# from the street: "houses with missing walls"; the old test, away from the centre, got 2,437 walls of 1,370 buildings wrong).
+	var ell := PackedVector2Array([Vector2(0, 0), Vector2(10, 0), Vector2(10, 4), Vector2(4, 4), Vector2(4, 10), Vector2(0, 10)])
+	var ell_ok := true
+	for ring: PackedVector2Array in [ell, PackedVector2Array(Array(ell).duplicate()), _reversed(ell)]:
+		for i in ring.size():
+			var p0 := ring[i]
+			var p1 := ring[(i + 1) % ring.size()]
+			var o := RealChunkBuilder.edge_out(ring, p0, p1)
+			ell_ok = ell_ok and not RealChunkBuilder.point_in_ring((p0 + p1) * 0.5 + o * 0.05, ring) and RealChunkBuilder.point_in_ring((p0 + p1) * 0.5 - o * 0.05, ring)
+	_check(ell_ok and RealChunkBuilder.edge_out(ell, Vector2(10, 4), Vector2(4, 4)).y > 0.9, "an L-shaped house's walls all face outward, whichever way round the outline is listed")
+	var inward := 0
+	var walls := 0
+	for key: Vector2i in data.chunk_keys:
+		for bld in data.load_chunk(key).get("buildings", []):
+			var ring := RealChunkBuilder._line(bld.p)
+			if ring.size() < 3:
+				continue
+			for i in ring.size():
+				var p0 := ring[i]
+				var p1 := ring[(i + 1) % ring.size()]
+				if p0.distance_to(p1) < 0.2:
+					continue
+				walls += 1
+				if RealChunkBuilder.point_in_ring((p0 + p1) * 0.5 + RealChunkBuilder.edge_out(ring, p0, p1) * 0.05, ring):
+					inward += 1
+	_check(inward <= walls / 200, "every real building's walls face outward (%d of %d do not)" % [inward, walls])
 	_check(data.bounds.size.x > 1500.0 and data.bounds.size.y > 2000.0, "it is the whole suburb (%.1f x %.1f km)" % [data.bounds.size.x / 1000.0, data.bounds.size.y / 1000.0])
 	_check(int(data.counts.get("buildings", 0)) > 5000, "it has the real building outlines (%d)" % int(data.counts.get("buildings", 0)))
 	for n in ["Excelsior Street", "Rhone Way", "Wespoort Drive", "Park Avenue", "De Duin Avenue", "Silverhurst Street"]:
@@ -2874,11 +2922,12 @@ func _test_real_world_units() -> void:
 	var key := data.chunk_at(Vector3(-150, 0, -128))
 	var stats := {}
 	var t0 := Time.get_ticks_usec()
-	var node := RealChunkBuilder.build(key, data.load_chunk(key), stats)
+	var node := RealChunkBuilder.build(key, data.load_chunk(key), stats, [], {}, [], {}, {}, {"street": data.street_context(key)})
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	_check(int(stats.buildings) > 20 and int(stats.roads) > 5 and node.get_node_or_null("Buildings") != null, "the Excelsior Street piece builds (%d buildings, %d road pieces, %.0f ms)" % [int(stats.buildings), int(stats.roads), ms])
-	var signs: Array = node.get_children().filter(func(c): return c.has_meta("street")).map(func(c): return str(c.get_meta("street")))
-	_check(signs.has("Excelsior Street"), "the piece has an Excelsior Street sign")
+	var slabs: Array = node.get_children().filter(func(c): return c.has_meta("street_slab")).map(func(c): return (c as Label3D).text)
+	_check(slabs.size() >= 2 and slabs.all(func(s): return s.contains("\n") and s == s.to_upper()) and RealStreetDecor.short_name("Excelsior Street") == "EXCELSIOR ST",
+		"street names are on concrete slabs at the junction corners, two names on both faces (%d labels, e.g. %s)" % [slabs.size(), str(slabs[0]).replace("\n", " / ") if not slabs.is_empty() else ""])
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
 	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \
@@ -2978,10 +3027,10 @@ func _test_real_world_units() -> void:
 		var surfaces := {}
 		var materials := {}
 		RealStreetDecor.build(data.load_chunk(ck).get("roads", []), data.street_context(ck), surfaces, materials, {})
-		if surfaces.has("decal_stop_text"):
+		if surfaces.has("decal_stop_text") and surfaces.has("panel_sign_stop"):
 			stop_found = true
 	_check(stop_found and RealStreetDecor.rank("main") > RealStreetDecor.rank("street") and RealStreetDecor.node_key(Vector2(10.01, 5.0)) == RealStreetDecor.node_key(Vector2(10.0, 4.99)),
-		"side streets get a stop line and STOP where they meet a bigger road")
+		"side streets get a stop line, STOP on the road and a physical STOP sign where they meet a bigger road")
 	# Yards: the game's own homes keep their gate spot (5 m out) outside the fence and the yard dog's run inside.
 	var ykey := data.chunk_at(Vector3(-150, 0, -128))
 	var yfronts := data.home_fronts(ykey)
@@ -3918,7 +3967,7 @@ func _test_npc_bodies_in_game(_main: Node, district: District, player: Player) -
 			continue
 		var m: NpcBodyModel = r.model
 		seen[m.body] = seen.get(m.body, 0) + 1
-		if r.data.role == "police" and m.body != NpcBodies.POLICE:
+		if r.data.role == "police" and not m.body in [NpcBodies.POLICE, NpcBodies.POLICE_WOMAN]:
 			wrong_police += 1
 		if r.data.role == "crew" and not m.body in [NpcBodies.CREW.man, NpcBodies.CREW.woman]:
 			wrong_crew += 1
@@ -4006,6 +4055,104 @@ func _test_npc_bodies_in_game(_main: Node, district: District, player: Player) -
 	_check(smallest < 0.8, "children are smaller bodies (smallest scale %.2f)" % smallest)
 	# Vendors and the interiors' stand-ins use the same bodies.
 	_check(NpcBodies.model_for("Vendor_x", "vendor", true) is NpcBodyModel, "vendors and interior stand-ins are built through the same factory")
+
+
+## The HUD after the long tabs went: clock top left, mini map under it, coin and money under the health, compass at the very top,
+## rep, crew and the mission in the phone; and the map menu's pinch, drag and zoom.
+func _test_hud_layout_in_game(main: Node, _district: District, player: Player) -> void:
+	print("== HUD layout, mini map, phone status, map zoom")
+	var hud: Hud = main.hud
+	var session: GameSession = main.session
+	await process_frame
+	_check(not hud._title.visible and not hud._stats.visible and not hud._tracker.visible, "the long tabs (area and controls, money and rep, the mission) are off the screen")
+	_check(hud._clock.visible and hud._clock.position.x < 30.0 and hud._clock.position.y < 20.0, "the day and time sit in the top left corner")
+	var mm: MiniMap = hud.minimap
+	_check(mm != null and mm.visible and mm.position.x < 30.0 and mm.position.y >= hud._clock.position.y + 30.0 and mm.size == Vector2(MiniMap.SIZE, MiniMap.SIZE), "the mini map is under the clock (%s)" % mm.position)
+	_check(mm.modulate.a == 1.0 and mm.mouse_filter == Control.MOUSE_FILTER_IGNORE, "and it never steals a touch")
+	player.global_position = _place(_district, "open")
+	mm._rebuild(Vector2(player.global_position.x, player.global_position.z))
+	var markers: Array = session.minimap_markers()
+	_check(mm._roads.size() > 40 and mm.markers_provider.is_valid() and markers.all(func(m): return m.has("pos") and m.has("color")),
+		"it draws the streets around you (%d segments) and takes solid coloured markers from the game (%d now)" % [mm._roads.size() / 2, markers.size()])
+	_check(hud._compass.offset_top <= 12.0, "the compass is right up at the top of the screen")
+	session.progression.cash = 242
+	hud.set_stats(session.progression)
+	await process_frame
+	await process_frame
+	var coin_ok: bool = hud._money_box.get_child(0) is CoinIcon and hud._cash_label.text == "242"
+	_check(coin_ok and hud._money_box.offset_top > hud._combat.offset_top + 20.0 and hud._money_box.get_global_rect().position.x > 800.0 - 400.0,
+		"the R5 coin and the money total sit under the health, top right (%d)" % int(hud._money_box.offset_top))
+	var lines: Array = session.phone_status()
+	var text := "\n".join(lines.map(func(l): return str(l)))
+	_check(text.contains("Money: R242") and text.contains("Reputation:") and text.contains("Crew:"), "money, reputation, crew and the mission are in the phone")
+	session.phone.open()
+	session.phone._tab = "status"
+	session.phone.refresh()
+	await process_frame
+	_check(session.phone._list.find_child("Tab_status", true, false) != null and session.phone._list.get_children().any(func(c): return c is Label and (c as Label).text.begins_with("Money: R242")), "the phone has a Status page")
+	session.phone.close()
+	# The map menu: pinch, drag and zoom.
+	session.open_turf_map()
+	var tm: TurfMap = session.turf_map
+	await process_frame
+	var mid := tm._canvas.get_global_rect().get_center()
+	_check(tm.zoom_level() == 1.0, "the map opens showing the whole suburb")
+	tm.zoom_at(2.0, Vector2(100, 100))
+	var zoomed := tm.zoom_level()
+	tm.reset_view()
+	var t0 := InputEventScreenTouch.new()
+	t0.index = 0
+	t0.pressed = true
+	t0.position = mid + Vector2(-40, 0)
+	tm._input(t0)
+	var t1 := InputEventScreenTouch.new()
+	t1.index = 1
+	t1.pressed = true
+	t1.position = mid + Vector2(40, 0)
+	tm._input(t1)
+	for step in 4:   # two fingers moving apart: pinch out
+		for spec in [[0, -40 - 20 * (step + 1)], [1, 40 + 20 * (step + 1)]]:
+			var d := InputEventScreenDrag.new()
+			d.index = spec[0]
+			d.position = mid + Vector2(spec[1], 0)
+			d.relative = Vector2(-20 if spec[0] == 0 else 20, 0)
+			tm._input(d)
+	var pinched := tm.zoom_level()
+	for idx in [0, 1]:
+		var up := InputEventScreenTouch.new()
+		up.index = idx
+		up.pressed = false
+		tm._input(up)
+	var before := tm._pan
+	var f0 := InputEventScreenTouch.new()
+	f0.index = 0
+	f0.pressed = true
+	f0.position = mid
+	tm._input(f0)
+	var drag := InputEventScreenDrag.new()
+	drag.index = 0
+	drag.position = mid + Vector2(30, 10)
+	drag.relative = Vector2(30, 10)
+	tm._input(drag)
+	var dragged := tm._pan != before
+	var f_up := InputEventScreenTouch.new()
+	f_up.index = 0
+	f_up.pressed = false
+	tm._input(f_up)
+	var wheel := InputEventMouseButton.new()
+	wheel.button_index = MOUSE_BUTTON_WHEEL_UP
+	wheel.pressed = true
+	wheel.position = mid
+	var z_before := tm.zoom_level()
+	tm._input(wheel)
+	var wheeled := tm.zoom_level() > z_before
+	tm.zoom_at(100.0, mid)
+	var capped := tm.zoom_level() <= TurfMap.ZOOM_MAX + 0.001
+	tm.zoom_at(0.001, mid)
+	var floor_ok := tm.zoom_level() == 1.0 and tm._pan == Vector2.ZERO
+	_check(zoomed == 2.0 and pinched > 1.5 and dragged and wheeled and capped and floor_ok,
+		"the map zooms with a pinch (%.1fx), pans with one finger, zooms with the wheel, and stays between 1x and %dx" % [pinched, int(TurfMap.ZOOM_MAX)])
+	tm.close()
 
 
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
@@ -4983,6 +5130,8 @@ func _test_district() -> void:
 			await _test_dormant_in_game(main, district, player)
 		elif only == "remyplayer":
 			await _test_remy_as_player(main, district, player)
+		elif only == "hudlayout":
+			await _test_hud_layout_in_game(main, district, player)
 		elif only == "npcvis":
 			await _diag_npc_visibility(district, player)
 		elif only == "npcbodies":
@@ -4993,6 +5142,7 @@ func _test_district() -> void:
 		return
 	await _test_remy_as_player(main, district, player)
 	await _test_npc_bodies_in_game(main, district, player)
+	await _test_hud_layout_in_game(main, district, player)
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
 	await _test_turf_in_game(main, district, player)

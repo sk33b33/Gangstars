@@ -141,6 +141,7 @@ func setup(p_district: District, p_player: Player, p_hud: Hud) -> void:
 	phone.name = "Phone"
 	hud.add_child(phone)
 	phone.setup(dealing)
+	phone.status_provider = phone_status
 	phone.closed.connect(func():
 		player.input_enabled = true
 		if DisplayServer.get_name() != "headless":
@@ -704,6 +705,39 @@ func _person_position(npc_id: String) -> Variant:
 
 ## {pos, text} for the gold marker: the current objective of the tracked mission, or, with none
 ## running, whoever has the next mission to give.
+## What the phone's Status page lists: money, reputation, crew, needs and the mission you are on (these used to be tabs on the HUD).
+func phone_status() -> Array:
+	var lines: Array = []
+	lines.append("Money: R%d" % progression.cash)
+	lines.append("Reputation: %d" % progression.reputation)
+	lines.append("Crew: %d recruited · influence %d" % [progression.recruited_crew_ids.size(), progression.crew_influence])
+	var needs := hud.survival_text()
+	if not needs.is_empty():
+		lines.append("Needs attention: " + needs)
+	lines.append("")
+	var mission := hud.tracker_text()
+	lines.append(mission if not mission.is_empty() else "No mission tracked.")
+	return lines
+
+
+## Dots for the mini map: gold for the mission and for people who have one for you, blue for the SAPS.
+func minimap_markers() -> Array:
+	var out: Array = []
+	if missions == null:
+		return out
+	var info := waypoint_info()
+	if not info.is_empty():
+		out.append({"pos": info.pos, "color": MiniMap.GOLD, "big": true})
+	for r: Resident in district.residents.values():
+		if r.is_inside or r.is_down():
+			continue
+		if r.data.role == "police":
+			out.append({"pos": r.global_position, "color": MiniMap.POLICE, "big": false})
+		elif missions.available_from(r.data.id) != null:
+			out.append({"pos": r.global_position, "color": MiniMap.GOLD, "big": false})
+	return out
+
+
 func waypoint_info() -> Dictionary:
 	if missions == null:
 		return {}

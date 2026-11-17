@@ -11,6 +11,8 @@ var _panel: PanelContainer
 var _list: VBoxContainer
 var _badge: Label
 var _tab := "contacts"
+## Callable -> Array of lines for the Status page (money, reputation, crew, needs, the mission).
+var status_provider := Callable()
 
 
 func setup(p_dealing: DealingController) -> void:
@@ -102,10 +104,10 @@ func refresh() -> void:
 	var tabs := HBoxContainer.new()
 	_list.add_child(tabs)
 	var first: Button = null
-	for t in ["contacts", "orders"]:
+	for t in ["contacts", "orders", "status"]:
 		var b := Button.new()
 		b.name = "Tab_" + t
-		b.text = ("Contacts (%d)" % st.stat("contacts")) if t == "contacts" else ("Orders (%d)" % st.orders.size())
+		b.text = ("Contacts (%d)" % st.stat("contacts")) if t == "contacts" else (("Orders (%d)" % st.orders.size()) if t == "orders" else "Status")
 		b.toggle_mode = true
 		b.button_pressed = _tab == t
 		b.pressed.connect(func(): _tab = t; refresh())
@@ -116,6 +118,8 @@ func refresh() -> void:
 		first = _call_view()
 	elif _tab == "orders":
 		_orders_view()
+	elif _tab == "status":
+		_status_view()
 	else:
 		_contacts_view()
 	var close_b := Button.new()
@@ -124,6 +128,12 @@ func refresh() -> void:
 	_list.add_child(close_b)
 	if first:
 		(func(): if is_instance_valid(first): first.grab_focus()).call_deferred()
+
+
+func _status_view() -> void:
+	var lines: Array = status_provider.call() if status_provider.is_valid() else []
+	for line in lines:
+		_label(str(line), 16, Color("#ffd75e") if str(line).begins_with("▶") else Color("#e9e6dc"))
 
 
 func _call_view() -> Button:

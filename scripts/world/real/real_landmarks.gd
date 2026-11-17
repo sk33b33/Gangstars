@@ -241,7 +241,7 @@ static func _window_rows(ring: PackedVector2Array, centre: Vector2, storeys: int
 			continue
 		var tangent := (p1 - p0) / length
 		var normal := Vector2(-tangent.y, tangent.x)
-		if normal.dot((p0 + p1) * 0.5 - centre) < 0.0:
+		if normal.dot(RealChunkBuilder.edge_out(ring, p0, p1)) < 0.0:
 			normal = -normal
 		var count := int((length - 1.0) / 3.0)
 		for k in count:
@@ -256,7 +256,7 @@ static func _sign_band(ring: PackedVector2Array, centre: Vector2, h: float, band
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
-		var out := Vector3(p0.x + p1.x, 0, p0.y + p1.y) * 0.5 - Vector3(centre.x, 0, centre.y)
+		var out := RealChunkBuilder._v(RealChunkBuilder.edge_out(ring, p0, p1), 0.0)
 		var push := RealChunkBuilder._wall_normal(p0, p1, out) * 0.03
 		RealChunkBuilder._quad(band, RealChunkBuilder._v(p0 + push, h), RealChunkBuilder._v(p1 + push, h), band_h, out)
 		RealChunkBuilder._quad(band, RealChunkBuilder._v(p0, h), RealChunkBuilder._v(p1, h), band_h, -out)
@@ -323,7 +323,7 @@ static func _canopy_on_columns(ring: PackedVector2Array, rect: Dictionary, heigh
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
-		var out := RealChunkBuilder._v((p0 + p1) * 0.5 - centre, 0.0)
+		var out := RealChunkBuilder._v(RealChunkBuilder.edge_out(ring, p0, p1), 0.0)
 		RealChunkBuilder._quad(band_tool, RealChunkBuilder._v(p0, height), RealChunkBuilder._v(p1, height), 0.9, out)
 	var half: Vector2 = rect.half
 	var steel := _mat("coping", RealChunkBuilder.COPING_COLOR, surfaces, materials)
@@ -352,7 +352,7 @@ static func _mural(ring: PackedVector2Array, centre: Vector2, front: Dictionary,
 	var p1 := ring[(best + 1) % ring.size()]
 	var t := (p1 - p0).normalized()
 	var n := Vector2(-t.y, t.x)
-	if n.dot((p0 + p1) * 0.5 - centre) < 0.0:
+	if n.dot(RealChunkBuilder.edge_out(ring, p0, p1)) < 0.0:
 		n = -n
 	var art: String = ["mural_plain", "mural_mountain", "tag_tortel", "tag_klip"][(seed_value / 2) % 4]
 	var tag := art.begins_with("tag")

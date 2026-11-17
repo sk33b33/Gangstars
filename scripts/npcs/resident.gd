@@ -343,11 +343,20 @@ func _maybe_wave(s: NpcBrain.State) -> void:
 	_prev_state = s
 
 
+## A grown man (by body, or by figure for the old model): the men call out "Awe mybru", "Aweza" or "Ahoy".
+func is_man() -> bool:
+	if data.role == "kid":
+		return false
+	if model is NpcBodyModel:
+		return (model as NpcBodyModel).body in NpcBodies.MEN
+	return float(data.appearance().figure) <= 0.5 and data.role != "kid" and data.height >= 0.85
+
+
 func _wave_at(p: Vector3) -> void:
 	var wave := true
 	if standing.is_valid() and p.distance_to(global_position) < 9.0 and data.role in ["resident", "kid"]:
 		var st: Dictionary = standing.call(data.id)
-		var talk := ReputationVoice.greet(int(st.rep), int(st.rel), int(st.heat), _rng)
+		var talk := ReputationVoice.greet(int(st.rep), int(st.rel), int(st.heat), _rng, is_man())
 		wave = bool(talk.wave)
 		if _rng.randf() < 0.6:
 			say(str(talk.line), 3.0)

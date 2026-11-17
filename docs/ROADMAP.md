@@ -206,3 +206,6 @@ The "rebuild the other suburbs" items above are dropped: only Westridge is built
 - Fences and yard walls done (2026-11-16): ~1,800 front yards in four styles, gates in line with doors, navigation-aware.
 - Stage 4a done (2026-11-16): old districts and code removed. Still to do: phone tuning, Windows build (when asked), graphics (roads, walls, roofs, fences).
 - Stage 3 done (2026-11-16): the full suite passes against the real Westridge (1528/1528). The real Westridge is now the default world.
+
+- [x] Houses with missing walls, road signs (STOP, slanted humps, street name slabs), HUD rework with mini map and R5 coin, map zoom, SAPS in uniform (men and women), Awe mybru greetings, pistol in the hand (2026-11-17).
+- [ ] Hit, kick and wave clips for Remy and the bodies; Mixamo sit, lean, talk and phone clips; confirm the street name slab look with someone from the Plain.

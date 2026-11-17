@@ -597,3 +597,8 @@ with the origin until then). Screenshots with people: `--wait=100 --cam-resident
 ### Buildings off the road (2026-11-17)
 `python3 tools/osm/clear_roads.py [--dry]` pulls building corners off streets (carriageway half width + 0.5 m kerb). Safe to run again.
 The check is in `_test_real_world_units` (`tests/run.sh --real-only`).
+
+### Signs, HUD and people (2026-11-17)
+- Pictures of signs and humps: `xvfb-run -a godot --path . --rendering-driver opengl3 -s tools/godot/sign_shot.gd -- --out=res://tests/output/signs`.
+- The pistol in Remy's hand: playground `-- --wm=pistol` (or `shotgun`) with `--cam=-1.1,1.5,-1.0,0,1.4,-1.6`.
+- Quick checks: `tests/run.sh --only=hudlayout` (HUD, mini map, phone status, map zoom), `--only=npcbodies`, `--real-only`.

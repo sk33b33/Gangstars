@@ -22,6 +22,7 @@ var mode := "idle"
 var carrying := false
 var stoop := 0.0
 var body := ""            # James, Kate, Leonard, Louise or Meegan
+var police := false       # SAPS: a navy uniform with POLICE on the chest and back
 const WAVE_TIME := 1.8   # there is no wave clip yet: is_waving() just stays true this long, so the Resident logic behaves
 var _wave_left := 0.0
 var _seated := false
@@ -53,9 +54,11 @@ func _ready() -> void:
 ## Colours: the clothes keep their own look; a share of the resident's colour is tinted in where the body has a separate top
 ## or trousers. `opts.height` scales the whole body (children are smaller). Hair, face and accessories do not apply.
 func build(shirt: Color, pants: Color, skin: Color, hat: Color = Color(0, 0, 0, 0), opts: Dictionary = {}) -> void:
-	if remy.part("Tops"):
+	if police:
+		_dress_police()
+	elif remy.part("Tops"):
 		remy.set_part_tint("Tops", shirt.lerp(Color.WHITE, 0.55))
-	if remy.part("Bottoms"):
+	if not police and remy.part("Bottoms"):
 		remy.set_part_tint("Bottoms", pants.lerp(Color.WHITE, 0.6))
 	var h := float(opts.get("height", 1.0))
 	scale = Vector3.ONE * clampf(h, 0.7, 1.12)
@@ -68,7 +71,7 @@ var _skin := Color.WHITE
 
 ## A recruited crew member is marked by their colour on the top (the old model gave them a cap).
 func set_hat(color: Color, _logo := "") -> void:
-	if remy.part("Tops"):
+	if not police and remy.part("Tops"):
 		remy.set_part_tint("Tops", color.lerp(Color.WHITE, 0.2))
 
 
@@ -153,3 +156,48 @@ func _seat(on: bool) -> void:
 		var leg := sk.find_bone("mixamorig_%sLeg" % side)
 		sk.set_bone_pose_rotation(up, sk.get_bone_rest(up).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(SIT_THIGH)))
 		sk.set_bone_pose_rotation(leg, sk.get_bone_rest(leg).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(-SIT_SHIN)))
+
+
+## The SAPS wardrobe: the shirt and trousers lose their pattern and become flat navy (the SAPS blue and a darker navy for the
+## trousers), and POLICE is lettered on the chest and the back, riding on the spine bone so it moves (and falls) with the body.
+const SAPS_SHIRT := Color("#27478a")
+const SAPS_TROUSERS := Color("#1a2444")
+const POLICE_TEXT := "POLICE"
+
+
+func _dress_police() -> void:
+	for slot in ["Tops", "Bottoms"]:
+		if remy.part(slot):
+			remy.set_part_texture(slot, null)
+			remy.set_part_tint(slot, SAPS_SHIRT if slot == "Tops" else SAPS_TROUSERS)
+	_chest_label(true)
+	_chest_label(false)
+
+
+func _chest_label(front: bool) -> void:
+	var sk := remy.skeleton
+	var bone := sk.find_bone("mixamorig_Spine2")
+	if bone < 0:
+		return
+	var attach := BoneAttachment3D.new()
+	attach.name = "PoliceFront" if front else "PoliceBack"
+	attach.bone_name = "mixamorig_Spine2"
+	sk.add_child(attach)
+	# skeleton space -> this node's space (the model scene and the glb are each turned half a turn, the armature is scaled 0.01)
+	var glb := remy.get_node("Remy") as Node3D   # the Mixamo glb inside the model scene
+	var to_model: Transform3D = remy.transform * glb.transform * (glb.get_node("Armature") as Node3D).transform * sk.transform
+	var bone_in_model: Transform3D = to_model * sk.get_bone_global_rest(bone)
+	var side := 1.0 if front else -1.0
+	var spot := Transform3D(Basis() if front else Basis(Vector3.UP, PI), bone_in_model.origin + Vector3(0.0, 0.0, 0.135 * side))
+	var label := Label3D.new()
+	label.text = POLICE_TEXT
+	label.font_size = 30 if front else 44
+	label.pixel_size = 0.0028 if front else 0.0034
+	label.shaded = false
+	label.double_sided = false
+	label.modulate = Color("#f1eee8")
+	label.outline_modulate = Color("#0d1530")
+	label.outline_size = 6
+	label.visibility_range_end = 30.0
+	attach.add_child(label)
+	label.transform = bone_in_model.affine_inverse() * spot
