@@ -2185,10 +2185,10 @@ func _test_remy() -> void:
 		var mat := (mi as MeshInstance3D).mesh.surface_get_material(0) as BaseMaterial3D
 		var cut_out := mi.name in ["Hair", "Eyelashes"]
 		alpha_ok = alpha_ok and (mat.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR) == cut_out
-		compressed = compressed and mat.albedo_texture is CompressedTexture2D and mat.metallic_texture == null and mat.roughness_texture != null
-		back_cull += 1 if mat.cull_mode == BaseMaterial3D.CULL_BACK else 0
+		compressed = compressed and mat.albedo_texture is CompressedTexture2D and mat.metallic_texture == null and mat.roughness_texture == null and mat.roughness >= 0.7 and mat.metallic_specular <= 0.3
+		back_cull += 1 if mat.cull_mode == BaseMaterial3D.CULL_DISABLED else 0
 	_check(alpha_ok, "hair and eyelashes use alpha scissor (no sorting trouble); everything else is opaque")
-	_check(compressed and back_cull == 5, "textures are imported compressed, no metallic texture is read, and closed meshes cull back faces (%d of 7 meshes)" % back_cull)
+	_check(compressed and back_cull == 7, "textures are imported compressed, nothing is shiny (no metallic or roughness map, matte roughness, low specular) and every mesh is two-sided so nothing shows through (%d of 7 meshes)" % back_cull)
 	var vram := true
 	for f in DirAccess.get_files_at("res://assets/models/characters/"):
 		if f.begins_with("Remy_Animations_Mobile_") and f.ends_with(".png.import"):

@@ -7,14 +7,17 @@ extends SceneTree
 ## BEFORE the .import points at the files, or after deleting the _subresources/materials block).
 const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
 const OUT := "res://assets/models/characters/remy/materials/"
-## material -> {transparency: 2 = alpha scissor, scissor threshold, cull_mode: 0 = back faces, 2 = both}
+## material -> {scissor threshold (alpha scissor), cull, rough (roughness), spec (metallic_specular)}.
+## Everything is two-sided: with back-face culling the open ends of sleeves, collars and trouser legs let the background
+## show through. The glb's Gloss maps are used as roughness there, which makes the clothes shiny, so they are dropped for
+## one matte roughness per material and a low specular.
 const FIX := {
-	"Bodymat": {"cull": BaseMaterial3D.CULL_BACK},
-	"Topmat": {"cull": BaseMaterial3D.CULL_BACK},
-	"Bottommat": {"cull": BaseMaterial3D.CULL_BACK},
-	"Shoesmat": {"cull": BaseMaterial3D.CULL_BACK},
-	"Hairmat": {"scissor": 0.4, "cull": BaseMaterial3D.CULL_DISABLED},
-	"Eyelashmat": {"scissor": 0.5, "cull": BaseMaterial3D.CULL_DISABLED},
+	"Bodymat": {"cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.85, "spec": 0.12},
+	"Topmat": {"cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.95, "spec": 0.1},
+	"Bottommat": {"cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.95, "spec": 0.1},
+	"Shoesmat": {"cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.85, "spec": 0.15},
+	"Hairmat": {"scissor": 0.4, "cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.8, "spec": 0.2},
+	"Eyelashmat": {"scissor": 0.5, "cull": BaseMaterial3D.CULL_DISABLED, "rough": 0.8, "spec": 0.1},
 }
 
 
@@ -33,6 +36,9 @@ func _init() -> void:
 			m.alpha_scissor_threshold = fix.scissor
 		else:
 			m.transparency = BaseMaterial3D.TRANSPARENCY_DISABLED
+		m.roughness_texture = null
+		m.roughness = fix.rough
+		m.metallic_specular = fix.spec
 		m.metallic_texture = null
 		m.metallic = 0.0
 		m.normal_enabled = false   # the glb imports every normal map with strength 0: it did nothing but cost a texture read

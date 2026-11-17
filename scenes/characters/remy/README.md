@@ -129,7 +129,7 @@ work through the same actions.
 One Remy is **35,196 triangles** (Body 13,538, Hair 4,666, Shoes 6,494, Bottoms 4,510, Tops 4,362, Eyes 1,520, Eyelashes
 106), **7 draw calls**, 6 materials with a 1024 x 1024 texture each, 67 bones, 109 animation tracks per clip. That is
 heavy for a phone: ten visible NPCs would be 350,000 triangles and 70 draw calls. Already done: textures are VRAM
-compressed, no metallic or normal texture is read, hair and eyelashes use alpha scissor, closed meshes cull back faces,
+compressed, no metallic or normal texture is read, hair and eyelashes use alpha scissor, every material is two-sided (open sleeve, collar and trouser ends would show the background through back-face culling) and matte (the glb's Gloss maps made the clothes shiny, so there is one roughness per material and a low specular),
 one AnimationTree per character. Still to do for crowds:
 - the importer builds mesh LODs (`meshes/generate_lods`); raise `rendering/mesh_lod/lod_change/threshold_pixels` to use them sooner;
 - a cheaper NPC version: reduce the Body mesh (most of it is hidden under clothes), merge Eyes and Eyelashes, 512 px textures;

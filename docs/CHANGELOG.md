@@ -1,5 +1,10 @@
 # Changelog
 
+## Remy: matte, no see-through spots (2026-11-17)
+- Materials: two-sided instead of back-face culled (gaps at sleeve, collar and trouser openings), and matte: the glb's Gloss maps
+  were used as roughness and made skin and clothes shiny with white highlight specks, so each material now has one roughness
+  and a low specular (`tools/godot/build_remy_materials.gd`).
+
 ## Remy falls and gets up (2026-11-17)
 - The glb now has `Fall_Down` and `Stand_Up`. Knocked out plays the fall, lies on the spot and stands up when the player wakes
   (`RemyModel.fall_down() / stand_up() / is_down()`, new states FallDown, Lying, StandUp in the AnimationTree). Both clips are
