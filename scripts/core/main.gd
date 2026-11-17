@@ -7,7 +7,7 @@ extends Node
 ##   --safehouse-menu (open the safehouse menu)  --turf-map (open the turf map)
 ##   --load=user://file.json (start from that save; goes through normal save validation)
 ##   --profile (print rendering/frame stats after the delay and quit)  --no-lod
-##   --day=N  --weather=clear|cloudy|windy|rain  --drive=<vehicle id>  --pause-menu
+##   --day=N  --weather=clear|cloudy|windy|rain  --drive=<vehicle id>  --pause-menu  --edit-controls[ --edit-select=<id> --edit-remove=<id> --edit-picker] (with --touch: the button editor)
 ##   --cam=x,y,z,tx,ty,tz (fixed camera at x,y,z looking at tx,ty,tz)
 
 @onready var district: District = $Westridge
@@ -78,6 +78,15 @@ func _ready() -> void:
 	touch.name = "TouchControls"
 	add_child(touch)
 	touch.setup(player, _args.has("touch"))
+	touch.apply_layout(settings.get_value("touch/layout"))
+	touch.edit_finished.connect(func(saved: Dictionary):   # Done: keep the layout, back to the menu
+		settings.set_value("touch/layout", saved)
+		settings.save_settings()
+		pause_menu.return_from_editor())
+	pause_menu.touch_available = func() -> bool: return touch != null and touch.enabled
+	pause_menu.edit_controls_requested.connect(func():
+		pause_menu.visible = false   # the game stays paused behind the editor
+		touch.begin_edit())
 	InputHints.touch = touch.enabled
 	hud.refresh_hints()
 	if touch.enabled and fresh_settings:   # a phone's first start: lighter settings so it runs
@@ -205,8 +214,24 @@ func apply_settings() -> void:
 		district.weather.enabled = bool(settings.get_value("gameplay/weather"))
 
 
+## The Android back key: finishes the button editor, closes the menu, or else opens the menu.
+func _notification(what: int) -> void:
+	if what != NOTIFICATION_WM_GO_BACK_REQUEST or session == null or session.turf_map == null:
+		return
+	if touch != null and touch.editing:
+		touch.end_edit()
+	elif pause_menu.visible:
+		pause_menu.close()
+	elif not hud.is_menu_open() and not session.turf_map.visible:
+		pause_menu.open()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if session == null or session.turf_map == null:   # still loading (the navigation bake takes a while)
+		return
+	if touch != null and touch.editing and (event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel")):
+		touch.end_edit()   # Esc (or B) finishes editing: it must not open the menu on top of the editor
+		get_viewport().set_input_as_handled()
 		return
 	if event.is_action_pressed("pause") and not pause_menu.visible and not hud.is_menu_open() \
 			and not session.turf_map.visible:
@@ -265,6 +290,15 @@ func _run_screenshot() -> void:
 		player.enter_vehicle(district.vehicles[_args.drive])
 	if _args.has("pause-menu"):
 		pause_menu.open()
+	if _args.has("edit-controls"):   # screenshots of the button editor (with --touch)
+		get_tree().paused = true
+		touch.begin_edit()
+		if _args.has("edit-select"):
+			touch._selected = str(_args["edit-select"])
+		if _args.has("edit-remove"):
+			touch.remove_button(str(_args["edit-remove"]))
+		if _args.has("edit-picker"):
+			touch._open_picker()
 	if _args.has("safehouse-menu"):
 		session.open_safehouse_menu()
 	if _args.has("turf-map"):

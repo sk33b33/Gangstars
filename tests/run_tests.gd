@@ -79,6 +79,7 @@ func _run() -> void:
 	_test_real_world_units()
 	await _test_real_world_streaming()
 	_test_survival_units()
+	_test_touch_layout_units()
 	_test_life_units()
 	if not _args.has("units-only"):   # --units-only: skip the in-game integration tests (fast)
 		await _test_real_people_and_traffic()
@@ -2155,6 +2156,63 @@ func _test_guidance_in_game(main: Node, district: District, player: Player) -> v
 		session.missions.active.erase(started)
 
 
+func _test_touch_layout_units() -> void:
+	print("== touch layout")
+	var size := Vector2(1280, 720)
+	var l := TouchLayout.new()
+	_check(l.is_default() and l.active().size() == 13 and l.available().size() == 3, "a new layout has the 13 default buttons and 3 extras to add")
+	var talk := TouchLayout.entry("interact")
+	_check(l.centre(talk, size) == Vector2(1280 - 330, 720 - 150), "a default button sits where it always has (%s)" % l.centre(talk, size))
+	# Moving: kept on screen, stored as fractions of the screen.
+	l.move("interact", Vector2(640, 360), size)
+	_check(l.centre(talk, size).is_equal_approx(Vector2(640, 360)) and not l.is_default(), "a button can be dragged somewhere else")
+	_check(l.centre(talk, Vector2(2560, 1440)).is_equal_approx(Vector2(1280, 720)), "...and stays in the same relative place on a bigger screen")
+	l.move("interact", Vector2(-500, 5000), size)
+	var kept := l.centre(talk, size)
+	_check(kept.x >= float(talk.r) and kept.y <= 720.0 - float(talk.r), "a button dragged off the screen is kept inside it (%s)" % kept)
+	# Removing.
+	_check(l.remove("bag") and not l.is_active("bag") and l.active().size() == 12 and l.available().size() == 4, "a button can be removed")
+	_check(not l.remove("bag"), "removing it twice does nothing")
+	_check(not l.can_remove("pause") and not l.remove("pause") and l.is_active("pause"), "the MENU button cannot be removed")
+	# Adding: a removed default goes back to its place, an extra appears near the top middle.
+	_check(l.add("bag") and l.is_active("bag") and not l.positions.has("bag") and not l.add("bag"), "a removed button can be added back, once")
+	_check(l.add("switch_weapon") and l.is_active("switch_weapon") and l.centre(TouchLayout.entry("switch_weapon"), size).is_equal_approx(TouchLayout.ADD_AT * size), "an extra button appears near the top middle")
+	_check(l.remove("switch_weapon") and not l.is_active("switch_weapon") and l.available().any(func(b): return b.id == "switch_weapon"), "an extra button can be removed and added again later")
+	# Saving and loading.
+	l.add("brake")
+	l.move("fire", Vector2(300, 400), size)
+	l.remove("radio")
+	var saved := l.to_dict()
+	var back := TouchLayout.new()
+	back.load_dict(JSON.parse_string(JSON.stringify(saved)))   # through the text a settings file holds
+	var same_spots := back.positions.size() == l.positions.size()
+	for id: String in l.positions:
+		same_spots = same_spots and back.positions.has(id) and ((back.positions[id] as Vector2) - (l.positions[id] as Vector2)).length() < 0.001   # saved to 4 decimals: a tenth of a pixel
+	_check(not back.is_active("radio") and back.is_active("brake") and back.centre(TouchLayout.entry("fire"), size).distance_to(Vector2(300, 400)) < 0.5 and same_spots \
+		and back.removed == l.removed and back.added == l.added, "a layout survives being saved and loaded")
+	for junk in [null, 5, "x", [], {"pos": 3, "removed": "no", "added": 7}, {"removed": ["pause", "nonsense", 4], "added": ["interact", "ghost"], "pos": {"ghost": [0.5, 0.5], "jump": [9, -3], "fire": "x", "bag": [0.2]}}]:
+		var j := TouchLayout.new()
+		j.load_dict(junk)
+		_check(j.is_active("pause") and j.active().size() >= 13 - 0 and j.centre(TouchLayout.entry("jump"), size).x >= 0.0, "a damaged saved layout (%s) is ignored without breaking" % str(junk).left(40))
+	var odd := TouchLayout.new()
+	odd.load_dict({"pos": {"jump": [9, -3]}})
+	_check(odd.positions["jump"] == Vector2(1, 0), "saved positions are held inside the screen")
+	l.reset()
+	_check(l.is_default() and l.active().size() == 13, "reset puts every button back")
+	# The settings carry it.
+	var s := SettingsStore.new()
+	s.path = "user://test_layout_settings.cfg"
+	s.set_value("touch/layout", saved)
+	s.save_settings()
+	var s2 := SettingsStore.new()
+	s2.path = s.path
+	s2.load_settings()
+	var viaFile := TouchLayout.new()
+	viaFile.load_dict(s2.get_value("touch/layout"))
+	_check(viaFile.removed == back.removed and viaFile.added == back.added and viaFile.positions.size() == back.positions.size(), "the settings file keeps the layout")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(s.path))
+
+
 func _test_survival_units() -> void:
 	print("== survival units")
 	var cfg := SurvivalConfig.load_default()
@@ -3174,6 +3232,142 @@ func _test_touch_in_game(main: Node, district: District, player: Player) -> void
 	await process_frame
 
 
+func _touch_event(touch: TouchControls, kind: String, at: Vector2, index := 5) -> void:
+	var e: InputEvent
+	if kind == "drag":
+		var d := InputEventScreenDrag.new()
+		d.index = index
+		d.position = at
+		e = d
+	else:
+		var t := InputEventScreenTouch.new()
+		t.index = index
+		t.pressed = kind == "down"
+		t.position = at
+		e = t
+	touch._input(e)
+
+
+## The menu's Back button and the touch-controls editor, driven by simulated touches.
+func _test_touch_editor_in_game(main: Node, district: District, player: Player) -> void:
+	print("== menu back button and the touch-controls editor")
+	var touch: TouchControls = main.touch
+	var menu: PauseMenu = main.pause_menu
+	var settings: SettingsStore = main.settings
+	player.input_enabled = true
+	# The menu: a Back button at the top (outside the scrolling list), the Edit button only with touch controls.
+	menu.open()
+	var back := menu.find_child("Resume", true, false) as Button
+	var in_scroll := false
+	var node: Node = back
+	while node != null and node != menu:
+		in_scroll = in_scroll or node is ScrollContainer
+		node = node.get_parent()
+	_check(back != null and back.text.contains("Back to game") and not in_scroll and back.custom_minimum_size.y >= 60.0, "the menu has a big Back to game button that stays put while the list scrolls")
+	var edit := menu.find_child("EditControls", true, false) as Button
+	_check(edit != null and not edit.visible, "the Edit touch controls button is hidden on a PC")
+	back.pressed.emit()
+	_check(not menu.visible and not get_root().get_tree().paused, "Back to game closes the menu and unpauses")
+	touch.enabled = true
+	player.mouse_look_enabled = false
+	menu.open()
+	_check(edit.visible and edit.text.begins_with("Edit touch controls"), "on a touchscreen the menu offers Edit touch controls")
+	# Edit mode: the game stays paused, the menu steps aside.
+	var size := touch._size()
+	edit.pressed.emit()
+	await process_frame
+	_check(touch.editing and not menu.visible and get_root().get_tree().paused and touch.visible, "Edit touch controls opens the editor over the paused game")
+	var toolbar := touch._toolbar
+	_check(toolbar.visible and toolbar.find_child("AddButton", true, false) != null and toolbar.find_child("ResetLayout", true, false) != null and toolbar.find_child("DoneEditing", true, false) != null,
+		"the editor has Add button, Reset and Done")
+	# Dragging a button moves it (and does not press it).
+	var talk := touch._button("interact")
+	var from := touch._button_centre(talk)
+	_touch_event(touch, "down", from)
+	_touch_event(touch, "drag", from + Vector2(-60, -90))
+	_touch_event(touch, "drag", Vector2(500, 300))
+	_touch_event(touch, "up", Vector2(500, 300))
+	await process_frame
+	_check(touch._button_centre(touch._button("interact")).distance_to(Vector2(500, 300)) < 1.0 and not Input.is_action_pressed("interact") and touch._selected == "",
+		"dragging a button moves it, does not press it, and does not select it (%s)" % touch._button_centre(touch._button("interact")))
+	# A tap selects: the small x appears; tapping the x removes it.
+	var jump := touch._button("jump")
+	_touch_event(touch, "down", touch._button_centre(jump))
+	_touch_event(touch, "up", touch._button_centre(jump))
+	_check(touch._selected == "jump" and touch.layout.can_remove("jump"), "tapping a button once selects it (its small x appears)")
+	_touch_event(touch, "down", Vector2(size.x * 0.5, size.y * 0.55))
+	_touch_event(touch, "up", Vector2(size.x * 0.5, size.y * 0.55))
+	_check(touch._selected == "", "tapping empty space unselects")
+	_touch_event(touch, "down", touch._button_centre(jump))
+	_touch_event(touch, "up", touch._button_centre(jump))
+	var x_at := touch._badge_centre(touch._button("jump"))
+	_touch_event(touch, "down", x_at)
+	_touch_event(touch, "up", x_at)
+	_check(not touch.layout.is_active("jump") and touch._button("jump").is_empty() and touch._selected == "", "tapping the x removes the button")
+	# The MENU button can be selected but never removed.
+	var menu_b := touch._button("pause")
+	_touch_event(touch, "down", touch._button_centre(menu_b))
+	_touch_event(touch, "up", touch._button_centre(menu_b))
+	var mx := touch._badge_centre(menu_b)
+	_touch_event(touch, "down", mx)
+	_touch_event(touch, "up", mx)
+	_check(touch._selected == "pause" and touch.layout.is_active("pause"), "the MENU button stays: tapping where an x would be does nothing")
+	# Add: the picker lists what is missing; tapping one puts it on screen.
+	(toolbar.find_child("AddButton", true, false) as Button).pressed.emit()
+	var rows := touch._picker_list.get_children().filter(func(c): return c is Button)
+	_check(touch._picker.visible and rows.size() == 4 and touch._picker_list.find_child("Add_jump", true, false) != null and touch._picker_list.find_child("Add_switch_weapon", true, false) != null,
+		"Add button lists the button just removed and the extras (%d)" % rows.size())
+	_touch_event(touch, "down", touch._button_centre(touch._button("fire")))   # the picker is modal: this must not start a drag
+	_touch_event(touch, "up", touch._button_centre(touch._button("fire")))
+	_check(touch._drag.is_empty() and touch._picker.visible, "while the list is open, touches elsewhere do nothing")
+	(touch._picker_list.find_child("Add_switch_weapon", true, false) as Button).pressed.emit()
+	await process_frame
+	_check(not touch._picker.visible and touch.layout.is_active("switch_weapon") and touch._selected == "switch_weapon"
+		and touch._button_centre(touch._button("switch_weapon")).distance_to(TouchLayout.ADD_AT * size) < 1.0, "an added button appears near the top middle, ready to drag")
+	# Done: back to the menu, the layout saved in the settings.
+	(toolbar.find_child("DoneEditing", true, false) as Button).pressed.emit()
+	await process_frame
+	var saved: Variant = settings.get_value("touch/layout")
+	_check(not touch.editing and menu.visible and get_root().get_tree().paused and saved is Dictionary and (saved.removed as Array).has("jump") and (saved.added as Array).has("switch_weapon"),
+		"Done returns to the menu and saves the layout")
+	back.pressed.emit()
+	await process_frame
+	# The new layout is in use: the moved button is where it was put, the removed one is gone, the added one works.
+	player.input_enabled = true
+	await process_frame
+	await process_frame
+	_check(touch.visible and touch._hit(Vector2(500, 300)) == "interact" and touch._hit(from) != "interact", "the moved button now answers where it was put")
+	var swap_at := touch._button_centre(touch._button("switch_weapon"))
+	_touch_event(touch, "down", swap_at)
+	await process_frame
+	_check(Input.is_action_pressed("switch_weapon"), "the added button presses its action")
+	_touch_event(touch, "up", swap_at)
+	await process_frame
+	_check(not Input.is_action_pressed("switch_weapon"), "...and lets go")
+	# A fresh TouchControls loading the saved layout shows the same buttons (a restart).
+	var fresh := TouchLayout.new()
+	fresh.load_dict(settings.get_value("touch/layout"))
+	_check(not fresh.is_active("jump") and fresh.is_active("switch_weapon") and fresh.centre(TouchLayout.entry("interact"), size).distance_to(Vector2(500, 300)) < 1.0, "after a restart the saved layout comes back")
+	# Reset, and the Android back key.
+	menu.open()
+	edit.pressed.emit()
+	(toolbar.find_child("ResetLayout", true, false) as Button).pressed.emit()
+	_check(touch.layout.is_default() and touch._buttons.size() == 13, "Reset to default puts every button back")
+	main._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	await process_frame
+	_check(not touch.editing and menu.visible, "the Android back key finishes the editor")
+	main._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	_check(not menu.visible and not get_root().get_tree().paused, "...and then closes the menu")
+	main._notification(Node.NOTIFICATION_WM_GO_BACK_REQUEST)
+	_check(menu.visible and get_root().get_tree().paused, "...and when playing it opens the menu")
+	back.pressed.emit()
+	settings.set_value("touch/layout", {})
+	touch.apply_layout({})
+	touch.enabled = false
+	player.mouse_look_enabled = true
+	await process_frame
+
+
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var missions := session.missions
@@ -4133,6 +4327,9 @@ func _test_district() -> void:
 			await _test_gamepad_in_game(main, district, player)
 		elif only == "dormant":
 			await _test_dormant_in_game(main, district, player)
+		elif only == "touch":
+			await _test_touch_in_game(main, district, player)
+			await _test_touch_editor_in_game(main, district, player)
 		return
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
@@ -4163,6 +4360,7 @@ func _test_district() -> void:
 	await _test_guidance_in_game(main, district, player)
 	await _test_view_in_game(main, player)
 	await _test_touch_in_game(main, district, player)
+	await _test_touch_editor_in_game(main, district, player)
 	await _test_survival_in_game(main, district, player)
 	await _test_story_in_game(main, district, player)
 	await _test_dormant_in_game(main, district, player)

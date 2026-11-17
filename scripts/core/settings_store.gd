@@ -13,6 +13,7 @@ const DEFAULTS := {
 	"video/render_scale": 1.0, "video/crowd_range": 2, "video/fullscreen": false, "video/vsync": true, "video/show_fps": false,
 	"gameplay/weather": true, "gameplay/traffic": true, "gameplay/autosave": true, "gameplay/waypoint": true, "gameplay/tips": true, "gameplay/survival": true,
 	"access/captions": true, "access/speech_bubbles": true,
+	"touch/layout": {},   # the on-screen buttons the player moved, removed or added (TouchLayout.to_dict)
 }
 const RANGES := {
 	"audio/master": [0.0, 1.0], "audio/sfx": [0.0, 1.0], "audio/ambient": [0.0, 1.0], "audio/ui": [0.0, 1.0], "audio/music": [0.0, 1.0],

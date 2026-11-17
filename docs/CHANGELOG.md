@@ -1,5 +1,15 @@
 # Changelog
 
+## Android controls: a way back and an editable layout (2026-11-17)
+- **Back to game:** a big button always at the top of the menu (it no longer scrolls away), and the Android back key now
+  works: it finishes the editor, closes the menu, or opens the menu while you play.
+- **Edit touch controls** (Menu, touchscreens only): drag a button to move it; tap it once to select it and tap the small
+  red x to remove it; **+ Add button** lists what is missing (removed buttons, and new SWAP, GAS and BRAKE); Reset to
+  default; Done saves and returns to the menu. The MENU button can't be removed. The layout is saved and kept after a restart.
+- Layouts are stored as fractions of the screen, so they fit other phones and a turned screen; damaged saved layouts are ignored.
+- 33 new checks (`_test_touch_layout_units`, `_test_touch_editor_in_game`; `tests/run.sh --only=touch`).
+- Screenshots `docs/screenshots/ui_*.png`. Design: `design/gdd/touch_controls.md`.
+
 ## Real Westridge: the leftovers (2026-11-17)
 - **Dual-road grass was on the wrong side:** it grew on the verge side of each carriageway and left the gap between
   the two roads bare sand. It now covers the whole gap between the carriageways (a check that failed on the old code).

@@ -5,9 +5,14 @@ extends Control
 signal resumed
 signal quit_requested
 signal replay_tutorial
+## "Edit touch controls" was tapped: the game closes this menu and opens the button editor.
+signal edit_controls_requested
 
 var settings: SettingsStore
+## Says whether the on-screen touch controls are in use (the Edit button only shows then); set by Main.
+var touch_available: Callable = func() -> bool: return false
 var _rows: VBoxContainer
+var _edit_button: Button
 
 
 func setup(p_settings: SettingsStore) -> void:
@@ -31,9 +36,22 @@ func setup(p_settings: SettingsStore) -> void:
 	style.set_content_margin_all(16)
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 10)
+	panel.add_child(column)
+	# Back to the game: always at the top, outside the scrolling list, big enough for a thumb.
+	var back := Button.new()
+	back.name = "Resume"
+	back.text = "<  Back to game"
+	back.custom_minimum_size = Vector2(0, 64)
+	back.add_theme_font_size_override("font_size", 26)
+	back.pressed.connect(close)
+	_outline(back)
+	column.add_child(back)
 	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
+	column.add_child(scroll)
 	_rows = VBoxContainer.new()
 	_rows.custom_minimum_size = Vector2(620, 0)
 	_rows.add_theme_constant_override("separation", 4)
@@ -44,11 +62,6 @@ func setup(p_settings: SettingsStore) -> void:
 
 func _build() -> void:
 	_heading("PAUSED", 28)
-	var resume := Button.new()
-	resume.name = "Resume"
-	resume.text = "Resume (Esc / Menu)"
-	resume.pressed.connect(close)
-	_rows.add_child(resume)
 	_heading("Audio", 20)
 	_slider("Master volume", "audio/master", 0.0, 1.0, 0.05)
 	_slider("Effects", "audio/sfx", 0.0, 1.0, 0.05)
@@ -56,6 +69,14 @@ func _build() -> void:
 	_slider("Interface", "audio/ui", 0.0, 1.0, 0.05)
 	_slider("Music & radio", "audio/music", 0.0, 1.0, 0.05)
 	_heading("Controls", 20)
+	_edit_button = Button.new()
+	_edit_button.name = "EditControls"
+	_edit_button.text = "Edit touch controls (move, remove or add buttons)"
+	_edit_button.custom_minimum_size = Vector2(0, 56)
+	_edit_button.pressed.connect(func(): edit_controls_requested.emit())
+	_edit_button.visible = false
+	_outline(_edit_button)
+	_rows.add_child(_edit_button)
 	_slider("Mouse sensitivity", "controls/mouse_sensitivity", 0.0005, 0.008, 0.0005)
 	_slider("Stick sensitivity", "controls/stick_sensitivity", 1.0, 6.0, 0.2)
 	_check("Controller vibration", "controls/vibration")
@@ -146,6 +167,18 @@ func _input(event: InputEvent) -> void:
 	_refresh_binds()
 
 
+## A button with a visible gold border (the theme's flat buttons are hard to see on a dark panel).
+static func _outline(b: Button) -> void:
+	for state in ["normal", "hover", "pressed", "focus"]:
+		var s := StyleBoxFlat.new()
+		s.bg_color = Color(0.16, 0.16, 0.22) if state != "pressed" else Color(0.3, 0.26, 0.12)
+		s.border_color = Color("#ffd75e") if state != "normal" else Color(1, 1, 1, 0.55)
+		s.set_border_width_all(2)
+		s.set_corner_radius_all(6)
+		s.set_content_margin_all(8)
+		b.add_theme_stylebox_override(state, s)
+
+
 func _heading(text: String, size: int) -> void:
 	var l := Label.new()
 	l.text = text
@@ -193,9 +226,18 @@ func control_for(key: String) -> Control:
 func open() -> void:
 	visible = true
 	get_tree().paused = true
+	_edit_button.visible = bool(touch_available.call())
 	var resume := find_child("Resume", true, false) as Button
 	if resume:
 		resume.grab_focus.call_deferred()
+
+
+## Back from the button editor: the menu comes up again (the game is still paused).
+func return_from_editor() -> void:
+	visible = true
+	var back := find_child("Resume", true, false) as Button
+	if back:
+		back.grab_focus.call_deferred()
 
 
 func close() -> void:

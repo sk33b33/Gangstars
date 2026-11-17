@@ -574,3 +574,9 @@ with the origin until then). Screenshots with people: `--wait=100 --cam-resident
 - Anything solid goes into `RealDistrictData.obstacles` (navigation) and the chunk's collision; keep the two in step.
 - Unclassified outlines in school grounds etc.: `python3 tools/osm/classify_buildings.py` (also run by build_westridge.py).
 - Quick groups: `tests/run.sh --only=gamepad`, `--only=dormant` (besides combat, crews, dealing).
+
+### Touch controls editor (2026-11-17)
+- Logic in `TouchLayout` (no nodes), drawing and input in `TouchControls`, saved as setting `touch/layout`.
+- Screenshots: `-- --touch --edit-controls [--edit-select=<id> --edit-remove=<id> --edit-picker]`, `-- --touch --pause-menu`.
+- Quick check: `tests/run.sh --only=touch` (boots the game, so about 10 minutes); the layout logic is in `--units-only`.
+- Android back key: `quit_on_go_back=false` in `project.godot`, handled in `Main._notification`.

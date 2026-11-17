@@ -183,6 +183,10 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 - [ ] Run its playtest / balance / cut-and-polish routines on the survival layer once a person has played it.
 - [ ] Survival follow-ups: nicer bin/crate models, searchable cupboards indoors, missions that use items and skills.
 
+## UI cleanup (requested 2026-11-17)
+- [x] Menu: Back to game button + Android back key; Edit touch controls (drag, tap to select + x to remove, add button, reset). design/gdd/touch_controls.md
+- [ ] Next UI ideas: resize buttons, move the sticks, a layout per hand (left/right), tidier HUD text on small screens.
+
 ## Real Westridge (the new world; design/gdd/real_world.md) (requested 2026-11-15)
 - [x] Stage 1: real data (streets + building outlines), real-line street builder, loading in pieces, walk-around preview.
 - [x] Stage 2: people: navigation on the real streets, residents in real houses, traffic on real roads; doors and windows on the houses.
