@@ -46,7 +46,8 @@ const FIGHT_LINES := {"police": ["Police! Drop it!", "Stop! Police!", "Get down!
 	"player_crew": ["I've got your back!", "Leave him alone!"]}
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
-@onready var model: CharacterModel = $Model
+## The body: an NpcBodyModel (Mixamo) or, with NpcBodies.enabled off, the old CharacterModel. Both answer the same calls.
+@onready var model = $Model
 @onready var interactable: Interactable = $Interactable
 @onready var name_label: Label3D = $NameLabel
 
@@ -147,6 +148,14 @@ func setup(p_data: NpcData, p_destinations: DestinationRegistry, think_offset: f
 	agent.max_speed = data.walk_speed * NpcBrain.FLEE_SPEED * 1.1
 	agent.velocity_computed.connect(_on_velocity_computed)
 	agent.path_search_max_polygons = RealNav.SEARCH_POLYGONS   # a walk across the whole suburb must not be cut short
+	if NpcBodies.enabled:
+		var body := NpcBodies.create(data)
+		var old: Node = model
+		old.get_parent().add_child(body)
+		old.get_parent().move_child(body, old.get_index())
+		old.free()
+		body.name = "Model"
+		model = body
 	model.build(data.shirt_color, data.pants_color, data.skin_color,
 		Color("#1d1b24") if data.role == "crew" else Color(0, 0, 0, 0), data.appearance())
 	_arm()

@@ -186,7 +186,7 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 ## Remy character (2026-11-17)
 - [x] Import, reusable model + AnimationTree, third-person player, touch controls, aim + gun placeholder, NPC outfits, playground.
 - [x] Remy is the game's player (2026-11-17).
-- [ ] hit, kick, wave clips (Idle, fall and stand-up are in); strafe and backwards clips; cheaper NPC version (LOD); put the six bodies (Remy and the five in `scenes/characters/npc`) on Residents: needs a resident wrapper with the old `CharacterModel` calls (talk, phone, sit, lean, wave, look-at, hats, hair) and clips for the missing ones.
+- [ ] hit, kick, wave clips (Idle, fall and stand-up are in); strafe and backwards clips; cheaper NPC version (LOD); real Mixamo clips for sit, lean, talk, phone, wave, kick and flinch to replace the stand-ins in `NpcBodyModel` (residents already wear the five bodies); hair, hats and accessories for the new bodies.
 
 ## UI cleanup (requested 2026-11-17)
 - [x] Menu: Back to game button + Android back key; Edit touch controls (drag, tap to select + x to remove, add button, reset). design/gdd/touch_controls.md

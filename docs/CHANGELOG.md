@@ -1,5 +1,13 @@
 # Changelog
 
+## Residents wear the Mixamo bodies (2026-11-17)
+- `NpcBodyModel` (extends `RemyPlayerModel`) answers the old `CharacterModel` calls; `NpcBodies` picks the body (police Leonard, crew
+  James or Meegan, others by id and sex). Residents, the interiors' stand-ins and the vendors use it
+  (`NpcBodies.enabled = false` restores the old model).
+- Stand-ins until clips exist: talk turns towards the listener, sit is a hand-posed chair pose, wave is a timer, lean stands.
+- Tests: the old model's checks run on `_legacy_model()`; new in-game checks for bodies, walking, turning, waving, sitting, weapons,
+  knock-out and kids.
+
 ## Five more Mixamo bodies for NPCs (2026-11-17)
 - James, Kate, Leonard, Louise and Meegan (uploaded as GLBs) are in `assets/models/characters/npc/`: lightened with
   `tools/blender/lighten_mixamo.py` (about 25,000 triangles each, Diffuse only), matte two-sided materials, and one model

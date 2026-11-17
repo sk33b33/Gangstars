@@ -1292,7 +1292,7 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	district.director.ambient_incidents = false
 	var cops := district.residents.values().filter(func(r): return r.data.role == "police")
 	_check(cops.size() == 10 and cops.all(func(r): return r.model.weapon in ["pistol", "shotgun"]), "10 armed officers (%d)" % cops.size())
-	_check(cops.all(func(r): return r.model.skeleton().get_node("Acc_police_vest").visible), "officers wear the vest, cap and belt")
+	_check(cops.all(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE), "officers wear the police body")
 	for i in 240:
 		await physics_frame
 	_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
@@ -1440,7 +1440,7 @@ func _test_crews_in_game(main: Node, district: District, player: Player) -> void
 	var prog := session.progression
 	var missions := session.missions
 	_check(prog.crew_id == "vlakte_vipers", "still a Vlakte Styler")
-	_check(district.residents["npc_viper_slang"].model.skeleton().get_node("Body") != null, "the Stylers live at their den")
+	_check(district.residents["npc_viper_slang"].model.skeleton() != null, "the Stylers live at their den")
 	var viper_m := missions.get_mission("viper_skin")
 	_check(missions.prerequisites_met(viper_m) or missions.is_completed("viper_skin") or missions.active.has("viper_skin"),
 		"Stylers get their crew missions (Fresh Threads)")
@@ -1731,7 +1731,7 @@ func _test_interiors_in_game(main: Node, district: District, player: Player) -> 
 		_check(talk != null and talk.target != "" and not talk.interact(player).is_empty(), "you can talk to them inside")
 		for i in 20:
 			await physics_frame
-		_check(interiors.room.find_children("StandIn_*", "", true, false).all(func(m): return (m as CharacterModel).base_pose in ["sit", ""]),
+		_check(interiors.room.find_children("StandIn_*", "", true, false).all(func(m): return m.base_pose in ["sit", ""]),
 			"they sit on the couch or stand about")
 		interiors.leave()
 		await physics_frame
@@ -2388,6 +2388,14 @@ func _test_npc_bodies() -> void:
 	_check(tall and hips_ok and tall_end == 5, "standing, each is life size (heads %s m, hips %s m) with the feet on the ground" % [heights, hip_heights])
 	_check(states_ok, "running at 4 m/s plays the retargeted Run clip (head 1.3 to 1.9 m up)")
 	_check(in_place and no_boxes, "each falls, lies on the spot and gets up again, and carries no box gun in the hand")
+
+
+## An old-style CharacterModel dressed from a resident's data (for the checks of that model and its looks).
+func _legacy_model(d: NpcData) -> CharacterModel:
+	var m := CharacterModel.new()
+	add_child_to_root(m)
+	m.build(d.shirt_color, d.pants_color, d.skin_color, Color(0, 0, 0, 0), d.appearance())
+	return m
 
 
 func add_child_to_root(n: Node) -> void:
@@ -3811,6 +3819,109 @@ func _test_remy_as_player(main: Node, district: District, player: Player) -> voi
 	_check(facing.dot(Vector3(0, 0, -1)) > 0.9 and (m.remy.global_basis * Vector3(0, 0, -1)).dot(Vector3(0, 0, -1)) > 0.9, "he faces the way he walks (the model's front is the direction the Player expects)")
 
 
+## Residents wear the Mixamo bodies (NpcBodyModel): who gets which body, and the calls the Resident, interiors and vendors make.
+func _test_npc_bodies_in_game(_main: Node, district: District, player: Player) -> void:
+	print("== Residents in Mixamo bodies")
+	var seen := {}
+	var wrong_police := 0
+	var wrong_crew := 0
+	var not_bodies := 0
+	for r: Resident in district.residents.values():
+		if not r.model is NpcBodyModel:
+			not_bodies += 1
+			continue
+		var m: NpcBodyModel = r.model
+		seen[m.body] = seen.get(m.body, 0) + 1
+		if r.data.role == "police" and m.body != NpcBodies.POLICE:
+			wrong_police += 1
+		if r.data.role == "crew" and not m.body in [NpcBodies.CREW.man, NpcBodies.CREW.woman]:
+			wrong_crew += 1
+	_check(not_bodies == 0 and wrong_police == 0 and wrong_crew == 0 and seen.size() == 5, "every resident wears a Mixamo body, police the dark sweater, crew the hoodie and the white tee (%s)" % [seen])
+	var women_ok := true
+	for r: Resident in district.residents.values():
+		if r.model is NpcBodyModel and float(r.data.appearance().figure) > 0.5 and not (r.model as NpcBodyModel).body in NpcBodies.WOMEN and r.data.role == "resident":
+			women_ok = false
+	_check(women_ok, "women residents get one of the three women's bodies")
+	_check(NpcBodies.pick("same_id", "resident", true) == NpcBodies.pick("same_id", "resident", true) and NpcBodies.pick("a", "vendor", true) in NpcBodies.WOMEN, "the body for a person is stable (picked from their id)")
+	# A resident's body walks, turns to talk, waves and sits.
+	var r0: Resident = district.residents.values()[0]
+	var m0: NpcBodyModel = r0.model
+	for i in 40:
+		m0.animate(1.0 / 60.0, 1.4)
+	_check(m0.remy.gait > 0.9 and m0.remy.gait < 1.2 and m0.walk_amplitude() > 0.9, "walking at 1.4 m/s plays the Walk clip (gait %.2f)" % m0.remy.gait)
+	for i in 40:
+		m0.animate(1.0 / 60.0, 0.0)
+	var standing_hips := m0.remy.skeleton.to_global(m0.remy.skeleton.get_bone_global_pose(m0.remy.skeleton.find_bone("mixamorig_Hips")).origin).y - m0.global_position.y
+	m0.mode = "talk"
+	m0.look_at_point(m0.global_position + m0.global_basis * Vector3(3, 1.5, 3))   # to the resident's front-left, 45 degrees
+	for i in 90:
+		m0.animate(1.0 / 60.0, 0.0)
+	var turned := absf(m0.head_yaw())
+	m0.mode = "idle"
+	m0.look_at_point(null)
+	for i in 120:
+		m0.animate(1.0 / 60.0, 0.0)
+	_check(turned > 0.5 and turned <= NpcBodyModel.TURN_LIMIT + 0.01 and absf(m0.head_yaw()) < 0.1, "a talking resident turns towards who they look at (%.2f rad) and back when they stop" % turned)
+	m0.wave()
+	var waved := m0.is_waving()
+	for i in 130:
+		m0.animate(1.0 / 60.0, 0.0)
+	_check(waved and not m0.is_waving(), "a wave lasts about two seconds")
+	var sitter := NpcBodies.make("sitter", "resident", false)
+	add_child_to_root(sitter)
+	await process_frame
+	var sk := sitter.remy.skeleton
+	var hips_id := sk.find_bone("mixamorig_Hips")
+	var knee_id := sk.find_bone("mixamorig_LeftLeg")
+	for i in 5:
+		sitter.animate(1.0 / 60.0, 0.0)
+	sitter.base_pose = "sit"
+	for i in 5:
+		sitter.animate(1.0 / 60.0, 0.0)
+	await process_frame
+	var seat_hips := sk.to_global(sk.get_bone_global_pose(hips_id).origin).y
+	var seat_knee := sk.to_global(sk.get_bone_global_pose(knee_id).origin)
+	_check(seat_hips > 0.4 and seat_hips < 0.65 and seat_knee.z > 0.3 and standing_hips > 0.8, "sitting puts the hips at seat height (%.2f m, standing %.2f m) with the knees forward (%.2f m)" % [seat_hips, standing_hips, seat_knee.z])
+	sitter.base_pose = ""
+	for i in 30:
+		sitter.animate(1.0 / 60.0, 0.0)
+	await process_frame
+	_check(sk.to_global(sk.get_bone_global_pose(hips_id).origin).y > 0.8 and sitter.remy.tree.active, "getting up from a seat stands again")
+	sitter.queue_free()
+	# Weapons ride on the hip or the back and come to the hand when drawn (police and gangsters are armed).
+	var armed: Resident = null
+	for r: Resident in district.residents.values():
+		if not r.model.weapon.is_empty():
+			armed = r
+			break
+	if armed != null:
+		var am: NpcBodyModel = armed.model
+		var rides_ok: bool = am._gun != null and am._gun.get_parent() in [am.remy.holster, am.remy.sling]
+		am.draw_weapon(true)
+		var in_hand: bool = am._gun.get_parent() == am.remy.pistol
+		am.draw_weapon(false)
+		_check(rides_ok and in_hand, "%s carries the %s on the hip or back and draws it into the hand" % [armed.data.display_name, am.weapon])
+	# Knocked out, a resident falls on the spot and gets up.
+	var down_r: Resident = district.residents.values()[1]
+	var dm: NpcBodyModel = down_r.model
+	dm.base_pose = "down"
+	for i in 200:
+		dm.animate(1.0 / 60.0, 0.0)
+	var was_down := dm.remy.is_down()
+	dm.base_pose = ""
+	for i in 200:
+		dm.animate(1.0 / 60.0, 0.0)
+	_check(was_down and not dm.remy.is_down(), "a knocked-out resident falls and gets up again")
+	# Kids are smaller.
+	var smallest := 9.0
+	for r: Resident in district.residents.values():
+		if r.model is NpcBodyModel:
+			smallest = minf(smallest, (r.model as NpcBodyModel).scale.y)
+	_check(smallest < 0.8, "children are smaller bodies (smallest scale %.2f)" % smallest)
+	# Vendors and the interiors' stand-ins use the same bodies.
+	_check(NpcBodies.model_for("Vendor_x", "vendor", true) is NpcBodyModel, "vendors and interior stand-ins are built through the same factory")
+
+
 func _test_story_in_game(main: Node, district: District, player: Player) -> void:
 	var session: GameSession = main.session
 	var missions := session.missions
@@ -4578,23 +4689,37 @@ func _test_district() -> void:
 
 	# Polish: smooth motion settings, jointed rig, plot dressing, swinging doors.
 	_check(ProjectSettings.get_setting("physics/common/physics_interpolation", false), "physics interpolation is enabled")
+	# Residents now wear the Mixamo bodies; the old CharacterModel (the fallback, NpcBodies.enabled = false) keeps its own checks here.
 	var some: Resident = district.residents.values()[0]
-	var sk := some.model.skeleton()
+	_check(some.model is NpcBodyModel and some.model.skeleton().find_bone("mixamorig_Head") >= 0, "residents are skinned Mixamo bodies on a rig")
+	var legacy_sample: Array = []
+	for r: Resident in district.residents.values():
+		if legacy_sample.size() < 150:
+			legacy_sample.append(_legacy_model(r.data))
+	var sk: Skeleton3D = (legacy_sample[0] as CharacterModel).skeleton()
 	_check(sk != null and sk.find_bone("thigh.L") >= 0 and sk.find_bone("upper_arm.R") >= 0 and sk.find_bone("head") >= 0,
-		"characters are skinned meshes on a rig (legs, arms, head)")
+		"the old character model is a skinned mesh on a rig (legs, arms, head)")
 	var shapes := {}
 	var skirts := 0
-	for r: Resident in district.residents.values():
-		var body: MeshInstance3D = r.model.skeleton().get_node("Body")
+	for m: CharacterModel in legacy_sample:
+		var body: MeshInstance3D = m.skeleton().get_node("Body")
 		shapes["%.1f/%.1f" % [body.get_blend_shape_value(0), body.get_blend_shape_value(1)]] = true
-		skirts += 1 if r.model.skeleton().get_node("Skirt").visible else 0
-	_check(shapes.size() >= 6 and skirts >= 3, "residents vary in build (%d body shapes, %d skirts)" % [shapes.size(), skirts])
-	var pastor_sk: Skeleton3D = district.residents["npc_kalk_pastor"].model.skeleton()
-	var spider_sk: Skeleton3D = district.residents["npc_rooi_spider"].model.skeleton()
+		skirts += 1 if m.skeleton().get_node("Skirt").visible else 0
+	_check(shapes.size() >= 6 and skirts >= 3, "the old model varies in build (%d body shapes, %d skirts)" % [shapes.size(), skirts])
+	for m: CharacterModel in legacy_sample:
+		m.queue_free()
+	var pastor := _legacy_model(district.residents["npc_kalk_pastor"].data)
+	var spider := _legacy_model(district.residents["npc_rooi_spider"].data)
+	var kaylin := _legacy_model(district.residents["npc_rooi_kaylin"].data)
+	var pastor_sk: Skeleton3D = pastor.skeleton()
+	var spider_sk: Skeleton3D = spider.skeleton()
 	_check(pastor_sk.get_node("Acc_collar").visible and pastor_sk.get_node("Acc_beard").visible and not pastor_sk.get_node("Acc_chain").visible
 		and spider_sk.get_node("Acc_chain").visible and spider_sk.get_node("Acc_sunglasses").visible,
 		"named characters have their own looks (pastor's collar and beard, Spider's chain and shades)")
-	_check(district.residents["npc_rooi_kaylin"].model.skeleton().get_node("Hair_afro").visible, "Kaylin has an afro (looks.json)")
+	_check(kaylin.skeleton().get_node("Hair_afro").visible, "Kaylin has an afro (looks.json)")
+	pastor.queue_free()
+	spider.queue_free()
+	kaylin.queue_free()
 	var sp := district.spots
 	_check(sp.count("sit") >= 20 and sp.count("lean") >= 3, "benches, chairs and the corner wall offer spots (%d sit, %d lean)" % [sp.count("sit"), sp.count("lean")])
 	var a := sp.claim(sp.position(0), ["sit"], 1.0, "test_a")
@@ -4772,11 +4897,14 @@ func _test_district() -> void:
 			await _test_dormant_in_game(main, district, player)
 		elif only == "remyplayer":
 			await _test_remy_as_player(main, district, player)
+		elif only == "npcbodies":
+			await _test_npc_bodies_in_game(main, district, player)
 		elif only == "touch":
 			await _test_touch_in_game(main, district, player)
 			await _test_touch_editor_in_game(main, district, player)
 		return
 	await _test_remy_as_player(main, district, player)
+	await _test_npc_bodies_in_game(main, district, player)
 	await _test_missions_in_game(main, district, player)
 	print("== phase 5 in game (gates, turf map, unlock, persistence)")
 	await _test_turf_in_game(main, district, player)

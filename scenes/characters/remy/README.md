@@ -162,5 +162,27 @@ Scenes: `scenes/characters/npc/<name>_model.tscn` (script `RemyModel`, `rig_key`
   by the difference between that body's rest pose and Remy's (q' = rest' * rest^-1 * q), the hips' travel is scaled by the hips
   height ratio, and the other position tracks are dropped. Idle, Walk, Run, Sprint, Jump, aim, fall and get-up all work.
 - **Parts.** `part("Tops")` etc. find `Ch21_Shirt`, `Ch31_Sweater`, `Ch07_Suit`... by name (James is one mesh, so he has none).
-- **Not wired to residents yet.** Residents still use the old `CharacterModel`; see the roadmap.
+- **Residents wear them** (below).
 - Look at them: `godot --path . scenes/dev/remy_playground.tscn -- --bodies --shot=res://tests/output/x.png --cam=0,1.5,0.5,0,1,-6`.
+
+## Residents in these bodies (NpcBodyModel)
+`scripts/npcs/npc_body_model.gd` extends `RemyPlayerModel` and answers the calls the old `CharacterModel` answered
+(`build`, `animate`, `mode`, `base_pose`, `set_weapon`, `draw_weapon`, `aiming`, `look_at_point`, `wave`, `muzzle_position`...), so
+`Resident`, the interiors and the vendors changed by a few lines: `Resident.setup` swaps its `$Model` for
+`NpcBodies.create(data)`; `interior_system.gd` and `real_vendor.gd` call `NpcBodies.model_for(...)`.
+`NpcBodies.enabled = false` brings back the old model everywhere (the tests that check its hair, faces and accessories use
+`_legacy_model()`).
+- **Which body:** `NpcBodies.pick(id, role, woman)`: police Leonard, crew James (men) or Meegan (women), everyone else from their
+  id: men James or Leonard, women Kate, Louise or Meegan. "Woman" is `appearance().figure > 0.5`.
+- **Dressing:** the clothes are the body's own. Where the body has a separate top and trousers (everyone but James) a share of the
+  resident's shirt and trouser colours is tinted in; `set_hat()` (a recruited crew member) tints the top with the crew colour.
+  `height` scales the body (children 0.7). Hair styles, faces, hats and accessories of the old model do not exist here.
+- **Animation cost:** the AnimationTree is advanced from `animate()` (manual mode), so the Resident's distance tiers decide how
+  often it runs. A body of 24,000 to 28,000 triangles and 6 or 7 draw calls.
+- **Stand-ins for clips that are missing:**
+  - `talk` turns the body towards what it looks at (up to 75 degrees); phone, guard and idle just stand.
+  - `base_pose = "sit"` bends the hips and knees by hand (hips 0.43 m lower, thighs and shins 90 degrees), tree switched off.
+  - `"lean"` stands. `"down"` is the real fall and get-up.
+  - `wave()` only keeps `is_waving()` true for 1.8 s. Kick and flinch do nothing.
+  - Real clips for sit, lean, talk, phone, wave, kick and flinch would replace these (download them on Remy from Mixamo).
+- Pictures: `-- --bodies --pose=sit` in the playground shows the residents' bodies seated.

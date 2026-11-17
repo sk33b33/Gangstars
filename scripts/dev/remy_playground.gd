@@ -78,7 +78,10 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	for n: Dictionary in npcs:
-		(n.model as RemyModel).update_locomotion(float(n.speed), bool(n.sprint), true, delta)
+		if n.has("nb"):
+			(n.nb as NpcBodyModel).animate(delta, 0.0)
+		else:
+			(n.model as RemyModel).update_locomotion(float(n.speed), bool(n.sprint), true, delta)
 
 
 func _build_world() -> void:
@@ -170,6 +173,22 @@ func _build_npcs() -> void:
 		outfit.hair_tint = look.hair
 		if not _args.has("bodies"):
 			m.apply_outfit(outfit)
+		if _args.has("pose"):   # --pose=sit: the bodies as residents wear them (NpcBodyModel) in a base pose
+			var nb := NpcBodyModel.new()
+			nb.setup_body(bodies[i])
+			add_child(nb)
+			nb.position = m.position
+			nb.rotation.y = PI   # residents face +Z; the camera looks at their fronts
+			m.queue_free()
+			nb.base_pose = str(_args.pose)
+			var seat := MeshInstance3D.new()   # a 0.45 m seat, for --pose=sit
+			var seat_box := BoxMesh.new()
+			seat_box.size = Vector3(0.5, 0.04, 0.5)
+			seat.mesh = seat_box
+			seat.position = m.position + Vector3(0, 0.43, 0)
+			add_child(seat)
+			npcs.append({"model": nb.remy, "speed": 0.0, "sprint": false, "nb": nb})
+			continue
 		if i == 4:
 			m.set_aiming(true)
 		npcs.append({"model": m, "speed": gaits[i][0], "sprint": gaits[i][1]})

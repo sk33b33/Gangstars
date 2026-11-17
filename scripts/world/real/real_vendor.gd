@@ -11,7 +11,7 @@ const LOOKS := {
 	"snoek": {"hair_style": "beanie", "face": "face_stubble", "accessories": ["moustache"]},
 }
 
-var model := CharacterModel.new()
+var model: Node3D
 var interactable := Interactable.new()
 var kind := "fruit"
 var label := ""
@@ -32,6 +32,7 @@ func setup(p_kind: String, at: Vector2, face: Vector2, seed_value: int, on_use: 
 	var look: Dictionary = (LOOKS[kind] as Dictionary).duplicate()
 	look["print"] = ["print_rose", "print_sun", "print_teal"][seed_value % 3]
 	look["hair_color"] = Color("#cfcac0") if kind == "fruit" and seed_value % 2 == 0 else Color("#1d1b24")
+	model = NpcBodies.model_for(name, "vendor", kind == "fruit")
 	add_child(model)
 	model.build(Color(shirts[seed_value % shirts.size()]), Color("#3a3d46"), Color(["#8d5a3b", "#a7754f", "#6b4430"][seed_value % 3]), Color(0, 0, 0, 0), look)
 	interactable.prompt = "Buy from %s" % label

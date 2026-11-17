@@ -382,7 +382,7 @@ func _add_people(place_id: String, kind: String) -> void:
 				_stand_in(r, spots.host, false)
 				return
 		# Nobody of theirs in: the desk officer.
-		var m := CharacterModel.new()
+		var m = NpcBodies.model_for("DeskOfficer", "police", false)
 		m.name = "DeskOfficer"
 		room.add_child(m)
 		m.build(Color("#9db4d6"), Color("#2b3b63"), Color("#6b4430"), Color(0, 0, 0, 0),
@@ -410,7 +410,7 @@ func _add_people(place_id: String, kind: String) -> void:
 
 
 func _stand_in(r: Resident, spot: Dictionary, sitting: bool) -> void:
-	var m := CharacterModel.new()
+	var m = NpcBodies.model_for(r.data.id, r.data.role, float(r.data.appearance().figure) > 0.5)
 	m.name = "StandIn_" + r.data.id
 	room.add_child(m)
 	m.build(r.data.shirt_color, r.data.pants_color, r.data.skin_color, Color(0, 0, 0, 0), r.data.appearance())
