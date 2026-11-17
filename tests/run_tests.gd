@@ -3820,6 +3820,62 @@ func _test_remy_as_player(main: Node, district: District, player: Player) -> voi
 
 
 ## Residents wear the Mixamo bodies (NpcBodyModel): who gets which body, and the calls the Resident, interiors and vendors make.
+## Diagnostics (--only=npcvis): who is around the player right now, and are they shown?
+func _diag_npc_visibility(district: District, player: Player) -> void:
+	district.director.clock.set_hour(9.83)   # 09:50, as in a new game
+	for checkpoint in [1, 40, 120]:
+		var frames := 120 if checkpoint == 1 else int((checkpoint - _diag_last) * 60.0)
+		for i in frames:
+			await physics_frame
+		_diag_last = checkpoint
+		var counts := {"total": 0, "outside": 0, "outside_shown": 0, "tier_near": 0, "tier_mid": 0, "tier_far": 0, "within60_shown": 0, "walking": 0}
+		var nearest := []
+		for r: Resident in district.residents.values():
+			counts.total += 1
+			if r.is_inside:
+				continue
+			counts.outside += 1
+			var shown: bool = r.is_visible_in_tree() and r.model.is_visible_in_tree()
+			counts.outside_shown += 1 if shown else 0
+			counts["tier_" + r.sim_tier] += 1
+			var d := r.global_position.distance_to(player.global_position)
+			if d < 60.0 and shown:
+				counts.within60_shown += 1
+			counts.walking += 1 if r.state_name().begins_with("TRAVEL") else 0
+			nearest.append([d, r.data.id, r.sim_tier, shown, r.state_name()])
+		nearest.sort_custom(func(a, b): return a[0] < b[0])
+		var rp: RealPopulation = district.real_people
+		var crowd := {"alive": rp.residents.size(), "spawned_total": rp.spawned_total, "max": rp.max_residents, "outside": 0, "shown": 0, "within60": 0, "nav_regions": district.real.nav_regions.size(), "queue": rp._spawn_queue.size(), "phone": district.is_phone()}
+		var crowd_near := []
+		for r: Resident in rp.residents.values():
+			if r.is_inside:
+				continue
+			crowd.outside += 1
+			var vis: bool = r.is_visible_in_tree() and r.model.is_visible_in_tree()
+			crowd.shown += 1 if vis else 0
+			var dd := r.global_position.distance_to(player.global_position)
+			crowd.within60 += 1 if dd < 60.0 else 0
+			crowd_near.append([dd, r.data.id, r.sim_tier, vis, r.state_name()])
+		crowd_near.sort_custom(func(a, b): return a[0] < b[0])
+		var states := {}
+		var sched_sample := ""
+		for r: Resident in rp.residents.values():
+			states[r.state_name()] = states.get(r.state_name(), 0) + 1
+			if sched_sample.is_empty():
+				sched_sample = "%s timer=%.1f clock_hour=%.2f allowed=%s schedule=%s active=%s" % [r.data.id, r.brain.timer, r.brain.clock_hour, r.brain._any_entry_allowed(), str(r.data.schedule).left(220), str(r.data.active_hours)]
+		print("DIAG CROWD t=%ds hour=%.2f states=%s sample=%s" % [checkpoint, rp.clock.hour(), states, sched_sample])
+		print("DIAG CROWD t=%ds %s" % [checkpoint, crowd])
+		for i in mini(4, crowd_near.size()):
+			print("DIAG CROWD    %.0f m %s tier=%s shown=%s %s" % crowd_near[i])
+		print("DIAG t=%ds player=%s %s" % [checkpoint, player.global_position.snapped(Vector3.ONE), counts])
+		for i in mini(5, nearest.size()):
+			print("DIAG     %.0f m %s tier=%s shown=%s %s" % nearest[i])
+	_check(true, "diagnostics printed")
+
+
+var _diag_last := 0
+
+
 func _test_npc_bodies_in_game(_main: Node, district: District, player: Player) -> void:
 	print("== Residents in Mixamo bodies")
 	var seen := {}
@@ -4897,6 +4953,8 @@ func _test_district() -> void:
 			await _test_dormant_in_game(main, district, player)
 		elif only == "remyplayer":
 			await _test_remy_as_player(main, district, player)
+		elif only == "npcvis":
+			await _diag_npc_visibility(district, player)
 		elif only == "npcbodies":
 			await _test_npc_bodies_in_game(main, district, player)
 		elif only == "touch":
