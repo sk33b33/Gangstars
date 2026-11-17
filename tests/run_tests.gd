@@ -2169,15 +2169,15 @@ func _test_remy() -> void:
 	print("== Remy character")
 	const GLB := "res://assets/models/characters/Remy_Animations_Mobile.glb"
 	# The uploaded file is untouched (all settings live in its .import file and in separate resources).
-	_check(FileAccess.get_sha256(GLB) == "441d9103ba4ee8e17ec2da4e9afd0e3754be7dba4518f0f47baa41185eaf63fc", "Remy_Animations_Mobile.glb is exactly the file that was uploaded")
+	_check(FileAccess.get_sha256(GLB) == "bce0076a2c3001df0a2fcffaee30ac75e4ebe047f76eab6933c7ebf2adeb0d2a", "Remy_Animations_Mobile.glb is exactly the file that was uploaded")
 	# Import: loops, alpha, compression.
 	var imported := (load(GLB) as PackedScene).instantiate()
 	var ap := imported.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	var loops := {}
 	for clip in ap.get_animation_list():
 		loops[clip] = ap.get_animation(clip).loop_mode
-	_check(ap.get_animation_list().size() == 5 and loops.Walk == Animation.LOOP_LINEAR and loops.Run == Animation.LOOP_LINEAR and loops.Sprint == Animation.LOOP_LINEAR \
-		and loops.Pistol_Aim == Animation.LOOP_LINEAR and loops.Jump == Animation.LOOP_NONE, "Walk, Run, Sprint and Pistol_Aim loop; Jump plays once (%s)" % [loops])
+	_check(ap.get_animation_list().size() == 6 and loops.Idle == Animation.LOOP_LINEAR and loops.Walk == Animation.LOOP_LINEAR and loops.Run == Animation.LOOP_LINEAR and loops.Sprint == Animation.LOOP_LINEAR \
+		and loops.Pistol_Aim == Animation.LOOP_LINEAR and loops.Jump == Animation.LOOP_NONE, "Idle, Walk, Run, Sprint and Pistol_Aim loop; Jump plays once (%s)" % [loops])
 	var alpha_ok := true
 	var compressed := true
 	var back_cull := 0
@@ -2201,7 +2201,7 @@ func _test_remy() -> void:
 	add_child_to_root(m)
 	await process_frame
 	_check(m.find_children("*", "AnimationTree", true, false).size() == 1 and m.find_children("*", "AnimationPlayer", true, false).size() == 1, "one AnimationTree and one AnimationPlayer per character")
-	_check(m.anims.has_animation("Idle_Temp") and m.anims.has_animation("Aim_Hold") and m.anims.get_animation("Idle_Temp").get_track_count() == m.anims.get_animation("Walk").get_track_count(), "the temporary idle (Walk's first frame held) and the aim hold exist")
+	_check(m.anims.has_animation("Idle") and m.anims.get_animation("Idle").loop_mode == Animation.LOOP_LINEAR and m.anims.get_animation("Idle").length > 5.0 and m.anims.has_animation("Aim_Hold") and not m.anims.has_animation("Idle_Temp"), "the real looping Idle clip and the aim hold exist")
 	var lo := 1e9
 	var hi := -1e9
 	for i in m.skeleton.get_bone_count():

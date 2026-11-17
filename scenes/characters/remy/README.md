@@ -46,7 +46,7 @@ else in the game changed: `set_weapon`, `draw_weapon`, `aiming`, `animate`, `muz
 | `Sprint` | 0.57 s | yes | 6.0 m/s (`AUTHORED_SPRINT`; your note said 5.5) | in place; quicker steps than Run |
 | `Jump` | 1.93 s | no | | crouch to 0.4 s, apex 0.8 s, feet down about 1.3 s |
 | `Pistol_Aim` | 7.13 s | yes | | raises the gun by 0.5 s, holds until about 1 s, then lowers it |
-| `Idle_Temp` | | yes | | **made at start-up: Walk's first frame held. There is no real Idle.** |
+| `Idle` | 10.0 s | yes | | breathing idle (added to the glb in the second upload) |
 | `Aim_Hold` | | yes | | made at start-up: Pistol_Aim at 0.75 s held |
 
 - The clip's play speed is `actual speed / authored speed`, so the feet do not skate (`RemyModel.play_speed`).
@@ -70,7 +70,7 @@ else in the game changed: `set_weapon`, `draw_weapon`, `aiming`, `animate`, `muz
 ```
 Blend2 "aim"  (filter: spine and everything above it)
   in    StateMachine "loco"
-          Grounded = BlendTree( BlendSpace1D "gait": Idle_Temp 0, Walk 1, Run 2, Sprint 3  ->  TimeScale "speed" )
+          Grounded = BlendTree( BlendSpace1D "gait": Idle 0, Walk 1, Run 2, Sprint 3  ->  TimeScale "speed" )
           JumpStart -> JumpAir -> JumpLand -> Grounded
   blend Aim_Hold
 ```
@@ -134,9 +134,8 @@ one AnimationTree per character. Still to do for crowds:
 
 ## What is missing
 
-- **Idle.** `Idle_Temp` is Walk's first frame held, which is a mid-stride pose. Export a real Idle from Mixamo (same
-  skeleton, "without skin") and add it: import the glb with the clip, then change `Idle_Temp` to the new clip in the
-  `gait` blend space (or replace `_held_pose` in `remy_model.gd`).
+- **Falling and standing up.** The glb has only Idle added; no fall or get-up clip is in it yet (knocked out still tips the
+  model over and back).
 - Strafe and backwards walking (aiming while moving sideways plays the forward walk), a turn-in-place, a falling-hard
   landing, hit and death clips, a firing recoil.
 - A cheaper LOD model for crowds (above).

@@ -8,7 +8,7 @@ filters = ["Armature/Skeleton3D:mixamorig_Head", "Armature/Skeleton3D:mixamorig_
 animation = &"Aim_Hold"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_m6ksf"]
-animation = &"Idle_Temp"
+animation = &"Idle"
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_i1nir"]
 animation = &"Walk"

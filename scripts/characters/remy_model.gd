@@ -20,7 +20,6 @@ const SLOTS := ["Body", "Tops", "Bottoms", "Shoes", "Hair", "Eyes", "Eyelashes"]
 const SKELETON_PATH := "Remy/Armature/Skeleton3D"
 ## Jump clip (1.93 s): crouch to 0.4 s, apex 0.8 s, feet back on the ground about 1.3 s. It is played in three pieces
 ## (see tools/godot/build_remy_model.gd): take-off, air (held while falling), landing.
-const IDLE_FRAME_TIME := 0.0    # the temporary idle is this moment of the Walk clip, held
 ## Pistol_Aim (7.1 s) raises the gun by 0.5 s, holds it steady until about 1 s, then lowers it. The hold is this moment of it.
 const AIM_FRAME_TIME := 0.75
 
@@ -40,7 +39,7 @@ var sling: Node3D                  # where a long gun rides on the back (barrel 
 var pistol: Node3D                 # the placeholder gun: RightHandAttachment (a BoneAttachment3D on mixamorig_RightHand) > Pistol
 var gait := 0.0                    # 0 idle, 1 walk, 2 run, 3 sprint (blended)
 
-static var _library: AnimationLibrary   # shared by every Remy: the five clips plus the temporary idle
+static var _library: AnimationLibrary   # shared by every Remy: the six clips (Idle, Walk, Run, Sprint, Jump, Pistol_Aim) plus the aim hold
 
 var _playback: AnimationNodeStateMachinePlayback
 var _aim := 0.0
@@ -67,18 +66,17 @@ func _ready() -> void:
 	imported.queue_free()   # the glb's own player is not needed: one AnimationTree drives the skeleton
 
 
-## The shared library: the glb's clips by reference (no copies), plus two held poses made from them:
-## Idle_Temp (Walk's first frame: there is no Idle clip) and Aim_Hold (the steady part of Pistol_Aim).
+## The shared library: the glb's clips by reference (no copies), plus a held pose made from them:
+## Aim_Hold (the steady part of Pistol_Aim).
 static func _make_library(imported: AnimationPlayer) -> AnimationLibrary:
 	var lib := AnimationLibrary.new()
 	for clip in imported.get_animation_list():
 		lib.add_animation(clip, imported.get_animation(clip))
-	lib.add_animation("Idle_Temp", _held_pose(imported.get_animation("Walk"), IDLE_FRAME_TIME))
 	lib.add_animation("Aim_Hold", _held_pose(imported.get_animation("Pistol_Aim"), AIM_FRAME_TIME))
 	return lib
 
 
-## A one-key-per-track copy of `src` at time `t`: the same pose, held. (Stands in for the missing Idle.)
+## A one-key-per-track copy of `src` at time `t`: the same pose, held. (Used for the steady aim pose.)
 static func _held_pose(src: Animation, t: float) -> Animation:
 	var a := Animation.new()
 	a.length = 1.0

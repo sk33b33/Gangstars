@@ -1,5 +1,9 @@
 # Changelog
 
+## Remy has a real Idle (2026-11-17)
+- The updated `Remy_Animations_Mobile.glb` carries a 10 s breathing `Idle` (looping). It replaces the held Walk frame at the
+  bottom of the gait blend, so standing still looks like standing still. Not in the glb yet: falling and standing up.
+
 ## Remy is the player (2026-11-17)
 - The game's `Player` now shows Remy (`scenes/characters/player.tscn`: the `Model` node is `remy_player_model.tscn`).
   Combat, interaction, camera, driving, touch controls, saves and the tests use the same `Player` script (one new line:

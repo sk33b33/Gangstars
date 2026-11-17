@@ -6,7 +6,7 @@ extends SceneTree
 ## The tree (one per character):
 ##   Blend2 "aim"  (upper body only: Pistol_Aim over the legs' gait; filtered to the bones from the spine up)
 ##     in    : StateMachine "loco"
-##               Grounded  = BlendTree( BlendSpace1D "gait": Idle_Temp 0, Walk 1, Run 2, Sprint 3  ->  TimeScale "speed" )
+##               Grounded  = BlendTree( BlendSpace1D "gait": Idle 0, Walk 1, Run 2, Sprint 3  ->  TimeScale "speed" )
 ##               JumpStart / JumpAir / JumpLand = three pieces of the Jump clip (take-off, air, landing)
 ##     blend : Aim_Hold (a steady frame of Pistol_Aim)
 const OUT := "res://scenes/characters/remy/"
@@ -42,7 +42,7 @@ func _grounded() -> AnimationNodeBlendTree:
 	space.min_space = 0.0
 	space.max_space = 3.0
 	space.sync = true   # the clips keep their steps in time with each other while they blend
-	space.add_blend_point(_anim("Idle_Temp"), 0.0)
+	space.add_blend_point(_anim("Idle"), 0.0)
 	space.add_blend_point(_anim("Walk"), 1.0)
 	space.add_blend_point(_anim("Run"), 2.0)
 	space.add_blend_point(_anim("Sprint"), 3.0)
