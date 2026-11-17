@@ -128,7 +128,14 @@ func _build_real_world() -> void:
 	real.name = "RealWestridge"
 	real.places = destinations
 	add_child(real)
-	real.bake_all = true
+	var phone := is_phone()
+	real.bake_all = not phone
+	if phone:
+		real.load_radius = PHONE_LOAD_RADIUS
+		real.builds_per_frame = 1
+		real.frame_budget_ms = PHONE_FRAME_MS
+		real.sim_radius = PHONE_SIM_RADIUS
+		real.sim_margin = PHONE_SIM_MARGIN
 	real.setup(data, player if player else self)
 	for area in areas:
 		real.extra_obstacles.append_array(StreetBuilder.build_real(nav_region, area, destinations))
@@ -178,6 +185,35 @@ func _build_real_world() -> void:
 			for cz in range(lo.y, hi.y + 1):
 				if data.has_chunk(Vector2i(cx, cz)):
 					real.keep_nav[Vector2i(cx, cz)] = true
+	if phone:   # only round the player's own patch: the rest is baked when they walk there (RealWorld.scan)
+		var home := registry.get_house(GameSession.SAFEHOUSE_ID)
+		var centre := Vector3(home.position.x, 0.0, home.position.y)
+		for key: Vector2i in real.keep_nav.keys():
+			if data.chunk_centre(key).distance_to(centre) > PHONE_KEEP_RADIUS:
+				real.keep_nav.erase(key)
+
+
+## A phone or tablet (a touchscreen, or `-- --touch`) cannot hold the whole suburb: it builds only what
+## is near the player, keeps navigation only round the player's own patch (and round wherever they walk),
+## carries fewer people and cars, and builds in shorter slices. phone_override: -1 decides by the device,
+## 0 never, 1 always (tests). Design: design/gdd/real_world.md ("Phone profile").
+const PHONE_LOAD_RADIUS := 320.0
+const PHONE_SIM_RADIUS := 220.0
+const PHONE_SIM_MARGIN := 100.0
+const PHONE_KEEP_RADIUS := 450.0        # navigation kept for good this far round the safehouse
+const PHONE_FRAME_MS := 12.0
+const PHONE_RESIDENTS := 18
+const PHONE_HOMES_PER_CHUNK := 3
+const PHONE_CARS := 6
+## Far-off people sleep beyond this: where the phone has no navigation for them.
+const PHONE_DORMANT := PHONE_SIM_RADIUS + PHONE_SIM_MARGIN
+static var phone_override := -1
+
+
+static func is_phone() -> bool:
+	if phone_override >= 0:
+		return phone_override == 1
+	return DisplayServer.is_touchscreen_available() or OS.get_cmdline_user_args().has("--touch")
 
 
 ## Game minutes per real second in the real Westridge. The old districts were a few hundred metres
@@ -218,10 +254,15 @@ func _await_real_navigation() -> void:
 	real_people.own_clock = false
 	add_child(real_people)
 	real_people.setup(real, player if player else self)
+	if is_phone():
+		real_people.max_residents = PHONE_RESIDENTS
+		real_people.homes_per_chunk = PHONE_HOMES_PER_CHUNK
 	real_traffic = RealTraffic.new()
 	real_traffic.name = "RealTraffic"
 	add_child(real_traffic)
 	real_traffic.setup(real, player if player else self, real_people)
+	if is_phone():
+		real_traffic.max_cars = PHONE_CARS
 	if use_lod:
 		merge_stats = MeshMerger.merge(nav_region)
 		lod_count = Lod.apply(nav_region)

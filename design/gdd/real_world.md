@@ -99,7 +99,13 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 - Where a piece meets a bigger road (by class rank: lane < street < collector < main) it gets a stop line across the
   arriving (left) lane, `STOP_BACK` before the crossing road's kerb, and STOP painted before it.
 - Zebra crossings on the road nearest each school, shop, clinic, crèche and the civic centre (within `CROSSING_REACH`).
-- Dual roads: each one-way carriageway grasses its half of the gap to the other carriageway of the same name.
+- Dual roads: each one-way carriageway grasses the whole gap between its kerb and the kerb of the nearest other
+  carriageway of the same name on its right (measured at the middle of the piece; a gap under `MEDIAN_MIN_GAP`, where
+  the carriageways taper together at a junction, gets none). The strips of the two carriageways overlap on one
+  texture; they lie under the kerb and the asphalt.
+- Speed humps slow cars: a car sees the humps of the loaded chunks ahead of it in its lane (`RealWorld.hump_ahead`,
+  `HUMP_REACH` 14 m) and drives over one at `HUMP_SPEED` (3 m/s), easing back up to road speed 0.6 m/s per metre
+  beyond it.
 - Residential streets and collectors: wooden power poles every `POLE_SPACING` at the back of the verge on one side,
   three sagging wires, a pair of sneakers on one span in `SNEAKER_ONE_IN`; poles keep 2 m from street lights.
 - Drain grates in the gutters every 45 m, manholes every 80 m, potholes, tar patches, oil stains and gutter sand at
@@ -131,8 +137,23 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
   Playgrounds: a swing frame, a slide and a roundabout. Pitches: goals at both ends (full size on big pitches).
 - Murals and tags: one shop or school block in two has a mural or a (made-up) crew tag on its longest side wall;
   one precast yard wall piece in `TAG_ONE_IN` carries a tag on its street side.
-- A fruit stall beside each zebra crossing (left verge) and a snoek bakkie by the shopping centre's crossing;
-  both solid and navigation obstacles.
+- A fruit stall beside each zebra crossing (left verge) and a snoek bakkie parked on the same verge by the shopping
+  centre's crossing; both solid and navigation obstacles.
+- Vendors (`RealVendor`): someone stands behind each stall (an older woman in an apron and doek at fruit stalls, a man
+  in a beanie at the bakkie), animated and talking while the camera is within 7 m, idle within 40 m, still beyond.
+  They are made with the chunk and freed with it. Using one (E, "Buy from ...") opens the shop menu with the stall's
+  stock: `fruit_stall` (apple, naartjie, banana, water) or `snoek_bakkie` (snoek piece, snoek roll, cooldrink, water),
+  both in `data/survival/items.json` > `shop_stock`.
+
+### Phone profile (`District.is_phone`)
+- A touchscreen (or `-- --touch`) cannot hold the whole suburb. The district then: builds only `PHONE_LOAD_RADIUS`
+  (320 m) round the player and frees pieces beyond `unload_margin`; works in slices of `PHONE_FRAME_MS` (12 ms)
+  instead of 40; keeps navigation for good only within `PHONE_KEEP_RADIUS` (450 m) of the safehouse and otherwise
+  bakes round the player (`PHONE_SIM_RADIUS` 220 m, `PHONE_SIM_MARGIN` 100 m); carries at most `PHONE_RESIDENTS` 18
+  passers-by (`PHONE_HOMES_PER_CHUNK` 3 per piece) and `PHONE_CARS` 6 cars; and puts people to sleep beyond
+  `PHONE_DORMANT` (320 m) whatever the crowd setting says, because beyond that there is no navigation for them.
+- Measured here (headless, no phone): the game starts in about 7 s with 16 of the 121 pieces built and navigation on 13.
+  Real phone speed is for the tester to judge; every number is a constant at the top of `district.gd`.
 
 ### Loading the details
 - Planning a chunk's details (`RealDistrictData.prepare`: street context, yards, home decor, school fences, stalls)
@@ -260,7 +281,10 @@ Wespoort Drive, cut through Westridge Gardens. Someone who lives there recognise
 | `WENDY_ONE_IN` / `TANK_ONE_IN` / `DISH_ONE_IN` / `SPAZA_ONE_IN` | `RealHomeDecor` | 4 / 5 / 4 / 30 | | How often each home detail appears |
 | `SEMI_AREA` / `SEMI_ASPECT` | builder | 110 to 320 m2 / 1.8 | | Which houses are painted as semi-detached pairs |
 | `SCHOOL_GATES` / `SCHOOL_GATE_WIDTH` / `PARK_TREE_SPACING` | `RealParkDecor` | 2 / 5 m / 11 m | | School gates, park trees |
-| `frame_budget_ms` | `RealWorld` | 40 ms | 8 to 60 | Loading speed against frame time |
+| `frame_budget_ms` | `RealWorld` | 40 ms (phone 12) | 8 to 60 | Loading speed against frame time |
+| `HUMP_SPEED` / `HUMP_REACH` | `RealCar` | 3 m/s / 14 m | 2 to 5 / 8 to 20 | How cars take speed humps |
+| `MEDIAN_MIN_GAP` | `RealStreetDecor` | 1.0 m | 0.5 to 3 | Narrowest dual-road gap that gets grass |
+| `PHONE_*` | `District` | see Phone profile | | Everything the phone profile changes |
 | `KEEP_CLEAR` | `RealDistrictData` | 3 m | 2 to 6 | How far generated obstacles keep from game places |
 | `HOME_MIN_AREA` / `HOME_MAX_AREA` | builder | 30 / 450 m2 | | Which outlines count as homes |
 | `max_residents` / `homes_per_chunk` | `RealPopulation` | 48 / 6 (touch: 18 / 3) | 10 to 120 / 1 to 15 | How busy the streets are; CPU |
@@ -293,6 +317,10 @@ Each has a check in `tests/run_tests.gd` (`_test_real_world_units`, `_test_real_
     out of any story family's front door.
 18. No home stands in school grounds, the shopping centre or a sports ground; each public kind maps to its shape; the
     mosque chunk builds a dome and the church chunks crosses.
+20. Dual-road grass lies between the carriageways and not where they taper together; cars slow at speed humps (the
+    humps they see are the ones drawn); every stall has a vendor that sells real items and is freed with its chunk;
+    a game started as on a phone builds a fraction of the suburb, keeps navigation only round the player's patch,
+    carries the smaller crowd, and follows the player across the suburb.
 19. World details: the Excelsior Street piece has poles, wires, drains, manholes, washing lines and aloes; Westridge has
     zebras, driveways and parked cars, wendy houses, spazas, fenced schools, fruit stalls and one snoek bakkie; side
     streets get stop lines; planning the next piece over takes under 200 ms and building one under 400 ms; no route

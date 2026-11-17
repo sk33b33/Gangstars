@@ -1,5 +1,16 @@
 # Changelog
 
+## Real Westridge: the leftovers (2026-11-17)
+- **Dual-road grass was on the wrong side:** it grew on the verge side of each carriageway and left the gap between
+  the two roads bare sand. It now covers the whole gap between the carriageways (a check that failed on the old code).
+- **Cars slow for speed humps** (3 m/s over a hump, easing up beyond it).
+- **Stallholders:** an older woman in an apron and doek behind each fruit stall and a man behind the snoek bakkie
+  (which now parks on the verge, not the median). Press E to buy: apples, naartjies, bananas, braaied snoek, snoek rolls.
+- **Phone profile:** on a touchscreen (or `-- --touch`) the game builds only 320 m round the player (16 of 121
+  pieces), keeps navigation only round the safehouse and wherever they walk, carries 18 passers-by and 6 cars, builds in
+  12 ms slices and lets far-off people sleep. Starts in about 7 s here. Test: `tests/run.sh --phone-only`.
+- 12 new checks.
+
 ## Real Westridge: a fuller world (2026-11-16)
 - **Streets:** speed humps on residential streets; stop lines and STOP where side streets meet bigger roads; zebra
   crossings by schools, shops, the clinic and the civic centre; grass medians on Spine, Morgenster, Eisleben and

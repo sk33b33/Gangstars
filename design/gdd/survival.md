@@ -42,6 +42,8 @@ have to look after. The longer you run these streets the better you get at it.
   A search takes `search_seconds`; a spot refills `refill_days` game days after it was emptied.
   What a spot holds is fixed by its id and the day it refilled (same result on every device and after loading).
 - Junk and valuables sell at shops for their `sell` price.
+- Street vendors (fruit stalls, the snoek bakkie in Westridge) sell through the same menu with their own stock
+  (`shop_stock.fruit_stall`, `shop_stock.snoek_bakkie`).
 - The bag opens with I (pad: D-pad right, touch: BAG): use, drop, and (at the safehouse) stash.
 
 ### Wounds

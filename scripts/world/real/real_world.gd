@@ -28,6 +28,9 @@ var places := DestinationRegistry.new()   # house doors ("<house id>:door") and 
 ## Chunks that always keep their navigation, wherever the focus is (the game's own places), baked
 ## from the map data even when the chunk's buildings are not loaded.
 var keep_nav := {}          # chunk key -> true
+var humps := {}             # chunk key -> Array[Vector2]: the speed humps of each loaded chunk
+## A street vendor was used: stock kind ("fruit_stall", "snoek_bakkie") and the vendor's name; the session opens the shop menu.
+signal vendor_used(stock_kind: String, label: String)
 ## Bake the rest of the suburb too, in the background (nearest first) and keep it: people can
 ## then walk from any part of Westridge to any other (a crew-mate following you across town).
 var bake_all := false
@@ -218,6 +221,23 @@ func nav_synced(pos: Vector3) -> bool:
 	return Vector2(on_map.x - flat.x, on_map.z - flat.z).length() < 60.0
 
 
+## Metres to the nearest speed hump in the lane ahead of `pos` heading `forward`, within `reach`
+## (a hump just passed, up to 2.5 m behind, counts as 0); INF when there is none.
+func hump_ahead(pos: Vector3, forward: Vector3, reach: float) -> float:
+	var here := data.chunk_at(pos)
+	var f := Vector2(forward.x, forward.z).normalized()
+	var p := Vector2(pos.x, pos.z)
+	var best := INF
+	for dx in [-1, 0, 1]:
+		for dz in [-1, 0, 1]:
+			for h: Vector2 in humps.get(here + Vector2i(dx, dz), []):
+				var v := h - p
+				var along := v.dot(f)
+				if along > -2.5 and along < reach and absf(v.dot(Vector2(-f.y, f.x))) < 3.5:
+					best = minf(best, maxf(along, 0.0))
+	return best
+
+
 func has_nav(pos: Vector3) -> bool:
 	return nav_regions.has(data.chunk_at(pos))
 
@@ -230,11 +250,17 @@ func load_chunk(key: Vector2i) -> void:
 	var node := RealChunkBuilder.build(key, chunk, stats, data.around(key, "road_lines"), data.story, data.around(key, "outlines"), data.yards(key), data.home_fronts(key), {"street": data.street_context(key), "decor": data.home_decor(key),
 		"schools": data.school_fences(key), "stalls": data.stalls(key), "strips": data.around(key, "road_strips")})
 	houses[key] = stats.get("houses", [])
+	humps[key] = stats.get("humps", [])
 	for h in houses[key]:
 		places.register(str(h.id) + ":door", h.door, 0.3, "home", "a house")
 	graph.add_chunk(key, chunk.get("roads", []))
 	node.set_meta("buildings", int(stats.get("buildings", 0)))
 	add_child(node)
+	for s: Dictionary in data.stalls(key):   # the person behind each stall (freed with the chunk)
+		var vendor := RealVendor.new()
+		node.add_child(vendor)
+		var behind: Vector2 = s.at + s.out * (0.75 if s.kind == "fruit" else 1.3) + (s.dir * -2.4 if s.kind == "snoek" else Vector2.ZERO)
+		vendor.setup(str(s.kind), behind, -s.out, hash(Vector2i(roundi(s.at.x), roundi(s.at.y))), func(stock: String, label: String): vendor_used.emit(stock, label))
 	loaded[key] = node
 	buildings_loaded += int(stats.get("buildings", 0))
 	chunk_loaded.emit(key)
@@ -250,6 +276,7 @@ func unload_chunk(key: Vector2i) -> void:
 	for h in houses.get(key, []):
 		places.remove(str(h.id) + ":door")
 	houses.erase(key)
+	humps.erase(key)
 	graph.remove_chunk(key)
 	loaded.erase(key)
 	node.queue_free()

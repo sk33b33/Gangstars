@@ -262,6 +262,9 @@ func _setup_survival() -> void:
 			survival.on_player_hit_target())
 	interiors.raided.connect(func(place_id: String):
 		hud.show_message(survival.finish_search("den_" + place_id, "den")))
+	# Street vendors (fruit stalls, the snoek bakkie) sell through the same menu.
+	if district.real != null:
+		district.real.vendor_used.connect(func(stock: String, label: String): survival_menus.open_shop.call_deferred(label, stock))
 	# Shops sell food and drink; a crate behind each shop and a bin at each stop can be searched.
 	for area in district.areas:
 		for poi in area.get("pois", []):

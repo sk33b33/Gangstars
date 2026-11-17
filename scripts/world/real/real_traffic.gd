@@ -104,6 +104,7 @@ func spawn_one(origin: Vector3) -> RealCar:
 		add_child(car)
 		# One SAPS bakkie is always somewhere on the streets around you.
 		var police := not cars.any(func(c: RealCar): return c.model == "police")
+		car.world = world
 		car.setup(world.graph, id, from, _rng.randi(), Color.WHITE if police else Color(COLORS[_rng.randi() % COLORS.size()]), "police" if police else "")
 		cars.append(car)
 		spawned_total += 1

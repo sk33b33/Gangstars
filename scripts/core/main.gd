@@ -182,6 +182,8 @@ func apply_settings() -> void:
 	if session.survival:
 		session.survival.needs.enabled = bool(settings.get_value("gameplay/survival"))
 	district.director.dormant_distance = [150.0, 320.0, INF][int(settings.get_value("video/crowd_range"))]
+	if District.is_phone():   # beyond the phone's navigation nobody could walk anyway
+		district.director.dormant_distance = minf(district.director.dormant_distance, District.PHONE_DORMANT)
 	Resident.bubbles_on = bool(settings.get_value("access/speech_bubbles"))
 	player.mouse_sensitivity = float(settings.get_value("controls/mouse_sensitivity"))
 	player.invert_y = bool(settings.get_value("controls/invert_y"))

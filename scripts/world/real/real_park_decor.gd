@@ -74,10 +74,10 @@ static func stalls(crossings: Array, rings: Array, lanes: Array) -> Array:
 		if RealYards.box_clear(box, PackedVector2Array(), rings, lanes):
 			out.append({"kind": "fruit", "at": at, "dir": d, "out": left})
 		if str(c.get("kind", "")) == "retail":   # the snoek bakkie parks on the verge on the other side
-			var bakkie_at: Vector2 = c.at - d * 9.0 - left * (float(c.w) * 0.5 + RealChunkBuilder.KERB_WIDTH + 1.1)
+			var bakkie_at: Vector2 = c.at - d * 9.0 + left * (float(c.w) * 0.5 + RealChunkBuilder.KERB_WIDTH + 1.4)
 			var bakkie_box := RealYards.obstacle_box(bakkie_at, d, SNOEK_HALF)
 			if RealYards.box_clear(bakkie_box, PackedVector2Array(), rings, lanes):
-				out.append({"kind": "snoek", "at": bakkie_at, "dir": d, "out": -left})
+				out.append({"kind": "snoek", "at": bakkie_at, "dir": d, "out": left})
 	return out
 
 
@@ -122,8 +122,8 @@ static func draw_stalls(list: Array, root: Node3D, surfaces: Dictionary, materia
 		RealLandmarks._obox(RealStreetDecor._flat("steel", RealLandmarks.STEEL, surfaces, materials), at - (s.out as Vector2) * 0.3, d, Vector2(0.03, 0.03), 0.0, 2.2)
 		var awning := RealChunkBuilder._tool("awning", surfaces, materials, PixelMaterials.panel("awning_stripes"))
 		RealStreetDecor.decal(awning, at, d, 1.4, 2.2, 2.2)
-		RealStreetDecor.add_prop(props, "crate_stack", at + (s.out as Vector2) * 0.9 - d * 0.6, 0.0)
-		RealStreetDecor.add_prop(props, "plastic_chair", at + (s.out as Vector2) * 0.9 + d * 0.6, PI)
+		RealStreetDecor.add_prop(props, "crate_stack", at + (s.out as Vector2) * 1.2 - d * 1.2, 0.0)
+		RealStreetDecor.add_prop(props, "plastic_chair", at + (s.out as Vector2) * 1.2 + d * 1.3, PI)
 		var box := RealYards.obstacle_box(at, d, STALL_HALF)
 		for k in 4:
 			var a := RealChunkBuilder._v(box[k], 0.0)

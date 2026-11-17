@@ -192,7 +192,7 @@ All roadmap phases (0–7) are validated, and Kalkbos (the second expansion dist
 The "rebuild the other suburbs" items above are dropped: only Westridge is built from now on.
 
 - Graphics pass 1 done (2026-11-16): kerbs, gutters, bleached asphalt, edge lines, plinths, sills, parapets, pitched hip/gable roofs. Next: driveways, litter and wear, stop lines at junctions.
-- Fuller world done (2026-11-16): ideas 1-15 (street details, home details, public places). Not yet: street vendors as people (stalls are unattended), cars slowing for humps.
+- Fuller world done (2026-11-16): ideas 1-15 (street details, home details, public places). Leftovers done 2026-11-17: stallholders, cars slowing for humps, dual-road grass, phone profile (needs a real phone to judge).
 - Authentic landmarks and pavements done (2026-11-16): classified buildings, church/mosque/civic/school/shop/fuel shapes, verges, heat shimmer off. Rule from the tester: Westridge must be close to perfect (graphics, missions) before any new district.
 - Fences and yard walls done (2026-11-16): ~1,800 front yards in four styles, gates in line with doors, navigation-aware.
 - Stage 4a done (2026-11-16): old districts and code removed. Still to do: phone tuning, Windows build (when asked), graphics (roads, walls, roofs, fences).

@@ -1,231 +1,300 @@
 {
-  "items": [
-    {
-      "id": "bread_roll",
-      "name": "Bread roll",
-      "kind": "food",
-      "weight": 0.2,
-      "price": 5,
-      "sell": 1,
-      "effects": {
-        "food": 20
-      }
-    },
-    {
-      "id": "vetkoek",
-      "name": "Vetkoek with mince",
-      "kind": "food",
-      "weight": 0.3,
-      "price": 15,
-      "sell": 3,
-      "effects": {
-        "food": 35
-      }
-    },
-    {
-      "id": "gatsby",
-      "name": "Gatsby (half)",
-      "kind": "food",
-      "weight": 0.6,
-      "price": 45,
-      "sell": 8,
-      "effects": {
-        "food": 70
-      }
-    },
-    {
-      "id": "koesister",
-      "name": "Koesister",
-      "kind": "food",
-      "weight": 0.1,
-      "price": 4,
-      "sell": 1,
-      "effects": {
-        "food": 10
-      }
-    },
-    {
-      "id": "chips_packet",
-      "name": "Packet of chips",
-      "kind": "food",
-      "weight": 0.1,
-      "price": 8,
-      "sell": 2,
-      "effects": {
-        "food": 12
-      }
-    },
-    {
-      "id": "tinned_fish",
-      "name": "Tin of pilchards",
-      "kind": "food",
-      "weight": 0.4,
-      "price": 22,
-      "sell": 6,
-      "effects": {
-        "food": 40
-      }
-    },
-    {
-      "id": "water_bottle",
-      "name": "Bottle of water",
-      "kind": "drink",
-      "weight": 0.5,
-      "price": 8,
-      "sell": 1,
-      "effects": {
-        "water": 45
-      }
-    },
-    {
-      "id": "cooldrink",
-      "name": "Cooldrink",
-      "kind": "drink",
-      "weight": 0.4,
-      "price": 12,
-      "sell": 2,
-      "effects": {
-        "water": 30,
-        "food": 5
-      }
-    },
-    {
-      "id": "rooibos_flask",
-      "name": "Flask of rooibos",
-      "kind": "drink",
-      "weight": 0.5,
-      "price": 10,
-      "sell": 2,
-      "effects": {
-        "water": 35,
-        "rest": 5
-      }
-    },
-    {
-      "id": "energy_drink",
-      "name": "Energy drink",
-      "kind": "drink",
-      "weight": 0.3,
-      "price": 20,
-      "sell": 4,
-      "effects": {
-        "water": 15,
-        "rest": 20
-      }
-    },
-    {
-      "id": "bandage",
-      "name": "Bandage",
-      "kind": "medical",
-      "weight": 0.1,
-      "price": 25,
-      "sell": 5,
-      "effects": {
-        "bandage": 1
-      }
-    },
-    {
-      "id": "first_aid_kit",
-      "name": "First-aid kit",
-      "kind": "medical",
-      "weight": 0.8,
-      "price": 90,
-      "sell": 25,
-      "effects": {
-        "bandage": 3,
-        "health": 30
-      }
-    },
-    {
-      "id": "plasters",
-      "name": "Plasters",
-      "kind": "medical",
-      "weight": 0.05,
-      "price": 10,
-      "sell": 2,
-      "effects": {
-        "health": 10
-      }
-    },
-    {
-      "id": "empty_bottles",
-      "name": "Empty bottles",
-      "kind": "junk",
-      "weight": 0.6,
-      "price": 0,
-      "sell": 6,
-      "effects": {}
-    },
-    {
-      "id": "scrap_metal",
-      "name": "Scrap metal",
-      "kind": "junk",
-      "weight": 2.0,
-      "price": 0,
-      "sell": 18,
-      "effects": {}
-    },
-    {
-      "id": "old_radio",
-      "name": "Old radio",
-      "kind": "junk",
-      "weight": 1.2,
-      "price": 0,
-      "sell": 40,
-      "effects": {}
-    },
-    {
-      "id": "car_battery",
-      "name": "Flat car battery",
-      "kind": "junk",
-      "weight": 4.0,
-      "price": 0,
-      "sell": 60,
-      "effects": {}
-    },
-    {
-      "id": "soccer_ball",
-      "name": "Scuffed soccer ball",
-      "kind": "junk",
-      "weight": 0.4,
-      "price": 0,
-      "sell": 15,
-      "effects": {}
-    },
-    {
-      "id": "wrist_watch",
-      "name": "Wrist watch",
-      "kind": "valuable",
-      "weight": 0.1,
-      "price": 0,
-      "sell": 120,
-      "effects": {}
-    },
-    {
-      "id": "gold_chain",
-      "name": "Gold chain",
-      "kind": "valuable",
-      "weight": 0.1,
-      "price": 0,
-      "sell": 300,
-      "effects": {}
-    }
-  ],
-  "shop_stock": {
-    "shop": [
-      "bread_roll",
-      "vetkoek",
-      "gatsby",
-      "koesister",
-      "chips_packet",
-      "tinned_fish",
-      "water_bottle",
-      "cooldrink",
-      "rooibos_flask",
-      "energy_drink",
-      "plasters",
-      "bandage",
-      "first_aid_kit"
-    ]
+ "items": [
+  {
+   "id": "bread_roll",
+   "name": "Bread roll",
+   "kind": "food",
+   "weight": 0.2,
+   "price": 5,
+   "sell": 1,
+   "effects": {
+    "food": 20
+   }
+  },
+  {
+   "id": "vetkoek",
+   "name": "Vetkoek with mince",
+   "kind": "food",
+   "weight": 0.3,
+   "price": 15,
+   "sell": 3,
+   "effects": {
+    "food": 35
+   }
+  },
+  {
+   "id": "gatsby",
+   "name": "Gatsby (half)",
+   "kind": "food",
+   "weight": 0.6,
+   "price": 45,
+   "sell": 8,
+   "effects": {
+    "food": 70
+   }
+  },
+  {
+   "id": "koesister",
+   "name": "Koesister",
+   "kind": "food",
+   "weight": 0.1,
+   "price": 4,
+   "sell": 1,
+   "effects": {
+    "food": 10
+   }
+  },
+  {
+   "id": "chips_packet",
+   "name": "Packet of chips",
+   "kind": "food",
+   "weight": 0.1,
+   "price": 8,
+   "sell": 2,
+   "effects": {
+    "food": 12
+   }
+  },
+  {
+   "id": "tinned_fish",
+   "name": "Tin of pilchards",
+   "kind": "food",
+   "weight": 0.4,
+   "price": 22,
+   "sell": 6,
+   "effects": {
+    "food": 40
+   }
+  },
+  {
+   "id": "water_bottle",
+   "name": "Bottle of water",
+   "kind": "drink",
+   "weight": 0.5,
+   "price": 8,
+   "sell": 1,
+   "effects": {
+    "water": 45
+   }
+  },
+  {
+   "id": "cooldrink",
+   "name": "Cooldrink",
+   "kind": "drink",
+   "weight": 0.4,
+   "price": 12,
+   "sell": 2,
+   "effects": {
+    "water": 30,
+    "food": 5
+   }
+  },
+  {
+   "id": "rooibos_flask",
+   "name": "Flask of rooibos",
+   "kind": "drink",
+   "weight": 0.5,
+   "price": 10,
+   "sell": 2,
+   "effects": {
+    "water": 35,
+    "rest": 5
+   }
+  },
+  {
+   "id": "energy_drink",
+   "name": "Energy drink",
+   "kind": "drink",
+   "weight": 0.3,
+   "price": 20,
+   "sell": 4,
+   "effects": {
+    "water": 15,
+    "rest": 20
+   }
+  },
+  {
+   "id": "bandage",
+   "name": "Bandage",
+   "kind": "medical",
+   "weight": 0.1,
+   "price": 25,
+   "sell": 5,
+   "effects": {
+    "bandage": 1
+   }
+  },
+  {
+   "id": "first_aid_kit",
+   "name": "First-aid kit",
+   "kind": "medical",
+   "weight": 0.8,
+   "price": 90,
+   "sell": 25,
+   "effects": {
+    "bandage": 3,
+    "health": 30
+   }
+  },
+  {
+   "id": "plasters",
+   "name": "Plasters",
+   "kind": "medical",
+   "weight": 0.05,
+   "price": 10,
+   "sell": 2,
+   "effects": {
+    "health": 10
+   }
+  },
+  {
+   "id": "empty_bottles",
+   "name": "Empty bottles",
+   "kind": "junk",
+   "weight": 0.6,
+   "price": 0,
+   "sell": 6,
+   "effects": {}
+  },
+  {
+   "id": "scrap_metal",
+   "name": "Scrap metal",
+   "kind": "junk",
+   "weight": 2.0,
+   "price": 0,
+   "sell": 18,
+   "effects": {}
+  },
+  {
+   "id": "old_radio",
+   "name": "Old radio",
+   "kind": "junk",
+   "weight": 1.2,
+   "price": 0,
+   "sell": 40,
+   "effects": {}
+  },
+  {
+   "id": "car_battery",
+   "name": "Flat car battery",
+   "kind": "junk",
+   "weight": 4.0,
+   "price": 0,
+   "sell": 60,
+   "effects": {}
+  },
+  {
+   "id": "soccer_ball",
+   "name": "Scuffed soccer ball",
+   "kind": "junk",
+   "weight": 0.4,
+   "price": 0,
+   "sell": 15,
+   "effects": {}
+  },
+  {
+   "id": "wrist_watch",
+   "name": "Wrist watch",
+   "kind": "valuable",
+   "weight": 0.1,
+   "price": 0,
+   "sell": 120,
+   "effects": {}
+  },
+  {
+   "id": "gold_chain",
+   "name": "Gold chain",
+   "kind": "valuable",
+   "weight": 0.1,
+   "price": 0,
+   "sell": 300,
+   "effects": {}
+  },
+  {
+   "id": "apple",
+   "name": "Apple",
+   "kind": "food",
+   "weight": 0.2,
+   "price": 6,
+   "sell": 1,
+   "effects": {
+    "food": 12,
+    "water": 4
+   }
+  },
+  {
+   "id": "naartjie",
+   "name": "Naartjie",
+   "kind": "food",
+   "weight": 0.15,
+   "price": 4,
+   "sell": 1,
+   "effects": {
+    "food": 8,
+    "water": 8
+   }
+  },
+  {
+   "id": "banana",
+   "name": "Banana",
+   "kind": "food",
+   "weight": 0.2,
+   "price": 5,
+   "sell": 1,
+   "effects": {
+    "food": 15
+   }
+  },
+  {
+   "id": "snoek_piece",
+   "name": "Braaied snoek piece",
+   "kind": "food",
+   "weight": 0.4,
+   "price": 28,
+   "sell": 5,
+   "effects": {
+    "food": 55
+   }
+  },
+  {
+   "id": "snoek_roll",
+   "name": "Snoek on a roll",
+   "kind": "food",
+   "weight": 0.5,
+   "price": 35,
+   "sell": 6,
+   "effects": {
+    "food": 65
+   }
   }
+ ],
+ "shop_stock": {
+  "shop": [
+   "bread_roll",
+   "vetkoek",
+   "gatsby",
+   "koesister",
+   "chips_packet",
+   "tinned_fish",
+   "water_bottle",
+   "cooldrink",
+   "rooibos_flask",
+   "energy_drink",
+   "plasters",
+   "bandage",
+   "first_aid_kit"
+  ],
+  "fruit_stall": [
+   "apple",
+   "naartjie",
+   "banana",
+   "water_bottle"
+  ],
+  "snoek_bakkie": [
+   "snoek_piece",
+   "snoek_roll",
+   "cooldrink",
+   "water_bottle"
+  ]
+ }
 }

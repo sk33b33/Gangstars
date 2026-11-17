@@ -73,8 +73,10 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 	for r in chunk.get("roads", []):
 		_road(r, surfaces, materials, root)
 	var props := {}   # prop name -> Array[Transform3D], built as one MultiMesh each
+	var humps: Array = []
 	if ctx.has("street"):
-		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props)
+		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props, humps)
+	stats["humps"] = humps
 	for at in lamp_points(chunk.get("roads", [])):
 		var steel := _tool("steel", surfaces, materials, PixelMaterials.flat(Color("#7d828c")))
 		var lamp := _tool("lamp", surfaces, materials, PixelMaterials.lamp())

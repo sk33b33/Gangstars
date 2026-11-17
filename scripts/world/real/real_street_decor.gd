@@ -16,6 +16,7 @@ const CROSSING_REACH := 70.0
 const Y_GROUND_DECAL := 0.0245   # above the verge, footway and kerb
 const Y_MEDIAN := 0.0222         # above the footway and verge, below the kerb
 const Y_ROAD_DECAL := 0.035      # above the asphalt, below the paint
+const MEDIAN_MIN_GAP := 1.0      # a gap narrower than this, at either carriageway's middle (a taper at a junction), gets no grass
 const HUMP_MIN_PIECE := 70.0
 const HUMP_HEIGHT := 0.08
 const HUMP_LENGTH := 3.6
@@ -41,9 +42,35 @@ static func node_key(p: Vector2) -> Vector2i:
 	return Vector2i(roundi(p.x * 2.0), roundi(p.y * 2.0))
 
 
+## Where a chunk's speed humps are (the same rule the builder uses), without building anything.
+static func humps_of(roads: Array) -> Array:
+	var out: Array = []
+	for r: Dictionary in roads:
+		var hump_at := hump_distance(r)
+		if hump_at >= 0.0:
+			out.append(at_distance(RealChunkBuilder._line(r.p), hump_at)[0])
+	return out
+
+
+## Metres along the road piece where its speed hump is, or -1 when it has none. Fixed by the piece's first point.
+static func hump_distance(r: Dictionary) -> float:
+	if str(r.c) != "street":
+		return -1.0
+	var line := RealChunkBuilder._line(r.p)
+	if line.size() < 2:
+		return -1.0
+	var length := RealChunkBuilder._length(line)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(Vector2i(roundi(line[0].x * 10.0), roundi(line[0].y * 10.0)))
+	if length >= HUMP_MIN_PIECE and rng.randi() % 2 == 0:
+		return length * (0.35 + rng.randf() * 0.3)
+	return -1.0
+
+
 ## Adds the street details of a chunk. `props`: {prop name: Array[Transform3D]} filled for the
 ## builder's MultiMeshes (trees).
-static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
+## `humps`: receives the speed humps' middle points (Vector2), for cars to slow down at.
+static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials: Dictionary, props: Dictionary, humps: Array = []) -> void:
 	var lamps: PackedVector3Array = ctx.get("lamps", PackedVector3Array())
 	for r: Dictionary in roads:
 		var cls := str(r.c)
@@ -58,7 +85,9 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 		var rng := RandomNumberGenerator.new()
 		rng.seed = hash(Vector2i(roundi(line[0].x * 10.0), roundi(line[0].y * 10.0)))
 		if cls == "street" and length >= HUMP_MIN_PIECE and rng.randi() % 2 == 0:
-			_hump(line, length * (0.35 + rng.randf() * 0.3), width, surfaces, materials)
+			var hump_at := length * (0.35 + rng.randf() * 0.3)
+			_hump(line, hump_at, width, surfaces, materials)
+			humps.append(at_distance(line, hump_at)[0])
 		_stop_lines(r, line, width, ctx.get("nodes", {}), surfaces, materials)
 		if cls == "main" and int(r.get("o", 0)) != 0:
 			_median(line, width, str(r.get("n", "")), ctx.get("oneways", []), surfaces, materials)
@@ -197,29 +226,37 @@ static func _zebra(at: Vector2, d: Vector2, width: float, surfaces: Dictionary, 
 
 ## Grass in the middle of a dual road: each carriageway grasses its half of the gap to the other one.
 static func _median(line: PackedVector2Array, width: float, street_name: String, oneways: Array, surfaces: Dictionary, materials: Dictionary) -> void:
-	var mid_here: Array = at_distance(line, RealChunkBuilder._length(line) * 0.5)
-	var m: Vector2 = mid_here[0]
-	var right := -left_of(mid_here[1])
+	var here: Array = at_distance(line, RealChunkBuilder._length(line) * 0.5)
+	var across := _gap_across(here[0], -left_of(here[1]), line, width, street_name, oneways)
+	if across.is_empty():
+		return
+	var gap := float(across.gap)
+	if gap < MEDIAN_MIN_GAP or gap > 40.0:
+		return
+	# The whole gap between the two kerbs. The other carriageway lays the same strip: they overlap on one texture,
+	# and where a taper is too narrow for the mate to draw, the gap is still grassed. It lies under the kerb and asphalt.
+	var inner := RealChunkBuilder.offset_line(line, width * 0.5 + RealChunkBuilder.KERB_WIDTH + gap * 0.5)   # offset_line: positive is the side the mate was found on
+	RealChunkBuilder.ribbon(RealChunkBuilder._tool("median", surfaces, materials, PixelMaterials.surface("median_grass", Vector2(2, 2))), inner, gap + 0.1, Y_MEDIAN)
+
+
+## The nearest other carriageway of the same street on the `right` of `at`: {gap: between the two kerbs,
+## mate: its record}, or {} when there is none.
+static func _gap_across(at: Vector2, right: Vector2, line: PackedVector2Array, width: float, street_name: String, oneways: Array) -> Dictionary:
 	var best := INF
-	var other_w := 0.0
+	var mate: Dictionary = {}
 	for o: Dictionary in oneways:
 		var ol: PackedVector2Array = o.line
 		if ol == line or str(o.n) != street_name:
 			continue
 		for i in ol.size() - 1:
-			var q := Geometry2D.get_closest_point_to_segment(m, ol[i], ol[i + 1])
-			var dd := m.distance_to(q)
-			if dd < best and (q - m).dot(right) > 0.0:
+			var q := Geometry2D.get_closest_point_to_segment(at, ol[i], ol[i + 1])
+			var dd := at.distance_to(q)
+			if dd < best and (q - at).dot(right) > 0.0:
 				best = dd
-				other_w = float(o.w)
-	if best == INF:
-		return
-	var gap := best - width * 0.5 - other_w * 0.5 - RealChunkBuilder.KERB_WIDTH * 2.0
-	if gap < 1.0 or gap > 40.0:
-		return
-	var half := gap * 0.5
-	var inner := RealChunkBuilder.offset_line(line, -(width * 0.5 + RealChunkBuilder.KERB_WIDTH + half * 0.5))
-	RealChunkBuilder.ribbon(RealChunkBuilder._tool("median", surfaces, materials, PixelMaterials.surface("median_grass", Vector2(2, 2))), inner, half + 0.05, Y_MEDIAN)
+				mate = o
+	if mate.is_empty():
+		return {}
+	return {"gap": best - width * 0.5 - float(mate.w) * 0.5 - RealChunkBuilder.KERB_WIDTH * 2.0, "mate": mate}
 
 
 ## Wooden power poles at the back of the verge on one side, with three sagging wires between them.

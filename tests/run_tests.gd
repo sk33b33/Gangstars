@@ -36,6 +36,13 @@ func _run() -> void:
 			print("  failed: ", f)
 		quit(0 if _failed.is_empty() else 1)
 		return
+	if _args.has("phone-only"):   # --phone-only: just the phone-profile game (quick while tuning it)
+		await _test_phone_game()
+		print("\n%d passed, %d failed" % [_passed, _failed.size()])
+		for f in _failed:
+			print("  failed: ", f)
+		quit(0 if _failed.is_empty() else 1)
+		return
 	if _args.has("district-only"):   # --district-only: straight to the in-game checks (while working on them)
 		await _test_district()
 		print("\n%d passed, %d failed" % [_passed, _failed.size()])
@@ -2552,6 +2559,21 @@ func _test_real_world_units() -> void:
 	_check(int(built_stats.yards) == chunk_yards.size() and chunk_yards.size() > 5 and yard_parts.any(func(n): return n.begins_with("Mesh_fence")),
 		"the Excelsior Street piece builds its yards' fences (%d yards)" % chunk_yards.size())
 	yard_node.free()
+	# A dual road: the grass lies between the two carriageways (a road at z 0 going east, its mate 20 m south).
+	var road_a := PackedVector2Array([Vector2(0, 0), Vector2(30, 0)])
+	var road_b := PackedVector2Array([Vector2(30, 20), Vector2(0, 20)])
+	var duals := [{"line": road_a, "w": 7.5, "n": "T"}, {"line": road_b, "w": 7.5, "n": "T"}]
+	var med_surfaces := {}
+	var med_materials := {}
+	RealStreetDecor._median(road_a, 7.5, "T", duals, med_surfaces, med_materials)
+	var med_mesh: ArrayMesh = (med_surfaces["median"] as SurfaceTool).commit() if med_surfaces.has("median") else null
+	var med_box: AABB = med_mesh.get_aabb() if med_mesh != null else AABB()
+	_check(med_mesh != null and med_box.position.z > 3.5 and med_box.end.z < 16.5 and absf(med_box.get_center().z - 10.0) < 0.2,
+		"the grass of a dual road lies between its two carriageways (z %.1f to %.1f)" % [med_box.position.z, med_box.end.z])
+	var narrow := [{"line": road_a, "w": 7.5, "n": "T"}, {"line": PackedVector2Array([Vector2(30, 8), Vector2(0, 8)]), "w": 7.5, "n": "T"}]
+	var no_surfaces := {}
+	RealStreetDecor._median(road_a, 7.5, "T", narrow, no_surfaces, {})
+	_check(not no_surfaces.has("median"), "carriageways with no gap between them get no grass")
 	var side := RealChunkBuilder.offset_line(bend, 2.0)
 	_check(side[0].is_equal_approx(Vector2(0, 2)) and side[1].is_equal_approx(Vector2(18, 2)),
 		"an edge line runs beside the road line and turns its corners inside (%s)" % [side])
@@ -2586,6 +2608,65 @@ func _test_real_world_streaming() -> void:
 	world.load_radius = INF
 	world.scan(focus.global_position)
 	_check(world.pending() + world.loaded.size() == data.chunk_keys.size(), "on a desktop the whole suburb is queued to load")
+	# Speed humps: cars slow down for them.
+	var hump_chunk := Vector2i.ZERO
+	var hump := Vector2.ZERO
+	for hk: Vector2i in data.chunk_keys:
+		var list: Array = RealStreetDecor.humps_of(data.load_chunk(hk).get("roads", []))
+		if not list.is_empty():
+			hump_chunk = hk
+			hump = list[0]
+			break
+	var built_humps: Array = []
+	RealStreetDecor.build(data.load_chunk(hump_chunk).get("roads", []), data.street_context(hump_chunk), {}, {}, {}, built_humps)
+	_check(built_humps == RealStreetDecor.humps_of(data.load_chunk(hump_chunk).get("roads", [])) and built_humps.size() >= 1,
+		"the speed humps cars slow for are exactly the ones the builder draws (%d in this piece)" % built_humps.size())
+	world.load_radius = 600.0
+	focus.global_position = Vector3(hump.x, 0.0, hump.y)
+	world.scan(focus.global_position)
+	while world.pending() > 0:
+		while not data.is_prepared(world._queue[0]):
+			data.prepare(world._queue[0])
+		world.load_chunk(world._queue.pop_front())
+	var face := Vector3(1, 0, 0)
+	var pos := Vector3(hump.x, 0, hump.y) - face * 8.0
+	_check(absf(world.hump_ahead(pos, face, RealCar.HUMP_REACH) - 8.0) < 0.1 and is_inf(world.hump_ahead(pos, -face, RealCar.HUMP_REACH))
+		and is_inf(world.hump_ahead(pos + Vector3(0, 0, 6), face, RealCar.HUMP_REACH)) and is_inf(world.hump_ahead(pos - face * 30.0, face, RealCar.HUMP_REACH)),
+		"a car sees a speed hump 8 m ahead in its lane, not behind it, not beside it, not 38 m off")
+	_check(is_equal_approx(RealCar.hump_target(0.0), RealCar.HUMP_SPEED) and RealCar.hump_target(10.0) > 8.0 and is_inf(RealCar.hump_target(INF)) and RealCar.HUMP_SPEED < RealCar.SPEEDS.street,
+		"a car drives over a speed hump at %.0f m/s and eases up to its road speed beyond it" % RealCar.HUMP_SPEED)
+	# Street vendors stand behind their stalls while the chunk is loaded, and go with it.
+	var stall_key := Vector2i.ZERO
+	var stall: Dictionary = {}
+	for sk: Vector2i in data.chunk_keys:
+		var list: Array = data.stalls(sk)
+		if not list.is_empty():
+			stall_key = sk
+			stall = list[0]
+			break
+	focus.global_position = Vector3((stall.at as Vector2).x, 0.0, (stall.at as Vector2).y)
+	world.scan(focus.global_position)
+	while world.pending() > 0:
+		while not data.is_prepared(world._queue[0]):
+			data.prepare(world._queue[0])
+		world.load_chunk(world._queue.pop_front())
+	var vendors: Array = world.loaded[stall_key].find_children("Vendor_*", "Node3D", false, false)
+	_check(vendors.size() == data.stalls(stall_key).size() and vendors.size() >= 1, "every street stall has someone behind it (%d vendors)" % vendors.size())
+	var seller: RealVendor = vendors[0]
+	var used: Array = []
+	world.vendor_used.connect(func(stock: String, label: String): used.append([stock, label]))
+	seller.interactable.on_interact.call()
+	_check(used.size() == 1 and used[0][0] == seller.stock_kind and (used[0][1] as String).length() > 5 and seller.interactable.prompt.begins_with("Buy from"),
+		"using a vendor opens their stall's menu (%s)" % [used])
+	var config := SurvivalConfig.load_default()
+	var fruit_ok := (config.shop_stock.get("fruit_stall", []) as Array).size() >= 3 and (config.shop_stock.get("snoek_bakkie", []) as Array).size() >= 3
+	for id in (config.shop_stock.get("fruit_stall", []) as Array) + (config.shop_stock.get("snoek_bakkie", []) as Array):
+		fruit_ok = fruit_ok and not config.item(str(id)).is_empty() and int(config.item(str(id)).price) > 0
+	_check(fruit_ok, "the fruit stall and the snoek bakkie sell real items at real prices")
+	world.load_radius = 200.0
+	focus.global_position = Vector3(-900.0, 0.0, 2000.0)   # far away: everything is freed
+	world.scan(focus.global_position)
+	_check(not world.loaded.has(stall_key) and not world.humps.has(hump_chunk), "freeing a piece frees its vendors and its speed humps")
 	world.queue_free()
 	focus.queue_free()
 	await process_frame
@@ -3744,6 +3825,53 @@ func _test_missions_in_game(main: Node, district: District, player: Player) -> v
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(session.save_path))
 
 
+## The whole game started as on a phone: only the area round the player is built, navigation is kept
+## only round their patch, and the crowd, traffic and loading slices are smaller.
+func _test_phone_game() -> void:
+	District.phone_override = 1
+	var t0 := Time.get_ticks_msec()
+	var main: Node = load("res://scenes/main/main.tscn").instantiate()
+	main.auto_load = false
+	main.save_path = "user://test_phone_save.json"
+	root.add_child(main)
+	var district: District = main.get_node("Westridge")
+	if not district.is_navigation_ready:
+		await district.navigation_ready
+	for i in 30:
+		await process_frame
+	print("  (phone start took %.1f s)" % ((Time.get_ticks_msec() - t0) / 1000.0))
+	main.session.autosave_enabled = false
+	var real := district.real
+	var all_chunks := real.data.chunk_keys.size()
+	_check(not real.bake_all and real.load_radius == District.PHONE_LOAD_RADIUS and real.sim_radius == District.PHONE_SIM_RADIUS and real.frame_budget_ms == District.PHONE_FRAME_MS,
+		"on a phone the world builds only round the player, in short slices")
+	_check(real.loaded.size() >= 4 and real.loaded.size() <= 25 and real.loaded.size() < all_chunks / 4,
+		"a phone has %d of the suburb's %d pieces built" % [real.loaded.size(), all_chunks])
+	_check(real.nav_regions.size() >= 4 and real.nav_regions.size() < all_chunks / 2 and real.keep_nav_ready(),
+		"a phone keeps navigation only round the player's patch (%d of %d pieces)" % [real.nav_regions.size(), all_chunks])
+	var home := district.registry.get_house(GameSession.SAFEHOUSE_ID)
+	var far_kept := real.keep_nav.keys().filter(func(k: Vector2i): return real.data.chunk_centre(k).distance_to(Vector3(home.position.x, 0, home.position.y)) > District.PHONE_KEEP_RADIUS)
+	_check(far_kept.is_empty(), "no navigation is kept for good beyond %.0f m of the safehouse (%d such pieces)" % [District.PHONE_KEEP_RADIUS, far_kept.size()])
+	_check(district.real_people.max_residents == District.PHONE_RESIDENTS and district.real_people.homes_per_chunk == District.PHONE_HOMES_PER_CHUNK and district.real_traffic.max_cars == District.PHONE_CARS,
+		"a phone carries %d passers-by and %d cars at most" % [District.PHONE_RESIDENTS, District.PHONE_CARS])
+	main.settings.set_value("video/crowd_range", 2)   # "everywhere": a phone still lets far-off people sleep
+	main.apply_settings()
+	_check(district.director.dormant_distance == District.PHONE_DORMANT, "far-off people sleep beyond %.0f m on a phone, whatever the crowd setting" % District.PHONE_DORMANT)
+	var before := real.loaded.keys().duplicate()
+	var player: Player = main.get_node("Player")
+	player.global_position += Vector3(900.0, 0.0, 600.0)   # walks (teleports) across the suburb: the world follows
+	for i in 600:
+		await physics_frame
+		if real.pending() == 0 and real.nav_synced(player.global_position) and real.loaded.has(real.data.chunk_at(player.global_position)):
+			break
+	var moved: bool = real.loaded.has(real.data.chunk_at(player.global_position)) and real.loaded.size() <= 25 and before.all(func(k): return not real.loaded.has(k))
+	_check(moved, "walking across the suburb builds the new surroundings and frees the old (%d pieces built)" % real.loaded.size())
+	main.queue_free()
+	await process_frame
+	District.phone_override = -1
+	DirAccess.remove_absolute(ProjectSettings.globalize_path("user://test_phone_save.json"))
+
+
 func _sample_states(district: District, seen: Dictionary, tiers: Dictionary) -> void:
 	for r: Resident in district.residents.values():
 		seen[r.state_name()] = seen.get(r.state_name(), 0) + 1
@@ -4043,3 +4171,5 @@ func _test_district() -> void:
 	_check(nudges + near_nudges <= 20, "physics nudges stay rare: %d off-screen, %d near, in ~1M NPC-frames" % [nudges, near_nudges])
 	main.queue_free()
 	await process_frame
+	print("== phone profile (a second game, started as on a touchscreen)")
+	await _test_phone_game()

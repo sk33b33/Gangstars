@@ -14,8 +14,11 @@ const LOOK_AHEAD := 5.0
 const TURN_RATE := 2.4           # radians per second
 const JUNCTION_SPEED := 3.5
 const STOP_GAP := 7.0
+const HUMP_SPEED := 3.0          # over a speed hump
+const HUMP_REACH := 14.0         # starts slowing this far before it
 
 var graph: RealRoadGraph
+var world: RealWorld             # for the speed humps (set by RealTraffic)
 var rng := RandomNumberGenerator.new()
 var edge := 0
 var next := 0                    # the edge after this one (0 until chosen)
@@ -106,6 +109,8 @@ func _physics_process(delta: float) -> void:
 	if to_end < 14.0:   # ease into the junction, or stop at the end of the loaded world
 		target_speed = minf(target_speed, JUNCTION_SPEED + to_end * 0.4) if next != 0 else minf(target_speed, to_end * 0.6)
 	var forward := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
+	if world != null:
+		target_speed = minf(target_speed, hump_target(world.hump_ahead(global_position, forward, HUMP_REACH)))
 	var stopped := _blocked(forward)
 	# Two cars waiting for each other at a junction: after a while one creeps through.
 	_stuck = _stuck + delta if stopped and _blocker is RealCar else 0.0
@@ -144,6 +149,12 @@ func _physics_process(delta: float) -> void:
 		_anim_time += delta
 		VehicleLibrary.animate(body, speed, clampf(angle_difference(yaw_before, rotation.y) / maxf(delta, 0.001) * 0.4, -1.0, 1.0),
 			(speed - before) / maxf(delta, 0.001), 0, delta, _anim_time)
+
+
+## The speed to be driving when a speed hump is `distance` metres ahead (INF: no hump): HUMP_SPEED over it,
+## easing up to the road's speed 0.6 m/s for every metre further away.
+static func hump_target(distance: float) -> float:
+	return INF if is_inf(distance) else HUMP_SPEED + distance * 0.6
 
 
 ## Something to stop for inside the lane ahead.
