@@ -1210,7 +1210,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 		await physics_frame
 	_check(district.light_pool.active_count() == LightPool.POOL, "at night the nearest streetlights cast light (%d)" % district.light_pool.active_count())
 	_check(district.light_pool.glow_visible(), "every streetlight paints a warm pool on the ground at night")
-	_check(PixelMaterials.panel("window_bars").emission_energy_multiplier > 0.5, "windows glow at night")
+	_check(PixelMaterials.panel("window_bars").emission_energy_multiplier > 0.1 and NightGlow.window_material().albedo_color.a > 0.2, "windows glow at night: a faint glow on every window and a warm pane on the lit ones")
 	_check(NightGlow.level() > 0.4 and district.get_children().size() > 0, "lamplight spills from windows and doors onto the yards at night (%.2f)" % NightGlow.level())
 	_check(district.skyline != null and district.skyline.layer_count() == 4, "Table Mountain, the Hottentots-Holland, the Peninsula and False Bay are on the horizon")
 	var sky_cam := player.camera.global_position
