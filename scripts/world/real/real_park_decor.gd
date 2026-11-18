@@ -12,6 +12,8 @@ const SCHOOL_PIECE := 20.0          # perimeter cut into pieces of at most this 
 const SCHOOL_GATES := 2
 const SCHOOL_GATE_WIDTH := 5.0
 const PARK_TREE_SPACING := 9.0
+const PARK_LOOP_RADIUS := 6.0       # the paved loop path in a park, and how many points make it round
+const PARK_LOOP_POINTS := 20
 const PARK_TREE_CLEAR := 2.5        # from paths and buildings
 const STALL_HALF := Vector2(0.95, 0.45)
 const STALL_FROM_CROSSING := 4.5
@@ -162,32 +164,62 @@ static func _park(ring: PackedVector2Array, strips: Array, rings: Array, rng: Ra
 		var y := box.position.y + PARK_TREE_SPACING * 0.5
 		while y < box.end.y:
 			var p := Vector2(x, y) + Vector2(rng.randf_range(-3.0, 3.0), rng.randf_range(-3.0, 3.0))
-			if RealChunkBuilder.point_in_ring(p, ring) and rng.randf() < 0.75 and _clear(p, near_strips, near_rings):
+			if RealChunkBuilder.point_in_ring(p, ring) and rng.randf() < 0.75 and _clear(p, near_strips, near_rings) and p.distance_to(box.get_center()) > PARK_LOOP_RADIUS + 3.5:
 				var roll := rng.randi() % 8
 				var tree := "tree_c" if roll < 2 else ("palm" if roll == 2 else ("tree_a" if roll < 5 else "tree_b"))
 				RealStreetDecor.add_prop(props, tree, p, rng.randf() * TAU, rng.randf_range(0.8, 1.25))
 			y += PARK_TREE_SPACING
 		x += PARK_TREE_SPACING
-	_undergrowth(ring, box, near_strips, near_rings, rng, props, 6.0, 0.6, ["bush", "bush_pink", "bush_yellow", "bush_white", "flowers_pink", "flowers_yellow", "flowers_purple", "grass_green", "grass_green", "agave"])
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 6.0, 0.6, ["bush", "bush_pink", "bush_yellow", "bush_white", "flowers_pink", "flowers_yellow", "flowers_purple", "grass_green", "grass_green", "agave"], box.get_center(), PARK_LOOP_RADIUS + 2.5)
+	_park_furniture(ring, box, near_strips, near_rings, rng, surfaces, materials, props)
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 11.0, 0.5, ["boulder", "fallen_log", "boulder"], box.get_center(), PARK_LOOP_RADIUS + 2.5)
+
+
+## The middle of a park: a paved loop path with benches and litter bins facing in from its outer edge, picnic tables on the grass
+## inside it, lamp posts at the corners of the loop and a lawn patch under the picnic tables. Everything is skipped where it would
+## fall outside the park or on a path or building.
+static func _park_furniture(ring: PackedVector2Array, box: Rect2, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
 	var c := box.get_center()
-	if RealChunkBuilder.point_in_ring(c, ring):
-		var wood := RealStreetDecor._flat("bench_wood", "#8c6044", surfaces, materials)
-		for k in 2:
-			var at := c + Vector2.RIGHT.rotated(k * PI + 0.4) * 4.0
-			if _clear(at, near_strips, near_rings):
-				var d := Vector2.RIGHT.rotated(k * PI + 0.4 + PI * 0.5)
-				RealLandmarks._obox(wood, at, d, Vector2(0.9, 0.22), 0.42, 0.5)
-				RealLandmarks._obox(wood, at - d.orthogonal() * 0.2, d, Vector2(0.9, 0.04), 0.5, 0.9)
+	var r := minf(PARK_LOOP_RADIUS, minf(box.size.x, box.size.y) * 0.3)
+	if r < 3.0 or not RealChunkBuilder.point_in_ring(c, ring):
+		return
+	var loop := PackedVector2Array()
+	for i in PARK_LOOP_POINTS + 1:
+		var q := c + Vector2.RIGHT.rotated(float(i) / PARK_LOOP_POINTS * TAU) * r
+		if not RealChunkBuilder.point_in_ring(q, ring) or not _clear(q, strips, rings):
+			return
+		loop.append(q)
+	var path_tool := RealChunkBuilder._tool("park_path", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(1.5, 1.5), Color("#cdc4ae")))
+	RealChunkBuilder.strip(path_tool, loop, 1.6, RealStreetDecor.Y_GROUND_DECAL + 0.001)
+	var lawn_tool := RealStreetDecor._decal_tool("grass_patch", surfaces, materials)
+	RealStreetDecor.decal(lawn_tool, c, Vector2.RIGHT, r * 0.9, r * 0.9, RealStreetDecor.Y_GROUND_DECAL + 0.002)
+	var turn := rng.randf() * TAU
+	for k in 4:   # benches on the outside of the loop, looking in, a bin beside each
+		var dir := Vector2.RIGHT.rotated(turn + k * TAU / 4.0)
+		var at := c + dir * (r + 1.6)
+		if _clear(at, strips, rings) and RealChunkBuilder.point_in_ring(at, ring):
+			RealStreetDecor.add_prop(props, "park_bench", at, atan2(-dir.x, -dir.y))
+			var bin := at + dir.orthogonal() * 1.4
+			if _clear(bin, strips, rings) and RealChunkBuilder.point_in_ring(bin, ring):
+				RealStreetDecor.add_prop(props, "litter_bin", bin, rng.randf() * TAU)
+	for k in 4:   # lamp posts between the benches
+		var dir := Vector2.RIGHT.rotated(turn + (k + 0.5) * TAU / 4.0)
+		var at := c + dir * (r + 1.4)
+		if _clear(at, strips, rings) and RealChunkBuilder.point_in_ring(at, ring):
+			RealStreetDecor.add_prop(props, "park_lamp", at, 0.0)
+	for k in 2:   # picnic tables on the lawn inside the loop
+		var dir := Vector2.RIGHT.rotated(turn + k * PI + 0.7)
+		RealStreetDecor.add_prop(props, "picnic_table", c + dir * minf(1.8, r * 0.35), dir.angle())
 
 
 ## Shrubs, flower beds and tufts scattered over an area on a loose grid, clear of paths and buildings.
-static func _undergrowth(ring: PackedVector2Array, box: Rect2, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary, spacing: float, chance: float, kinds: Array) -> void:
+static func _undergrowth(ring: PackedVector2Array, box: Rect2, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary, spacing: float, chance: float, kinds: Array, hole := Vector2.ZERO, hole_r := 0.0) -> void:
 	var x := box.position.x + spacing * 0.5
 	while x < box.end.x:
 		var y := box.position.y + spacing * 0.5
 		while y < box.end.y:
 			var p := Vector2(x, y) + Vector2(rng.randf_range(-2.0, 2.0), rng.randf_range(-2.0, 2.0))
-			if rng.randf() < chance and RealChunkBuilder.point_in_ring(p, ring) and _clear(p, strips, rings):
+			if rng.randf() < chance and RealChunkBuilder.point_in_ring(p, ring) and _clear(p, strips, rings) and (hole_r <= 0.0 or p.distance_to(hole) > hole_r):
 				RealStreetDecor.add_prop(props, kinds[rng.randi() % kinds.size()], p, rng.randf() * TAU, rng.randf_range(0.8, 1.3))
 			y += spacing
 		x += spacing

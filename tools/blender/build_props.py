@@ -583,6 +583,64 @@ def letterbox(x):
     return join(p, "letterbox", (x, 0, 0))
 
 
+def park_bench(x):
+    """A park bench with a slatted seat and back on steel ends, 1.7 m wide; people sit facing -Y (Godot +Z)."""
+    p = []
+    for i in range(3):
+        p.append(add("cube", (0, -0.08 + i * 0.12, 0.45), (0.85, 0.05, 0.02), "wood", smooth=False))       # seat slats
+    for i in range(3):
+        p.append(add("cube", (0, 0.2, 0.62 + i * 0.1), (0.85, 0.015, 0.045), "wood", rot=(-0.2, 0, 0), smooth=False))   # back slats
+    for sx in (-0.78, 0.78):
+        p.append(add("cube", (sx, 0.05, 0.22), (0.03, 0.22, 0.22), "metal_dark", smooth=False))
+        p.append(add("cube", (sx, 0.2, 0.6), (0.03, 0.02, 0.3), "metal_dark", rot=(-0.2, 0, 0), smooth=False))
+    return join(p, "park_bench", (x, 0, 0))
+
+
+def picnic_table(x):
+    """A wooden picnic table with two attached benches, 1.8 x 1.6 m, 0.75 m high."""
+    p = [add("cube", (0, 0, 0.75), (0.9, 0.4, 0.03), "wood", smooth=False)]
+    for sy in (-0.65, 0.65):
+        p.append(add("cube", (0, sy, 0.45), (0.9, 0.15, 0.025), "wood", smooth=False))
+    for sx in (-0.65, 0.65):
+        p.append(add("cube", (sx, 0, 0.38), (0.05, 0.75, 0.04), "wood_dark", smooth=False))
+        for sy in (-0.3, 0.3):
+            p.append(add("cube", (sx, sy, 0.4), (0.04, 0.03, 0.4), "wood_dark", rot=(0.25 * (1 if sy > 0 else -1), 0, 0), smooth=False))
+    return join(p, "picnic_table", (x, 0, 0))
+
+
+def litter_bin(x):
+    """A municipal litter bin: a green steel drum with a rain lid on a post, 0.9 m high."""
+    p = [add("cyl", (0, 0, 0.5), (0.22, 0.22, 0.32), "paint", seg=12)]
+    p.append(add("cyl", (0, 0, 0.84), (0.24, 0.24, 0.03), "metal_dark", seg=12))
+    p.append(add("cyl", (0, 0, 0.14), (0.04, 0.04, 0.14), "metal_dark", seg=6))
+    p.append(add("cube", (0, -0.215, 0.62), (0.1, 0.01, 0.07), "plastic_dark", smooth=False))      # the opening
+    return join(p, "litter_bin", (x, 0, 0))
+
+
+def boulder(x):
+    """A weathered granite boulder with a smaller one beside it, 1.1 m across."""
+    random.seed(9)
+    p = [add("sphere", (0, 0, 0.3), (0.55, 0.45, 0.32), "metal_dark", sub=2, jitter=0.05),
+         add("sphere", (0.55, 0.2, 0.15), (0.28, 0.24, 0.17), "metal", sub=1, jitter=0.03)]
+    return join(p, "boulder", (x, 0, 0))
+
+
+def fallen_log(x):
+    """A fallen log, 1.8 m long, lying along X."""
+    p = [add("cyl", (0, 0, 0.17), (0.17, 0.17, 0.9), "bark", seg=8, rot=(0, math.pi / 2, 0), jitter=0.01)]
+    p.append(add("cyl", (0.3, 0.1, 0.1), (0.05, 0.05, 0.25), "bark", seg=6, rot=(0.9, 0.5, 0)))
+    return join(p, "fallen_log", (x, 0, 0))
+
+
+def park_lamp(x):
+    """A park lamp post: a slim dark steel pole with a round white lantern, 3.6 m high."""
+    p = [add("cyl", (0, 0, 1.75), (0.045, 0.045, 1.75), "metal_dark", seg=8)]
+    p.append(add("cyl", (0, 0, 0.1), (0.1, 0.1, 0.1), "metal_dark", seg=8))
+    p.append(add("uvsphere", (0, 0, 3.55), (0.2, 0.2, 0.2), "white_plastic", seg=12, rings=6))
+    p.append(add("cyl", (0, 0, 3.78), (0.16, 0.16, 0.03), "metal_dark", seg=10))
+    return join(p, "park_lamp", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -593,7 +651,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp):
     build(x)
     x += 6.0
 

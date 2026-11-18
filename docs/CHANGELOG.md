@@ -1,5 +1,12 @@
 # Changelog
 
+## More in the public parks (2026-11-18)
+- Six new Blender props: `park_bench`, `picnic_table`, `litter_bin`, `boulder`, `fallen_log`, `park_lamp` (52 props in all).
+- Parks: a paved loop path (6 m radius, smaller in small parks) with four benches on its outside looking in, a litter bin beside each,
+  four lamp posts between them, two picnic tables on a lawn patch inside it, and boulders and fallen logs scattered through the park.
+  Trees and shrubs keep clear of the loop. A park too small or cluttered for the loop is left as before. The old box benches are gone.
+- Tests: a 60 m park gets the path, benches, bins, lamps and tables, and no tree grows inside the loop.
+
 ## No board across a gable end (2026-11-18)
 - Gable roofs had a horizontal fascia board along each gable end, which read as a gutter across the short side. Gable roofs now have
   fascia only on the two long eaves; hip roofs keep all four (`RealChunkBuilder.fascia_edges`). Test seen failing, then passing.

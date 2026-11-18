@@ -2979,6 +2979,19 @@ func _test_real_world_units() -> void:
 		roof_dishes += int(e[1]) if e[0] == "satellite_dish" else 0
 	_check(parts.has("Mesh_panel_garage") and geysers >= 3 and roof_dishes >= 1 and RealHomeDecor.DISH_ONE_IN <= 2,
 		"more garage roller doors, solar geysers on the north-facing roofs (%d here) and satellite dishes (%d on roofs here, one wall dish in two)" % [geysers, roof_dishes])
+	var park_props := {}
+	var park_surfaces := {}
+	var park_materials := {}
+	RealParkDecor.draw_areas([{"k": "park", "p": [[0, 0], [60, 0], [60, 60], [0, 60]]}], [], [], park_surfaces, park_materials, park_props)
+	_check(park_props.has("park_bench") and park_props.has("litter_bin") and park_props.has("park_lamp") and park_props.has("picnic_table") \
+		and park_surfaces.has("park_path") and park_props.has("tree_a"),
+		"a 60 m park has a paved loop path with benches, litter bins, lamp posts and picnic tables, besides its trees (%s)" % [park_props.keys()])
+	var in_hole := 0
+	for kind: String in park_props:
+		for xf: Transform3D in park_props[kind]:
+			if kind.begins_with("tree") or kind == "palm":
+				in_hole += 1 if Vector2(xf.origin.x - 30.0, xf.origin.z - 30.0).length() < RealParkDecor.PARK_LOOP_RADIUS + 3.0 else 0
+	_check(in_hole == 0, "no park tree grows on the loop path or its benches (%d inside)" % in_hole)
 	var grect := {"c": Vector2.ZERO, "u": Vector2.RIGHT, "v": Vector2.DOWN, "half": Vector2(6.0, 4.0), "area": 192.0}
 	var hip_runs := RealChunkBuilder.gutter_runs(grect, false)
 	var gable_runs := RealChunkBuilder.gutter_runs(grect, true)
