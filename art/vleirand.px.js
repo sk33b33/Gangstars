@@ -26,6 +26,27 @@ sprite("wall_plaster", { w: 32, h: 32 },
   hline(3, 6, 9, "W"), hline(18, 13, 11, "W"), hline(6, 22, 8, "W"), hline(21, 28, 7, "W"),
   hline(12, 9, 5, "v"), hline(1, 17, 6, "v"), hline(25, 3, 5, "v"), hline(14, 25, 6, "v"))
 
+// Face brick, near-white so each house can be tinted brick red or brown: stretcher bond, 4 courses per 16 px, mortar joints a little darker,
+// the odd brick fired lighter or darker (cause: uneven firing).
+sprite("wall_brick", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "v"),
+  (c) => {
+    for (let row = 0; row < 8; row++) {
+      const y = row * 4, off = (row % 2) * 4
+      c.hline(0, y + 3, 32, "u")
+      for (let b = 0; b < 4; b++) {
+        const x = (off + b * 8) % 32
+        c.vline(x, y, 3, "u")
+        if ((row * 5 + b * 3) % 7 === 0) c.rect(x + 1, y, 7, 3, "w")
+        if ((row * 3 + b * 5) % 9 === 0) c.rect(x + 1, y, 7, 3, "V")
+      }
+    }
+  })
+
+// Rough-cast (pebbledash) plaster: a granular finish, so a sparse speckle is justified here.
+sprite("wall_rough", { w: 32, h: 32 },
+  rect(0, 0, 32, 32, "w"), noise(0, 0, 32, 32, "W", 0.18, 5), noise(0, 0, 32, 32, "v", 0.2, 11), noise(0, 0, 32, 32, "V", 0.06, 17))
+
 // Splash-back grime band: dirt kicked up from the sandy yard, fading upward.
 sprite("wall_grime", { w: 32, h: 8 },
   rect(0, 0, 32, 8, "w"),
@@ -93,6 +114,12 @@ sprite("roof_tiles", { w: 32, h: 32 },
   (c) => {
     for (let row = 0; row < 4; row++) {
       const y = row * 8, off = (row % 2) * 4
+      // concrete tiles weather unevenly: a few lighter (new) and darker (old, damp) ones
+      for (let x = off; x < 32 + 8; x += 8) {
+        const k = (row * 7 + x * 3) % 11
+        if (k === 0) c.rect((x % 32) + 1, y + 1, 7, 6, "y")
+        if (k === 4) c.rect((x % 32) + 1, y + 1, 7, 6, "T")
+      }
       c.hline(0, y + 7, 32, "T"); c.hline(0, y, 32, "y")
       for (let x = off; x < 32; x += 8) c.vline(x, y + 1, 6, "T")
     }

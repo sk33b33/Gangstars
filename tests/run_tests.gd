@@ -2090,7 +2090,17 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	main.settings.set_value("video/crowd_range", 0)
 	for i in 90:
 		await physics_frame
-	_check(dir.dormant_distance == 150.0 and dir.dormant_count >= 40, "a short crowd range puts far-off people to sleep (%d dormant)" % dir.dormant_count)
+	# Everyone who may sleep (not indoors, not busy: who is indoors depends on the time of day) and is far off is asleep.
+	var may_sleep := 0
+	var asleep_wrongly := 0
+	for r: Resident in district.residents.values():
+		var far: bool = r.global_position.distance_to(player.global_position) > 150.0
+		if far and r.can_be_dormant():
+			may_sleep += 1
+		if r.dormant and not far:
+			asleep_wrongly += 1
+	_check(dir.dormant_distance == 150.0 and dir.dormant_count > 0 and dir.dormant_count >= may_sleep - 3 and asleep_wrongly == 0,
+		"a short crowd range puts far-off people to sleep (%d dormant, %d could)" % [dir.dormant_count, may_sleep])
 	var sleeper: Resident = null
 	for r: Resident in district.residents.values():
 		if r.dormant and not r.is_inside:   # people at home are hidden anyway: watch one who is out
@@ -2108,7 +2118,7 @@ func _test_dormant_in_game(main: Node, district: District, player: Player) -> vo
 	main.settings.set_value("video/crowd_range", 2)
 	for i in 90:
 		await physics_frame
-	_check(is_inf(dir.dormant_distance) and dir.dormant_count == 0 and not sleeper.dormant and sleeper.visible,
+	_check(is_inf(dir.dormant_distance) and dir.dormant_count == 0 and not sleeper.dormant and sleeper.visible == not sleeper.is_inside,
 		"everyone wakes up again when you widen the range (%d still asleep; the sleeper %s: dormant %s, visible %s, inside %s)" % [dir.dormant_count, sleeper.data.id, sleeper.dormant, sleeper.visible, sleeper.is_inside])
 	var teleports := 0
 	for r: Resident in district.residents.values():
@@ -2957,6 +2967,10 @@ func _test_real_world_units() -> void:
 	_check(RealStreetDecor.STOP_POLE_TOP <= RealStreetDecor.STOP_SIGN_BOTTOM + 0.01 and RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign is one octagon on top of its pole, the pole never across the face")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
+	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
+		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
+		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}
+	_check(not want.values().has(false), "houses have gutters, ridge caps, air bricks, face-brick and rough-cast walls, and roofs in different colours (%s)" % [want])
 	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \
 		and parts.any(func(n): return n.begins_with("Mesh_fascia")) and parts.has("Mesh_coping"),
 		"streets have kerbs and gutters; houses have plinth bands, fascias and window sills")

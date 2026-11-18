@@ -13,10 +13,12 @@ func _init() -> void:
 	var data := RealDistrictData.new()
 	data.load_meta()
 	var node: Node3D = null
+	var chosen := Vector2i(-1, -1)
 	for key: Vector2i in [Vector2i(-1, -1), Vector2i(-1, -2), Vector2i(0, -1), Vector2i(-2, -1), Vector2i(0, -2), Vector2i(-2, -2), Vector2i(0, 0), Vector2i(-1, 0)]:
 		node = RealChunkBuilder.build(key, data.load_chunk(key), {}, [], {}, [], {}, {}, {"street": data.street_context(key)})
 		var has_stop := node.get_children().any(func(c): return str(c.name).contains("sign_stop"))
 		if has_stop:
+			chosen = key
 			break
 		node.free()
 	root.add_child(node)
@@ -67,6 +69,25 @@ func _init() -> void:
 			_cams.append([mid + Vector3(3, 2.2, 3), mid])
 			print("HUMP at ", mid)
 			break
+	# Three ordinary houses from the street, for the walls and roofs.
+	var picked := 0
+	for key2: Vector2i in [chosen]:
+		for b in data.load_chunk(key2).get("buildings", []):
+			if picked >= 4:
+				break
+			if b.has("k") or b.p.size() < 4:
+				continue
+			var ring := RealChunkBuilder._line(b.p)
+			var area := absf(RealChunkBuilder._signed_area(ring))
+			if area < 60.0 or area > 200.0:
+				continue
+			var cen := Vector2.ZERO
+			for q in ring:
+				cen += q
+			cen /= ring.size()
+			picked += 1
+			_cams.append([Vector3(cen.x + 11.0, 4.0, cen.y + 11.0), Vector3(cen.x, 2.0, cen.y)])
+			_cams.append([Vector3(cen.x - 9.0, 2.2, cen.y + 9.0), Vector3(cen.x, 1.8, cen.y)])
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

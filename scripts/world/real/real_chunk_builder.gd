@@ -42,6 +42,9 @@ const EAVES := 0.35
 const PARAPET := 0.35
 const COPING_COLOR := "#cfcac0"
 const SILL_DEPTH := 0.12
+const BRICK_TINTS := ["#c7775b", "#b9694f", "#a35d49", "#d39a7a", "#9c5a44"]
+const ROOF_TILE_TINTS := ["#ffffff", "#d8d2cc", "#f0d6c4", "#bfb6b0"]
+const ROOF_IBR_TINTS := ["#ffffff", "#e9a99c", "#a9c3b3", "#c8ccd2"]
 ## A house gets a pitched roof over its best-fitting rectangle when its outline fills at least this
 ## much of that rectangle; other outlines (L-shapes, odd traces) get a flat roof behind a parapet.
 const ROOF_FILL := 0.75
@@ -441,7 +444,15 @@ static func _building(b: Dictionary, surfaces: Dictionary, materials: Dictionary
 ## close to a rectangle, otherwise a flat roof behind a parapet.
 static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: float, rect: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array, front: Dictionary = {}) -> void:
 	var paint: String = WALL_PAINTS[seed_value % WALL_PAINTS.size()]
-	var walls := _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
+	var finish := (seed_value / 3) % 6   # plaster 0 to 3, rough-cast 4, face brick 5
+	var walls: SurfaceTool
+	if finish == 5:
+		var brick: String = BRICK_TINTS[(seed_value / 7) % BRICK_TINTS.size()]
+		walls = _tool("wall_brick_" + brick, surfaces, materials, PixelMaterials.surface("wall_brick", Vector2(1.0, 1.0), Color(brick)))
+	elif finish == 4:
+		walls = _tool("wall_rough_" + paint, surfaces, materials, PixelMaterials.surface("wall_rough", Vector2(2, 2), Color(paint)))
+	else:
+		walls = _tool("wall_" + paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(paint)))
 	var plinth_paint: String = PLINTH_PAINTS[(seed_value / 7) % PLINTH_PAINTS.size()]
 	var plinth := _tool("plinth_" + plinth_paint, surfaces, materials, PixelMaterials.surface("wall_plaster", Vector2(2, 2), Color(plinth_paint)))
 	var hip := area < 420.0 and area / maxf(float(rect.area), 0.01) >= ROOF_FILL
@@ -449,9 +460,11 @@ static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: fl
 	var semi := hip and not front.is_empty() and area >= SEMI_AREA.x and area <= SEMI_AREA.y and half.x >= half.y * SEMI_ASPECT and seed_value % 3 != 0
 	var gable := seed_value % 2 == 0
 	var tiles := seed_value % 5 < 3
-	var roof := _tool("roof_tiles" if tiles else "roof_ibr", surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2)))
+	var roof_tint: String = (ROOF_TILE_TINTS if tiles else ROOF_IBR_TINTS)[(seed_value / 13) % 4]
+	var roof := _tool(("roof_tiles_" if tiles else "roof_ibr_") + roof_tint, surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2), Color(roof_tint)))
 	if semi:
 		_semi(ring, centre, h, rect, seed_value, walls, plinth, roof, gable, front, surfaces, materials, collision)
+		_house_details(ring, rect, h, false, false, front, seed_value, surfaces, materials)
 		return
 	wall_ring(ring, centre, h, walls, plinth, collision, 0.0 if hip else PARAPET)
 	if hip:
@@ -460,6 +473,64 @@ static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: fl
 		_pitched_roof(roof, fascia, walls, rect, h, gable)
 	else:
 		flat_roof(ring, h, PARAPET, roof, _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))))
+	_house_details(ring, rect, h, hip, gable, front, seed_value, surfaces, materials)
+
+
+## What a house is fitted with besides its walls and roof: rain gutters under the eaves, one or two downpipes on the corners, a
+## ridge cap and now and then a chimney on a pitched roof, and at the front door a concrete stoep step, an electricity meter box and
+## sometimes a small awning. (Window surrounds and air bricks are made with the windows, `_window`.)
+static func _house_details(ring: PackedVector2Array, rect: Dictionary, h: float, hip: bool, gable: bool, front: Dictionary, seed_value: int, surfaces: Dictionary, materials: Dictionary) -> void:
+	var u: Vector2 = rect.u
+	var v: Vector2 = rect.v
+	var c: Vector2 = rect.c
+	var half: Vector2 = rect.half
+	var gutter := _tool("eave_gutter", surfaces, materials, PixelMaterials.flat(Color("#8c8f96")))
+	var pitched := hip   # `hip` is true for any outline the pitched roof fits (hip or gable)
+	if pitched:
+		var l := half.x + EAVES
+		var w := half.y + EAVES
+		for sv: float in [-1.0, 1.0]:
+			RealLandmarks._obox(gutter, c + v * sv * (w + 0.06), u, Vector2(l, 0.05), h - 0.2, h - 0.06)
+		if not gable:
+			for su: float in [-1.0, 1.0]:
+				RealLandmarks._obox(gutter, c + u * su * (l + 0.06), v, Vector2(w, 0.05), h - 0.2, h - 0.06)
+		var rise := clampf(half.y * 0.45, 0.8, 1.8)
+		var ridge := l if gable else maxf(0.0, l - w)
+		RealLandmarks._obox(_tool("ridge_cap", surfaces, materials, PixelMaterials.flat(Color("#4a403a"))), c, u, Vector2(ridge + 0.1, 0.1), h + rise - 0.02, h + rise + 0.1)
+		if seed_value % 5 == 0:   # a brick chimney stack through the ridge
+			var at := c + u * ridge * 0.45
+			RealLandmarks._obox(_tool("chimney", surfaces, materials, PixelMaterials.flat(Color("#a2634c"))), at, u, Vector2(0.28, 0.28), h + rise * 0.3, h + rise + 0.95)
+			RealLandmarks._obox(_tool("chimney_cap", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))), at, u, Vector2(0.35, 0.35), h + rise + 0.95, h + rise + 1.04)
+	# Downpipes on one or two convex corners.
+	var sign_area := signf(_signed_area(ring))
+	var corners: Array = []
+	for i in ring.size():
+		var a := ring[(i + ring.size() - 1) % ring.size()]
+		var b := ring[i]
+		var d := ring[(i + 1) % ring.size()]
+		if (b - a).cross(d - b) * sign_area > 0.5:
+			corners.append([b, (edge_out(ring, a, b) + edge_out(ring, b, d)).normalized()])
+	if not corners.is_empty():
+		for k in 2:
+			var pick: Array = corners[(seed_value / (3 + k * 4)) % corners.size()]
+			RealLandmarks._obox(gutter, (pick[0] as Vector2) + (pick[1] as Vector2) * 0.06, Vector2.RIGHT, Vector2(0.035, 0.035), 0.0, h - 0.12)
+			if corners.size() == 1:
+				break
+	if front.is_empty():
+		return
+	var mid: Vector2 = front.mid
+	var n: Vector2 = front.normal
+	var t := left_of_wall(n)
+	var concrete := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
+	RealLandmarks._obox(concrete, mid + n * 0.32, t, Vector2(0.85, 0.32), 0.0, 0.14)   # the stoep step
+	RealLandmarks._obox(_tool("meter_box", surfaces, materials, PixelMaterials.flat(Color("#bfc3c8"))), mid + t * 1.2 + n * 0.09, t, Vector2(0.2, 0.09), 1.2, 1.75)
+	if seed_value % 3 == 0 and h > 2.6:   # a small concrete awning over the door
+		RealLandmarks._obox(concrete, mid + n * 0.5, t, Vector2(0.85, 0.5), 2.3, 2.38)
+
+
+## The direction along a wall whose outward normal is `n` (either way: only the line matters).
+static func left_of_wall(n: Vector2) -> Vector2:
+	return Vector2(n.y, -n.x)
 
 
 ## A semi-detached pair: the house split across its length, each half painted by its own owner, a
@@ -601,6 +672,7 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 	var door := _tool("panel_door", surfaces, materials, PixelMaterials.panel("door_gate"))
 	var window := _tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
 	var sill := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
+	var dark := _tool("airbrick", surfaces, materials, PixelMaterials.flat(Color("#2a2a2e")))
 	var anchor := Vector3.ZERO
 	for i in ring.size():
 		var p0 := ring[i]
@@ -618,9 +690,9 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 			anchor = Vector3(mid.x + normal.x * DOOR_OUT, 0.0, mid.y + normal.y * DOOR_OUT)
 			if length > 5.0:
 				for side in [-1.0, 1.0]:
-					_window(window, sill, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, top)
+					_window(window, sill, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, top, dark)
 		elif length > 3.2:
-			_window(window, sill, mid, tangent, normal, top)
+			_window(window, sill, mid, tangent, normal, top, dark)
 	return {"at": anchor}
 
 
@@ -673,8 +745,14 @@ static func _distance_to_lines(p: Vector2, lines: Array) -> float:
 
 
 ## A barred window 1.4 m wide from 1.0 m up to `top`, with a concrete sill under it.
-static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float) -> void:
+static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float, dark: SurfaceTool = null) -> void:
 	_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+	# A concrete surround: a lintel over the opening and a reveal down each side.
+	RealLandmarks._obox(sill, mid + normal * 0.05, tangent, Vector2(0.82, 0.06), top, top + 0.13)
+	for side: float in [-1.0, 1.0]:
+		RealLandmarks._obox(sill, mid + tangent * side * 0.75 + normal * 0.05, tangent, Vector2(0.06, 0.06), 1.0, top)
+	if dark != null and (roundi(mid.x * 7.0) + roundi(mid.y * 3.0)) % 2 == 0:   # an air brick under the sill
+		RealLandmarks._obox(dark, mid + normal * 0.03, tangent, Vector2(0.14, 0.03), 0.3, 0.42)
 	var a := mid - tangent * 0.8
 	var b := mid + tangent * 0.8
 	var a_out := a + normal * SILL_DEPTH

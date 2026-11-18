@@ -1,5 +1,13 @@
 # Changelog
 
+## More detailed house walls and roofs (2026-11-18)
+- Walls: three finishes by house (smooth plaster, rough-cast, face brick tinted brick red or brown), window surrounds (a lintel and a reveal
+  each side), air bricks under some windows, a concrete stoep step at the front door, an electricity meter box beside it and sometimes a
+  small awning, and downpipes on one or two corners.
+- Roofs: rain gutters under the eaves, a ridge cap, now and then a brick chimney, uneven concrete tiles (lighter and darker ones), and
+  roofs in different colours (four tints each for tiles and IBR sheeting).
+- New pxl textures `wall_brick` and `wall_rough`; the details are built by `RealChunkBuilder._house_details` and `_window`.
+
 ## Mirrored tags, one STOP sign (2026-11-18)
 - Gang tags (and the shop boards, murals and other pictures on walls) were mirrored: the wall panel helper's flip rule was the wrong way
   round for every wall. Fixed in `RealChunkBuilder._panel`, with a check that the panel's right-hand edge carries the right-hand part
