@@ -1,5 +1,18 @@
 # Changelog
 
+## Remy's own van: a Toyota HiAce Commuter (2026-11-18)
+- New model `assets/models/vehicles/hiace.glb`, built by `tools/blender/build_hiace.py` from the 2012 Toyota HiAce Commuter the owner
+  supplied (`art/source/2012_Toyota_HiAce_Commuter.fbx`, kept out of the game import with a `.gdignore`). The source was 500 000 triangles
+  with 30 photo textures, 1.25 times life size; the script scales it to a real 5.4 m, welds and decimates it to about 37 000 triangles,
+  drops the roof luggage and replaces every texture with plain materials (paint takes the car's colour, glass, black trim, chrome, seats,
+  headlights, tail lights). Four wheels spin and the front pair steers, there are number plates, and the driver (Remy) shows at the wheel
+  on the right. The steering wheel, doors and mirrors are static parts of the body.
+- Exclusive to Remy: `VehicleLibrary.EXCLUSIVE` gives the model only to the vehicle id `car_player`. It is in no traffic, parking or
+  civilian list, so no other car on the road is a HiAce. `car_player` is now "Remy's HiAce", white, in the data (it was a blue hatchback).
+- It stays clean (no weathering, rust, dents or road dust) and has a 5.4 m collision box.
+- Tests: Remy's id gets the HiAce and no other drivable car does (seen failing with the exclusivity off); four wheels, a driver and under
+  45 000 triangles; the collision box is 5.4 m.
+
 ## More at the community halls (2026-11-18)
 - Four new textures (pxl): `sign_civic`, `sign_sports_hall`, `sign_events`, `door_hall`.
 - Civic centre (`RealHallDecor.draw_civic`): barred windows along its walls (it had none), a row of high windows in the raised hall, the

@@ -30,13 +30,15 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	name = id
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | RealCar.LAYER_VEHICLES
-	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, VehicleLibrary.civilian_for(id))
-	VehicleLibrary.add_headlights(body, VehicleLibrary.civilian_for(id))
+	var model := VehicleLibrary.model_for(id)
+	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, model)
+	VehicleLibrary.add_headlights(body, model)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.85, 1.4, 4.0)
+	var van := model == "hiace"
+	box.size = Vector3(1.95, 2.0, float(VehicleLibrary.LENGTH[model])) if van else Vector3(1.85, 1.4, 4.0)
 	shape.shape = box
-	shape.position = Vector3(0, 0.75, 0)
+	shape.position = Vector3(0, 1.05 if van else 0.75, 0)
 	add_child(shape)
 	interactable = Interactable.new()
 	interactable.radius = 2.6

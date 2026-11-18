@@ -214,6 +214,7 @@ old mesh.
 - **Models are code:** see `.claude/skills/blender-assets/SKILL.md`.
   - Blender 4.5 LTS headless: `blender -b --factory-startup --python tools/blender/build_character.py`
     (or `build_props.py`), then `godot --headless --path . --import`.
+  - Remy's van (`hiace.glb`): `blender -b --factory-startup --python tools/blender/build_hiace.py` (source model `art/source/2012_Toyota_HiAce_Commuter.fbx`), then import. Preview: `xvfb-run -a godot --path . --rendering-driver opengl3 -s tools/godot/van_shot.gd`. `VehicleLibrary.EXCLUSIVE` maps a vehicle id to a model nobody else uses.
   - Character line-up: `xvfb-run -a godot --path . -s tools/godot/lineup.gd -- --out=res://tests/output/lineup.png [--close | --named]`.
 - **Spots:** `SpotRegistry` collects Marker3D nodes in the groups `spot_sit` and `spot_lean`. Add one
   with `SpotRegistry.marker(parent, kind, local_pos, rot_y)`, facing the way the person should face.

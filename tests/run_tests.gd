@@ -228,6 +228,29 @@ func _test_npc_data() -> void:
 	_check(own.get_meta("occupants", []).size() == 1 and own.get_meta("occupants")[0].visible, "the player shows at the wheel of their car")
 	VehicleLibrary.set_driver(own, false)
 	_check(not own.get_meta("occupants")[0].visible, "and not once they get out")
+	# Remy's own remy_van: a Toyota HiAce Commuter that only his car id gets, in no traffic or parking list.
+	var remy_van := VehicleLibrary.build(garage, "hiace", Color.WHITE, Vector3(35, 0, 0))
+	VehicleLibrary.set_driver(remy_van, true)
+	var remy_van_tris := 0
+	var remy_van_mesh: Mesh = VehicleLibrary.mesh("hiace")
+	for si in remy_van_mesh.get_surface_count():
+		remy_van_tris += (remy_van_mesh.surface_get_arrays(si)[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
+	var drivable := DrivableCar.new()
+	root.add_child(drivable)
+	drivable.setup("car_player", "Remy's HiAce", Color.WHITE)
+	var other := DrivableCar.new()
+	root.add_child(other)
+	other.setup("car_mossie", "the yellow Golf", Color.YELLOW)
+	_check(VehicleLibrary.model_for("car_player") == "hiace" and not VehicleLibrary.CIVILIAN.has("hiace") and VehicleLibrary.model_for("car_mossie") != "hiace" \
+		and drivable.body.get_meta("model") == "hiace" and other.body.get_meta("model") != "hiace",
+		"Remy's car id gets the HiAce and no other drivable car does; the HiAce is in no traffic or parking list")
+	_check(remy_van.get_meta("wheels", []).size() == 4 and remy_van.get_meta("occupants", []).size() >= 1 and remy_van_tris <= 45000 and VehicleLibrary.mesh("hiace_tyre") != null,
+		"the HiAce has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
+	var remy_van_shape: CollisionShape3D = drivable.find_children("*", "CollisionShape3D", false, false)[0]
+	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["hiace"])) < 0.01, "the HiAce's collision box is as long as the van (5.4 m)")
+	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)
+	drivable.queue_free()
+	other.queue_free()
 	# Detail pass: a hollow taxi with a load of passengers, the combi and the bakery van.
 	var taxi := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(40, 0, 0))
 	VehicleLibrary.add_occupants(taxi)

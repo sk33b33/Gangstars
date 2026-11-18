@@ -47,6 +47,8 @@ static func age_for(model: String, seed: int) -> float:
 			return 0.25 + base * 0.6
 		"bus", "refuse":
 			return 0.3 + base * 0.5
+		"hiace":
+			return 0.04   # Remy's van is looked after
 	return base * 0.9
 
 

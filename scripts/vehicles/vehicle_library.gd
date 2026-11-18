@@ -7,10 +7,15 @@ extends RefCounted
 ## material per vehicle so its lights can flash (see set_lights()).
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
-const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter"]
+## Models with a file of their own (tools/blender/build_hiace.py), loaded next to the main set under the same conventions.
+const EXTRA_SOURCES := {"hiace": "res://assets/models/vehicles/hiace.glb"}
+const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter", "hiace"]
+## Cars that belong to one person: only that vehicle id gets the model, and it is in no traffic or parking list (CIVILIAN).
+## "car_player" is Remy's own van.
+const EXCLUSIVE := {"car_player": "hiace"}
 const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "hiace": 5.4}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
@@ -46,9 +51,18 @@ static func _load() -> void:
 	var root: Node = (load(SOURCE) as PackedScene).instantiate()
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		_meshes[str(mi.name)] = (mi as MeshInstance3D).mesh
+	var extras: Array = []
+	for model: String in EXTRA_SOURCES:
+		var extra: Node = (load(EXTRA_SOURCES[model]) as PackedScene).instantiate()
+		for mi in extra.find_children("*", "MeshInstance3D", true, false):
+			_meshes[str(mi.name)] = (mi as MeshInstance3D).mesh
+		extras.append(extra)
 	# Marker empties under each body: <model>_axle_0..3 (front pair first), <model>_plate_*.
 	for model in MODELS:
 		var body := root.find_child(model, true, false) as Node3D
+		for extra: Node in extras:
+			if body == null:
+				body = extra.find_child(model, true, false) as Node3D
 		var m := {"wheels": [], "seats": [], "wipers": []}
 		if body:
 			for c in body.get_children():
@@ -69,11 +83,18 @@ static func _load() -> void:
 		m.seats = m.seats.map(func(w): return w[1])
 		_markers[model] = m
 	root.free()
+	for extra: Node in extras:
+		extra.free()
 
 
 ## A civilian model picked deterministically from a seed (e.g. a vehicle id).
 static func civilian_for(seed_text: String) -> String:
 	return CIVILIAN[absi(seed_text.hash()) % CIVILIAN.size()]
+
+
+## The model a drivable car of this id uses: its exclusive one (Remy's van), else a civilian model from the id.
+static func model_for(vehicle_id: String) -> String:
+	return EXCLUSIVE.get(vehicle_id, civilian_for(vehicle_id))
 
 
 ## The vehicle: pivot (faces +X) > Tilt (body, pitches on the suspension) + Wheels (spin, front
@@ -91,10 +112,10 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 		return pivot
 	var seed := absi(("%s|%s|%s" % [model, color, center]).hash())
 	var age := VehicleDetail.age_for(model, seed)
-	if model not in ["police", "taxi", "bus", "refuse"]:
+	if model not in ["police", "taxi", "bus", "refuse", "hiace"]:
 		color = VehicleDetail.weathered(color, age)
 	# Some cars are dusty from the roads; the skorokoro always is.
-	var dirty := model == "skoro" or seed % 20 < 7
+	var dirty := model == "skoro" or (seed % 20 < 7 and model != "hiace")   # Remy keeps his van clean
 	pivot.set_meta("model", model)
 	pivot.set_meta("seed", seed)
 	var tilt := Node3D.new()
