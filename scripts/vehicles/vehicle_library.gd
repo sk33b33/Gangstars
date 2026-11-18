@@ -23,6 +23,8 @@ const SKINS := [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f"), Color("#4a
 
 ## How far the front wheels turn at full lock (radians). The HiAce's wide tyres foul the arch at more than this.
 const STEER_LOCK := {"hiace": 0.3}
+## Where Remy sits in a car that seats him himself (the origin of his sitting model, in the body's Tilt space), instead of the plain bust.
+const REMY_SEAT := {"hiace": Vector3(-0.496, 0.06, 1.6)}
 
 static var _meshes: Dictionary = {}
 static var _markers: Dictionary = {}   # model -> {"wheels": [Vector3], "plate_front": Vector3, "plate_rear": Vector3}

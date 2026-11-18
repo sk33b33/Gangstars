@@ -25,7 +25,6 @@ var body := ""            # James, Kate, Leonard, Louise or Meegan
 var police := false       # SAPS: a light blue shirt and navy trousers
 const WAVE_TIME := 1.8   # there is no wave clip yet: is_waving() just stays true this long, so the Resident logic behaves
 var _wave_left := 0.0
-var _seated := false
 var _look: Variant = null
 var _facing := 0.0        # the turn towards the look target, radians, applied to the body inside this node
 
@@ -90,7 +89,7 @@ func look_at_point(p: Variant) -> void:
 ## Call with the horizontal speed (every frame near, at a lower rate far away).
 func animate(delta: float, speed: float) -> void:
 	_wave_left = maxf(0.0, _wave_left - delta)
-	if _seated:
+	if _pose_seated:
 		return   # posed by hand (see _seat): nothing to advance
 	remy.update_locomotion(speed, speed > RUN + 0.3, true, delta)
 	remy.tree.advance(delta)
@@ -129,33 +128,8 @@ func _lay_down(down: bool) -> void:
 		remy.stand_up()
 
 
-## Seat height: the origin of a sitting character is the middle of a 0.45 m seat (SpotRegistry).
-const SIT_DROP := 0.43      # the hips sink this far (m) from standing
-const SIT_THIGH := 90.0     # degrees the thighs swing forward
-const SIT_SHIN := 90.0      # degrees the shins fold back
-
-
 func _seat(on: bool) -> void:
-	if on == _seated:
-		return
-	_seated = on
-	var sk := remy.skeleton
-	if on:
-		remy.gait = 0.0
-		remy.update_locomotion(0.0, false, true, 0.0)
-		remy.tree.advance(0.05)   # the Idle pose (arms down) is the starting point
-	remy.tree.active = not on
-	if not on:
-		return
-	var hips := sk.find_bone("mixamorig_Hips")
-	var rest := sk.get_bone_rest(hips)
-	# local Z of the hips is the vertical axis, negative up (see RemyModel._in_place): less negative is lower
-	sk.set_bone_pose_position(hips, rest.origin + Vector3(0, 0, SIT_DROP * 100.0))
-	for side in ["Left", "Right"]:
-		var up := sk.find_bone("mixamorig_%sUpLeg" % side)
-		var leg := sk.find_bone("mixamorig_%sLeg" % side)
-		sk.set_bone_pose_rotation(up, sk.get_bone_rest(up).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(SIT_THIGH)))
-		sk.set_bone_pose_rotation(leg, sk.get_bone_rest(leg).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(-SIT_SHIN)))
+	set_seated(on)   # the hand-made sit pose lives in RemyPlayerModel (Remy sits at the wheel of his van with it)
 
 
 ## The SAPS wardrobe: the shirt and trousers lose their pattern and become flat colours, a light blue shirt and navy blue trousers (the

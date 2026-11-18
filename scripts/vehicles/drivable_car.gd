@@ -22,6 +22,7 @@ var interactable: Interactable
 var obstacle: NavigationObstacle3D
 var body: Node3D
 var _anim_time := 0.0
+var _remy: RemyPlayerModel   # the seated driver of a car that has a seat for him (REMY_SEAT)
 
 
 func setup(id: String, p_name: String, color: Color) -> void:
@@ -54,6 +55,22 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	add_child(obstacle)
 
 
+## Remy's own van seats Remy himself at the wheel (his model, sitting, hands on the wheel); every other car shows the plain driver bust.
+func _show_driver(on: bool) -> void:
+	var seat: Variant = VehicleLibrary.REMY_SEAT.get(str(body.get_meta("model", "")))
+	if seat == null or not driver is Player:
+		VehicleLibrary.set_driver(body, on, Color("#f1eee8"))
+		return
+	if _remy == null:
+		_remy = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
+		_remy.name = "RemyAtTheWheel"
+		_remy.position = seat
+		(body.get_meta("tilt") as Node3D).add_child(_remy)
+		_remy.set_seated(true, true)
+	_remy.visible = on
+	VehicleLibrary.set_driver(body, false)
+
+
 func is_driven() -> bool:
 	return driver != null
 
@@ -61,7 +78,7 @@ func is_driven() -> bool:
 func _physics_process(delta: float) -> void:
 	if body and bool(body.get_meta("driver_shown", false)) != (driver != null):
 		body.set_meta("driver_shown", driver != null)   # the player shows at the wheel while driving
-		VehicleLibrary.set_driver(body, driver != null, Color("#f1eee8"))
+		_show_driver(driver != null)
 	if driver == null and absf(speed) < 0.05:
 		# Parked: no physics step, so passing traffic can never nudge it out of its bay.
 		speed = 0.0

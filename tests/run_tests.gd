@@ -254,6 +254,15 @@ func _test_npc_data() -> void:
 	_check(remy_van.get_meta("wipers", []).size() == 2 and remy_van.has_meta("indicator_L") and remy_van.has_meta("indicator_R") and remy_van.has_meta("dims") \
 		and remy_van.find_child("ScreenDrops", true, false) != null,
 		"the HiAce has two wipers, left and right indicator lamps, and a windscreen for rain drops")
+	var seated_remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
+	root.add_child(seated_remy)
+	seated_remy.set_seated(true, true)
+	seated_remy.remy.skeleton.force_update_all_bone_transforms()
+	var sk_hand := seated_remy.remy.skeleton.global_transform * seated_remy.remy.skeleton.get_bone_global_pose(seated_remy.remy.skeleton.find_bone("mixamorig_RightHand"))
+	var sk_hips := seated_remy.remy.skeleton.global_transform * seated_remy.remy.skeleton.get_bone_global_pose(seated_remy.remy.skeleton.find_bone("mixamorig_Hips"))
+	_check(seated_remy.is_seated() and VehicleLibrary.REMY_SEAT.has("hiace") and sk_hand.origin.z - sk_hips.origin.z > 0.3 and absf(sk_hand.origin.y - 1.14) < 0.15,
+		"Remy sits at the wheel of his van with his hands forward and up on the wheel, not at his sides (hand %.2f m ahead of the hips)" % (sk_hand.origin.z - sk_hips.origin.z))
+	seated_remy.queue_free()
 	var remy_van_shape: CollisionShape3D = drivable.find_children("*", "CollisionShape3D", false, false)[0]
 	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["hiace"])) < 0.01, "the HiAce's collision box is as long as the van (5.4 m)")
 	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)

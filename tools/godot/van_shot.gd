@@ -33,7 +33,35 @@ func _initialize() -> void:
 	var stage := Node3D.new()
 	root.add_child(stage)
 	_van = VehicleLibrary.build(stage, "hiace", Color("#f1eee8"))
-	VehicleLibrary.set_driver(_van, true)
+	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT["hiace"]
+	var remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
+	remy.position = remy_seat
+	(_van.get_meta("tilt") as Node3D).add_child(remy)
+	remy.set_seated(true, true)
+	if "--ghost" in OS.get_cmdline_user_args():   # see through the paint, to check where the driver sits
+		var mi: MeshInstance3D = _van.find_child("Mesh", true, false)
+		for si in mi.mesh.get_surface_count():
+			var nm := mi.mesh.surface_get_material(si).resource_name
+			if nm in ["paint", "glass"]:
+				var ghost := StandardMaterial3D.new()
+				ghost.albedo_color = Color(0.9, 0.9, 0.9, 0.12)
+				ghost.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+				mi.set_surface_override_material(si, ghost)
+	if "--marks" in OS.get_cmdline_user_args():   # a red ball where the model's steering wheel is (Blender -0.496, -2.0, 1.2), a green one at the driver's seat marker
+		var tilt: Node3D = _van.get_meta("tilt")
+		for spec in [[Vector3(-0.496, 1.2, 2.0), Color.RED], [Vector3(-0.496, 0.78, 1.38), Color.GREEN]]:
+			var ball := MeshInstance3D.new()
+			var sm := SphereMesh.new()
+			sm.radius = 0.06
+			sm.height = 0.12
+			ball.mesh = sm
+			var bm := StandardMaterial3D.new()
+			bm.albedo_color = spec[1]
+			bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			bm.no_depth_test = true
+			ball.material_override = bm
+			ball.position = spec[0]
+			tilt.add_child(ball)
 	if "--rain" in OS.get_cmdline_user_args():
 		VehicleLibrary.rain = 1.0
 	if "--steer=1" in OS.get_cmdline_user_args():
@@ -44,7 +72,7 @@ func _initialize() -> void:
 	cam.name = "Cam"
 	root.add_child(cam)
 	cam.current = true
-	_cams = [[Vector3(7, 2.4, 6), Vector3(0, 1.0, 0)], [Vector3(-6.5, 2.4, -6.5), Vector3(0, 1.0, 0)], [Vector3(4.2, 2.0, -4.2), Vector3(0.3, 0.6, -1.5)], [Vector3(-2.2, 1.6, -5.2), Vector3(0, 1.4, -2.0)], [Vector3(0.0, 1.5, -5.0), Vector3(0, 1.3, 0)], [Vector3(5.0, 3.5, 1.0), Vector3(0, 2.0, 0)]]
+	_cams = [[Vector3(5.0, 1.7, 1.7), Vector3(-0.4, 1.1, 1.7)], [Vector3(-4.5, 1.7, 1.7), Vector3(-0.4, 1.1, 1.7)], [Vector3(-0.4, 4.0, 1.8), Vector3(-0.4, 0.8, 1.7)], [Vector3(-0.4, 1.4, -0.8), Vector3(-0.4, 1.2, 2.2)]]
 
 
 func _process(_delta: float) -> bool:

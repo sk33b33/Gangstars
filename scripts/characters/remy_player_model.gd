@@ -126,6 +126,49 @@ func is_waving() -> bool:
 	return false
 
 
+## Sitting: the AnimationTree is switched off and the hips, thighs and shins are set by hand (there is no sit clip yet). The origin of a
+## sitting character is the middle of a 0.45 m seat. `at_wheel` also puts the arms forward, the hands on a steering wheel.
+const SIT_DROP := 0.43      # the hips sink this far (m) from standing
+const SIT_THIGH := 90.0     # degrees the thighs swing forward
+const SIT_SHIN := 90.0      # degrees the shins fold back
+const WHEEL_ARM := 90.0     # degrees the upper arms swing forward (about the bone's Z, mirrored left to right) to reach the wheel
+const WHEEL_FOREARM := 30.0    # and the forearms bend about X (found by searching the poses for hands 0.2 m either side of the wheel's centre)
+var _pose_seated := false
+
+
+func is_seated() -> bool:
+	return _pose_seated
+
+
+func set_seated(on: bool, at_wheel := false) -> void:
+	if remy == null or (on == _pose_seated and not at_wheel):
+		return
+	_pose_seated = on
+	var sk := remy.skeleton
+	if on:
+		remy.gait = 0.0
+		remy.update_locomotion(0.0, false, true, 0.0)
+		remy.tree.advance(0.05)   # the Idle pose (arms down) is the starting point
+	remy.tree.active = not on
+	if not on:
+		return
+	var hips := sk.find_bone("mixamorig_Hips")
+	var rest := sk.get_bone_rest(hips)
+	# local Z of the hips is the vertical axis, negative up (see RemyModel._in_place): less negative is lower
+	sk.set_bone_pose_position(hips, rest.origin + Vector3(0, 0, SIT_DROP * 100.0))
+	for side in ["Left", "Right"]:
+		var up := sk.find_bone("mixamorig_%sUpLeg" % side)
+		var leg := sk.find_bone("mixamorig_%sLeg" % side)
+		sk.set_bone_pose_rotation(up, sk.get_bone_rest(up).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(SIT_THIGH)))
+		sk.set_bone_pose_rotation(leg, sk.get_bone_rest(leg).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(-SIT_SHIN)))
+		if at_wheel:
+			var arm := sk.find_bone("mixamorig_%sArm" % side)
+			var fore := sk.find_bone("mixamorig_%sForeArm" % side)
+			var swing := WHEEL_ARM * (1.0 if side == "Left" else -1.0)
+			sk.set_bone_pose_rotation(arm, sk.get_bone_rest(arm).basis.get_rotation_quaternion() * Quaternion(Vector3.BACK, deg_to_rad(swing)))
+			sk.set_bone_pose_rotation(fore, sk.get_bone_rest(fore).basis.get_rotation_quaternion() * Quaternion(Vector3.RIGHT, deg_to_rad(WHEEL_FOREARM)))
+
+
 func _lay_down(down: bool) -> void:
 	if remy == null:
 		return

@@ -1,5 +1,13 @@
 # Changelog
 
+## Remy himself sits at the wheel of his van (2026-11-18)
+- The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the
+  right-hand seat with his hands forward on the steering wheel (`DrivableCar._show_driver`, `VehicleLibrary.REMY_SEAT`). Other cars keep the
+  plain driver.
+- The hand-made sit pose that seated residents use moved up into `RemyPlayerModel.set_seated(on, at_wheel)`, with a new arms-on-the-wheel
+  pose (the arm angles were found by searching the poses for hands 0.2 m either side of the wheel's centre); `NpcBodyModel` calls it.
+- Test: seated at the wheel, Remy's hand is more than 0.3 m ahead of his hips at wheel height (seen failing with the arms at his sides).
+
 ## More on Remy's van, and the wheels fixed (the roof rack added here was taken out again the same day) (2026-11-18)
 - Wheels: the rims were black (a metal material with nothing to reflect renders black), so the wheels read as plain black discs, and at full
   lock (0.5 rad, as on every car) the wide HiAce tyres pushed out through the arch. The rims are now light grey and visible, and the
