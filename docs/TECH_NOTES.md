@@ -183,7 +183,7 @@ Extra flags: `--profile`, `--no-lod`, `--day=N`, `--weather=rain|cloudy|windy|cl
 
 ## Phase 7: adding a district
 
-1. Write a spec like `tools/specs/rooiduin.json` and run `python3 tools/generate_district.py <spec>`.
+1. (The old spec-driven generator and `tools/specs/` were deleted; write the data files by hand.)
 2. Write the district file (like `data/districts/rooiduin.json`): bounds, streets, landmarks, pois,
    patrol_routes, traffic, parked_cars, decals, ground_texture, ground_margin / open_sides /
    backdrop_skip for sides shared with a neighbour, houses_file, residents_file.
@@ -201,7 +201,7 @@ church_hall, quarry_face, lookout. Missions can require unlocked districts (`pre
 Navigation rebakes (`District.rebake_navigation`) run on a thread, then wait for two fresh
 navigation-map iterations before emitting `navigation_rebaked`: Godot 4.5 syncs maps
 asynchronously, and reading the map a fixed few frames after `bake_finished` can still see the
-old mesh. Rocklands is the worked example of a second district (`tools/specs/kalkbos.json`).
+old mesh.
 
 ## Models and rendering
 

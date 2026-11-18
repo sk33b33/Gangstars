@@ -3504,8 +3504,7 @@ func _test_real_people_and_traffic() -> void:
 		await process_frame
 
 
-## Every family of the game lives in a real house on a real street of Westridge (data written by
-## tools/world/relocate_to_real.py; see design/gdd/real_world.md).
+## Every family of the game lives in a real house on a real street of Westridge (see design/gdd/real_world.md).
 func _test_real_homes_units() -> void:
 	var data := RealDistrictData.new()
 	data.load_meta()

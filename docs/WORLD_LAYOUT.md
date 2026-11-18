@@ -73,8 +73,7 @@ What is not real yet: the 40 m of Excelsior Street and Rhone Way beyond the cros
 neighbouring districts (which still use made-up layouts and call those roads AZ Berman Drive and Spine Road);
 the houses, shops and families are the game's own; Valencia Street (south) and the streets north of Rhone Way are
 behind the wall. Every area's block was deepened from 56 to 70 m so the two link roads still line up.
-The migration is recorded in `tools/world/rebuild_westridge_real.py`. `tools/generate_starter_data.py` is the
-original Phase 2 generator and no longer matches the data: do not run it.
+The migration scripts have been deleted; the data in `data/` is now the source of truth.
 
 ## As built: Lentegeur on its real streets (2026-11-15)
 
@@ -92,7 +91,7 @@ on the same 22-degree turn as Westridge (`real` in `data/districts/rooiduin.json
 Not real yet: Hyacinth Avenue and Marguerite Road beyond the area's edges are link roads to Westridge and the Town
 Centre; the soccer field, shops, taxi rank and families are the game's own (the real crescent is all houses);
 the railway and Lentegeur station (60 m west of Firethorn Road) and the neighbouring crescents (Crocus Street,
-Narcissus) are not built. Migration record: `tools/world/rebuild_lentegeur_real.py`.
+Narcissus) are not built.
 
 ## As built (Phase 2, superseded)
 

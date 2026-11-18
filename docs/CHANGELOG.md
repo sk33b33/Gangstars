@@ -1,5 +1,9 @@
 # Changelog
 
+## Old specs and migration scripts deleted (2026-11-18)
+- Removed `tools/specs/` (four old district specs) and `tools/world/` (the three migration scripts). Nothing in the game or tests read them.
+  Docs that pointed at them now say so. The old districts themselves were already removed in 3e58e94.
+
 ## More detail in house gardens and yards (2026-11-18)
 - Front gardens: a paved path from the gate to the door, lawn patches on the side away from the driveway, a wheelie bin beside the gate,
   a letterbox on the gate post, plastic chairs on some stoeps and tyre planters.
