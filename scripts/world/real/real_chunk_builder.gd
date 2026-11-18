@@ -467,7 +467,7 @@ static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: fl
 	var roof := _tool(("roof_tiles_" if tiles else "roof_ibr_") + roof_tint, surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2), Color(roof_tint)))
 	if semi:
 		_semi(ring, centre, h, rect, seed_value, walls, plinth, roof, gable, front, surfaces, materials, collision)
-		_house_details(ring, rect, h, false, false, front, seed_value, surfaces, materials)
+		_house_details(ring, rect, h, true, gable, front, seed_value, surfaces, materials)   # a semi has a pitched roof too
 		return
 	wall_ring(ring, centre, h, walls, plinth, collision, 0.0 if hip else PARAPET)
 	if hip:
@@ -477,6 +477,25 @@ static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: fl
 	else:
 		flat_roof(ring, h, PARAPET, roof, _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))))
 	_house_details(ring, rect, h, hip, gable, front, seed_value, surfaces, materials)
+
+
+## Where the rain gutters run on a pitched roof, as {at, dir, half} (centre, direction, half length). A hip roof (sloping ends,
+## a pyramid hip included) is guttered all round, the long sides first and the ends closing the corners. A gable roof drains only
+## to its two long sides (`rect.half.x` is the long side), so its gable ends have none.
+static func gutter_runs(rect: Dictionary, gable: bool) -> Array:
+	var u: Vector2 = rect.u
+	var v: Vector2 = rect.v
+	var c: Vector2 = rect.c
+	var half: Vector2 = rect.half
+	var l := half.x + EAVES
+	var w := half.y + EAVES
+	var runs: Array = []
+	for sv: float in [-1.0, 1.0]:
+		runs.append({"at": c + v * sv * (w + 0.06), "dir": u, "half": l + 0.11 if not gable else l})
+	if not gable:
+		for su: float in [-1.0, 1.0]:
+			runs.append({"at": c + u * su * (l + 0.06), "dir": v, "half": w})
+	return runs
 
 
 ## What a house is fitted with besides its walls and roof: rain gutters under the eaves, one or two downpipes on the corners, a
@@ -492,11 +511,8 @@ static func _house_details(ring: PackedVector2Array, rect: Dictionary, h: float,
 	if pitched:
 		var l := half.x + EAVES
 		var w := half.y + EAVES
-		for sv: float in [-1.0, 1.0]:
-			RealLandmarks._obox(gutter, c + v * sv * (w + 0.06), u, Vector2(l, 0.05), h - 0.2, h - 0.06)
-		if not gable:
-			for su: float in [-1.0, 1.0]:
-				RealLandmarks._obox(gutter, c + u * su * (l + 0.06), v, Vector2(w, 0.05), h - 0.2, h - 0.06)
+		for run: Dictionary in gutter_runs(rect, gable):
+			RealLandmarks._obox(gutter, run.at, run.dir, Vector2(run.half, 0.05), h - 0.2, h - 0.06)
 		var rise := clampf(half.y * 0.45, 0.8, 1.8)
 		var ridge := l if gable else maxf(0.0, l - w)
 		RealLandmarks._obox(_tool("ridge_cap", surfaces, materials, PixelMaterials.flat(Color("#4a403a"))), c, u, Vector2(ridge + 0.1, 0.1), h + rise - 0.02, h + rise + 0.1)

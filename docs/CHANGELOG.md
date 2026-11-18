@@ -1,5 +1,11 @@
 # Changelog
 
+## Gutters follow the roof type (2026-11-18)
+- Hip and pyramid-hip roofs are guttered all round, with the end gutters now meeting the side ones at the corners. Gable roofs have
+  gutters only on their two long sides, none on the gable ends (`RealChunkBuilder.gutter_runs`).
+- Fix: semi-detached houses had no gutters at all (they were passed as flat-roofed); they now follow the same rule.
+- Test: the gutter layout check was seen failing with gutters on gable ends, then passing.
+
 ## Old specs and migration scripts deleted (2026-11-18)
 - Removed `tools/specs/` (four old district specs) and `tools/world/` (the three migration scripts). Nothing in the game or tests read them.
   Docs that pointed at them now say so. The old districts themselves were already removed in 3e58e94.

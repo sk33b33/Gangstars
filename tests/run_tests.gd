@@ -2979,6 +2979,12 @@ func _test_real_world_units() -> void:
 		roof_dishes += int(e[1]) if e[0] == "satellite_dish" else 0
 	_check(parts.has("Mesh_panel_garage") and geysers >= 3 and roof_dishes >= 1 and RealHomeDecor.DISH_ONE_IN <= 2,
 		"more garage roller doors, solar geysers on the north-facing roofs (%d here) and satellite dishes (%d on roofs here, one wall dish in two)" % [geysers, roof_dishes])
+	var grect := {"c": Vector2.ZERO, "u": Vector2.RIGHT, "v": Vector2.DOWN, "half": Vector2(6.0, 4.0), "area": 192.0}
+	var hip_runs := RealChunkBuilder.gutter_runs(grect, false)
+	var gable_runs := RealChunkBuilder.gutter_runs(grect, true)
+	_check(hip_runs.size() == 4 and gable_runs.size() == 2 and gable_runs.all(func(r): return (r.dir as Vector2).is_equal_approx(Vector2.RIGHT)) \
+		and hip_runs.slice(2).all(func(r): return (r.dir as Vector2).is_equal_approx(Vector2.DOWN)),
+		"a hip roof is guttered on all four sides, a gable roof only on its two long sides (%d and %d gutters)" % [hip_runs.size(), gable_runs.size()])
 	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
 		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
 		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}
