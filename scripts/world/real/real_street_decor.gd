@@ -98,7 +98,7 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 		if pave >= FURNITURE_MIN_PAVE:
 			street_furniture(cls, line, width, length, lamps, poles, rng, props)
 		if (cls == "main" or cls == "collector") and length >= STOP_MIN_PIECE and pave >= 2.0:
-			_shelter(line, width, length, rng, surfaces, materials)
+			_shelter(line, width, length, rng, surfaces, materials, props)
 		if str(r.get("n", "")) in TREE_STREETS and pave > 0.0:
 			_street_trees(line, width, pave, lamps, poles, rng, props)
 		elif pave >= GREEN_MIN_PAVE and cls != "lane":
@@ -641,7 +641,7 @@ static func _wear(cls: String, line: PackedVector2Array, width: float, pave: flo
 
 
 ## A bus or taxi stop on the left verge halfway along: back wall, roof, bench, and a sign on a pole.
-static func _shelter(line: PackedVector2Array, width: float, length: float, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> void:
+static func _shelter(line: PackedVector2Array, width: float, length: float, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
 	var here: Array = at_distance(line, length * 0.5)
 	var d: Vector2 = here[1]
 	var left := left_of(d)
@@ -660,6 +660,7 @@ static func _shelter(line: PackedVector2Array, width: float, length: float, rng:
 	var sign := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
 	for s: float in [1.0, -1.0]:
 		face_quad(sign, sign_at, d * s, 0.5, 2.1, 2.6)
+	RealTransitDecor.draw_stop(line, length * 0.5, width, left, d, left, tex == "sign_taxi", rng, surfaces, materials, props)
 
 
 ## Trees along both sides of the street at the back of the verge, clear of lamps and power poles.

@@ -1,5 +1,14 @@
 # Changelog
 
+## More at the bus stops and taxi ranks (2026-11-18)
+- Four new textures (pxl): `sign_taxi_rank`, `sign_timetable`, and the road words `bay_bus` and `bay_taxi`.
+- Bus and taxi stops (`RealTransitDecor.draw_stop`): a yellow painted kerb along a 14 m bay, BUS or TAXI painted across the lane, a
+  timetable (BUS 06:10, 07:25, 12:40) on the shelter's back wall, a litter bin beside it, and on one stop in three a hawker's crate stack
+  and two plastic chairs.
+- The small "bus station" building (`bus_station` in the data; there is one) is now a real landmark with a "TAXI RANK / TO TOWN" sign, a
+  bench, a litter bin and three bollards (`RealTransitDecor.draw_station`).
+- Tests: a taxi stop gets the kerb paint, road words, timetable and bin; the station gets the sign, bench and bollards.
+
 ## More at the petrol stations (2026-11-18)
 - Two new textures (pxl): `sign_garage` ("DUIN GARAGE / SHOP OPEN 24H") and `sign_fuel_prices` (a price board, fictional "DUIN FUEL").
 - Five new Blender props: `tyre_stack`, `oil_drums`, `air_machine`, `bollard`, `price_pylon` (69 props in all).

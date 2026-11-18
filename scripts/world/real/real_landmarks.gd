@@ -48,6 +48,8 @@ static func style_of(b: Dictionary) -> String:
 			return "shop"
 		"fuel", "garage":
 			return "fuel"
+		"bus_station":
+			return "station"
 		"roof":
 			return "canopy"
 		"sports_hall", "sports_block":
@@ -122,6 +124,14 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 				var kiosk_room := RealChunkBuilder._distance_to_lines(front.mid, near_roads) - 6.0 if not near_roads.is_empty() else 14.0
 				var kiosk_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
 				RealFuelDecor.draw(front.mid, _tangent(front), front.normal, kiosk_len, kiosk_room, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
+		"station":
+			var walls := _plaster("#d9c49a", surfaces, materials)
+			var h := float(b.get("h", 3.0))
+			RealChunkBuilder.wall_ring(ring, centre, h, walls, null, collision, RealChunkBuilder.PARAPET)
+			RealChunkBuilder.flat_roof(ring, h, RealChunkBuilder.PARAPET, _roof("roof_ibr", surfaces, materials), coping)
+			if not front.is_empty():
+				var st_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				RealTransitDecor.draw_station(front.mid, _tangent(front), front.normal, st_len, surfaces, materials, RealChunkBuilder._roof_props)
 		"canopy":
 			_canopy_on_columns(ring, rect, CANOPY_HEIGHT, FORECOURT_BANDS[seed_value % FORECOURT_BANDS.size()], surfaces, materials)
 		"hall":

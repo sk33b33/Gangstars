@@ -3036,6 +3036,18 @@ func _test_real_world_units() -> void:
 	_check(fuel_surfaces.has("panel_sign_garage") and fuel_surfaces.has("panel_sign_fuel_prices") and fuel_props.has("price_pylon") and fuel_props.has("air_machine") \
 		and fuel_props.has("tyre_stack") and fuel_props.has("oil_drums") and fuel_props.get("bollard", []).size() == 3 and not tight_props.has("price_pylon") and not narrow_props.has("tyre_stack"),
 		"a petrol station kiosk has a garage sign, a price pylon, an air machine, tyres, oil drums and bollards; with no room before the road there is no pylon, and a narrow front has no tyres (%s)" % [fuel_props.keys()])
+	var stop_props := {}
+	var stop_surfaces := {}
+	var stop_line := PackedVector2Array([Vector2(0, 0), Vector2(100, 0)])
+	var stop_rng := RandomNumberGenerator.new()
+	stop_rng.seed = 12
+	RealTransitDecor.draw_stop(stop_line, 50.0, 8.0, Vector2(0, -1), Vector2.RIGHT, Vector2(0, -1), true, stop_rng, stop_surfaces, {}, stop_props)
+	var station_props := {}
+	var station_surfaces := {}
+	RealTransitDecor.draw_station(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 4.7, station_surfaces, {}, station_props)
+	_check(stop_surfaces.has("bay_paint") and stop_surfaces.has("decal_bay_taxi") and stop_surfaces.has("panel_sign_timetable") and stop_props.has("litter_bin") \
+		and station_surfaces.has("panel_sign_taxi_rank") and station_props.has("park_bench") and station_props.get("bollard", []).size() == 3,
+		"a taxi stop has a yellow kerb, TAXI on the tarmac, a timetable and a bin; the bus station has a taxi rank sign, a bench and bollards (%s)" % [stop_surfaces.keys()])
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

@@ -195,6 +195,23 @@ sprite("sign_fuel_prices", { w: 56, h: 40 },
   text(4, 22, "ULP93", "W"), text(52, 22, "23.60", "l", { align: "r" }),
   text(4, 31, "DIESEL", "W"), text(52, 31, "22.80", "l", { align: "r" }))
 
+sprite("sign_taxi_rank", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "l"), box(0, 0, 64, 16, "k"), hline(1, 1, 62, "L"),
+  text(32, 3, "TAXI RANK", "k", { align: "c" }), text(32, 9, "TO TOWN", "k", { align: "c" }))
+
+// Timetable on the back wall of a bus shelter: header and four departures.
+sprite("sign_timetable", { w: 28, h: 32 },
+  rect(0, 0, 28, 32, "W"), box(0, 0, 28, 32, "B"), rect(1, 1, 26, 8, "B"),
+  text(14, 3, "BUS", "W", { align: "c" }),
+  text(14, 11, "06:10", "k", { align: "c" }), text(14, 18, "07:25", "k", { align: "c" }),
+  text(14, 25, "12:40", "k", { align: "c" }))
+
+// Words painted on the road at a stop bay, stretched along the road like STOP: the top is the far end.
+sprite("bay_taxi", { w: 32, h: 16 },
+  text(16, 5, "TAXI", "#f1eee8", { align: "c" }))
+sprite("bay_bus", { w: 32, h: 16 },
+  text(16, 5, "BUS", "#f1eee8", { align: "c" }))
+
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
   rect(3, 9, 10, 4, "k"), px(4, 13, "k"), px(11, 13, "k"), rect(4, 10, 3, 2, "C"), rect(9, 10, 3, 2, "C"))

@@ -166,6 +166,28 @@ func _init() -> void:
 			_cams.append([bo + Vector3(7, 2.4, 9), bo + Vector3(0, 2.0, 0)])
 			print("FUEL at ", bo)
 			break
+	var stop_found := false
+	for sk: Vector2i in [Vector2i(3, 6), Vector2i(-1, -1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(0, 0), Vector2i(-2, 1), Vector2i(2, 2), Vector2i(1, 1)]:
+		var sn := RealChunkBuilder.build(sk, data.load_chunk(sk), {}, data.around(sk, "road_lines"), {}, data.around(sk, "outlines"), data.yards(sk), data.home_fronts(sk), {"street": data.street_context(sk), "decor": data.home_decor(sk), "schools": data.school_fences(sk), "stalls": data.stalls(sk), "strips": data.around(sk, "road_strips")})
+		for c in sn.get_children():
+			if c is MeshInstance3D and str(c.name) == "Mesh_panel_sign_timetable" and not stop_found:
+				var tv: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+				var tp := tv[0]
+				root.add_child(sn)
+				_cams.append([tp + Vector3(5, 4, 9), tp])
+				_cams.append([tp + Vector3(0, 1.6, 4.5), tp])
+				print("TIMETABLE at ", tp, " chunk ", sk)
+				stop_found = true
+				for c2 in sn.get_children():
+					if c2 is MeshInstance3D and str(c2.name).begins_with("Mesh_decal_bay_"):
+						var bv: PackedVector3Array = (c2 as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+						var bmid := (bv[0] + bv[2]) * 0.5
+						var bd := Vector3(bv[0].x - bv[2].x, 0, bv[0].z - bv[2].z).normalized()
+						_cams.append([bmid + Vector3(0, 4.5, 0), bmid, bd])
+						print("BAY TEXT ", c2.name, " at ", bmid, " driving ", bd)
+						break
+		if not stop_found:
+			sn.free()
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
