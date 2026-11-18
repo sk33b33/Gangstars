@@ -1,5 +1,9 @@
 # Changelog
 
+## No board across a gable end (2026-11-18)
+- Gable roofs had a horizontal fascia board along each gable end, which read as a gutter across the short side. Gable roofs now have
+  fascia only on the two long eaves; hip roofs keep all four (`RealChunkBuilder.fascia_edges`). Test seen failing, then passing.
+
 ## Gutters follow the roof type (2026-11-18)
 - Hip and pyramid-hip roofs are guttered all round, with the end gutters now meeting the side ones at the corners. Gable roofs have
   gutters only on their two long sides, none on the gable ends (`RealChunkBuilder.gutter_runs`).

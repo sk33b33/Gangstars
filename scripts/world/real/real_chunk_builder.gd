@@ -885,6 +885,12 @@ static func min_rect(ring: PackedVector2Array) -> Dictionary:
 	return best
 
 
+## Which edges of the eave rectangle get a fascia board (0 and 2 are the long sides, 1 and 3 the ends). A hip roof has an eave all
+## round; a gable roof has none on its gable ends, where the wall goes straight up into the triangle.
+static func fascia_edges(gable: bool) -> Array:
+	return [0, 2] if gable else [0, 1, 2, 3]
+
+
 ## A pitched roof over the rectangle with eaves all round: a hip roof (sloping ends) or a gable roof
 ## (painted triangular end walls). Fascia boards along the eaves, a soffit underneath.
 static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: SurfaceTool, rect: Dictionary, h: float, gable: bool, rise_override := -1.0, end_low: SurfaceTool = null, end_high: SurfaceTool = null) -> void:
@@ -923,7 +929,7 @@ static func _pitched_roof(roof: SurfaceTool, fascia: SurfaceTool, walls: Surface
 			_facing(roof, corner.call(su, -1.0), corner.call(su, 1.0), top.call(su), out + Vector3.UP)
 	var low := h - FASCIA_DEPTH
 	var pts := [corner.call(-1.0, -1.0), corner.call(1.0, -1.0), corner.call(1.0, 1.0), corner.call(-1.0, 1.0)]
-	for i in 4:
+	for i: int in fascia_edges(gable):
 		var a: Vector3 = pts[i]
 		var b: Vector3 = pts[(i + 1) % 4]
 		var mid := (a + b) * 0.5 - _v(c, h)

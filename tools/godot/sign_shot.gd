@@ -88,6 +88,10 @@ func _init() -> void:
 			picked += 1
 			_cams.append([Vector3(cen.x + 11.0, 4.0, cen.y + 11.0), Vector3(cen.x, 2.0, cen.y)])
 			_cams.append([Vector3(cen.x - 9.0, 2.2, cen.y + 9.0), Vector3(cen.x, 1.8, cen.y)])
+			if RealChunkBuilder.seed_of(ring) % 2 == 0:   # a gable house, seen from its short end (the gable end must have no board)
+				var rect := RealChunkBuilder.min_rect(ring)
+				var end_at: Vector2 = cen + (rect.u as Vector2) * (float((rect.half as Vector2).x) + 7.0)
+				_cams.append([Vector3(end_at.x, 2.6, end_at.y), Vector3(cen.x, 3.0, cen.y)])
 	for c in node.get_children():
 		if c is MultiMeshInstance3D and str(c.name) == "Props_solar_geyser":
 			var xf: Transform3D = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0)

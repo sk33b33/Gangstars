@@ -2985,6 +2985,8 @@ func _test_real_world_units() -> void:
 	_check(hip_runs.size() == 4 and gable_runs.size() == 2 and gable_runs.all(func(r): return (r.dir as Vector2).is_equal_approx(Vector2.RIGHT)) \
 		and hip_runs.slice(2).all(func(r): return (r.dir as Vector2).is_equal_approx(Vector2.DOWN)),
 		"a hip roof is guttered on all four sides, a gable roof only on its two long sides (%d and %d gutters)" % [hip_runs.size(), gable_runs.size()])
+	_check(RealChunkBuilder.fascia_edges(true) == [0, 2] and RealChunkBuilder.fascia_edges(false).size() == 4,
+		"a gable roof has fascia boards on its two long eaves only, no horizontal board across the gable end; a hip roof has all four")
 	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
 		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
 		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}
