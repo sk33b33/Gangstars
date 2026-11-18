@@ -1,5 +1,12 @@
 # Changelog
 
+## More in the playgrounds (2026-11-18)
+- Three new Blender props: `seesaw`, `spring_rider`, `monkey_bars` (55 props in all).
+- Each playground: a red rubber safety surface under the swings, slide and roundabout; a sandpit with a timber edge; a seesaw; monkey
+  bars; three spring riders; two benches and a litter bin at the edge; shade trees, shrubs and flower beds round the outside.
+  Anything that would fall outside the playground or on a path is left out.
+- Test: a 40 m playground gets all of these.
+
 ## More in the public parks (2026-11-18)
 - Six new Blender props: `park_bench`, `picnic_table`, `litter_bin`, `boulder`, `fallen_log`, `park_lamp` (52 props in all).
 - Parks: a paved loop path (6 m radius, smaller in small parks) with four benches on its outside looking in, a litter bin beside each,

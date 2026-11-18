@@ -146,7 +146,7 @@ static func draw_areas(areas: Array, strips: Array, rings: Array, surfaces: Dict
 			"park":
 				_park(ring, strips, rings, rng, surfaces, materials, props)
 			"playground":
-				_playground(ring, rng, surfaces, materials)
+				_playground(ring, strips, rings, rng, surfaces, materials, props)
 			"pitch":
 				_goals(ring, surfaces, materials)
 			"dunes":
@@ -253,7 +253,7 @@ static func _clear(p: Vector2, strips: Array, rings: Array) -> bool:
 
 
 ## A swing frame, a slide and a roundabout round the middle of the playground.
-static func _playground(ring: PackedVector2Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> void:
+static func _playground(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
 	var c := RealChunkBuilder.ring_box(ring).get_center()
 	if not RealChunkBuilder.point_in_ring(c, ring):
 		return
@@ -280,6 +280,38 @@ static func _playground(ring: PackedVector2Array, rng: RandomNumberGenerator, su
 		RealChunkBuilder._facing(blue, tri[0], tri[1], tri[2], Vector3.DOWN)
 	RealLandmarks._prism(yellow, c + v * -3.5, 1.2, 12, 0.25, 0.35, true)
 	RealLandmarks._prism(steel, c + v * -3.5, 0.08, 6, 0.0, 0.9, true)
+	_playground_extras(ring, c, u, strips, rings, rng, surfaces, materials, props)
+
+
+## What else a playground has: a red rubber safety surface under the equipment, a sandpit with a timber edge, a seesaw, three spring
+## riders, monkey bars, two benches and a litter bin at the edge, and shade trees and flower beds round the outside. `u` is the
+## direction the swings and slide are laid out along. Anything that would fall outside the playground or on a path is left out.
+static func _playground_extras(ring: PackedVector2Array, c: Vector2, u: Vector2, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
+	var v := u.orthogonal()
+	var rubber := RealStreetDecor._flat("play_rubber", "#9c4a3c", surfaces, materials)
+	RealLandmarks._prism(rubber, c, 6.2, 20, 0.0, 0.03, true)
+	var sand := RealStreetDecor._flat("play_sand", "#d9c48c", surfaces, materials)
+	var timber := RealStreetDecor._flat("bench_wood", "#8c6044", surfaces, materials)
+	var pit := c + u * 7.5 + v * 7.0
+	if RealChunkBuilder.point_in_ring(pit, ring) and RealChunkBuilder.point_in_ring(pit + u * 2.2 + v * 2.2, ring):
+		RealLandmarks._obox(sand, pit, u, Vector2(2.0, 2.0), 0.0, 0.12)
+		for e: Array in [[u * 2.1, v, Vector2(2.2, 0.1)], [-u * 2.1, v, Vector2(2.2, 0.1)], [v * 2.1, u, Vector2(2.2, 0.1)], [-v * 2.1, u, Vector2(2.2, 0.1)]]:
+			RealLandmarks._obox(timber, pit + e[0], e[1], e[2], 0.0, 0.2)
+	var spots: Array = [
+		["seesaw", c + u * 7.0 - v * 4.5, u, 0.0], ["monkey_bars", c - u * 1.0 + v * 7.5, u, 0.0],
+		["spring_rider", c - u * 6.5 + v * 4.5, Vector2.ZERO, 0.0], ["spring_rider", c - u * 5.0 + v * 5.6, Vector2.ZERO, 0.0], ["spring_rider", c - u * 8.0 + v * 6.0, Vector2.ZERO, 0.0],
+		["park_bench", c + u * 0.0 - v * 8.5, -v, 0.0], ["park_bench", c + u * 9.0 + v * 0.5, -u, 0.0], ["litter_bin", c + u * 9.0 - v * 1.5, Vector2.ZERO, 0.0]]
+	for sp: Array in spots:
+		var at: Vector2 = sp[1]
+		if not RealChunkBuilder.point_in_ring(at, ring) or not _clear(at, strips, rings):
+			continue
+		var dir: Vector2 = sp[2]
+		var yaw := rng.randf() * TAU if dir == Vector2.ZERO else atan2(dir.x, dir.y)
+		if str(sp[0]) == "seesaw" or str(sp[0]) == "monkey_bars":
+			yaw = atan2(-u.y, u.x)   # the long side (the prop's X axis) runs along u
+		RealStreetDecor.add_prop(props, str(sp[0]), at, yaw)
+	var box := RealChunkBuilder.ring_box(ring)
+	_undergrowth(ring, box, strips, rings, rng, props, 9.0, 0.7, ["tree_c", "tree_a", "bush", "bush_pink", "flowers_yellow", "flowers_pink", "grass_green"], c, 10.5)
 
 
 ## Soccer goals (posts and crossbar) at both short ends of a pitch.

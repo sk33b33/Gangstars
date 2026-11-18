@@ -115,6 +115,16 @@ func _init() -> void:
 			_cams.append([pb + Vector3(5, 2.0, 5), pb + Vector3(0, 0.6, 0)])
 			print("PARK BENCH at ", pb)
 			break
+	var play_key := Vector2i(-3, 0)   # a playground of 45 x 48 m
+	var play_node := RealChunkBuilder.build(play_key, data.load_chunk(play_key), {}, data.around(play_key, "road_lines"), {}, data.around(play_key, "outlines"), data.yards(play_key), data.home_fronts(play_key), {"street": data.street_context(play_key), "decor": data.home_decor(play_key), "schools": data.school_fences(play_key), "stalls": data.stalls(play_key), "strips": data.around(play_key, "road_strips")})
+	root.add_child(play_node)
+	for c in play_node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_spring_rider":
+			var sr: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0).origin
+			_cams.append([sr + Vector3(0, 16, 14), sr + Vector3(5, 0, -4)])
+			_cams.append([sr + Vector3(4, 2.5, 6), sr + Vector3(4, 0.6, 0)])
+			print("PLAYGROUND at ", sr)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

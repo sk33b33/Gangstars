@@ -641,6 +641,44 @@ def park_lamp(x):
     return join(p, "park_lamp", (x, 0, 0))
 
 
+def seesaw(x):
+    """A seesaw: a 2.6 m plank tilted on a central steel fulcrum, handles at each end; the plank runs along X."""
+    p = [add("cube", (0, 0, 0.55), (1.3, 0.14, 0.04), "cloth_d", rot=(0, 0.14, 0), smooth=False)]
+    p.append(add("cube", (0, 0, 0.3), (0.05, 0.14, 0.3), "metal_dark", smooth=False))
+    p.append(add("cube", (0, 0, 0.04), (0.35, 0.05, 0.04), "metal_dark", smooth=False))
+    for sx, sz in ((-1.1, 0.4), (1.1, 0.7)):
+        p.append(add("cyl", (sx, 0, sz + 0.2), (0.015, 0.015, 0.16), "metal", seg=6))
+        p.append(add("cube", (sx, 0, sz + 0.37), (0.015, 0.1, 0.015), "metal", smooth=False))
+    return join(p, "seesaw", (x, 0, 0))
+
+
+def spring_rider(x):
+    """A spring rider: a painted animal on a coiled spring, 0.9 m high, facing -Y (Godot +Z)."""
+    p = [add("cyl", (0, 0, 0.03), (0.25, 0.25, 0.03), "metal_dark", seg=10)]
+    for i in range(4):
+        p.append(add("torus", (0, 0, 0.12 + i * 0.07), (0.08, 0.08, 0.08), "metal", minor=0.18, seg=10))
+    p.append(add("sphere", (0, 0.0, 0.62), (0.2, 0.38, 0.2), "cloth_c", sub=2))                       # the body
+    p.append(add("sphere", (0, -0.36, 0.78), (0.15, 0.15, 0.15), "cloth_c", sub=1))                    # the head
+    p.append(add("cube", (0, -0.5, 0.74), (0.03, 0.06, 0.03), "cloth_d", smooth=False))               # the nose
+    p.append(add("cube", (0, -0.22, 0.88), (0.2, 0.015, 0.015), "metal", smooth=False))               # handlebar
+    p.append(add("cube", (0.2, -0.1, 0.4), (0.025, 0.1, 0.025), "cloth_d", smooth=False))             # footrests
+    p.append(add("cube", (-0.2, -0.1, 0.4), (0.025, 0.1, 0.025), "cloth_d", smooth=False))
+    return join(p, "spring_rider", (x, 0, 0))
+
+
+def monkey_bars(x):
+    """Monkey bars: two A-frames with eight rungs between them, 3 m long (along X) and 1.9 m high."""
+    p = []
+    for sx in (-1.5, 1.5):
+        for sy in (-0.45, 0.45):
+            p.append(add("cyl", (sx, sy * 1.0, 0.95), (0.025, 0.025, 0.98), "cloth_a", seg=6, rot=(-sy * 0.5, 0, 0)))
+        p.append(add("cube", (sx, 0, 1.88), (0.03, 0.03, 0.03), "cloth_a", smooth=False))
+    for i in range(8):
+        p.append(add("cyl", (-1.3 + i * 0.37, 0, 1.85), (0.015, 0.015, 0.2), "metal", seg=6, rot=(math.pi / 2, 0, 0)))
+    p.append(add("cyl", (0, 0, 1.85), (0.02, 0.02, 1.5), "cloth_a", seg=6, rot=(0, math.pi / 2, 0)))
+    return join(p, "monkey_bars", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -651,7 +689,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars):
     build(x)
     x += 6.0
 
