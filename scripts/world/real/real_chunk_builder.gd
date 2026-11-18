@@ -468,6 +468,7 @@ static func _house(ring: PackedVector2Array, centre: Vector2, h: float, area: fl
 	var tiles := seed_value % 5 < 3
 	var roof_tint: String = (ROOF_TILE_TINTS if tiles else ROOF_IBR_TINTS)[(seed_value / 13) % 4]
 	var roof := _tool(("roof_tiles_" if tiles else "roof_ibr_") + roof_tint, surfaces, materials, PixelMaterials.surface("roof_tiles" if tiles else "roof_ibr", Vector2(2, 2), Color(roof_tint)))
+	WallWear.draw(ring, seed_value, surfaces, materials)
 	if semi:
 		_semi(ring, centre, h, rect, seed_value, walls, plinth, roof, gable, front, surfaces, materials, collision)
 		_house_details(ring, rect, h, true, gable, front, seed_value, surfaces, materials)   # a semi has a pitched roof too
@@ -728,6 +729,7 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 	var sill := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
 	var dark := _tool("airbrick", surfaces, materials, PixelMaterials.flat(Color("#2a2a2e")))
 	var lit := _tool("window_light", surfaces, materials, NightGlow.window_material())
+	var streak := WallWear.tool("wall_streak", surfaces, materials)
 	var anchor := Vector3.ZERO
 	for i in ring.size():
 		var p0 := ring[i]
@@ -752,11 +754,11 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 					if side == garage_side:
 						_roller_door(surfaces, materials, at, tangent, normal)
 					else:
-						_window(window, sill, at, tangent, normal, top, dark, lit)
+						_window(window, sill, at, tangent, normal, top, dark, lit, streak)
 		elif length >= 5.0 and _wall_hash(mid) % 100 < 22:
 			_roller_door(surfaces, materials, mid, tangent, normal)   # a garage on a side wall
 		elif length > 3.2:
-			_window(window, sill, mid, tangent, normal, top, dark, lit)
+			_window(window, sill, mid, tangent, normal, top, dark, lit, streak)
 	return {"at": anchor}
 
 
@@ -827,8 +829,9 @@ static func _distance_to_lines(p: Vector2, lines: Array) -> float:
 
 
 ## A barred window 1.4 m wide from 1.0 m up to `top`, with a concrete sill under it.
-static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float, dark: SurfaceTool = null, lit: SurfaceTool = null) -> void:
+static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float, dark: SurfaceTool = null, lit: SurfaceTool = null, streak: SurfaceTool = null) -> void:
 	_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+	WallWear.streak(streak, mid, tangent, normal)
 	if lit != null and _wall_hash(mid) % 100 < LIT_WINDOW_PERCENT:   # a warm pane over the glass, shown only at night (NightGlow)
 		_panel(lit, mid + normal * 0.012, tangent, normal, 1.18, 1.1, top - 0.1)
 	# A concrete surround: a lintel over the opening and a reveal down each side.

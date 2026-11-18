@@ -3258,6 +3258,8 @@ func _test_real_world_units() -> void:
 	Puddles.set_wetness(0.0)
 	_check(dparts.has("Mesh_puddle") and dry_alpha == 0.0 and wet_alpha == 1.0 and Puddles.visibility(0.5) > 0.4 and Puddles.visibility(0.5) < 0.6,
 		"roads have puddles that stay invisible while dry and show up as the ground gets wet")
+	_check(dparts.has("Mesh_wallwear_wall_damp") and dparts.has("Mesh_wallwear_wall_streak") and dparts.has("Mesh_wallwear_wall_patch"),
+		"walls have rising damp above the plinth, rain streaks under window sills and repaired patches (%s)" % [dparts.filter(func(n): return n.begins_with("Mesh_wallwear"))])
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}

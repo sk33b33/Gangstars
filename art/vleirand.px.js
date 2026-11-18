@@ -707,6 +707,16 @@ sprite("mural_plain", { w: 48, h: 20 },
 // A puddle on the road after rain: a pale sky-blue pool with a lighter rim and a glint. It shows only while the ground is wet (Puddles).
 sprite("puddle", { w: 32, h: 20 },
   ellipse(16, 10, 15, 8, "#8aa3bd99"), ellipse(15, 10, 12, 6, "#a9c0d6aa"), ellipse(13, 8, 5, 2, "#e6f0f8cc"), ellipse(21, 12, 3, 1, "#e6f0f899"))
+// Wall wear, laid over the painted walls (soft alpha). Each mark has a cause:
+// rising damp: a darker band above the plinth with a ragged top edge (water drawn up from the ground);
+sprite("wall_damp", { w: 32, h: 12 },
+  (c) => { for (let x = 0; x < 32; x++) { const top = 2 + ((x * 7 + (x >> 2) * 3) % 5); c.rect(x, top, 1, 12 - top, "#2a2218" + "38"); c.rect(x, top + 2, 1, 12 - top - 2, "#2a221825") } })
+// a rain streak running down from a window sill (dirt carried by the water that runs off it), fading as it goes down;
+sprite("wall_streak", { w: 12, h: 24 },
+  (c) => { for (let y = 0; y < 24; y++) { const a = Math.round(70 * (1 - y / 24)).toString(16).padStart(2, "0"); c.rect(3, y, 2, 1, "#1d1b24" + a); c.rect(7, y, 2, 1, "#1d1b24" + a); if (y < 14) c.rect(5, y, 2, 1, "#1d1b24" + a) } })
+// a repaired patch: fresh paint over a crack, a shade lighter than the wall with a rough edge.
+sprite("wall_patch", { w: 16, h: 16 },
+  (c) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const e = Math.min(x, 15 - x, y, 15 - y); if (e > 1 || (e === 1 && (x + y) % 3 !== 0) || (e === 0 && (x * y) % 5 === 0)) c.px(x, y, "#ffffff2e") } })
 sprite("dent", { w: 16, h: 12 },
   ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
 sprite("sticker_a", { w: 14, h: 6 },

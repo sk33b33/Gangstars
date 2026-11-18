@@ -16,6 +16,9 @@
 - Puddles (`Puddles`, new `puddle` texture): pale pools along the gutters of every road (not the main roads' sand drifts), invisible while dry
   and shown as the ground gets wet (from 0.25 wet, full at 0.75), one shared material so they cost no extra draws. Test: they exist, and
   follow the wet level.
+- Wall wear (`WallWear`, three new textures): rising damp (a darker, ragged band above the plinth) on about half of the homes, a rain streak
+  running down from under about 60% of window sills, and a repaired patch of fresh paint on about one wall in seven. Soft alpha layers, so
+  the walls keep their own colours. Test: all three exist in a built piece.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the
