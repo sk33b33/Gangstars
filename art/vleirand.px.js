@@ -232,6 +232,38 @@ sprite("sign_clinic_hours", { w: 24, h: 32 },
 sprite("bay_ambulance", { w: 48, h: 16 },
   text(24, 5, "AMBULANCE", "#f1eee8", { align: "c" }))
 
+// ---- Places of worship. Arched windows in a stone surround (opaque, so no alpha is needed).
+sprite("window_stained", { w: 16, h: 32 },
+  rect(0, 0, 16, 32, "#d8d3c8"), rect(2, 8, 12, 22, "#2a2f4a"), circ(8, 9, 6, "#2a2f4a"),
+  rect(3, 9, 4, 6, "#2f6fb8"), rect(9, 9, 4, 6, "#c8392f"), rect(3, 16, 4, 6, "#e0b02a"), rect(9, 16, 4, 6, "#3f8a4a"),
+  rect(3, 23, 4, 6, "#c8392f"), rect(9, 23, 4, 6, "#2f6fb8"), circ(8, 6, 3, "#e0b02a"),
+  rect(7, 3, 2, 26, "#2a2f4a"), hline(3, 15, 10, "#2a2f4a"), hline(3, 22, 10, "#2a2f4a"))
+
+sprite("rose_window", { w: 24, h: 24 },
+  rect(0, 0, 24, 24, "#d8d3c8"), circ(12, 12, 10, "#2a2f4a"), circ(12, 12, 8, "#2f6fb8"),
+  circ(12, 12, 4, "#e0b02a"), rect(11, 3, 2, 18, "#2a2f4a"), rect(3, 11, 18, 2, "#2a2f4a"),
+  circ(12, 12, 2, "#c8392f"))
+
+sprite("door_church", { w: 16, h: 24 },
+  rect(0, 0, 16, 24, "#d8d3c8"), rect(1, 2, 14, 22, "#5a3a26"), circ(8, 4, 7, "#5a3a26"),
+  rect(7, 1, 2, 23, "#2e1c10"), rect(3, 8, 4, 14, "#6b4630"), rect(9, 8, 4, 14, "#6b4630"),
+  px(6, 15, "#e0b02a"), px(9, 15, "#e0b02a"))
+
+sprite("window_arch", { w: 16, h: 32 },
+  rect(0, 0, 16, 32, "#f1eee8"), rect(2, 8, 12, 22, "#1f4a3a"), circ(8, 9, 6, "#1f4a3a"),
+  rect(3, 9, 10, 20, "#2f6a52"), circ(8, 10, 5, "#2f6a52"), rect(7, 5, 2, 24, "#f1eee8"),
+  hline(3, 17, 10, "#f1eee8"), hline(3, 23, 10, "#f1eee8"))
+
+sprite("sign_church", { w: 64, h: 24 },
+  rect(0, 0, 64, 24, "#f1eee8"), box(0, 0, 64, 24, "#2f4a8a"), rect(4, 3, 2, 8, "#2f4a8a"), rect(2, 5, 6, 2, "#2f4a8a"),
+  text(38, 3, "ALL WELCOME", "#2f4a8a", { align: "c" }),
+  text(38, 10, "SUNDAYS", "#2f4a8a", { align: "c" }), text(38, 16, "09:00", "#2f4a8a", { align: "c" }))
+
+sprite("sign_mosque", { w: 64, h: 24 },
+  rect(0, 0, 64, 24, "#f1eee8"), box(0, 0, 64, 24, "#1f6a4a"), circ(8, 8, 4, "#1f6a4a"), circ(10, 7, 3, "#f1eee8"),
+  text(38, 3, "MASJID", "#1f6a4a", { align: "c" }),
+  text(38, 10, "FRIDAYS", "#1f6a4a", { align: "c" }), text(38, 16, "13:00", "#1f6a4a", { align: "c" }))
+
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
   rect(3, 9, 10, 4, "k"), px(4, 13, "k"), px(11, 13, "k"), rect(4, 10, 3, 2, "C"), rect(9, 10, 3, 2, "C"))

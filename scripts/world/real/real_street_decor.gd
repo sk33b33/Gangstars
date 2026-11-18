@@ -365,7 +365,7 @@ static func face_quad(st: SurfaceTool, mid: Vector2, normal: Vector2, width: flo
 	var br := m + right * width * 0.5
 	var corners := [Vector3(bl.x, y0, bl.y), Vector3(br.x, y0, br.y), Vector3(br.x, y1, br.y), Vector3(bl.x, y1, bl.y)]
 	var uvs := [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
-	for k: int in [0, 1, 2, 0, 2, 3]:
+	for k: int in [0, 2, 1, 0, 3, 2]:   # clockwise seen from the front: Godot's front face
 		st.set_uv(uvs[k])
 		st.set_normal(Vector3(normal.x, 0, normal.y))
 		st.add_vertex(corners[k])

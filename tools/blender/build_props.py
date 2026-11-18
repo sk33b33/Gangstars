@@ -811,6 +811,15 @@ def price_pylon(x):
     return join(p, "price_pylon", (x, 0, 0))
 
 
+def crescent_finial(x):
+    """A gold crescent and star on a short pole, for a mosque dome or minaret: 1.4 m tall, the crescent open upwards-and-forwards, in the XZ plane."""
+    p = [add("cyl", (0, 0, 0.35), (0.025, 0.025, 0.35), "chrome", seg=6)]
+    p.append(add("torus", (0, 0, 0.95), (0.22, 0.22, 0.22), "glow", rot=(math.pi / 2, 0, 0), minor=0.13, seg=14))
+    p.append(add("sphere", (0.12, 0, 1.05), (0.07, 0.05, 0.07), "glow", sub=1))
+    p.append(add("sphere", (0, 0, 1.38), (0.05, 0.05, 0.05), "glow", sub=1))
+    return join(p, "crescent_finial", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -821,7 +830,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box, drinks_fridge, chest_freezer, a_frame, gas_cage, tyre_stack, oil_drums, air_machine, bollard, price_pylon):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box, drinks_fridge, chest_freezer, a_frame, gas_cage, tyre_stack, oil_drums, air_machine, bollard, price_pylon, crescent_finial):
     build(x)
     x += 6.0
 

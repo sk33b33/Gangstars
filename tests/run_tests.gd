@@ -3058,6 +3058,26 @@ func _test_real_world_units() -> void:
 		and clinic_props.has("litter_bin") and not clinic_props.has("spring_rider") \
 		and creche_surfaces.has("panel_sign_creche") and creche_props.get("spring_rider", []).size() == 2 and creche_props.has("seesaw") and not creche_surfaces.has("decal_bay_ambulance"),
 		"a clinic has a green-cross sign, hours board, ambulance bay and waiting benches; a crèche has its own sign, spring riders and a seesaw but no ambulance bay (%s / %s)" % [clinic_surfaces.keys(), creche_surfaces.keys()])
+	var church_props := {}
+	var church_surfaces := {}
+	var church_rect := {"c": Vector2(0, 0), "u": Vector2.RIGHT, "v": Vector2.DOWN, "half": Vector2(14.0, 7.0), "area": 392.0}
+	RealWorshipDecor.draw_church(church_rect, 1.0, 6.3, church_surfaces, {}, church_props)
+	var small_church_surfaces := {}
+	RealWorshipDecor.draw_church(church_rect, 1.0, 3.0, small_church_surfaces, {}, {})
+	var mosque_props := {}
+	var mosque_surfaces := {}
+	RealWorshipDecor.draw_mosque(church_rect, {"mid": Vector2(14, 0), "normal": Vector2.RIGHT, "index": 0}, Vector2.ZERO, 9.0, Vector2(12, 5), 18.1, mosque_surfaces, {}, mosque_props)
+	_check(church_surfaces.has("panel_window_stained") and church_surfaces.has("panel_door_church") and church_surfaces.has("panel_rose_window") and church_surfaces.has("panel_sign_church") \
+		and church_props.has("park_bench") and not small_church_surfaces.has("panel_rose_window") \
+		and mosque_props.get("crescent_finial", []).size() == 2 and mosque_surfaces.has("panel_sign_mosque") and mosque_surfaces.has("steel"),
+		"a church has stained-glass windows, doors, a rose window (only when the gable is tall enough), a notice board and a bench; a mosque has crescents on the dome and minaret, a notice board and loudspeakers (%s / %s)" % [church_surfaces.keys(), mosque_surfaces.keys()])
+	var fq := SurfaceTool.new()
+	fq.begin(Mesh.PRIMITIVE_TRIANGLES)
+	RealStreetDecor.face_quad(fq, Vector2(0, 0), Vector2(0, 1), 1.0, 0.0, 1.0, 0.0)
+	var fq_verts: PackedVector3Array = fq.commit().surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var fq_cross := (fq_verts[1] - fq_verts[0]).cross(fq_verts[2] - fq_verts[0])
+	_check(fq_cross.dot(Vector3(0, 0, 1)) < 0.0,
+		"a sign quad facing +z is wound clockwise as seen from +z (Godot's front face), so a single-sided material shows its picture the right way round, not mirrored")
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

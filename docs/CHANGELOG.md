@@ -1,5 +1,18 @@
 # Changelog
 
+## More at the churches and mosque (2026-11-18)
+- Six new textures (pxl): `window_stained`, `rose_window`, `door_church`, `window_arch`, `sign_church`, `sign_mosque`. One new Blender
+  prop: `crescent_finial` (70 props in all).
+- Churches (`RealWorshipDecor.draw_church`, the ones with a pitched roof): stained-glass windows between stone buttresses along the long
+  walls, a pair of wooden doors up two steps at the front gable, a rose window in the gable (when the gable is tall enough), a notice board
+  by the street ("ALL WELCOME, SUNDAYS 09:00"), flower beds, a bench, a bin, a palm and a tree.
+- Mosque (`RealWorshipDecor.draw_mosque`): arched green-glass windows, a crescent on the dome and on the minaret, four loudspeakers under the
+  minaret's balcony, a shoe rack and an ablution trough with taps beside the entrance, a notice board ("MASJID, FRIDAYS 13:00") and palms.
+- Fix: `RealStreetDecor.face_quad` wound its triangles anticlockwise, but Godot's front face is clockwise, so a single-sided material showed
+  its picture mirrored (the STOP sign hid it because its material draws both sides). It now winds clockwise, which also corrects the fuel
+  price board, the clinic signpost and the bus and taxi stop signs. Regression check seen failing, then passing.
+- Tests: church and mosque each get their parts; the rose window is left out of a low gable.
+
 ## More at the clinic and crèche (2026-11-18)
 - Four new textures (pxl): `sign_clinic` (green cross, "WESTRIDGE CLINIC"), `sign_creche`, `sign_clinic_hours`, `bay_ambulance`.
 - Clinic (`RealClinicDecor`): barred windows along the walls (there were none), the clinic sign above the entrance canopy, an opening-hours

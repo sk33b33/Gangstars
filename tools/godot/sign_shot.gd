@@ -200,6 +200,30 @@ func _init() -> void:
 			_cams.append([cp + cn * 18.0 + Vector3(0, 12.0, 0), cp])
 			print("CLINIC at ", cp, " normal ", cn)
 			break
+	for wk: Vector2i in [Vector2i(-1, 2), Vector2i(2, 6)]:
+		var wn := RealChunkBuilder.build(wk, data.load_chunk(wk), {}, data.around(wk, "road_lines"), {}, data.around(wk, "outlines"), data.yards(wk), data.home_fronts(wk), {"street": data.street_context(wk), "decor": data.home_decor(wk), "schools": data.school_fences(wk), "stalls": data.stalls(wk), "strips": data.around(wk, "road_strips")})
+		root.add_child(wn)
+		for c in wn.get_children():
+			if c is MeshInstance3D and str(c.name) == "Mesh_panel_door_church":
+				var dv: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+				var dn: Vector3 = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0]
+				var dp := dv[0]
+				_cams.append([dp + dn * 14.0 + Vector3(0, 3.5, 0), dp + Vector3(0, 3.5, 0)])
+				_cams.append([dp + dn * 8.0 + Vector3(5, 2.0, 0), dp + Vector3(0, 2.0, 0)])
+				print("CHURCH at ", dp)
+			if c is MeshInstance3D and str(c.name) == "Mesh_panel_sign_church":
+				var nv: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+				var nn: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+				var nmid := (nv[0] + nv[2]) * 0.5
+				for q in [0, 6]:   # the quad facing along its normal, then the other side
+					var qmid := (nv[q] + nv[q + 2]) * 0.5
+					_cams.append([qmid + nn[q] * 3.5 + Vector3(0, 0.2, 0), qmid])
+				print("BOARD at ", nmid)
+			if c is MultiMeshInstance3D and str(c.name) == "Props_crescent_finial":
+				var cf: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0).origin
+				_cams.append([cf + Vector3(14, 3, 14), cf + Vector3(0, -4, 0)])
+				_cams.append([cf + Vector3(25, 6, 25), cf + Vector3(0, -6, 0)])
+				print("MOSQUE at ", cf)
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

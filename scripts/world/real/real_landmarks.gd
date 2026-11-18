@@ -75,6 +75,7 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			RealChunkBuilder.wall_ring(ring, centre, 5.5, walls, null, collision, RealChunkBuilder.PARAPET)
 			RealChunkBuilder.flat_roof(ring, 5.5, RealChunkBuilder.PARAPET, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
 			_mosque(rect, front, 5.5, walls, surfaces, materials)
+			_window_rows(ring, centre, 1, surfaces, materials, "window_arch", Vector2(1.0, 2.0), 1.4)
 		"civic":
 			var walls := _plaster(BRICK, surfaces, materials)
 			RealChunkBuilder.wall_ring(ring, centre, 5.0, walls, null, collision, RealChunkBuilder.PARAPET)
@@ -196,6 +197,7 @@ static func _church(rect: Dictionary, area: float, near_roads: Array, walls: Sur
 		var tower_top := top + 3.0
 		_obox(walls, at, u, Vector2(t, t), 0.0, tower_top)
 		_pyramid(_roof("roof_tiles", surfaces, materials), at, u, t + 0.2, tower_top, tower_top + 3.5)
+	RealWorshipDecor.draw_church(rect, su, rise, surfaces, materials, RealChunkBuilder._roof_props)
 
 
 ## A green dome on a low drum over the middle of the prayer hall, and a slender minaret with a
@@ -223,6 +225,7 @@ static func _mosque(rect: Dictionary, front: Dictionary, h: float, walls: Surfac
 	_prism(trim, corner, 1.6, 8, MINARET_HEIGHT - 4.0, MINARET_HEIGHT - 3.7, true)
 	_dome(dome, Vector3(corner.x, MINARET_HEIGHT, corner.y), 1.1, 8, 3)
 	_obox(trim, corner, Vector2.RIGHT, Vector2(0.06, 0.06), MINARET_HEIGHT + 1.0, MINARET_HEIGHT + 2.0)
+	RealWorshipDecor.draw_mosque(rect, front, c, drum_top + r, corner, MINARET_HEIGHT + 1.1, surfaces, materials, RealChunkBuilder._roof_props)
 
 
 ## The middle third of the building raised into a taller hall with a low gable roof.
@@ -251,8 +254,8 @@ static func _flagpole(at: Vector2, surfaces: Dictionary, materials: Dictionary) 
 
 
 ## Rows of barred classroom windows along every wall longer than 5 m, one row per storey.
-static func _window_rows(ring: PackedVector2Array, centre: Vector2, storeys: int, surfaces: Dictionary, materials: Dictionary) -> void:
-	var window := RealChunkBuilder._tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
+static func _window_rows(ring: PackedVector2Array, centre: Vector2, storeys: int, surfaces: Dictionary, materials: Dictionary, tex := "window_bars", size := Vector2(1.8, 1.4), y_from := 1.0) -> void:
+	var window := RealChunkBuilder._tool("panel_window" if tex == "window_bars" else "panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
 	for i in ring.size():
 		var p0 := ring[i]
 		var p1 := ring[(i + 1) % ring.size()]
@@ -268,7 +271,7 @@ static func _window_rows(ring: PackedVector2Array, centre: Vector2, storeys: int
 			var mid := p0 + tangent * (length - (count - 1) * 3.0) * 0.5 + tangent * k * 3.0
 			for s in storeys:
 				var y := s * SCHOOL_STOREY
-				RealChunkBuilder._panel(window, mid, tangent, normal, 1.8, y + 1.0, y + 2.4)
+				RealChunkBuilder._panel(window, mid, tangent, normal, size.x, y + y_from, y + y_from + size.y)
 
 
 ## A painted sign band round the top of a shop: the parapet's outer face in the band colour.
