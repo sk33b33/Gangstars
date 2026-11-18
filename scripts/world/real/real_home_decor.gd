@@ -198,6 +198,7 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 		RealChunkBuilder._panel(RealStreetDecor._flat("hatch", "#1d1b24", surfaces, materials), at, t, n, 0.9, 1.0, 1.6)
 		RealStreetDecor.add_prop(props, "crate_stack", at + n * 0.9 + t * 0.6, 0.3)
 		RealStreetDecor.add_prop(props, "plastic_chair", at + n * 1.0 - t * 0.6, 2.4)
+		RealShopDecor.draw_spaza(at, t, n, seed_value, surfaces, materials, props)
 
 
 static func _driveway(yard: Dictionary, front: Dictionary, seed_value: int, root: Node3D, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:

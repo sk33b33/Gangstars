@@ -1,5 +1,13 @@
 # Changelog
 
+## More at the shops and spaza stores (2026-11-18)
+- Four new Blender props: `drinks_fridge`, `chest_freezer`, `a_frame`, `gas_cage` (64 props in all).
+- Shopping-centre and corner-shop frontages (`RealShopDecor.draw_shop`): the "WESTRIDGE CAFE" sign board on the parapet band, a drinks
+  fridge, a chest freezer, sometimes a gas bottle cage, an A-frame board on the pavement, two or three plastic chairs and a crate stack.
+- Spaza shops in a front room (`RealShopDecor.draw_spaza`): a striped awning over the hatch, a drinks fridge and a chest freezer either
+  side, an A-frame board out front and sometimes a gas cage, besides the existing sign, crates and chair.
+- Tests: a 14 m shop frontage and a spaza hatch get these, and none stands behind the wall.
+
 ## More on the streets and verges (2026-11-18)
 - Two new Blender props: `fire_hydrant`, `post_box` (60 props in all).
 - Streets: a red fire hydrant about every 110 m; wheelie bins put out at the kerb on ordinary streets; on collectors and main roads

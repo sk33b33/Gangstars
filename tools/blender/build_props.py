@@ -730,6 +730,46 @@ def post_box(x):
     return join(p, "post_box", (x, 0, 0))
 
 
+def drinks_fridge(x):
+    """A shop drinks fridge: a red upright cabinet with a lit glass door and shelves of bottles, 0.7 x 0.7 x 1.9 m, door towards -Y (Godot +Z)."""
+    p = [add("cube", (0, 0, 0.95), (0.35, 0.35, 0.95), "gas", smooth=False)]
+    p.append(add("cube", (0, -0.355, 0.95), (0.3, 0.01, 0.8), "glow", smooth=False))              # the lit door
+    for i in range(4):
+        p.append(add("cube", (0, -0.36, 0.4 + i * 0.4), (0.28, 0.012, 0.04), "glass_green", smooth=False))   # bottles on the shelves
+    p.append(add("cube", (0, -0.36, 1.78), (0.3, 0.012, 0.06), "cloth_b", smooth=False))          # the lit header
+    return join(p, "drinks_fridge", (x, 0, 0))
+
+
+def chest_freezer(x):
+    """A white chest freezer with a sliding lid and a red ice sign, 1.3 x 0.65 x 0.9 m, front towards -Y (Godot +Z)."""
+    p = [add("cube", (0, 0, 0.42), (0.65, 0.32, 0.42), "white_plastic", smooth=False)]
+    p.append(add("cube", (0, 0, 0.86), (0.66, 0.33, 0.03), "cloth_b", smooth=False))
+    p.append(add("cube", (0, -0.331, 0.5), (0.3, 0.006, 0.12), "cloth_c", smooth=False))          # the sign on the front
+    return join(p, "chest_freezer", (x, 0, 0))
+
+
+def a_frame(x):
+    """An A-frame advertising board on the pavement, 0.6 m wide and 0.95 m high, the writing side towards -Y (Godot +Z)."""
+    p = []
+    for s in (-1, 1):
+        p.append(add("cube", (0, 0.2 * s * 0.5, 0.48), (0.3, 0.012, 0.5), "cloth_d" if s < 0 else "wood_dark", rot=(0.18 * s, 0, 0), smooth=False))
+    p.append(add("cube", (0, -0.1, 0.62), (0.22, 0.004, 0.14), "plastic_dark", rot=(-0.18, 0, 0), smooth=False))
+    return join(p, "a_frame", (x, 0, 0))
+
+
+def gas_cage(x):
+    """A gas bottle exchange cage: a steel mesh cage holding four red gas bottles, 1.2 x 0.6 x 1.1 m."""
+    p = [add("cube", (0, 0, 0.03), (0.6, 0.3, 0.03), "metal_dark", smooth=False)]
+    for sx in (-0.58, 0.58):
+        for sy in (-0.28, 0.28):
+            p.append(add("cyl", (sx, sy, 0.55), (0.02, 0.02, 0.55), "metal_dark", seg=6))
+    for sz in (0.2, 0.55, 1.08):
+        p.append(add("cube", (0, 0, sz), (0.6, 0.3, 0.012), "metal_dark", smooth=False))
+    for i in range(4):
+        p.append(add("cyl", (-0.45 + i * 0.3, 0, 0.32), (0.11, 0.11, 0.28), "gas", seg=10))
+    return join(p, "gas_cage", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -740,7 +780,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box, drinks_fridge, chest_freezer, a_frame, gas_cage):
     build(x)
     x += 6.0
 

@@ -108,6 +108,10 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			RealChunkBuilder.flat_roof(ring, SHOP_WALL, SHOP_BAND, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
 			if not front.is_empty():
 				_shopfront(ring, front, surfaces, materials)
+				var front_t := _tangent(front)
+				var front_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				var front_mid: Vector2 = (ring[front.index] + ring[(int(front.index) + 1) % ring.size()]) * 0.5
+				RealShopDecor.draw_shop(front_mid, front_t, front.normal, front_len, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
 			_mural(ring, centre, front, seed_value, 0.4, 3.4, surfaces, materials)
 		"fuel":
 			var walls := _plaster(WHITE, surfaces, materials)

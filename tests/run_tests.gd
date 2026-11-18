@@ -3012,6 +3012,20 @@ func _test_real_world_units() -> void:
 		for xf: Transform3D in street_props[kind]:
 			furniture_on_road += 1 if absf(xf.origin.z) < 3.0 else 0
 	_check(furniture_on_road == 0, "no street furniture stands on the carriageway (%d on it)" % furniture_on_road)
+	var shop_props := {}
+	var shop_surfaces := {}
+	RealShopDecor.draw_shop(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 14.0, 5, shop_surfaces, {}, shop_props)
+	var spaza_props := {}
+	var spaza_surfaces := {}
+	RealShopDecor.draw_spaza(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 5, spaza_surfaces, {}, spaza_props)
+	_check(shop_surfaces.has("panel_sign_shop") and shop_props.has("drinks_fridge") and shop_props.has("chest_freezer") and shop_props.has("a_frame") and shop_props.has("plastic_chair") \
+		and spaza_surfaces.has("awning") and spaza_props.has("drinks_fridge") and spaza_props.has("chest_freezer") and spaza_props.has("a_frame"),
+		"a 14 m shop frontage has a sign board, a fridge, a freezer, an A-frame and chairs; a spaza hatch has an awning, fridge, freezer and A-frame (%s / %s)" % [shop_props.keys(), spaza_props.keys()])
+	var shop_in_front := 0
+	for kind: String in shop_props:
+		for xf: Transform3D in shop_props[kind]:
+			shop_in_front += 0 if xf.origin.z > 0.3 else 1   # the wall is on z = 0 and the front is towards +z
+	_check(shop_in_front == 0, "every shop item stands in front of the wall, none inside it (%d behind)" % shop_in_front)
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:
