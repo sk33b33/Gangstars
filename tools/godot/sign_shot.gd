@@ -88,6 +88,13 @@ func _init() -> void:
 			picked += 1
 			_cams.append([Vector3(cen.x + 11.0, 4.0, cen.y + 11.0), Vector3(cen.x, 2.0, cen.y)])
 			_cams.append([Vector3(cen.x - 9.0, 2.2, cen.y + 9.0), Vector3(cen.x, 1.8, cen.y)])
+	for c in node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_solar_geyser":
+			var xf: Transform3D = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0)
+			_cams.append([xf.origin + xf.basis.y * 3.0 + xf.basis.z * 5.0, xf.origin])
+			_cams.append([xf.origin + xf.basis.y * 5.0 + xf.basis.z * 9.0 + xf.basis.x * 6.0, xf.origin])
+			print("GEYSER at ", xf.origin)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

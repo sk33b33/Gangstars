@@ -1,5 +1,14 @@
 # Changelog
 
+## Roller doors, solar geysers, dishes; SAPS colours (2026-11-18)
+- Roller doors: a garage roller door (white ribbed shutter in a concrete frame, steel housing above, threshold) in place of one front
+  window on about a third of the houses with a wide front, and on some side walls.
+- Solar water heaters (`solar_geyser`, a new Blender prop): a collector panel with its tank on the north-facing slope of about a third of
+  the pitched roofs, lying flush on the slope. Satellite dishes: a wall dish on one house in two (was one in four) and a dish at the eave
+  of some roofs.
+- SAPS: the POLICE lettering is off (it did not fit the body). Officers wear a light blue shirt (#a4c1e6) and navy blue trousers (#2c4c96),
+  as in the reference photo.
+
 ## More detailed house walls and roofs (2026-11-18)
 - Walls: three finishes by house (smooth plaster, rough-cast, face brick tinted brick red or brown), window surrounds (a lintel and a reveal
   each side), air bricks under some windows, a concrete stoep step at the front door, an electricity meter box beside it and sometimes a

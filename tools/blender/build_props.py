@@ -522,6 +522,23 @@ def hedge(x):
     return join(p, "hedge", (x, 0, 0))
 
 
+
+def solar_geyser(x):
+    """A roof solar water heater: a flat collector panel with a horizontal tank at its upper end, on short legs. Origin at the middle of
+    the panel's underside, the panel lying flat (normal up) with the tank towards +Y (up the roof slope): the placement tilts it to the roof."""
+    p = [add("cube", (0, 0, 0.14), (0.62, 0.92, 0.045), "metal_dark", smooth=False)]            # the collector frame
+    p.append(add("cube", (0, 0, 0.17), (0.56, 0.86, 0.02), "screen", smooth=False))               # its dark glass
+    for i in range(-2, 3):
+        p.append(add("cube", (i * 0.22, 0, 0.19), (0.008, 0.85, 0.008), "metal", smooth=False))    # the tubes' lines
+    for sx in (-0.5, 0.5):
+        for sy in (-0.7, 0.7):
+            p.append(add("cube", (sx, sy, 0.06), (0.04, 0.04, 0.06), "metal_dark", smooth=False))   # legs
+    p.append(add("cyl", (0, 1.12, 0.45), (0.22, 0.22, 0.62), "white_plastic", rot=(0, math.pi / 2, 0), seg=16))   # the tank
+    for sx in (-0.4, 0.4):
+        p.append(add("cube", (sx, 1.0, 0.3), (0.03, 0.15, 0.16), "metal_dark", smooth=False))      # tank cradle
+    return join(p, "solar_geyser", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -532,7 +549,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge):
+              agave, palm, shade_tree, hedge, solar_geyser):
     build(x)
     x += 6.0
 

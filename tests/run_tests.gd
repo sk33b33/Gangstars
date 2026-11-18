@@ -1295,9 +1295,14 @@ func _test_combat_in_game(main: Node, district: District, player: Player) -> voi
 	var cop_men := cops.filter(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE).size()
 	var cop_women := cops.filter(func(r): return r.model is NpcBodyModel and r.model.body == NpcBodies.POLICE_WOMAN).size()
 	_check(cop_men >= 3 and cop_women >= 3 and cop_men + cop_women == cops.size(), "the SAPS are both men and women (%d men, %d women), in their own bodies" % [cop_men, cop_women])
-	var uniformed := cops.all(func(r): return r.model.police and r.model.skeleton().find_children("PoliceFront", "BoneAttachment3D", false, false).size() == 1 \
-		and (r.model.skeleton().get_node("PoliceBack").get_child(0) as Label3D).text == "POLICE")
-	_check(uniformed, "every officer has POLICE on the chest and the back, riding on the spine")
+	var uniformed := cops.all(func(r): return r.model.police and r.model.skeleton().find_children("Police*", "BoneAttachment3D", false, false).is_empty())
+	var top_ok := cops.all(func(r):
+		var tops: MeshInstance3D = r.model.remy.part("Tops")
+		var bottoms: MeshInstance3D = r.model.remy.part("Bottoms")
+		var tm := tops.get_surface_override_material(0) as StandardMaterial3D
+		var bm := bottoms.get_surface_override_material(0) as StandardMaterial3D
+		return tm != null and bm != null and tm.albedo_texture == null and bm.albedo_texture == null and tm.albedo_color.b > tm.albedo_color.r and tm.albedo_color.v > 0.8 and bm.albedo_color.b > bm.albedo_color.r and bm.albedo_color.v < 0.7)
+	_check(uniformed and top_ok, "every officer wears a light blue shirt and navy blue trousers, with no lettering")
 	for i in 240:
 		await physics_frame
 	_check(district.real_traffic.police_cars().size() == 1, "a police bakkie patrols the streets around you (%d)" % district.real_traffic.police_cars().size())
@@ -2967,6 +2972,13 @@ func _test_real_world_units() -> void:
 	_check(RealStreetDecor.STOP_POLE_TOP <= RealStreetDecor.STOP_SIGN_BOTTOM + 0.01 and RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign is one octagon on top of its pole, the pole never across the face")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
+	var geysers := 0
+	var roof_dishes := 0
+	for e: Array in stats.props:
+		geysers += int(e[1]) if e[0] == "solar_geyser" else 0
+		roof_dishes += int(e[1]) if e[0] == "satellite_dish" else 0
+	_check(parts.has("Mesh_panel_garage") and geysers >= 3 and roof_dishes >= 1 and RealHomeDecor.DISH_ONE_IN <= 2,
+		"more garage roller doors, solar geysers on the north-facing roofs (%d here) and satellite dishes (%d on roofs here, one wall dish in two)" % [geysers, roof_dishes])
 	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
 		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
 		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}

@@ -42,6 +42,8 @@ const EAVES := 0.35
 const PARAPET := 0.35
 const COPING_COLOR := "#cfcac0"
 const SILL_DEPTH := 0.12
+## Where the house being built puts its roof fittings (set by `build`: the chunk's prop dictionary).
+static var _roof_props: Dictionary = {}
 const BRICK_TINTS := ["#c7775b", "#b9694f", "#a35d49", "#d39a7a", "#9c5a44"]
 const ROOF_TILE_TINTS := ["#ffffff", "#d8d2cc", "#f0d6c4", "#bfb6b0"]
 const ROOF_IBR_TINTS := ["#ffffff", "#e9a99c", "#a9c3b3", "#c8ccd2"]
@@ -76,6 +78,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 	for r in chunk.get("roads", []):
 		_road(r, surfaces, materials, root)
 	var props := {}   # prop name -> Array[Transform3D], built as one MultiMesh each
+	_roof_props = props   # houses put their roof fittings (solar geysers, dishes) here
 	var humps: Array = []
 	if ctx.has("street"):
 		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props, humps, root)
@@ -501,6 +504,8 @@ static func _house_details(ring: PackedVector2Array, rect: Dictionary, h: float,
 			var at := c + u * ridge * 0.45
 			RealLandmarks._obox(_tool("chimney", surfaces, materials, PixelMaterials.flat(Color("#a2634c"))), at, u, Vector2(0.28, 0.28), h + rise * 0.3, h + rise + 0.95)
 			RealLandmarks._obox(_tool("chimney_cap", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR))), at, u, Vector2(0.35, 0.35), h + rise + 0.95, h + rise + 1.04)
+	if pitched:
+		_roof_fittings(rect, h, gable, seed_value)
 	# Downpipes on one or two convex corners.
 	var sign_area := signf(_signed_area(ring))
 	var corners: Array = []
@@ -526,6 +531,36 @@ static func _house_details(ring: PackedVector2Array, rect: Dictionary, h: float,
 	RealLandmarks._obox(_tool("meter_box", surfaces, materials, PixelMaterials.flat(Color("#bfc3c8"))), mid + t * 1.2 + n * 0.09, t, Vector2(0.2, 0.09), 1.2, 1.75)
 	if seed_value % 3 == 0 and h > 2.6:   # a small concrete awning over the door
 		RealLandmarks._obox(concrete, mid + n * 0.5, t, Vector2(0.85, 0.5), 2.3, 2.38)
+
+
+## A solar water heater lying on the roof slope that faces north (true north is -z, where the sun is), on about one pitched roof in
+## three, and a satellite dish at the eave of another few. Placed as props (one MultiMesh each) tilted to the slope.
+static func _roof_fittings(rect: Dictionary, h: float, gable: bool, seed_value: int) -> void:
+	var u: Vector2 = rect.u
+	var v: Vector2 = rect.v
+	var c: Vector2 = rect.c
+	var half: Vector2 = rect.half
+	var w := half.y + EAVES
+	var l := half.x + EAVES
+	var rise := clampf(half.y * 0.45, 0.8, 1.8)
+	var ridge := l if gable else maxf(0.0, l - w)
+	var sv := -signf(v.y) if absf(v.y) > 0.05 else 1.0   # the side whose slope falls towards the north
+	var outward := v * sv
+	if seed_value % 3 == 1 and w > 2.2 and ridge > 1.0:
+		var s := w * 0.55
+		var uo := clampf(float((seed_value / 3) % 5 - 2) * 0.3 * ridge, -ridge + 1.0, ridge - 1.0)
+		var at := c + outward * s + u * uo
+		var y := (Vector3(outward.x * rise, w, outward.y * rise)).normalized()
+		var down := Vector3(outward.x * w, -rise, outward.y * w).normalized()
+		var x := y.cross(down)
+		var origin := Vector3(at.x, h + rise * (1.0 - s / w), at.y) + y * 0.03
+		if not _roof_props.has("solar_geyser"):
+			_roof_props["solar_geyser"] = []
+		_roof_props["solar_geyser"].append(Transform3D(Basis(x, y, down), origin))
+	if seed_value % 4 == 3 and w > 1.6:
+		var at := c + outward * (w - 0.2) + u * float((seed_value / 4) % 3 - 1) * half.x * 0.5
+		var facing := Vector2(0.35, -1.0).normalized()   # towards the satellite (north-east)
+		RealStreetDecor.add_prop(_roof_props, "satellite_dish", at, atan2(facing.x, facing.y), 1.0, h + rise * 0.1 + 0.45)
 
 
 ## The direction along a wall whose outward normal is `n` (either way: only the line matters).
@@ -689,14 +724,40 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 				_panel(door, mid, tangent, normal, 1.0, 0.0, minf(2.0, h - 0.3))
 			anchor = Vector3(mid.x + normal.x * DOOR_OUT, 0.0, mid.y + normal.y * DOOR_OUT)
 			if length > 5.0:
+				var garage_side := 0.0
+				if length >= 6.5 and _wall_hash(mid) % 100 < 38:
+					garage_side = 1.0 if (_wall_hash(mid) / 100) % 2 == 0 else -1.0   # a roller door where one of the windows would be
 				for side in [-1.0, 1.0]:
-					_window(window, sill, mid + tangent * side * minf(length * 0.3, 3.0), tangent, normal, top, dark)
+					var at: Vector2 = mid + tangent * side * minf(length * 0.3, 3.0)
+					if side == garage_side:
+						_roller_door(surfaces, materials, at, tangent, normal)
+					else:
+						_window(window, sill, at, tangent, normal, top, dark)
+		elif length >= 5.0 and _wall_hash(mid) % 100 < 22:
+			_roller_door(surfaces, materials, mid, tangent, normal)   # a garage on a side wall
 		elif length > 3.2:
 			_window(window, sill, mid, tangent, normal, top, dark)
 	return {"at": anchor}
 
 
 const DOOR_CLEAR := 0.9
+
+
+## A number from where a wall is, to choose which walls get a roller door.
+static func _wall_hash(mid: Vector2) -> int:
+	return absi(roundi(mid.x * 13.0) * 7 + roundi(mid.y * 7.0) * 3)
+
+
+## A garage roller door, 2.4 m wide and 2.1 m high: the white ribbed shutter in a concrete frame, a steel roller housing above it and a
+## step-up sill.
+static func _roller_door(surfaces: Dictionary, materials: Dictionary, mid: Vector2, tangent: Vector2, normal: Vector2) -> void:
+	var shutter := _tool("panel_garage", surfaces, materials, PixelMaterials.panel("garage_door"))
+	_panel(shutter, mid, tangent, normal, 2.4, 0.04, 2.1)
+	var concrete := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
+	for side: float in [-1.0, 1.0]:
+		RealLandmarks._obox(concrete, mid + tangent * side * 1.28 + normal * 0.05, tangent, Vector2(0.07, 0.06), 0.0, 2.25)   # the jambs
+	RealLandmarks._obox(_tool("roller_housing", surfaces, materials, PixelMaterials.flat(Color("#a9adb3"))), mid + normal * 0.09, tangent, Vector2(1.35, 0.09), 2.1, 2.3)
+	RealLandmarks._obox(concrete, mid + normal * 0.16, tangent, Vector2(1.35, 0.16), 0.0, 0.05)   # the threshold
 
 
 static func _distance_to_ring(p: Vector2, ring: PackedVector2Array) -> float:
