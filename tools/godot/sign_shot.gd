@@ -42,10 +42,12 @@ func _init() -> void:
 		print("SLAB ", slab.text.replace("\n", " / "), " at ", p)
 	for c in node.get_children():
 		if c is MeshInstance3D and str(c.name).contains("sign_stop"):
-			var box: AABB = c.get_aabb()
-			var mid := box.get_center()
-			_cams.append([mid + Vector3(0, 0.2, 0) + Vector3(3.0, 0.4, 3.0), mid])
-			_cams.append([mid + Vector3(-3.0, 0.8, -3.0), mid])
+			var sv: PackedVector3Array = (c.mesh as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+			var mid := (sv[0] + sv[2]) * 0.5   # the first plate's centre
+			_cams.append([mid + Vector3(2.2, 0.2, 2.2), mid])
+			_cams.append([mid + Vector3(-2.2, 0.2, -2.2), mid])
+			_cams.append([mid + Vector3(2.2, 0.2, -2.2), mid])
+			_cams.append([mid + Vector3(-2.2, 0.2, 2.2), mid])
 			print("STOP sign mesh around ", mid)
 			break
 	# The painted STOP and a speed hump, from a driver's seat: 7 m back along the road, 1.3 m up, looking at the first marking.

@@ -247,9 +247,14 @@ static func _decal_tool(tex: String, surfaces: Dictionary, materials: Dictionary
 ## A textured rectangle standing on end, facing `normal` (the way the sign looks, towards whoever reads it), centred on `mid`,
 ## `width` across, from y0 to y1, with the texture the right way round and not mirrored: a viewer looking at it has the viewer's
 ## right = left_of(normal) (x east, z south). (RealChunkBuilder._panel is for walls: its flip rule mirrors a sign on a pole.)
+## How far a sign plate stands in front of the middle of its pole: more than the pole's half thickness (0.04 m), so the pole is
+## behind the plate and never shows across the face of the sign.
+const SIGN_STANDOFF := 0.06
+
+
 static func face_quad(st: SurfaceTool, mid: Vector2, normal: Vector2, width: float, y0: float, y1: float) -> void:
 	var right := left_of(normal)
-	var m := mid + normal * 0.03
+	var m := mid + normal * SIGN_STANDOFF
 	var bl := m - right * width * 0.5
 	var br := m + right * width * 0.5
 	var corners := [Vector3(bl.x, y0, bl.y), Vector3(br.x, y0, br.y), Vector3(br.x, y1, br.y), Vector3(bl.x, y1, bl.y)]
@@ -362,8 +367,8 @@ static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, n
 		var facing := -inward
 		var sign_tool := RealChunkBuilder._tool("panel_sign_stop", surfaces, materials, PixelMaterials.panel("sign_stop", Color.WHITE, true))
 		face_quad(sign_tool, pole_at, facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)
-		var back_tool := RealChunkBuilder._tool("panel_sign_stop_back", surfaces, materials, PixelMaterials.panel("sign_stop", Color("#7d828c"), true))
-		face_quad(back_tool, pole_at - facing * 0.06, -facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)   # the plain steel back, seen from behind
+		var back_tool := RealChunkBuilder._tool("panel_sign_stop_back", surfaces, materials, PixelMaterials.panel("sign_stop_back", Color.WHITE, true))
+		face_quad(back_tool, pole_at, -facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)   # the plain steel back, seen from behind
 
 
 ## Zebra stripes across the whole road, 3 m long, every metre.

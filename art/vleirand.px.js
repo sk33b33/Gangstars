@@ -611,6 +611,10 @@ sprite("stop_text", { w: 48, h: 24 },
     const P = (x0) => { c.rect(x0, y0, s, h, W); c.rect(x0, y0, w, s, W); c.rect(x0 + w - s, y0, s, 11, W); c.rect(x0, y0 + 8, w, s, W) }
     S(1); T(13); O(25); P(37)
   })
+// The plain galvanised back of the STOP sign.
+sprite("sign_stop_back", { w: 24, h: 24 },
+  poly([7, 0, 16, 0, 23, 7, 23, 16, 16, 23, 7, 23, 0, 16, 0, 7], "#8d9299"),
+  poly([8, 2, 15, 2, 21, 8, 21, 15, 15, 21, 8, 21, 2, 15, 2, 8], "#9ca1a8"))
 // The red octagonal STOP sign on a pole.
 sprite("sign_stop", { w: 24, h: 24 },
   poly([7, 0, 16, 0, 23, 7, 23, 16, 16, 23, 7, 23, 0, 16, 0, 7], "#f1eee8"),

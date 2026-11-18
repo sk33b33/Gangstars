@@ -2930,7 +2930,7 @@ func _test_real_world_units() -> void:
 	_check(slabs.size() >= 2 and slabs.all(func(s): return s == s.to_upper() and not s.contains("\n")) and node.get_children().any(func(c): return str(c.name) == "Mesh_slab"),
 		"each junction corner has concrete street name blocks, one name each (%d names, e.g. %s)" % [slabs.size(), str(slabs[0]) if not slabs.is_empty() else ""])
 	_check(floating.has("Excelsior Street"), "the street names also float over the roads")
-	_check(RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.STOP_POLE_TOP > RealStreetDecor.STOP_SIGN_BOTTOM, "a STOP sign's pole ends inside the octagon, never above it")
+	_check(RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.STOP_POLE_TOP > RealStreetDecor.STOP_SIGN_BOTTOM and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign's pole ends inside the octagon and stands behind the plate, never across its face")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
 	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \

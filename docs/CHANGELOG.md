@@ -1,5 +1,10 @@
 # Changelog
 
+## STOP sign pole no longer shows across the face (2026-11-18)
+- The sign plate stood 3 cm in front of the pole's middle but the pole is 7 cm thick, so the pole poked through the plate and showed
+  across the STOP (and the bus stop signs). Plates now stand 6 cm out (`SIGN_STANDOFF`), the pole behind them, ending below the top.
+  The back of a STOP sign is a plain grey octagon.
+
 ## Street name blocks, STOP sign pole, floating names (2026-11-18)
 - The corner slabs are now the long low concrete name block (1 m x 105 mm, 265 mm high with a 125 mm step in front and the name on the
   sloping face), white-painted with the street's name in black capitals. One block per street, lying along that street just behind its kerb
