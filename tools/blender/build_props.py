@@ -770,6 +770,47 @@ def gas_cage(x):
     return join(p, "gas_cage", (x, 0, 0))
 
 
+def tyre_stack(x):
+    """A stack of four used tyres, 0.65 m across and 0.75 m high."""
+    p = [add("torus", (0, 0, 0.1 + i * 0.18), (0.3, 0.3, 0.3), "rubber", minor=0.28, seg=14) for i in range(4)]
+    return join(p, "tyre_stack", (x, 0, 0))
+
+
+def oil_drums(x):
+    """Three blue 200 litre oil drums standing together, 0.58 m across, 0.88 m high."""
+    p = []
+    for sx, sy in ((-0.3, 0.0), (0.3, 0.0), (0.0, 0.52)):
+        p.append(add("cyl", (sx, sy, 0.44), (0.29, 0.29, 0.44), "cloth_c", seg=14))
+        p.append(add("cyl", (sx, sy, 0.88), (0.3, 0.3, 0.02), "metal_dark", seg=14))
+        p.append(add("cyl", (sx, sy, 0.3), (0.3, 0.3, 0.012), "metal_dark", seg=14))
+        p.append(add("cyl", (sx, sy, 0.62), (0.3, 0.3, 0.012), "metal_dark", seg=14))
+    return join(p, "oil_drums", (x, 0, 0))
+
+
+def air_machine(x):
+    """A forecourt tyre-air and water machine: a yellow pedestal with a coiled hose, 1.3 m high, face towards -Y (Godot +Z)."""
+    p = [add("cube", (0, 0, 0.65), (0.2, 0.18, 0.65), "cloth_d", smooth=False)]
+    p.append(add("cube", (0, -0.185, 1.05), (0.14, 0.01, 0.12), "screen", smooth=False))
+    p.append(add("cube", (0, 0, 0.03), (0.28, 0.25, 0.03), "metal_dark", smooth=False))
+    p.append(add("torus", (0.22, 0, 0.7), (0.1, 0.1, 0.1), "rubber", rot=(math.pi / 2, 0, 0), minor=0.2, seg=10))
+    return join(p, "air_machine", (x, 0, 0))
+
+
+def bollard(x):
+    """A steel bollard with a yellow band, 0.9 m high."""
+    p = [add("cyl", (0, 0, 0.45), (0.07, 0.07, 0.45), "metal", seg=10)]
+    p.append(add("cyl", (0, 0, 0.72), (0.075, 0.075, 0.07), "cloth_d", seg=10))
+    return join(p, "bollard", (x, 0, 0))
+
+
+def price_pylon(x):
+    """The pole of a forecourt price pylon: a 6.8 m steel column on a concrete base with a lamp on top (the price board is a panel)."""
+    p = [add("cube", (0, 0, 0.2), (0.45, 0.45, 0.2), "counter_top", smooth=False)]
+    p.append(add("cube", (0, 0, 3.4), (0.1, 0.1, 3.4), "metal_dark", smooth=False))
+    p.append(add("sphere", (0, 0, 6.9), (0.16, 0.16, 0.12), "glow", sub=1))
+    return join(p, "price_pylon", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -780,7 +821,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box, drinks_fridge, chest_freezer, a_frame, gas_cage):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box, drinks_fridge, chest_freezer, a_frame, gas_cage, tyre_stack, oil_drums, air_machine, bollard, price_pylon):
     build(x)
     x += 6.0
 

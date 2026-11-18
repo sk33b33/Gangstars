@@ -119,6 +119,9 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			RealChunkBuilder.flat_roof(ring, 3.4, RealChunkBuilder.PARAPET, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
 			if not front.is_empty() and str(b.get("k", "")) == "fuel":
 				_forecourt(front, near_roads, seed_value, surfaces, materials)
+				var kiosk_room := RealChunkBuilder._distance_to_lines(front.mid, near_roads) - 6.0 if not near_roads.is_empty() else 14.0
+				var kiosk_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				RealFuelDecor.draw(front.mid, _tangent(front), front.normal, kiosk_len, kiosk_room, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
 		"canopy":
 			_canopy_on_columns(ring, rect, CANOPY_HEIGHT, FORECOURT_BANDS[seed_value % FORECOURT_BANDS.size()], surfaces, materials)
 		"hall":

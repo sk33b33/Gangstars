@@ -183,6 +183,18 @@ sprite("sign_shop", { w: 80, h: 16 },
   rect(0, 0, 80, 16, "f"), box(0, 0, 80, 16, "F"), hline(1, 1, 78, "l"),
   text(40, 4, "WESTRIDGE CAFE", "W", { align: "c" }), text(40, 10, "BREAD  AIRTIME", "l", { align: "c" }))
 
+sprite("sign_garage", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "f"), box(0, 0, 64, 16, "F"), hline(1, 1, 62, "l"),
+  text(32, 3, "DUIN GARAGE", "W", { align: "c" }), text(32, 9, "SHOP  OPEN 24H", "l", { align: "c" }))
+
+// Fuel price board on the forecourt pylon: header, three prices (fictional pump brand).
+sprite("sign_fuel_prices", { w: 56, h: 40 },
+  rect(0, 0, 56, 40, "f"), box(0, 0, 56, 40, "F"), rect(1, 1, 54, 9, "l"),
+  text(28, 3, "DUIN FUEL", "k", { align: "c" }),
+  text(4, 13, "ULP95", "W"), text(52, 13, "24.10", "l", { align: "r" }),
+  text(4, 22, "ULP93", "W"), text(52, 22, "23.60", "l", { align: "r" }),
+  text(4, 31, "DIESEL", "W"), text(52, 31, "22.80", "l", { align: "r" }))
+
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
   rect(3, 9, 10, 4, "k"), px(4, 13, "k"), px(11, 13, "k"), rect(4, 10, 3, 2, "C"), rect(9, 10, 3, 2, "C"))

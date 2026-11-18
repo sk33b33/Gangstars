@@ -1,5 +1,13 @@
 # Changelog
 
+## More at the petrol stations (2026-11-18)
+- Two new textures (pxl): `sign_garage` ("DUIN GARAGE / SHOP OPEN 24H") and `sign_fuel_prices` (a price board, fictional "DUIN FUEL").
+- Five new Blender props: `tyre_stack`, `oil_drums`, `air_machine`, `bollard`, `price_pylon` (69 props in all).
+- Each station (`RealFuelDecor`): the garage sign over the kiosk, three bollards at its door, a litter bin, a price pylon with a two-sided
+  price board by the road (when there is 3.5 m or more before the road), and, on a kiosk front 10 m wide or more, an air and water machine,
+  a stack of tyres and oil drums.
+- Tests: a station kiosk gets these; no pylon where there is no room before the road; no tyres or drums on a narrow front.
+
 ## More at the shops and spaza stores (2026-11-18)
 - Four new Blender props: `drinks_fridge`, `chest_freezer`, `a_frame`, `gas_cage` (64 props in all).
 - Shopping-centre and corner-shop frontages (`RealShopDecor.draw_shop`): the "WESTRIDGE CAFE" sign board on the parapet band, a drinks

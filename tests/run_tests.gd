@@ -3026,6 +3026,16 @@ func _test_real_world_units() -> void:
 		for xf: Transform3D in shop_props[kind]:
 			shop_in_front += 0 if xf.origin.z > 0.3 else 1   # the wall is on z = 0 and the front is towards +z
 	_check(shop_in_front == 0, "every shop item stands in front of the wall, none inside it (%d behind)" % shop_in_front)
+	var fuel_props := {}
+	var fuel_surfaces := {}
+	RealFuelDecor.draw(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 10.0, 12.0, 3, fuel_surfaces, {}, fuel_props)
+	var narrow_props := {}
+	RealFuelDecor.draw(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 8.7, 12.0, 3, {}, {}, narrow_props)
+	var tight_props := {}
+	RealFuelDecor.draw(Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 10.0, 1.0, 3, {}, {}, tight_props)
+	_check(fuel_surfaces.has("panel_sign_garage") and fuel_surfaces.has("panel_sign_fuel_prices") and fuel_props.has("price_pylon") and fuel_props.has("air_machine") \
+		and fuel_props.has("tyre_stack") and fuel_props.has("oil_drums") and fuel_props.get("bollard", []).size() == 3 and not tight_props.has("price_pylon") and not narrow_props.has("tyre_stack"),
+		"a petrol station kiosk has a garage sign, a price pylon, an air machine, tyres, oil drums and bollards; with no room before the road there is no pylon, and a narrow front has no tyres (%s)" % [fuel_props.keys()])
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

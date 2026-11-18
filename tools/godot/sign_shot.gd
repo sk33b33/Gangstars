@@ -156,6 +156,16 @@ func _init() -> void:
 			_cams.append([df + dfb.z * 3.0 + dfb.x * 3.0 + Vector3(0, 1.6, 0), df + Vector3(0, 1.0, 0)])
 			print("SHOP FRIDGE at ", df)
 			break
+	var fuel_key := Vector2i(1, 3)
+	var fuel_node := RealChunkBuilder.build(fuel_key, data.load_chunk(fuel_key), {}, data.around(fuel_key, "road_lines"), {}, data.around(fuel_key, "outlines"), data.yards(fuel_key), data.home_fronts(fuel_key), {"street": data.street_context(fuel_key), "decor": data.home_decor(fuel_key), "schools": data.school_fences(fuel_key), "stalls": data.stalls(fuel_key), "strips": data.around(fuel_key, "road_strips")})
+	root.add_child(fuel_node)
+	for c in fuel_node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_bollard":
+			var bo: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(1).origin
+			_cams.append([bo + Vector3(0, 14, 16), bo])
+			_cams.append([bo + Vector3(7, 2.4, 9), bo + Vector3(0, 2.0, 0)])
+			print("FUEL at ", bo)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
