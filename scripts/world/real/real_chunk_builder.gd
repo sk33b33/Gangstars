@@ -348,16 +348,22 @@ static func _road(r: Dictionary, surfaces: Dictionary, materials: Dictionary, ro
 			while t + 2.0 < length:
 				ribbon(paint, PackedVector2Array([line[i] + dir * t, line[i] + dir * (t + 2.0)]), 0.15, Y_PAINT)
 				t += 7.0
-	# The street's name for the HUD and "which street am I on": an invisible marker (the street names you read in the world are on
-	# the concrete slabs at the junction corners, RealStreetDecor._street_slabs).
+	# The street's name floating over the road (also what the HUD and "which street am I on" read), besides the concrete name blocks.
 	var road_name := str(r.get("n", ""))
 	if not road_name.is_empty() and _length(line) > 35.0:
 		var mid := line[line.size() / 2]
-		var tag := Node3D.new()
-		tag.name = "StreetName"
-		tag.position = Vector3(mid.x, 0.0, mid.y)
-		tag.set_meta("street", road_name)
-		root.add_child(tag)
+		var label := Label3D.new()
+		label.text = road_name.to_upper()
+		label.font_size = 40
+		label.pixel_size = 0.008
+		label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		label.modulate = Color.WHITE
+		label.outline_modulate = Color("#1f5d3a")
+		label.outline_size = 14
+		label.position = Vector3(mid.x, 3.2, mid.y)
+		label.visibility_range_end = 70.0
+		label.set_meta("street", road_name)
+		root.add_child(label)
 
 
 static func _length(line: PackedVector2Array) -> float:

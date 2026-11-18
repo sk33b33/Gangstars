@@ -106,8 +106,16 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 
 # ------------------------------------------------------------------ street name slabs
 
-const SLAB_COLOR := "#d9d5ca"
-const SLAB_FOOT := "#a8a398"
+## The STOP sign: the octagon from 1.55 m to 2.3 m; its pole stops inside it, 10 cm below the top, so it never pokes out above.
+const STOP_SIGN_BOTTOM := 1.55
+const STOP_SIGN_TOP := 2.3
+const STOP_POLE_TOP := 2.2
+const SLAB_COLOR := "#ebe8df"
+const BLOCK_LENGTH := 1.0
+const BLOCK_DEPTH := 0.105
+const BLOCK_HEIGHT := 0.265
+const BLOCK_STEP := 0.125
+const BLOCK_SETBACK := 0.15   # from the kerb to the block's front face
 const ABBREV := {"Street": "St", "Avenue": "Ave", "Road": "Rd", "Close": "Cl", "Drive": "Dr", "Crescent": "Cres", "Court": "Ct", "Place": "Pl", "Way": "Way", "Lane": "Ln"}
 
 
@@ -155,36 +163,68 @@ static func _slab_pair(entries: Array) -> Array:
 
 
 static func _slab(node: Vector2, a: Array, b: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
-	var da: Vector2 = a[3]
-	var db: Vector2 = b[3]
+	# One block for each street, lying along that street just behind its kerb, on the corner's side of the junction.
+	_name_block(node, a, b, surfaces, materials, root)
+	_name_block(node, b, a, surfaces, materials, root)
+
+
+## The concrete street name block (1 m x 105 mm, 265 mm high at the back, a 125 mm step in front, the name on the sloping face),
+## white-painted, with the street's name in black, standing behind the kerb of street `own` at the corner with street `other`.
+static func _name_block(node: Vector2, own: Array, other: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+	var along: Vector2 = own[3]
+	var side: Vector2 = other[3]   # the corner is on this side of `own`
+	var toward := left_of(along)   # horizontal and across the street
+	if toward.dot(side) > 0.0:
+		toward = -toward           # the face looks at the road: away from the corner's side
 	var kerb := RealChunkBuilder.KERB_WIDTH
-	# The pavement corner between the two streets: clear of both carriageways and their kerbs.
-	var corner := node + da * (float(b[1]) * 0.5 + kerb + 0.7) + db * (float(a[1]) * 0.5 + kerb + 0.7)
-	var n := -(da + db).normalized()   # the face towards the junction
-	var u := left_of(n)
+	var front_gap := float(own[1]) * 0.5 + kerb + BLOCK_SETBACK   # centre line of the street to the block's front face
+	var back_at := node + along * (float(other[1]) * 0.5 + kerb + 0.6 + BLOCK_LENGTH * 0.5) - toward * (front_gap + BLOCK_DEPTH)
+	var u := left_of(toward)   # the reader's right: the name runs this way
 	var concrete := _flat("slab", SLAB_COLOR, surfaces, materials)
-	RealLandmarks._obox(_flat("slab_foot", SLAB_FOOT, surfaces, materials), corner, u, Vector2(0.36, 0.14), 0.0, 0.12)
-	RealLandmarks._obox(concrete, corner, u, Vector2(0.33, 0.055), 0.12, 0.72)
-	if root == null:
+	var sect: Array[Vector2] = [Vector2(0, 0), Vector2(BLOCK_DEPTH, 0), Vector2(BLOCK_DEPTH, BLOCK_STEP), Vector2(BLOCK_DEPTH - 0.02, BLOCK_STEP + 0.015),
+		Vector2(BLOCK_DEPTH - 0.035, BLOCK_HEIGHT), Vector2(0, BLOCK_HEIGHT)]
+	var half := BLOCK_LENGTH * 0.5
+	var n3 := Vector3(toward.x, 0, toward.y)
+	var u3 := Vector3(u.x, 0, u.y)
+	var base := Vector3(back_at.x, 0, back_at.y)
+	for i in sect.size():   # the long faces, each facing out of the section
+		var p0 := sect[i]
+		var p1 := sect[(i + 1) % sect.size()]
+		var out := n3 * (p1.y - p0.y) + Vector3.UP * (p0.x - p1.x)   # outward for the counter-clockwise section
+		var q := [base + n3 * p0.x + Vector3.UP * p0.y - u3 * half, base + n3 * p0.x + Vector3.UP * p0.y + u3 * half,
+			base + n3 * p1.x + Vector3.UP * p1.y + u3 * half, base + n3 * p1.x + Vector3.UP * p1.y - u3 * half]
+		RealChunkBuilder._facing(concrete, q[0], q[1], q[2], out)
+		RealChunkBuilder._facing(concrete, q[0], q[2], q[3], out)
+	var idx := Geometry2D.triangulate_polygon(PackedVector2Array(sect))
+	for end_s: float in [-1.0, 1.0]:   # the two ends
+		for k in range(0, idx.size(), 3):
+			var c: Array = []
+			for j in 3:
+				var sp := sect[idx[k + j]]
+				c.append(base + n3 * sp.x + Vector3.UP * sp.y + u3 * half * end_s)
+			RealChunkBuilder._facing(concrete, c[0], c[1], c[2], u3 * end_s)
+	if root == null or str(own[2]).is_empty():
 		return
-	var text := "%s\n%s" % [short_name(str(a[2])), short_name(str(b[2]))]
-	for side: float in [1.0, -1.0]:
-		var face := n * side
-		var label := Label3D.new()
-		label.text = text
-		label.font_size = 26
-		label.pixel_size = 0.0034
-		label.shaded = false
-		label.double_sided = false
-		label.modulate = Color("#1d1b24")
-		label.outline_size = 0
-		label.line_spacing = -4.0
-		label.position = Vector3(corner.x + face.x * 0.062, 0.45, corner.y + face.y * 0.062)
-		var z := Vector3(face.x, 0, face.y)
-		label.basis = Basis(Vector3.UP.cross(z), Vector3.UP, z)
-		label.visibility_range_end = 28.0
-		label.set_meta("street_slab", true)
-		root.add_child(label)
+	# The name, on the sloping face, in black capitals sized to fit the metre.
+	var name_text := str(own[2]).to_upper()
+	var label := Label3D.new()
+	label.text = name_text
+	label.font_size = 40
+	label.pixel_size = minf(0.0022, 0.86 / (maxf(float(name_text.length()), 1.0) * 26.0))
+	label.shaded = false
+	label.double_sided = false
+	label.modulate = Color("#141418")
+	label.outline_size = 0
+	var face_n := (n3 * (BLOCK_HEIGHT - BLOCK_STEP - 0.015) + Vector3.UP * 0.015).normalized()   # the sloping face's normal
+	var mid_d := BLOCK_DEPTH - 0.0275
+	var mid_h := (BLOCK_STEP + 0.015 + BLOCK_HEIGHT) * 0.5
+	label.position = base + n3 * (mid_d + 0.003) + Vector3.UP * mid_h
+	var xa := u3
+	var ya := face_n.cross(xa)
+	label.basis = Basis(xa, ya, face_n)
+	label.visibility_range_end = 30.0
+	label.set_meta("street_slab", true)
+	root.add_child(label)
 
 
 # ------------------------------------------------------------------ helpers
@@ -318,10 +358,12 @@ static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, n
 		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 1.7 + left * width * 0.25, inward, 2.4, 1.8, Y_ROAD_DECAL)
 		# The sign itself: a red octagon on a pole at the kerb beside the stop line, facing the arriving driver.
 		var pole_at := at + left * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.55)
-		RealLandmarks._obox(_flat("steel", RealLandmarks.STEEL, surfaces, materials), pole_at, left, Vector2(0.035, 0.035), 0.0, 2.3)
+		RealLandmarks._obox(_flat("steel", RealLandmarks.STEEL, surfaces, materials), pole_at, left, Vector2(0.035, 0.035), 0.0, STOP_POLE_TOP)
 		var facing := -inward
 		var sign_tool := RealChunkBuilder._tool("panel_sign_stop", surfaces, materials, PixelMaterials.panel("sign_stop", Color.WHITE, true))
-		face_quad(sign_tool, pole_at, facing, 0.75, 1.55, 2.3)
+		face_quad(sign_tool, pole_at, facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)
+		var back_tool := RealChunkBuilder._tool("panel_sign_stop_back", surfaces, materials, PixelMaterials.panel("sign_stop", Color("#7d828c"), true))
+		face_quad(back_tool, pole_at - facing * 0.06, -facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)   # the plain steel back, seen from behind
 
 
 ## Zebra stripes across the whole road, 3 m long, every metre.
@@ -501,7 +543,7 @@ static func _shelter(line: PackedVector2Array, width: float, length: float, rng:
 		RealLandmarks._obox(steel, front + d * s * 1.5, d, Vector2(0.05, 0.05), 0.0, 2.3)
 	RealLandmarks._obox(_flat("bench_wood", "#8c6044", surfaces, materials), back - left * 0.3, d, Vector2(1.3, 0.2), 0.45, 0.52)
 	var sign_at := front + d * 2.3
-	RealLandmarks._obox(steel, sign_at, d, Vector2(0.04, 0.04), 0.0, 2.6)
+	RealLandmarks._obox(steel, sign_at, d, Vector2(0.04, 0.04), 0.0, 2.5)
 	var tex := "sign_bus" if rng.randi() % 2 == 0 else "sign_taxi"
 	var sign := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
 	for s: float in [1.0, -1.0]:

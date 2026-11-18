@@ -1,5 +1,13 @@
 # Changelog
 
+## Street name blocks, STOP sign pole, floating names (2026-11-18)
+- The corner slabs are now the long low concrete name block (1 m x 105 mm, 265 mm high with a 125 mm step in front and the name on the
+  sloping face), white-painted with the street's name in black capitals. One block per street, lying along that street just behind its kerb
+  at each junction corner, facing the road.
+- A STOP sign's pole now stops inside the octagon (2.2 m; the sign runs 1.55 to 2.3 m) instead of poking out above it, and the sign has a
+  plain grey back (it showed a mirrored red face from behind). Bus stop sign poles are 10 cm shorter than their signs too.
+- The street names float over the roads again (besides the blocks).
+
 ## STOP written across the lane (2026-11-18)
 - The STOP painted before a stop line is now written horizontally across the lane, letters side by side reading left to right as the
   driver sees them (2.4 m across, 1.8 m along, stretched along the road like real road paint), not stacked along the road.

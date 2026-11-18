@@ -2926,8 +2926,11 @@ func _test_real_world_units() -> void:
 	var ms := (Time.get_ticks_usec() - t0) / 1000.0
 	_check(int(stats.buildings) > 20 and int(stats.roads) > 5 and node.get_node_or_null("Buildings") != null, "the Excelsior Street piece builds (%d buildings, %d road pieces, %.0f ms)" % [int(stats.buildings), int(stats.roads), ms])
 	var slabs: Array = node.get_children().filter(func(c): return c.has_meta("street_slab")).map(func(c): return (c as Label3D).text)
-	_check(slabs.size() >= 2 and slabs.all(func(s): return s.contains("\n") and s == s.to_upper()) and RealStreetDecor.short_name("Excelsior Street") == "EXCELSIOR ST",
-		"street names are on concrete slabs at the junction corners, two names on both faces (%d labels, e.g. %s)" % [slabs.size(), str(slabs[0]).replace("\n", " / ") if not slabs.is_empty() else ""])
+	var floating: Array = node.get_children().filter(func(c): return c.has_meta("street")).map(func(c): return str(c.get_meta("street")))
+	_check(slabs.size() >= 2 and slabs.all(func(s): return s == s.to_upper() and not s.contains("\n")) and node.get_children().any(func(c): return str(c.name) == "Mesh_slab"),
+		"each junction corner has concrete street name blocks, one name each (%d names, e.g. %s)" % [slabs.size(), str(slabs[0]) if not slabs.is_empty() else ""])
+	_check(floating.has("Excelsior Street"), "the street names also float over the roads")
+	_check(RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.STOP_POLE_TOP > RealStreetDecor.STOP_SIGN_BOTTOM, "a STOP sign's pole ends inside the octagon, never above it")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
 	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \
