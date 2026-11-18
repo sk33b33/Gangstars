@@ -122,7 +122,7 @@ func _build_real_world() -> void:
 	for id in registry.order:
 		var h := registry.get_house(id)
 		if not h.real_id.is_empty():
-			data.story[h.real_id] = true
+			data.story[h.real_id] = h.number   # the number goes on the gate (RealHomeDecor.number_for)
 	data.game_spots = RealDistrictData.spots_of(areas)   # generated details keep clear of the game's places
 	real = RealWorld.new()
 	real.name = "RealWestridge"

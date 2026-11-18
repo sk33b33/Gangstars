@@ -108,7 +108,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 			_yard(yards[n], seed_of(_line(b.p)), surfaces, materials, collision)
 		var decor: Dictionary = ctx.get("decor", {})
 		if decor.has(n) and fronts.has(n):
-			RealHomeDecor.draw(decor[n], yards.get(n, {}), fronts[n], _line(b.p), float(b.get("h", 3.0)), seed_of(_line(b.p)), root, surfaces, materials, props, collision)
+			RealHomeDecor.draw(decor[n], yards.get(n, {}), fronts[n], _line(b.p), float(b.get("h", 3.0)), seed_of(_line(b.p)), root, surfaces, materials, props, collision, int(story[hid]) if story.get(hid) is int else 0)
 		n += 1
 	stats["houses"] = houses
 	stats["yards"] = yards.size()

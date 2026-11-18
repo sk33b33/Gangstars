@@ -141,10 +141,11 @@ static func _free(box: PackedVector2Array, own: PackedVector2Array, rings: Array
 # ------------------------------------------------------------------ drawing
 
 ## Draws a home's decor and its yard's driveway. `h`: the house's wall height.
-static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: PackedVector2Array, h: float, seed_value: int, root: Node3D, surfaces: Dictionary, materials: Dictionary, props: Dictionary, collision: PackedVector3Array) -> void:
+static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: PackedVector2Array, h: float, seed_value: int, root: Node3D, surfaces: Dictionary, materials: Dictionary, props: Dictionary, collision: PackedVector3Array, house_number := 0) -> void:
 	var n: Vector2 = front.normal
 	var mid: Vector2 = front.mid
 	var t := Vector2(-n.y, n.x)
+	draw_number(root, mid, t, n, number_for(house_number, seed_value), surfaces, materials)
 	if not yard.is_empty() and not (yard.drive as Dictionary).is_empty():
 		_driveway(yard, front, seed_value, root, surfaces, materials, collision)
 	if decor.has("back"):
@@ -199,6 +200,36 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 		RealStreetDecor.add_prop(props, "crate_stack", at + n * 0.9 + t * 0.6, 0.3)
 		RealStreetDecor.add_prop(props, "plastic_chair", at + n * 1.0 - t * 0.6, 2.4)
 		RealShopDecor.draw_spaza(at, t, n, seed_value, surfaces, materials, props)
+
+
+## The number on a home: the game's own number for the homes that are in the game's data, else one made from the outline's seed (1 to 98),
+## so every home has a number that never changes.
+static func number_for(game_number: int, seed_value: int) -> int:
+	return game_number if game_number > 0 else 1 + seed_value % 98
+
+
+## A small white plate on the wall beside the front door, the number in black on it. The number is a Label3D that only shows within
+## HOUSE_NUMBER_RANGE metres, so far-off streets cost nothing.
+const HOUSE_NUMBER_RANGE := 16.0
+const HOUSE_NUMBER_BESIDE := 1.25
+
+
+static func draw_number(root: Node3D, mid: Vector2, t: Vector2, n: Vector2, number: int, surfaces: Dictionary, materials: Dictionary) -> Label3D:
+	var at := mid + t * HOUSE_NUMBER_BESIDE
+	RealLandmarks._obox(RealStreetDecor._flat("number_plate", "#f1eee8", surfaces, materials), at + n * 0.02, t, Vector2(0.17, 0.012), 1.5, 1.74)
+	var label := Label3D.new()
+	label.name = "HouseNumber"
+	label.text = str(number)
+	label.font_size = 40
+	label.pixel_size = 0.004
+	label.modulate = Color("#1d1b24")
+	label.outline_size = 0
+	label.double_sided = false
+	label.visibility_range_end = HOUSE_NUMBER_RANGE
+	label.position = Vector3(at.x + n.x * 0.036, 1.62, at.y + n.y * 0.036)
+	label.rotation.y = atan2(n.x, n.y)
+	root.add_child(label)
+	return label
 
 
 static func _driveway(yard: Dictionary, front: Dictionary, seed_value: int, root: Node3D, surfaces: Dictionary, materials: Dictionary, collision: PackedVector3Array) -> void:

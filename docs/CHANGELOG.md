@@ -1,5 +1,10 @@
 # Changelog
 
+## Quick wins and medium upgrades (2026-11-18, in progress)
+- House numbers: every home has a small white plate with its number beside the front door (`RealHomeDecor.draw_number`). The game's own homes
+  show their number from the data (`starter_houses.json`); every other home gets a steady number from 1 to 98 made from its outline. The
+  number is a `Label3D` that only draws within 16 m. Test: a plate with the right text, facing the street.
+
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the
   right-hand seat with his hands forward on the steering wheel (`DrivableCar._show_driver`, `VehicleLibrary.REMY_SEAT`). Other cars keep the

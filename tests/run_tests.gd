@@ -3129,6 +3129,13 @@ func _test_real_world_units() -> void:
 		and civic_props.has("park_bench") and civic_props.has("jojo_tank") and civic_props.get("bollard", []).size() == 5 \
 		and sports_surfaces.has("panel_sign_sports_hall") and sports_props.has("netball_post") and sports_props.get("park_lamp", []).size() == 2 and not sports_surfaces.has("garden_veg"),
 		"the civic centre has a sign, doors, an events board, benches, a vegetable garden and a water tank; the sports hall has its own sign, a basketball post and floodlights (%s / %s)" % [civic_surfaces.keys(), sports_surfaces.keys()])
+	var number_root := Node3D.new()
+	var plate_surfaces := {}
+	var number_label := RealHomeDecor.draw_number(number_root, Vector2(10, 20), Vector2.RIGHT, Vector2.DOWN, 42, plate_surfaces, {})
+	_check(number_label.text == "42" and absf(number_label.global_basis.z.dot(Vector3(0, 0, 1)) - 1.0) < 0.01 and plate_surfaces.has("number_plate") \
+		and RealHomeDecor.number_for(7, 12345) == 7 and RealHomeDecor.number_for(0, 12345) == RealHomeDecor.number_for(0, 12345) and RealHomeDecor.number_for(0, 12345) in range(1, 99),
+		"a home's number is on a plate beside its door, facing the street; game homes keep their own number and the rest get a steady one from 1 to 98")
+	number_root.free()
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:
