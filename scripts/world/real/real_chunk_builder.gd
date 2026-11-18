@@ -724,6 +724,7 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 	var window := _tool("panel_window", surfaces, materials, PixelMaterials.panel("window_bars"))
 	var sill := _tool("coping", surfaces, materials, PixelMaterials.flat(Color(COPING_COLOR)))
 	var dark := _tool("airbrick", surfaces, materials, PixelMaterials.flat(Color("#2a2a2e")))
+	var lit := _tool("window_light", surfaces, materials, NightGlow.window_material())
 	var anchor := Vector3.ZERO
 	for i in ring.size():
 		var p0 := ring[i]
@@ -748,14 +749,15 @@ static func _front(ring: PackedVector2Array, centre: Vector2, h: float, near_roa
 					if side == garage_side:
 						_roller_door(surfaces, materials, at, tangent, normal)
 					else:
-						_window(window, sill, at, tangent, normal, top, dark)
+						_window(window, sill, at, tangent, normal, top, dark, lit)
 		elif length >= 5.0 and _wall_hash(mid) % 100 < 22:
 			_roller_door(surfaces, materials, mid, tangent, normal)   # a garage on a side wall
 		elif length > 3.2:
-			_window(window, sill, mid, tangent, normal, top, dark)
+			_window(window, sill, mid, tangent, normal, top, dark, lit)
 	return {"at": anchor}
 
 
+const LIT_WINDOW_PERCENT := 55   # share of windows with a light on at night
 const DOOR_CLEAR := 0.9
 
 
@@ -822,8 +824,10 @@ static func _distance_to_lines(p: Vector2, lines: Array) -> float:
 
 
 ## A barred window 1.4 m wide from 1.0 m up to `top`, with a concrete sill under it.
-static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float, dark: SurfaceTool = null) -> void:
+static func _window(window: SurfaceTool, sill: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vector2, top: float, dark: SurfaceTool = null, lit: SurfaceTool = null) -> void:
 	_panel(window, mid, tangent, normal, 1.4, 1.0, top)
+	if lit != null and _wall_hash(mid) % 100 < LIT_WINDOW_PERCENT:   # a warm pane over the glass, shown only at night (NightGlow)
+		_panel(lit, mid + normal * 0.012, tangent, normal, 1.18, 1.1, top - 0.1)
 	# A concrete surround: a lintel over the opening and a reveal down each side.
 	RealLandmarks._obox(sill, mid + normal * 0.05, tangent, Vector2(0.82, 0.06), top, top + 0.13)
 	for side: float in [-1.0, 1.0]:

@@ -5,6 +5,9 @@ extends RefCounted
 ## streetlights use a sodium-orange variant of the same trick (see LightPool).
 
 static var _mat: StandardMaterial3D
+static var _window_mat: StandardMaterial3D
+## How bright a lit window is at full night (the pane is an additive warm layer over the dark glass).
+const WINDOW_LEVEL := 0.38
 
 
 static func material() -> StandardMaterial3D:
@@ -29,9 +32,22 @@ static func material() -> StandardMaterial3D:
 	return _mat
 
 
+## The warm pane over a lit window: one shared flat additive material, so every lit window batches and DayNight only changes its strength.
+static func window_material() -> StandardMaterial3D:
+	if _window_mat == null:
+		_window_mat = StandardMaterial3D.new()
+		_window_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_window_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_window_mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		_window_mat.albedo_color = Color(1.0, 0.74, 0.36, 0.0)
+		_window_mat.disable_receive_shadows = true
+	return _window_mat
+
+
 ## 0 = off (day, or load-shedding), 1 = full night.
 static func set_level(level: float) -> void:
 	material().albedo_color.a = clampf(level, 0.0, 1.0)
+	window_material().albedo_color.a = clampf(level, 0.0, 1.0) * WINDOW_LEVEL
 
 
 static func level() -> float:

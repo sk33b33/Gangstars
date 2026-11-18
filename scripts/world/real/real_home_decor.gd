@@ -146,6 +146,9 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 	var mid: Vector2 = front.mid
 	var t := Vector2(-n.y, n.x)
 	draw_number(root, mid, t, n, number_for(house_number, seed_value), surfaces, materials)
+	if seed_value % 5 < 3:   # a lit home: its light falls on the ground out front at night
+		var glow := RealChunkBuilder._tool("night_glow", surfaces, materials, NightGlow.material())
+		RealStreetDecor.decal(glow, mid + n * 1.7, n, 3.4, 2.4, RealStreetDecor.Y_GROUND_DECAL + 0.004)
 	if not yard.is_empty() and not (yard.drive as Dictionary).is_empty():
 		_driveway(yard, front, seed_value, root, surfaces, materials, collision)
 	if decor.has("back"):

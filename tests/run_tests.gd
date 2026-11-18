@@ -3150,6 +3150,12 @@ func _test_real_world_units() -> void:
 		"a hip roof is guttered on all four sides, a gable roof only on its two long sides (%d and %d gutters)" % [hip_runs.size(), gable_runs.size()])
 	_check(RealChunkBuilder.fascia_edges(true) == [0, 2] and RealChunkBuilder.fascia_edges(false).size() == 4,
 		"a gable roof has fascia boards on its two long eaves only, no horizontal board across the gable end; a hip roof has all four")
+	NightGlow.set_level(1.0)
+	var lit_on: float = NightGlow.window_material().albedo_color.a
+	NightGlow.set_level(0.0)
+	var lit_off: float = NightGlow.window_material().albedo_color.a
+	_check(parts.has("Mesh_window_light") and lit_on > 0.3 and lit_off == 0.0,
+		"windows light up at night (and stay dark by day or in load-shedding) and (%.2f at night; window %s, glow %s)" % [lit_on, parts.has("Mesh_window_light"), parts.has("Mesh_night_glow")])
 	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
 		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
 		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}
@@ -3228,6 +3234,7 @@ func _test_real_world_units() -> void:
 	_check(dparts.has("Mesh_garden_path") and dparts.has("Mesh_decal_grass_patch") and yard_props.has("Props_wheelie_bin") and yard_props.has("Props_letterbox")
 		and yard_props.has("Props_braai_drum") and yard_props.has("Props_plastic_chair"),
 		"front gardens have paved paths, lawn patches, wheelie bins and letterboxes; yards have braai drums and chairs (%s)" % [yard_props])
+	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}
 	for ck: Vector2i in data.chunk_keys:
