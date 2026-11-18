@@ -1,5 +1,12 @@
 # Changelog
 
+## Mirrored tags, one STOP sign (2026-11-18)
+- Gang tags (and the shop boards, murals and other pictures on walls) were mirrored: the wall panel helper's flip rule was the wrong way
+  round for every wall. Fixed in `RealChunkBuilder._panel`, with a check that the panel's right-hand edge carries the right-hand part
+  of the picture (seen failing first).
+- A STOP sign is one octagon on top of its pole: red with STOP on both faces, each reading correctly from its own side (it was a red
+  front plus a grey back plate, which looked like two signs). The pole ends at the octagon's lower edge.
+
 ## More trees, plants and flowers (2026-11-18)
 - New plant models (`tools/blender/build_props.py`, each under 400 triangles): bush, flowering bushes (pink, yellow, white), flower
   beds (three colour mixes), grass tufts (dry and green), agave, a fan palm, a broad shade tree (`tree_c`) and a hedge piece.

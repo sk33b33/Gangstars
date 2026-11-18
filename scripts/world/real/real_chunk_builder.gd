@@ -690,8 +690,9 @@ static func _panel(st: SurfaceTool, mid: Vector2, tangent: Vector2, normal: Vect
 	var a2 := mid - tangent * width * 0.5 + normal * 0.04
 	var b2 := mid + tangent * width * 0.5 + normal * 0.04
 	var corners := [Vector3(a2.x, y0, a2.y), Vector3(b2.x, y0, b2.y), Vector3(b2.x, y1, b2.y), Vector3(a2.x, y1, a2.y)]
-	# Seen from outside, the wall runs right to left when the tangent is the outward normal turned left.
-	var flip := tangent.x * normal.y - tangent.y * normal.x > 0.0
+	# For a viewer outside the wall, "right" is left_of(normal). When the tangent points to that side the picture runs along it, otherwise
+	# against it. (This rule was the wrong way round: every tag, board and sign on a wall came out mirrored.)
+	var flip := tangent.x * normal.y - tangent.y * normal.x < 0.0
 	var uvs := [Vector2(1, 1), Vector2(0, 1), Vector2(0, 0), Vector2(1, 0)] if flip else [Vector2(0, 1), Vector2(1, 1), Vector2(1, 0), Vector2(0, 0)]
 	for tri in [[0, 1, 2], [0, 2, 3]]:
 		var order: Array = tri

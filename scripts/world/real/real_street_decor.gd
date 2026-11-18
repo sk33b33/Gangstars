@@ -154,10 +154,10 @@ static func _verge_greenery(line: PackedVector2Array, width: float, pave: float,
 
 # ------------------------------------------------------------------ street name slabs
 
-## The STOP sign: the octagon from 1.55 m to 2.3 m; its pole stops inside it, 10 cm below the top, so it never pokes out above.
+## The STOP sign: the octagon from 1.55 m to 2.3 m sits on top of its pole, which ends at the octagon's lower edge.
 const STOP_SIGN_BOTTOM := 1.55
 const STOP_SIGN_TOP := 2.3
-const STOP_POLE_TOP := 2.2
+const STOP_POLE_TOP := 1.55
 const SLAB_COLOR := "#ebe8df"
 const BLOCK_LENGTH := 1.0
 const BLOCK_DEPTH := 0.105
@@ -300,9 +300,9 @@ static func _decal_tool(tex: String, surfaces: Dictionary, materials: Dictionary
 const SIGN_STANDOFF := 0.06
 
 
-static func face_quad(st: SurfaceTool, mid: Vector2, normal: Vector2, width: float, y0: float, y1: float) -> void:
+static func face_quad(st: SurfaceTool, mid: Vector2, normal: Vector2, width: float, y0: float, y1: float, standoff := SIGN_STANDOFF) -> void:
 	var right := left_of(normal)
-	var m := mid + normal * SIGN_STANDOFF
+	var m := mid + normal * standoff
 	var bl := m - right * width * 0.5
 	var br := m + right * width * 0.5
 	var corners := [Vector3(bl.x, y0, bl.y), Vector3(br.x, y0, br.y), Vector3(br.x, y1, br.y), Vector3(bl.x, y1, bl.y)]
@@ -411,12 +411,13 @@ static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, n
 		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 1.7 + left * width * 0.25, inward, 2.4, 1.8, Y_ROAD_DECAL)
 		# The sign itself: a red octagon on a pole at the kerb beside the stop line, facing the arriving driver.
 		var pole_at := at + left * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.55)
+		# One octagon on top of a pole, red with STOP on both faces (each reads the right way round from its own side): the faces are
+		# a centimetre either side of the pole's axis and the pole ends at the octagon's lower edge, so nothing shows through.
 		RealLandmarks._obox(_flat("steel", RealLandmarks.STEEL, surfaces, materials), pole_at, left, Vector2(0.035, 0.035), 0.0, STOP_POLE_TOP)
 		var facing := -inward
 		var sign_tool := RealChunkBuilder._tool("panel_sign_stop", surfaces, materials, PixelMaterials.panel("sign_stop", Color.WHITE, true))
-		face_quad(sign_tool, pole_at, facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)
-		var back_tool := RealChunkBuilder._tool("panel_sign_stop_back", surfaces, materials, PixelMaterials.panel("sign_stop_back", Color.WHITE, true))
-		face_quad(back_tool, pole_at, -facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP)   # the plain steel back, seen from behind
+		face_quad(sign_tool, pole_at, facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP, 0.012)
+		face_quad(sign_tool, pole_at, -facing, 0.75, STOP_SIGN_BOTTOM, STOP_SIGN_TOP, 0.012)
 
 
 ## Zebra stripes across the whole road, 3 m long, every metre.

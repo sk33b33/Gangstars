@@ -2857,6 +2857,23 @@ func _test_real_world_units() -> void:
 							on_road += 1
 							break
 	_check(on_road == 0, "no building corner stands on a carriageway (%d do)" % on_road)
+	# A texture on a wall reads the right way round for someone standing outside (the gang tags and shop boards were mirrored): the
+	# edge of the panel on the viewer's right carries u = 1, whichever way round the outline runs.
+	var panel_ok := true
+	for n_dir: Vector2 in [Vector2(0, 1), Vector2(1, 0), Vector2(0.6, -0.8), Vector2(-1, 0)]:
+		for turn: float in [1.0, -1.0]:
+			var along := RealStreetDecor.left_of(n_dir) * turn
+			var st := SurfaceTool.new()
+			st.begin(Mesh.PRIMITIVE_TRIANGLES)
+			RealChunkBuilder._panel(st, Vector2(5, 5), along, n_dir, 2.0, 0.0, 2.0)
+			var arrays := st.commit().surface_get_arrays(0)
+			var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+			for k in verts.size():
+				var to_right := (Vector2(verts[k].x, verts[k].z) - Vector2(5, 5)).dot(RealStreetDecor.left_of(n_dir))
+				if absf(to_right) > 0.5:
+					panel_ok = panel_ok and (uvs[k].x > 0.5) == (to_right > 0.0)
+	_check(panel_ok, "a texture on a wall is not mirrored: the panel's right-hand edge carries the right-hand part of the picture")
 	# Every wall faces out of its building, including the walls round the inside of an L or U shape (a wall facing in is not drawn
 	# from the street: "houses with missing walls"; the old test, away from the centre, got 2,437 walls of 1,370 buildings wrong).
 	var ell := PackedVector2Array([Vector2(0, 0), Vector2(10, 0), Vector2(10, 4), Vector2(4, 4), Vector2(4, 10), Vector2(0, 10)])
@@ -2937,7 +2954,7 @@ func _test_real_world_units() -> void:
 			greenery += int(e[1])
 			kinds_seen[e[0]] = true
 	_check(greenery >= 60 and kinds_seen.size() >= 6, "the verges, yards and parks are planted: trees, shrubs, flower beds and grass (%d plants of %d kinds in this piece)" % [greenery, kinds_seen.size()])
-	_check(RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.STOP_POLE_TOP > RealStreetDecor.STOP_SIGN_BOTTOM and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign's pole ends inside the octagon and stands behind the plate, never across its face")
+	_check(RealStreetDecor.STOP_POLE_TOP <= RealStreetDecor.STOP_SIGN_BOTTOM + 0.01 and RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign is one octagon on top of its pole, the pole never across the face")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))
 	_check(parts.has("Mesh_kerb") and parts.has("Mesh_gutter") and parts.any(func(n): return n.begins_with("Mesh_plinth")) \
