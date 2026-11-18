@@ -1,5 +1,12 @@
 # Changelog
 
+## More in the school grounds (2026-11-18)
+- Three new Blender props: `netball_post`, `flagpole`, `bike_rack` (58 props in all).
+- Each school ground: up to two netball courts (tar, white boundary and third lines, a post at each end), a flagpole with a flag, three
+  bicycle racks, and six benches each with a litter bin. Every item is put on open ground found by trying random spots (clear of
+  buildings, paths and the fence); one that finds no room is left out.
+- Test: a 160 m school ground gets the court, posts, flagpole, racks, benches and bins.
+
 ## More in the playgrounds (2026-11-18)
 - Three new Blender props: `seesaw`, `spring_rider`, `monkey_bars` (55 props in all).
 - Each playground: a red rubber safety surface under the swings, slide and roundabout; a sandpit with a timber edge; a seesaw; monkey

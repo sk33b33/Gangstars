@@ -14,6 +14,8 @@ const SCHOOL_GATE_WIDTH := 5.0
 const PARK_TREE_SPACING := 9.0
 const PARK_LOOP_RADIUS := 6.0       # the paved loop path in a park, and how many points make it round
 const PARK_LOOP_POINTS := 20
+const SCHOOL_COURTS := 2
+const COURT_HALF := Vector2(14.0, 7.5)   # a netball court is 30.5 x 15.25 m
 const PARK_TREE_CLEAR := 2.5        # from paths and buildings
 const STALL_HALF := Vector2(0.95, 0.45)
 const STALL_FROM_CROSSING := 4.5
@@ -152,7 +154,7 @@ static func draw_areas(areas: Array, strips: Array, rings: Array, surfaces: Dict
 			"dunes":
 				_dunes(ring, strips, rings, rng, props)
 			"school":
-				_school_grounds(ring, strips, rings, rng, props)
+				_school_grounds(ring, strips, rings, rng, surfaces, materials, props)
 
 
 static func _park(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
@@ -234,12 +236,60 @@ static func _dunes(ring: PackedVector2Array, strips: Array, rings: Array, rng: R
 
 
 ## School grounds: shade trees round the edge and across the playing fields, with shrubs along the buildings.
-static func _school_grounds(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+static func _school_grounds(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
 	var box := RealChunkBuilder.ring_box(ring)
 	var near_strips: Array = strips.filter(func(s): return (s.box as Rect2).intersects(box.grow(5.0)))
 	var near_rings: Array = rings.filter(func(r): return RealChunkBuilder.ring_box(r).intersects(box.grow(5.0)))
 	_undergrowth(ring, box, near_strips, near_rings, rng, props, 13.0, 0.7, ["tree_c", "tree_a", "tree_b", "tree_c", "palm"])
 	_undergrowth(ring, box, near_strips, near_rings, rng, props, 7.0, 0.3, ["bush", "bush_pink", "flowers_yellow", "grass_green"])
+	_school_yard(ring, box, near_strips, near_rings, rng, surfaces, materials, props)
+
+
+## Where a school's pupils spend the day: up to two netball courts (tar, white lines, a post at each end), a flagpole, bicycle racks,
+## and benches with a litter bin. Each is put on open ground found by trying random spots; one that finds none is left out.
+static func _school_yard(ring: PackedVector2Array, box: Rect2, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
+	var rect := RealChunkBuilder.min_rect(ring)
+	var u: Vector2 = rect.u
+	var v := u.orthogonal()
+	var tar := RealStreetDecor._flat("court_tar", "#555a62", surfaces, materials)
+	var line := RealStreetDecor._flat("court_line", "#f2efe6", surfaces, materials)
+	var courts: Array = []
+	for attempt in 120:
+		if courts.size() >= SCHOOL_COURTS:
+			break
+		var at := Vector2(rng.randf_range(box.position.x, box.end.x), rng.randf_range(box.position.y, box.end.y))
+		if _open_ground(at, u, v, COURT_HALF + Vector2(2.0, 2.0), ring, strips, rings) and courts.all(func(k): return (k as Vector2).distance_to(at) > 25.0):
+			courts.append(at)
+			RealLandmarks._obox(tar, at, u, COURT_HALF, 0.0, 0.03)
+			for e: Array in [[v * COURT_HALF.y, u, Vector2(COURT_HALF.x, 0.06)], [-v * COURT_HALF.y, u, Vector2(COURT_HALF.x, 0.06)],
+					[u * COURT_HALF.x, v, Vector2(COURT_HALF.y, 0.06)], [-u * COURT_HALF.x, v, Vector2(COURT_HALF.y, 0.06)],
+					[Vector2.ZERO, u, Vector2(COURT_HALF.x, 0.05)], [v * COURT_HALF.y / 3.0, u, Vector2(COURT_HALF.x, 0.05)], [-v * COURT_HALF.y / 3.0, u, Vector2(COURT_HALF.x, 0.05)]]:
+				RealLandmarks._obox(line, at + e[0], e[1], e[2], 0.03, 0.035)
+			for sgn: float in [-1.0, 1.0]:
+				RealStreetDecor.add_prop(props, "netball_post", at + u * sgn * (COURT_HALF.x - 0.3), atan2(-u.x * sgn, -u.y * sgn))
+	var singles: Array = [["flagpole", 1, Vector2(1.5, 1.5)], ["bike_rack", 3, Vector2(2.0, 1.0)], ["park_bench", 6, Vector2(1.2, 1.0)]]
+	for kind: Array in singles:
+		var placed := 0
+		for attempt in 160:
+			if placed >= int(kind[1]):
+				break
+			var at := Vector2(rng.randf_range(box.position.x, box.end.x), rng.randf_range(box.position.y, box.end.y))
+			if not _open_ground(at, u, v, kind[2], ring, strips, rings) or courts.any(func(k): return (k as Vector2).distance_to(at) < 14.0):
+				continue
+			placed += 1
+			var yaw := atan2(-u.y, u.x) if str(kind[0]) == "bike_rack" else (rng.randf() * TAU if str(kind[0]) == "flagpole" else atan2(v.x, v.y))
+			RealStreetDecor.add_prop(props, str(kind[0]), at, yaw)
+			if str(kind[0]) == "park_bench":
+				RealStreetDecor.add_prop(props, "litter_bin", at + u * 1.6, rng.randf() * TAU)
+
+
+## True when a rectangle (half sizes along u and v) lies wholly inside the area and clear of paths and buildings.
+static func _open_ground(at: Vector2, u: Vector2, v: Vector2, half: Vector2, ring: PackedVector2Array, strips: Array, rings: Array) -> bool:
+	for k: Vector2 in [Vector2.ZERO, Vector2(1, 1), Vector2(1, -1), Vector2(-1, 1), Vector2(-1, -1)]:
+		var q := at + u * k.x * half.x + v * k.y * half.y
+		if not RealChunkBuilder.point_in_ring(q, ring) or not _clear(q, strips, rings):
+			return false
+	return true
 
 
 static func _clear(p: Vector2, strips: Array, rings: Array) -> bool:

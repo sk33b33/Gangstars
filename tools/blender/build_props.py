@@ -679,6 +679,35 @@ def monkey_bars(x):
     return join(p, "monkey_bars", (x, 0, 0))
 
 
+def netball_post(x):
+    """A netball post: a 3.05 m steel pole with a ring on a short arm towards -Y (Godot +Z)."""
+    p = [add("cyl", (0, 0, 1.52), (0.04, 0.04, 1.52), "white_plastic", seg=8)]
+    p.append(add("cyl", (0, 0.0, 0.08), (0.09, 0.09, 0.08), "metal_dark", seg=8))
+    p.append(add("cube", (0, -0.1, 2.98), (0.015, 0.1, 0.015), "metal", smooth=False))
+    p.append(add("torus", (0, -0.3, 3.0), (0.19, 0.19, 0.19), "cloth_a", minor=0.07, seg=14))
+    return join(p, "netball_post", (x, 0, 0))
+
+
+def flagpole(x):
+    """A school flagpole: a 7 m tapering pole on a concrete base with a flag flying towards +X."""
+    p = [add("cyl", (0, 0, 0.12), (0.3, 0.3, 0.12), "counter_top", seg=10)]
+    p.append(add("cyl", (0, 0, 3.6), (0.05, 0.05, 3.5), "metal", seg=8, r2=0.6))
+    p.append(add("sphere", (0, 0, 7.12), (0.07, 0.07, 0.07), "chrome", sub=1))
+    for i, m in enumerate(("cloth_c", "cloth_b", "cloth_a")):
+        p.append(add("cube", (0.62, 0, 6.82 - i * 0.2), (0.6, 0.012, 0.1), m, smooth=False))
+    return join(p, "flagpole", (x, 0, 0))
+
+
+def bike_rack(x):
+    """A steel bicycle rack: a rail on six hoops, 2.2 m long (along X), 0.8 m high."""
+    p = []
+    for i in range(6):
+        sx = -1.0 + i * 0.4
+        p.append(add("torus", (sx, 0, 0.3), (0.3, 0.3, 0.3), "metal_dark", rot=(math.pi / 2, 0, 0), minor=0.04, seg=12))
+    p.append(add("cube", (0, 0, 0.02), (1.1, 0.14, 0.02), "metal_dark", smooth=False))
+    return join(p, "bike_rack", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -689,7 +718,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack):
     build(x)
     x += 6.0
 

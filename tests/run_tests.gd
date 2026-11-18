@@ -2992,6 +2992,12 @@ func _test_real_world_units() -> void:
 	_check(play_props.has("seesaw") and play_props.has("monkey_bars") and play_props.has("spring_rider") and play_props.get("spring_rider", []).size() == 3 \
 		and play_props.has("park_bench") and play_props.has("litter_bin") and play_surfaces.has("play_rubber") and play_surfaces.has("play_sand"),
 		"a 40 m playground has a rubber surface, a sandpit, a seesaw, monkey bars, three spring riders, benches and a bin (%s)" % [play_props.keys()])
+	var school_props := {}
+	var school_surfaces := {}
+	RealParkDecor.draw_areas([{"k": "school", "p": [[0, 0], [160, 0], [160, 160], [0, 160]]}], [], [], school_surfaces, {}, school_props)
+	_check(school_surfaces.has("court_tar") and school_props.get("netball_post", []).size() >= 2 and school_props.has("flagpole") and school_props.has("bike_rack") \
+		and school_props.has("park_bench") and school_props.has("litter_bin"),
+		"a 160 m school ground has a netball court with posts, a flagpole, bicycle racks, benches and bins (%s)" % [school_props.keys()])
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

@@ -125,6 +125,19 @@ func _init() -> void:
 			_cams.append([sr + Vector3(4, 2.5, 6), sr + Vector3(4, 0.6, 0)])
 			print("PLAYGROUND at ", sr)
 			break
+	for c in play_node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_netball_post":
+			var np: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0).origin
+			_cams.append([np + Vector3(0, 30, 24), np + Vector3(0, 0, -8)])
+			_cams.append([np + Vector3(6, 2.5, 8), np + Vector3(0, 1.5, 0)])
+			print("NETBALL at ", np)
+			break
+	for c in play_node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_flagpole":
+			var fp: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0).origin
+			_cams.append([fp + Vector3(5, 3, 9), fp + Vector3(0, 3, 0)])
+			print("FLAG at ", fp)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
