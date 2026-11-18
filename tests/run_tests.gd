@@ -263,6 +263,15 @@ func _test_npc_data() -> void:
 	_check(seated_remy.is_seated() and VehicleLibrary.REMY_SEAT.has("hiace") and sk_hand.origin.z - sk_hips.origin.z > 0.3 and absf(sk_hand.origin.y - 1.14) < 0.15,
 		"Remy sits at the wheel of his van with his hands forward and up on the wheel, not at his sides (hand %.2f m ahead of the hips)" % (sk_hand.origin.z - sk_hips.origin.z))
 	seated_remy.queue_free()
+	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.5, 0.1)
+	var steer_ring: Node3D = remy_van.get_meta("steer_ring", null)
+	var turned_ring: float = steer_ring.rotation.y if steer_ring else 0.0
+	VehicleLibrary.animate(remy_van, -2.0, 0.0, 0.0, 0, 0.1, 0.1)
+	var rev_on: float = (remy_van.get_meta("reverse_lamp") as StandardMaterial3D).emission_energy_multiplier if remy_van.has_meta("reverse_lamp") else -1.0
+	VehicleLibrary.animate(remy_van, 3.0, 0.0, 0.0, 0, 0.1, 0.1)
+	var rev_off: float = (remy_van.get_meta("reverse_lamp") as StandardMaterial3D).emission_energy_multiplier if remy_van.has_meta("reverse_lamp") else -1.0
+	_check(steer_ring != null and absf(turned_ring) > 0.4 and rev_on > 1.0 and rev_off == 0.0,
+		"the HiAce's steering wheel turns with the steering (%.2f rad at full lock) and its reversing lamps light only while it backs up" % turned_ring)
 	var remy_van_shape: CollisionShape3D = drivable.find_children("*", "CollisionShape3D", false, false)[0]
 	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["hiace"])) < 0.01, "the HiAce's collision box is as long as the van (5.4 m)")
 	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)

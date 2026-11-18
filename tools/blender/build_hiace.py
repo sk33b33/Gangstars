@@ -6,7 +6,7 @@ Run headless:  blender -b --factory-startup --python tools/blender/build_hiace.p
 What it does, so the van drives like every other vehicle in VehicleLibrary (see tools/blender/build_vehicles.py):
   * scales the model by 0.8 (it was 1.25 times life size: 5.4 m long, 1.86 m wide after) and puts its origin on the ground at the centre,
     front = -Y in Blender (+Z in Godot), right-hand drive;
-  * drops the roof luggage and the roof rack floor (the van has no roof rack);
+  * drops the roof luggage and the roof rack floor (the van has no roof rack) and its steering wheel (Godot makes a ring that turns);
   * decimates every part (the phone cannot draw 500 000 triangles for one van) to roughly 30 000 triangles in total;
   * replaces the 30 photo textures with plain role materials named as in vehicles.glb: paint (Godot recolours it), glass, trim (black
     plastic), chrome, seat, headlight, taillight - no textures at all;
@@ -25,7 +25,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "art", "source", "2012_Toyota_HiAce_Commuter.fbx")
 OUT = os.path.join(ROOT, "assets", "models", "vehicles", "hiace.glb")
 SCALE = 0.8
-DROP = ("Baggages", "Baggage Floor")
+DROP = ("Baggages", "Baggage Floor", "steering", "steering.001")   # the steering wheel is a ring Godot makes and turns (hiace_steer)
 WHEELS = ("TireRing173", "TireRing174", "TireRing173.001", "TireRing174.001")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -234,6 +234,7 @@ marker("plate_front", (0.0, plate_front_y - 0.02, 0.6))
 marker("plate_rear", (0.0, plate_rear_y + 0.02, 0.7))
 marker("seat_0", (steer_x, steer_y + 0.62, 0.78))     # right-hand drive: the driver on the -X side facing -Y
 marker("seat_1", (-steer_x, steer_y + 0.62, 0.78))
+marker("steer", (steer_x, steer_y + 0.05, 1.2))      # the centre of the steering wheel (the model's own is left out)
 # Wiper pivots at the foot of the windscreen (Blender coordinates: the glass runs from y -2.49, z 1.29 up to y -1.85, z 1.79).
 marker("wiper_0", (steer_x - 0.1, -2.4, 1.33))
 marker("wiper_1", (steer_x + 0.55, -2.4, 1.33))

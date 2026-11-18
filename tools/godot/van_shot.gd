@@ -84,7 +84,7 @@ func _initialize() -> void:
 	cam.name = "Cam"
 	root.add_child(cam)
 	cam.current = true
-	_cams = [[Vector3(5.0, 1.7, 1.7), Vector3(-0.4, 1.1, 1.7)], [Vector3(-4.5, 1.7, 1.7), Vector3(-0.4, 1.1, 1.7)], [Vector3(-0.4, 4.0, 1.8), Vector3(-0.4, 0.8, 1.7)], [Vector3(-0.4, 1.4, -0.8), Vector3(-0.4, 1.2, 2.2)]]
+	_cams = [[Vector3(-0.4, 4.0, 1.9), Vector3(-0.4, 0.8, 1.9)], [Vector3(3.6, 1.8, 1.4), Vector3(-0.5, 1.15, 2.0)], [Vector3(-0.5, 1.5, 0.6), Vector3(-0.5, 1.2, 2.1)], [Vector3(0, 1.2, -5.5), Vector3(0, 0.7, -2.5)]]
 
 
 func _process(_delta: float) -> bool:

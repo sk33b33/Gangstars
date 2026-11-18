@@ -377,6 +377,9 @@ static func animate(pivot: Node3D, speed: float, steer: float, accel: float, ind
 	if tail:
 		var braking := accel < -0.5 or (absf(speed) < 0.3 and accel < 0.0)
 		tail.emission_energy_multiplier = 3.0 if braking else night * 1.2
+	var reverse: StandardMaterial3D = _opt_meta(pivot, "reverse_lamp")
+	if reverse:
+		reverse.emission_energy_multiplier = 3.5 if speed < -0.3 else 0.0
 	var blink := fmod(time, 0.8) < 0.4
 	for side in ["indicator_L", "indicator_R"]:
 		var ind: StandardMaterial3D = _opt_meta(pivot, side)

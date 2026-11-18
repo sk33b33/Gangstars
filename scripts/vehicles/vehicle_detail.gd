@@ -26,7 +26,7 @@ const DIMS := {
 	"panel_van": {"w": 1.85, "h": 2.5, "belt": 1.1, "roof": 2.0, "ws": [2.33, 1.12, 1.77, 1.92], "wb": 3.0},
 	"bus": {"w": 2.4, "h": 4.4, "belt": 1.12, "roof": 2.76, "ws": [4.18, 1.14, 4.0, 2.7], "wb": 5.6},
 	"refuse": {"w": 2.3, "h": 3.3, "belt": 1.4, "roof": 2.46, "ws": [3.13, 1.32, 2.95, 2.4], "wb": 4.4},
-	"hiace": {"w": 1.86, "h": 2.68, "belt": 1.0, "roof": 2.15, "ws": [2.49, 1.29, 1.85, 1.79], "wb": 3.09},
+	"hiace": {"w": 1.86, "h": 2.68, "belt": 1.0, "roof": 2.15, "ws": [2.49, 1.29, 1.85, 1.79], "wb": 3.09, "steer_scale": 1.25},
 	"scooter": {"w": 0.5, "h": 0.95, "belt": 0.7, "roof": 1.0, "ws": [], "wb": 1.24},
 }
 const SLOGANS := ["taxi_slogan_a", "taxi_slogan_b"]
@@ -127,10 +127,20 @@ static func dress(pivot: Node3D, tilt: Node3D, model: String, color: Color, seed
 		"bus":
 			_bus(tilt, d, seed)
 		"hiace":
+			_reverse_lamps(pivot, tilt)
 			_quad(tilt, "sticker_westridge", Vector2(0.72, 0.14), Vector3(-0.35, 1.28, -2.5), PI, 30.0)   # low on the rear window
 	_extras(tilt, d, model, seed, color)
 	if model != "scooter":
 		_exhaust(pivot, tilt, d, age)
+
+
+## Two white reversing lamps low on the back of Remy's van; they light while it backs up (VehicleLibrary.animate).
+static func _reverse_lamps(pivot: Node3D, tilt: Node3D) -> void:
+	var mat := VehicleLibrary._glow(Color("#cfd3d8"), Color("#ffffff"))
+	for sx: float in [-1.0, 1.0]:
+		var lamp := _box(tilt, Vector3(0.16, 0.07, 0.03), Vector3(sx * 0.68, 0.64, -2.51), Color.WHITE, 30.0)
+		lamp.material_override = mat
+	pivot.set_meta("reverse_lamp", mat)
 
 
 ## The small things that make one car of a kind different from the next (from its seed, so they never change): a spoiler on some hatchbacks and
@@ -240,8 +250,9 @@ static func _windscreen(pivot: Node3D, tilt: Node3D, d: Dictionary, marks: Dicti
 		tilt.add_child(holder)
 		var ring := MeshInstance3D.new()
 		var torus := TorusMesh.new()
-		torus.inner_radius = 0.14
-		torus.outer_radius = 0.18
+		var steer_scale := float(d.get("steer_scale", 1.0))
+		torus.inner_radius = 0.14 * steer_scale
+		torus.outer_radius = 0.18 * steer_scale
 		torus.rings = 16
 		torus.ring_segments = 6
 		ring.mesh = torus
