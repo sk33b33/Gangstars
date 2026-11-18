@@ -717,6 +717,13 @@ sprite("wall_streak", { w: 12, h: 24 },
 // a repaired patch: fresh paint over a crack, a shade lighter than the wall with a rough edge.
 sprite("wall_patch", { w: 16, h: 16 },
   (c) => { for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const e = Math.min(x, 15 - x, y, 15 - y); if (e > 1 || (e === 1 && (x + y) % 3 !== 0) || (e === 0 && (x * y) % 5 === 0)) c.px(x, y, "#ffffff2e") } })
+// What tops some fences and walls: a coil of razor wire (loops on two strands), and an electric fence (three taut strands on brackets).
+sprite("razor_wire", { w: 24, h: 8 },
+  hline(0, 2, 24, "#7d828c"), hline(0, 5, 24, "#7d828c"),
+  (c) => { for (let x = 0; x < 24; x += 6) { c.ring(x + 3, 4, 3, "#b9bcc2"); c.px(x + 1, 1, "#e8eaee"); c.px(x + 5, 7, "#e8eaee") } })
+sprite("electric_fence", { w: 16, h: 12 },
+  hline(0, 2, 16, "#b9bcc2"), hline(0, 6, 16, "#b9bcc2"), hline(0, 10, 16, "#b9bcc2"),
+  rect(0, 0, 1, 12, "#3a3d46"), rect(8, 1, 1, 11, "#3a3d4688"), px(0, 2, "#f2c43a"), px(0, 6, "#f2c43a"), px(0, 10, "#f2c43a"))
 sprite("dent", { w: 16, h: 12 },
   ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
 sprite("sticker_a", { w: 14, h: 6 },

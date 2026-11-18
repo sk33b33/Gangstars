@@ -997,8 +997,23 @@ static func _yard(plan: Dictionary, seed_value: int, surfaces: Dictionary, mater
 		var a1 := _v(a, height)
 		var b1 := _v(b, height)
 		collision.append_array([a0, a1, b1, a0, b1, b0])
+	var top := fence_top(seed_value) if kind != "none" else ""
+	if not top.is_empty():   # razor wire or an electric fence along the top of every run
+		var wire := _tool("fence_" + top, surfaces, materials, PixelMaterials.panel(top + ("_wire" if top == "razor" else "_fence"), Color.WHITE, true))
+		for seg: Array in plan.segments:
+			_fence_panel(wire, seg[0], seg[1], height, height + (0.3 if top == "razor" else 0.4), 1.5 if top == "razor" else 1.0)
 	for p: Vector2 in plan.posts:
 		_post(post_tool, coping, p, height + 0.15)
+
+
+## What runs along the top of a home's fence: "razor" (razor wire) on about one in ten, "electric" (an electric fence) on about one in eleven more,
+## nothing on the rest. From the outline's seed, so it never changes.
+const RAZOR_PERCENT := 10
+const ELECTRIC_PERCENT := 19    # the seeds from RAZOR_PERCENT up to this
+
+static func fence_top(seed_value: int) -> String:
+	var k := seed_value % 100
+	return "razor" if k < RAZOR_PERCENT else ("electric" if k < ELECTRIC_PERCENT else "")
 
 
 ## A see-through fence panel from a to b, y0 to y1, its texture repeating every `tile` metres along it.

@@ -19,6 +19,9 @@
 - Wall wear (`WallWear`, three new textures): rising damp (a darker, ragged band above the plinth) on about half of the homes, a rain streak
   running down from under about 60% of window sills, and a repaired patch of fresh paint on about one wall in seven. Soft alpha layers, so
   the walls keep their own colours. Test: all three exist in a built piece.
+- Fence tops (`RealChunkBuilder.fence_top`, two new textures `razor_wire` and `electric_fence`): about one home in ten has a coil of razor
+  wire along its fence or wall, about one in eleven more an electric fence (three taut strands on brackets). Test: the right ones for
+  the right seeds, none on the rest. Burglar bars were already on the windows and doors.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the
