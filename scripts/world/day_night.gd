@@ -25,6 +25,10 @@ var power_on := true
 const OVERCAST_SKY := Color(0.52, 0.55, 0.6)
 
 const DAY_AMBIENT := Color(0.62, 0.68, 0.78)
+const MORNING_AMBIENT := Color(0.58, 0.68, 0.84)     # cooler, bluer shade in the early morning
+const AFTERNOON_AMBIENT := Color(0.78, 0.68, 0.6)    # warmer, golden shade from mid-afternoon to sunset
+const AFTERNOON_FOG := Color(1.0, 0.86, 0.68)         # the haze turns warm late in the day
+const LIT_WINDOW_GLOW := 0.25                        # every window catches a little of the night; the lit ones add their own pane (NightGlow)
 const NIGHT_AMBIENT := Color(0.3, 0.36, 0.56)
 const MOON_COLOR := Color(0.62, 0.72, 1.0)
 const MOON_ENERGY := 0.3
@@ -81,6 +85,18 @@ func night_amount() -> float:
 	return 1.0 - smoothstep(0.0, 0.3, daylight(clock.hour())) if clock else 0.0
 
 
+## The shade colour by day at hour `h`: bluer in the morning, neutral at noon, warm and golden in the afternoon.
+static func ambient_color(h: float) -> Color:
+	var morning := 1.0 - smoothstep(6.0, 10.0, h) if h < 12.0 else 0.0
+	var afternoon := smoothstep(13.5, 18.0, h) if h > 12.0 else 0.0
+	return DAY_AMBIENT.lerp(MORNING_AMBIENT, morning).lerp(AFTERNOON_AMBIENT, afternoon)
+
+
+## How warm the haze is at hour `h` (0 to 1): none before the afternoon, most at sunset.
+static func afternoon_warmth(h: float) -> float:
+	return smoothstep(14.0, 18.5, h) if h > 12.0 else 0.0
+
+
 func apply() -> void:
 	var h := clock.hour()
 	var light := daylight(h)
@@ -96,7 +112,7 @@ func apply() -> void:
 	sun.light_energy = lerpf(0.95 * smoothstep(0.0, 0.25, light), MOON_ENERGY, night) * (1.0 - overcast * 0.55) * (1.0 - shade * 0.2) * (1.0 - dust * 0.25)
 	sun.shadow_enabled = shadows_allowed
 	sun.sky_mode = DirectionalLight3D.SKY_MODE_LIGHT_ONLY if night > 0.5 else DirectionalLight3D.SKY_MODE_LIGHT_AND_SKY
-	environment.ambient_light_color = DAY_AMBIENT.lerp(NIGHT_AMBIENT, night)
+	environment.ambient_light_color = ambient_color(h).lerp(NIGHT_AMBIENT, night)
 	environment.ambient_light_energy = lerpf(0.55, 0.6, night)
 	var sky := environment.sky.sky_material as ProceduralSkyMaterial if environment.sky else null
 	if sky:
@@ -107,7 +123,7 @@ func apply() -> void:
 		sky.sky_horizon_color = horizon
 		sky.ground_horizon_color = horizon
 		sky.ground_bottom_color = horizon.darkened(0.3)
-		environment.fog_light_color = horizon.lerp(DUST_FOG.darkened(night * 0.8), dust * 0.7)
+		environment.fog_light_color = horizon.lerp(AFTERNOON_FOG, afternoon_warmth(h) * clear * (1.0 - night) * 0.35).lerp(DUST_FOG.darkened(night * 0.8), dust * 0.7)
 		environment.fog_depth_begin = lerpf(80.0, 10.0, maxf(overcast * 0.45, dust))
 		environment.fog_depth_end = lerpf(320.0, 110.0, dust)
 		if environment.volumetric_fog_enabled:   # Forward+ only: thin haze that shows the sun's shafts, thicker at dusk and in dust
@@ -126,9 +142,10 @@ func apply() -> void:
 		win.emission_enabled = true
 		win.emission_texture = win.albedo_texture
 		win.emission = Color("#ffcf7a")
-	win.emission_energy_multiplier = night * 0.8 * power
+	win.emission_energy_multiplier = night * LIT_WINDOW_GLOW * power
 	NightGlow.set_level(night * power * 0.85)
 	is_lit = night > 0.5 and power_on
 	if absf(wet - _applied_wet) > 0.02:
 		_applied_wet = wet
 		PixelMaterials.set_wetness(wet)
+		Puddles.set_wetness(wet)

@@ -606,7 +606,7 @@ static func _wear(cls: String, line: PackedVector2Array, width: float, pave: flo
 			var here: Array = at_distance(line, dist)
 			decal(_decal_tool("manhole", surfaces, materials), here[0], here[1], 0.75, 0.75, Y_ROAD_DECAL)
 			dist += 80.0
-	var items := [["pothole", 90.0, Vector2(1.0, 0.75)], ["tar_patch", 60.0, Vector2(1.6, 1.6)], ["oil_stain", 35.0, Vector2(0.9, 0.9)], ["sand_drift", 70.0, Vector2(1.1, 3.2)]]
+	var items := [["pothole", 90.0, Vector2(1.0, 0.75)], ["tar_patch", 60.0, Vector2(1.6, 1.6)], ["oil_stain", 35.0, Vector2(0.9, 0.9)], ["sand_drift", 70.0, Vector2(1.1, 3.2)], ["puddle", 38.0, Vector2(1.9, 1.15)]]
 	for item: Array in items:
 		var tex := str(item[0])
 		if tex == "sand_drift" and cls == "main":
@@ -624,10 +624,14 @@ static func _wear(cls: String, line: PackedVector2Array, width: float, pave: flo
 					dir = d.rotated(rng.randf() * TAU)
 				"oil_stain":
 					c += left * (width * 0.5 - 1.1) * (1.0 if rng.randi() % 2 == 0 else -1.0)
+				"puddle":   # in the gutter side of the lane, where the water collects
+					c += left * (width * 0.5 - 0.9 - rng.randf() * 0.8) * (1.0 if rng.randi() % 2 == 0 else -1.0)
+					dir = d.rotated((rng.randf() - 0.5) * 0.5)
 				"sand_drift":
 					c += left * (width * 0.5 - 0.45) * (1.0 if rng.randi() % 2 == 0 else -1.0)
 			var size: Vector2 = item[2]
-			decal(_decal_tool(tex, surfaces, materials), c, dir, size.x, size.y, Y_ROAD_DECAL + (0.001 if tex == "sand_drift" else 0.0))
+			var tool := RealChunkBuilder._tool("puddle", surfaces, materials, Puddles.material()) if tex == "puddle" else _decal_tool(tex, surfaces, materials)
+			decal(tool, c, dir, size.x, size.y, Y_ROAD_DECAL + (0.001 if tex == "sand_drift" else (0.002 if tex == "puddle" else 0.0)))
 			dist += float(item[1]) * rng.randf_range(0.7, 1.3)
 	if pave > 0.6:
 		var litter := ["litter_paper", "litter_can", "litter_chips", "litter_bottle"]

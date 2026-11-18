@@ -704,6 +704,9 @@ sprite("mural_plain", { w: 48, h: 20 },
   hline(0, 0, 48, "#1d1b24"), hline(0, 19, 48, "#1d1b24"), vline(0, 0, 20, "#1d1b24"), vline(47, 0, 20, "#1d1b24"))
 
 // ---- Vehicle detail: dents, stickers, slogans, rain on the glass, skid marks ----
+// A puddle on the road after rain: a pale sky-blue pool with a lighter rim and a glint. It shows only while the ground is wet (Puddles).
+sprite("puddle", { w: 32, h: 20 },
+  ellipse(16, 10, 15, 8, "#8aa3bd99"), ellipse(15, 10, 12, 6, "#a9c0d6aa"), ellipse(13, 8, 5, 2, "#e6f0f8cc"), ellipse(21, 12, 3, 1, "#e6f0f899"))
 sprite("dent", { w: 16, h: 12 },
   ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
 sprite("sticker_a", { w: 14, h: 6 },

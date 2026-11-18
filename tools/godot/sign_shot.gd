@@ -243,6 +243,8 @@ func _init() -> void:
 			_cams.append([hl.position + hn * 9.0 + Vector3(3, 1.0, 0), hl.position - Vector3(0, 0.5, 0)])
 			print("HOUSE NUMBER ", hl.text, " at ", hl.global_position, " local ", hl.position, " in tree ", hl.is_inside_tree(), " parent ", hl.get_parent().name)
 			break
+	if "--wet" in OS.get_cmdline_user_args():
+		Puddles.set_wetness(1.0)
 	if "--night" in OS.get_cmdline_user_args():
 		NightGlow.set_level(1.0)
 		sun.light_energy = 0.04

@@ -10,6 +10,12 @@
 - Contact shadows (`ContactShadows`): a soft dark blob on the ground under every solid prop (trees, bushes, bins, benches, tanks, boulders and
   so on; none for grass and flowers, or for props that stand on something), all of a piece's blobs in one MultiMesh, and one blob under each
   car. Real shadows stay off on the phone. Test: blobs exist, trees get bigger ones than bins, nothing off the ground gets one.
+- Colour through the day (`DayNight.ambient_color`, `afternoon_warmth`): the shade is bluer in the morning, neutral at noon and warm and
+  golden from mid-afternoon to sunset, and the distance haze warms towards sunset. Costs nothing (no post-processing). Every window now
+  catches only a little of the night (0.25 instead of 0.8), so the lit ones read as lit.
+- Puddles (`Puddles`, new `puddle` texture): pale pools along the gutters of every road (not the main roads' sand drifts), invisible while dry
+  and shown as the ground gets wet (from 0.25 wet, full at 0.75), one shared material so they cost no extra draws. Test: they exist, and
+  follow the wet level.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the

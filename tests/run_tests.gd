@@ -3156,6 +3156,12 @@ func _test_real_world_units() -> void:
 	var lit_off: float = NightGlow.window_material().albedo_color.a
 	_check(parts.has("Mesh_window_light") and lit_on > 0.3 and lit_off == 0.0,
 		"windows light up at night (and stay dark by day or in load-shedding) and (%.2f at night; window %s, glow %s)" % [lit_on, parts.has("Mesh_window_light"), parts.has("Mesh_night_glow")])
+	var noon_amb := DayNight.ambient_color(12.0)
+	var morn_amb := DayNight.ambient_color(7.0)
+	var late_amb := DayNight.ambient_color(17.0)
+	_check((late_amb.r - late_amb.b) > (noon_amb.r - noon_amb.b) + 0.1 and (morn_amb.b - morn_amb.r) > (noon_amb.b - noon_amb.r) + 0.05 \
+		and DayNight.afternoon_warmth(10.0) == 0.0 and DayNight.afternoon_warmth(17.0) > 0.7,
+		"the shade is bluer in the morning, neutral at noon and warm and golden late in the afternoon, and the haze warms towards sunset")
 	var want := {"gutter": parts.has("Mesh_eave_gutter"), "ridge": parts.has("Mesh_ridge_cap"), "airbrick": parts.has("Mesh_airbrick"),
 		"brick": parts.any(func(n): return n.begins_with("Mesh_wall_brick")), "rough": parts.any(func(n): return n.begins_with("Mesh_wall_rough")),
 		"tiles": parts.any(func(n): return n.begins_with("Mesh_roof_tiles_")), "ibr": parts.any(func(n): return n.begins_with("Mesh_roof_ibr_"))}
@@ -3245,6 +3251,13 @@ func _test_real_world_units() -> void:
 	_check(blob_node != null and blob_node.multimesh.instance_count > 20 and blob_node.multimesh.instance_count <= ground_props \
 		and sample.size() == 2 and absf(sample[0].origin.y - ContactShadows.Y) < 0.001 and sample[0].basis.get_scale().x > sample[1].basis.get_scale().x,
 		"trees, bushes, bins and other solid props have a soft shadow blob on the ground, bigger for a tree than a bin, none for props off the ground, all in one draw (%d blobs for %d props)" % [blob_node.multimesh.instance_count if blob_node else 0, ground_props])
+	Puddles.set_wetness(0.0)
+	var dry_alpha: float = Puddles.material().albedo_color.a
+	Puddles.set_wetness(1.0)
+	var wet_alpha: float = Puddles.material().albedo_color.a
+	Puddles.set_wetness(0.0)
+	_check(dparts.has("Mesh_puddle") and dry_alpha == 0.0 and wet_alpha == 1.0 and Puddles.visibility(0.5) > 0.4 and Puddles.visibility(0.5) < 0.6,
+		"roads have puddles that stay invisible while dry and show up as the ground gets wet")
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}
