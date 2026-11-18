@@ -1,5 +1,12 @@
 # Changelog
 
+## More on the streets and verges (2026-11-18)
+- Two new Blender props: `fire_hydrant`, `post_box` (60 props in all).
+- Streets: a red fire hydrant about every 110 m; wheelie bins put out at the kerb on ordinary streets; on collectors and main roads
+  public litter bins and benches (looking at the houses); the odd post box; tufts of dry grass growing from the kerb. All clear of
+  lamps, power poles and junction ends (`RealStreetDecor.street_furniture`).
+- Tests: furniture appears on a 400 m street and collector, and none stands on the carriageway.
+
 ## More in the school grounds (2026-11-18)
 - Three new Blender props: `netball_post`, `flagpole`, `bike_rack` (58 props in all).
 - Each school ground: up to two netball courts (tar, white boundary and third lines, a post at each end), a flagpole with a flag, three

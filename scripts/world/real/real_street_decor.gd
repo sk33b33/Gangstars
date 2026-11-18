@@ -95,6 +95,8 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 		if cls == "street" or cls == "collector":
 			poles = _power_line(line, width, pave, lamps, rng, surfaces, materials)
 		_wear(cls, line, width, pave, length, rng, surfaces, materials)
+		if pave >= FURNITURE_MIN_PAVE:
+			street_furniture(cls, line, width, length, lamps, poles, rng, props)
 		if (cls == "main" or cls == "collector") and length >= STOP_MIN_PIECE and pave >= 2.0:
 			_shelter(line, width, length, rng, surfaces, materials)
 		if str(r.get("n", "")) in TREE_STREETS and pave > 0.0:
@@ -150,6 +152,62 @@ static func _verge_greenery(line: PackedVector2Array, width: float, pave: float,
 					for k in 2:
 						add_prop(props, TUFTS[rng.randi() % TUFTS.size()], p + Vector2(rng.randf_range(-0.5, 0.5), rng.randf_range(-0.5, 0.5)), rng.randf() * TAU, rng.randf_range(0.8, 1.4))
 			dist += step
+
+
+# ------------------------------------------------------------------ street furniture
+
+const FURNITURE_MIN_PAVE := 1.2
+const HYDRANT_SPACING := 110.0
+const BIN_SPACING := 70.0       # public litter bins on collectors and main roads
+const BENCH_SPACING := 130.0
+const WHEELIE_SPACING := 42.0   # wheelie bins put out at the kerb on ordinary streets
+const WEED_SPACING := 7.0
+
+
+## What stands on a street's pavement: fire hydrants, wheelie bins put out at the kerb, public litter bins and benches on the bigger
+## roads, a post box, and tufts of dry grass growing from the kerb. Clear of lamps, power poles and the junction ends.
+static func street_furniture(cls: String, line: PackedVector2Array, width: float, length: float, lamps: PackedVector3Array, poles: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+	var kerb := width * 0.5 + RealChunkBuilder.KERB_WIDTH
+	var big := cls == "main" or cls == "collector"
+	var side := 1.0 if rng.randi() % 2 == 0 else -1.0
+	var rows: Array = [["fire_hydrant", HYDRANT_SPACING, 0.5], ["litter_bin", BIN_SPACING if big else 0.0, 0.9], ["park_bench", BENCH_SPACING if big else 0.0, 1.4],
+		["wheelie_bin", 0.0 if big else WHEELIE_SPACING, 0.55]]
+	for row: Array in rows:
+		var spacing := float(row[1])
+		if spacing <= 0.0:
+			continue
+		var dist := GREEN_END_CLEAR + rng.randf() * spacing
+		while dist < length - GREEN_END_CLEAR:
+			var here: Array = at_distance(line, dist)
+			var out: Vector2 = left_of(here[1]) * side
+			var p: Vector2 = here[0] + out * (kerb + float(row[2]))
+			if _free_of_posts(p, lamps, poles, 1.6) and (str(row[0]) != "wheelie_bin" or rng.randf() < 0.55):
+				var face := out if str(row[0]) == "park_bench" else -out   # a bench looks at the houses, the rest at the road
+				add_prop(props, str(row[0]), p, atan2(face.x, face.y) if str(row[0]) != "wheelie_bin" else rng.randf_range(-0.3, 0.3) + atan2(face.x, face.y))
+			side = -side
+			dist += spacing * rng.randf_range(0.8, 1.25)
+	if length >= 60.0 and rng.randf() < 0.45:
+		var here: Array = at_distance(line, length * rng.randf_range(0.3, 0.7))
+		var out: Vector2 = left_of(here[1]) * side
+		var p: Vector2 = here[0] + out * (kerb + 0.6)
+		if _free_of_posts(p, lamps, poles, 1.8):
+			add_prop(props, "post_box", p, atan2(-out.x, -out.y))
+	var dist := rng.randf() * WEED_SPACING
+	while dist < length:
+		var here: Array = at_distance(line, dist)
+		var s := 1.0 if rng.randi() % 2 == 0 else -1.0
+		add_prop(props, "grass_dry", here[0] + left_of(here[1]) * s * (kerb + 0.07), rng.randf() * TAU, rng.randf_range(0.35, 0.7))
+		dist += WEED_SPACING * rng.randf_range(0.6, 1.6)
+
+
+static func _free_of_posts(p: Vector2, lamps: PackedVector3Array, poles: Array, clear: float) -> bool:
+	for l in lamps:
+		if Vector2(l.x, l.z).distance_to(p) < clear:
+			return false
+	for pole: Array in poles:
+		if (pole[0] as Vector2).distance_to(p) < clear:
+			return false
+	return true
 
 
 # ------------------------------------------------------------------ street name slabs

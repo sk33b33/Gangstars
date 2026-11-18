@@ -708,6 +708,28 @@ def bike_rack(x):
     return join(p, "bike_rack", (x, 0, 0))
 
 
+def fire_hydrant(x):
+    """A red fire hydrant, 0.8 m high, with two side outlets along X."""
+    p = [add("cyl", (0, 0, 0.06), (0.13, 0.13, 0.06), "metal_dark", seg=10)]
+    p.append(add("cyl", (0, 0, 0.42), (0.1, 0.1, 0.34), "gas", seg=10))
+    p.append(add("sphere", (0, 0, 0.78), (0.11, 0.11, 0.09), "gas", sub=1))
+    p.append(add("cyl", (0, 0, 0.7), (0.13, 0.13, 0.03), "metal_dark", seg=10))
+    for sx in (-1, 1):
+        p.append(add("cyl", (0.13 * sx, 0, 0.5), (0.05, 0.05, 0.05), "metal_dark", seg=8, rot=(0, math.pi / 2, 0)))
+    p.append(add("cyl", (0, -0.12, 0.45), (0.045, 0.045, 0.04), "metal_dark", seg=8, rot=(math.pi / 2, 0, 0)))
+    return join(p, "fire_hydrant", (x, 0, 0))
+
+
+def post_box(x):
+    """A red pillar post box with a dome top and a posting slot towards -Y (Godot +Z), 1.25 m high."""
+    p = [add("cyl", (0, 0, 0.58), (0.23, 0.23, 0.58), "gas", seg=14)]
+    p.append(add("sphere", (0, 0, 1.15), (0.23, 0.23, 0.1), "gas", sub=2))
+    p.append(add("cyl", (0, 0, 0.04), (0.26, 0.26, 0.04), "metal_dark", seg=14))
+    p.append(add("cube", (0, -0.225, 0.9), (0.12, 0.012, 0.025), "plastic_dark", smooth=False))
+    p.append(add("cyl", (0, 0, 1.06), (0.245, 0.245, 0.012), "metal_dark", seg=14))
+    return join(p, "post_box", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -718,7 +740,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox, park_bench, picnic_table, litter_bin, boulder, fallen_log, park_lamp, seesaw, spring_rider, monkey_bars, netball_post, flagpole, bike_rack, fire_hydrant, post_box):
     build(x)
     x += 6.0
 

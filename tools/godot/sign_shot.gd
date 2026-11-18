@@ -138,6 +138,13 @@ func _init() -> void:
 			_cams.append([fp + Vector3(5, 3, 9), fp + Vector3(0, 3, 0)])
 			print("FLAG at ", fp)
 			break
+	for c in node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_fire_hydrant":
+			var hy: Vector3 = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0).origin
+			_cams.append([hy + Vector3(6, 2.2, 7), hy + Vector3(0, 0.6, 0)])
+			_cams.append([hy + Vector3(0, 12, 14), hy])
+			print("HYDRANT at ", hy)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

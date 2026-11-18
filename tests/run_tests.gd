@@ -2998,6 +2998,20 @@ func _test_real_world_units() -> void:
 	_check(school_surfaces.has("court_tar") and school_props.get("netball_post", []).size() >= 2 and school_props.has("flagpole") and school_props.has("bike_rack") \
 		and school_props.has("park_bench") and school_props.has("litter_bin"),
 		"a 160 m school ground has a netball court with posts, a flagpole, bicycle racks, benches and bins (%s)" % [school_props.keys()])
+	var street_props := {}
+	var srng := RandomNumberGenerator.new()
+	srng.seed = 7
+	RealStreetDecor.street_furniture("street", PackedVector2Array([Vector2(0, 0), Vector2(400, 0)]), 6.0, 400.0, PackedVector3Array(), [], srng, street_props)
+	var big_props := {}
+	RealStreetDecor.street_furniture("collector", PackedVector2Array([Vector2(0, 0), Vector2(400, 0)]), 8.0, 400.0, PackedVector3Array(), [], srng, big_props)
+	_check(street_props.has("fire_hydrant") and street_props.has("wheelie_bin") and street_props.has("grass_dry") and not street_props.has("park_bench") \
+		and big_props.has("litter_bin") and big_props.has("park_bench") and not big_props.has("wheelie_bin"),
+		"a 400 m street has hydrants, kerbside wheelie bins and kerb weeds; a collector has litter bins and benches instead of wheelie bins (%s / %s)" % [street_props.keys(), big_props.keys()])
+	var furniture_on_road := 0
+	for kind: String in street_props:
+		for xf: Transform3D in street_props[kind]:
+			furniture_on_road += 1 if absf(xf.origin.z) < 3.0 else 0
+	_check(furniture_on_road == 0, "no street furniture stands on the carriageway (%d on it)" % furniture_on_road)
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:
