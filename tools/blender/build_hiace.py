@@ -55,8 +55,12 @@ ROLES = {
     "headlight": role_material("headlight", "#f4f1e6", 0.2),
     "taillight": role_material("taillight", "#b0202a", 0.3),
     "tyre": role_material("tyre", "#232327", 0.9),
-    "rim": role_material("rim", "#b9bcc2", 0.3, 0.8),
+    "rim": role_material("rim", "#d2d5da", 0.35, 0.1),   # barely metallic: a metal surface with nothing to reflect renders black
+    "indicator_L": role_material("indicator_L", "#e8901c", 0.4),
+    "indicator_R": role_material("indicator_R", "#e8901c", 0.4),
 }
+# The lamp clusters at the corners: the vehicle's left is +X (Godot's left when facing +Z). They blink when the van turns.
+INDICATORS = {"Meshpart73": "indicator_L", "Meshpart36": "indicator_L", "Meshpart8": "indicator_R", "Meshpart36.002": "indicator_R"}
 PAINT = ("car_body", "Meshpart1Mtl.001", "Meshpart1Mtl.002", "Material.004")
 GLASS = ("Material.001", "Material.002", "Material.003", "Meshpart32Mtl.001")
 CHROME = ("Door_lf_hi_ok.4", "Material.008", "Material.009", "Material.013", "Material.019", "Material.021", "Meshpart30Mtl.001")
@@ -118,7 +122,7 @@ for o in parts + list(wheel_src.values()):
     old = [s.material.name if s.material else "" for s in o.material_slots]
     o.data.materials.clear()
     for name in old:
-        o.data.materials.append(ROLES[role_of(name)])
+        o.data.materials.append(ROLES[INDICATORS.get(o.name) or role_of(name)])
     world_apply(o)
 
 # Scale about the origin, then centre the van on x = 0 with its wheels on the ground (z = 0).
@@ -169,6 +173,22 @@ for o in parts:
     mod.ratio = ratio
     mod.use_collapse_triangulate = True
     bpy.ops.object.modifier_apply(modifier=mod.name)
+
+# A roof rack: two rails and four cross bars on the roof (the original carried a pile of luggage there).
+def rack_bar(centre, size):
+    bpy.ops.mesh.primitive_cube_add(size=2, location=centre)
+    b = bpy.context.active_object
+    b.scale = (size[0] / 2, size[1] / 2, size[2] / 2)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    b.data.materials.append(ROLES["trim"])
+    parts.append(b)
+
+
+ROOF_Z = 2.13
+for sx in (-0.62, 0.62):
+    rack_bar((sx, 0.45, ROOF_Z + 0.05), (0.04, 3.3, 0.05))
+for cy in (-1.1, -0.1, 0.9, 1.9):
+    rack_bar((0.0, cy, ROOF_Z + 0.09), (1.34, 0.05, 0.04))
 
 # Join the body.
 bpy.ops.object.select_all(action="DESELECT")
@@ -230,6 +250,9 @@ marker("plate_front", (0.0, plate_front_y - 0.02, 0.6))
 marker("plate_rear", (0.0, plate_rear_y + 0.02, 0.7))
 marker("seat_0", (steer_x, steer_y + 0.62, 0.78))     # right-hand drive: the driver on the -X side facing -Y
 marker("seat_1", (-steer_x, steer_y + 0.62, 0.78))
+# Wiper pivots at the foot of the windscreen (Blender coordinates: the glass runs from y -2.49, z 1.29 up to y -1.85, z 1.79).
+marker("wiper_0", (steer_x - 0.1, -2.4, 1.33))
+marker("wiper_1", (steer_x + 0.55, -2.4, 1.33))
 
 bpy.ops.object.select_all(action="DESELECT")
 for o in scene.objects:

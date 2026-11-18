@@ -1,5 +1,14 @@
 # Changelog
 
+## More on Remy's van, and the wheels fixed (2026-11-18)
+- Wheels: the rims were black (a metal material with nothing to reflect renders black), so the wheels read as plain black discs, and at full
+  lock (0.5 rad, as on every car) the wide HiAce tyres pushed out through the arch. The rims are now light grey and visible, and the
+  van's front wheels turn 0.3 rad at full lock (`VehicleLibrary.STEER_LOCK`, other cars keep 0.5). Check seen failing at 0.5.
+- Details: a roof rack (two rails, four cross bars), indicator lamps at all four corners that blink on the side the van turns towards (every
+  drivable car now passes its turn to the lamps), two wipers that sweep in rain with drops on the windscreen, dust and an exhaust puff
+  (the van now has `VehicleDetail.DIMS`), and a "WESTRIDGE" sticker low on the rear window.
+- Tests: front-wheel lock, two wipers, both indicator lamps and the windscreen.
+
 ## Remy's own van: a Toyota HiAce Commuter (2026-11-18)
 - New model `assets/models/vehicles/hiace.glb`, built by `tools/blender/build_hiace.py` from the 2012 Toyota HiAce Commuter the owner
   supplied (`art/source/2012_Toyota_HiAce_Commuter.fbx`, kept out of the game import with a `.gdignore`). The source was 500 000 triangles

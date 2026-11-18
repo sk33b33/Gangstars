@@ -84,7 +84,8 @@ func _physics_process(delta: float) -> void:
 	speed = clampf(speed, -REVERSE_SPEED, MAX_SPEED * (driver.drive_factor if driver is Player else 1.0))
 	_anim_time += delta
 	var braking := -1.0 if (throttle < 0.0 and speed > 0.2) or (throttle > 0.0 and speed < -0.2) else 0.0
-	VehicleLibrary.animate(body, speed, steer, braking * 4.0 + throttle * 2.0 * (1.0 + braking), 0, delta, _anim_time)
+	var indicate := 0 if absf(steer) < 0.3 else (-1 if steer > 0.0 else 1)   # the lamps on the side it is turning towards blink
+	VehicleLibrary.animate(body, speed, steer, braking * 4.0 + throttle * 2.0 * (1.0 + braking), indicate, delta, _anim_time)
 	rotation.y += steer * STEER_RATE * clampf(speed / 5.0, -1.0, 1.0) * delta
 	var forward := global_basis.z
 	velocity.x = forward.x * speed

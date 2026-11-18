@@ -21,6 +21,9 @@ const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
 const SKINS := [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f"), Color("#4a2f22"), Color("#c58c62")]
 
+## How far the front wheels turn at full lock (radians). The HiAce's wide tyres foul the arch at more than this.
+const STEER_LOCK := {"hiace": 0.3}
+
 static var _meshes: Dictionary = {}
 static var _markers: Dictionary = {}   # model -> {"wheels": [Vector3], "plate_front": Vector3, "plate_rear": Vector3}
 ## 0 by day, 1 at night; DayNight sets it. Moving cars switch their headlight beams on at night.
@@ -347,11 +350,12 @@ static func animate(pivot: Node3D, speed: float, steer: float, accel: float, ind
 	if pivot == null or not pivot.has_meta("tilt"):
 		return
 	var r: float = pivot.get_meta("wheel_radius", 0.32)
+	var lock: float = STEER_LOCK.get(str(pivot.get_meta("model", "")), 0.5)
 	var spin: float = float(pivot.get_meta("spin", 0.0)) + speed / r * delta
 	pivot.set_meta("spin", fmod(spin, TAU))
 	for w: MeshInstance3D in pivot.get_meta("wheels", []):
 		var flip: float = w.get_meta("flip")
-		var yaw := flip + (steer * 0.5 if w.get_meta("front") else 0.0)
+		var yaw := flip + (steer * lock if w.get_meta("front") else 0.0)
 		w.basis = Basis(Vector3.UP, yaw) * Basis(Vector3.RIGHT, spin if flip == 0.0 else -spin)
 	# Suspension: the nose dips under braking and lifts when pulling away, with a little roll.
 	var tilt: Node3D = pivot.get_meta("tilt")

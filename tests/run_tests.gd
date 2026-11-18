@@ -246,6 +246,14 @@ func _test_npc_data() -> void:
 		"Remy's car id gets the HiAce and no other drivable car does; the HiAce is in no traffic or parking list")
 	_check(remy_van.get_meta("wheels", []).size() == 4 and remy_van.get_meta("occupants", []).size() >= 1 and remy_van_tris <= 45000 and VehicleLibrary.mesh("hiace_tyre") != null,
 		"the HiAce has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
+	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
+	var front_wheel: MeshInstance3D = remy_van.get_meta("wheels")[0]
+	var lock_turn := front_wheel.basis.get_euler(EULER_ORDER_YXZ).y
+	_check(absf(absf(lock_turn) - VehicleLibrary.STEER_LOCK["hiace"]) < 0.02 and VehicleLibrary.STEER_LOCK["hiace"] < 0.5,
+		"the HiAce's front wheels turn 0.3 rad at full lock, less than other cars, so the wide tyres stay clear of the arch (%.2f)" % lock_turn)
+	_check(remy_van.get_meta("wipers", []).size() == 2 and remy_van.has_meta("indicator_L") and remy_van.has_meta("indicator_R") and remy_van.has_meta("dims") \
+		and remy_van.find_child("ScreenDrops", true, false) != null,
+		"the HiAce has two wipers, left and right indicator lamps, and a windscreen for rain drops")
 	var remy_van_shape: CollisionShape3D = drivable.find_children("*", "CollisionShape3D", false, false)[0]
 	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["hiace"])) < 0.01, "the HiAce's collision box is as long as the van (5.4 m)")
 	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)

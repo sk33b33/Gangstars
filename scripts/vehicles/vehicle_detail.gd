@@ -26,6 +26,7 @@ const DIMS := {
 	"panel_van": {"w": 1.85, "h": 2.5, "belt": 1.1, "roof": 2.0, "ws": [2.33, 1.12, 1.77, 1.92], "wb": 3.0},
 	"bus": {"w": 2.4, "h": 4.4, "belt": 1.12, "roof": 2.76, "ws": [4.18, 1.14, 4.0, 2.7], "wb": 5.6},
 	"refuse": {"w": 2.3, "h": 3.3, "belt": 1.4, "roof": 2.46, "ws": [3.13, 1.32, 2.95, 2.4], "wb": 4.4},
+	"hiace": {"w": 1.86, "h": 2.68, "belt": 1.0, "roof": 2.15, "ws": [2.49, 1.29, 1.85, 1.79], "wb": 3.09},
 	"scooter": {"w": 0.5, "h": 0.95, "belt": 0.7, "roof": 1.0, "ws": [], "wb": 1.24},
 }
 const SLOGANS := ["taxi_slogan_a", "taxi_slogan_b"]
@@ -125,6 +126,8 @@ static func dress(pivot: Node3D, tilt: Node3D, model: String, color: Color, seed
 			_bakkie(tilt, d, color, seed)
 		"bus":
 			_bus(tilt, d, seed)
+		"hiace":
+			_quad(tilt, "sticker_westridge", Vector2(0.72, 0.14), Vector3(-0.35, 1.28, -2.5), PI, 30.0)   # low on the rear window
 	if model != "scooter":
 		_exhaust(pivot, tilt, d, age)
 

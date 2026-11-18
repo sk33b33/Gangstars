@@ -34,12 +34,17 @@ func _initialize() -> void:
 	root.add_child(stage)
 	_van = VehicleLibrary.build(stage, "hiace", Color("#f1eee8"))
 	VehicleLibrary.set_driver(_van, true)
+	if "--rain" in OS.get_cmdline_user_args():
+		VehicleLibrary.rain = 1.0
+	if "--steer=1" in OS.get_cmdline_user_args():
+		VehicleLibrary.animate(_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
+	elif "--steer=-1" in OS.get_cmdline_user_args():
+		VehicleLibrary.animate(_van, 3.0, -1.0, 0.0, 0, 0.1, 0.1)
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
 	cam.current = true
-	_cams = [[Vector3(7, 2.4, 6), Vector3(0, 1.0, 0)], [Vector3(-7, 2.4, 6), Vector3(0, 1.0, 0)], [Vector3(-7, 2.4, -6), Vector3(0, 1.0, 0)],
-		[Vector3(6.5, 4.0, -6.5), Vector3(0, 1.0, 0)], [Vector3(5.5, 1.5, 0.0), Vector3(0, 1.2, 0)], [Vector3(0.5, 1.6, 4.0), Vector3(0, 1.3, 0.0)]]
+	_cams = [[Vector3(7, 2.4, 6), Vector3(0, 1.0, 0)], [Vector3(-6.5, 2.4, -6.5), Vector3(0, 1.0, 0)], [Vector3(4.2, 2.0, -4.2), Vector3(0.3, 0.6, -1.5)], [Vector3(-2.2, 1.6, -5.2), Vector3(0, 1.4, -2.0)], [Vector3(0.0, 1.5, -5.0), Vector3(0, 1.3, 0)], [Vector3(5.0, 3.5, 1.0), Vector3(0, 2.0, 0)]]
 
 
 func _process(_delta: float) -> bool:
