@@ -314,8 +314,8 @@ static func _stop_lines(r: Dictionary, line: PackedVector2Array, width: float, n
 		var left := left_of(inward)
 		var at := e - inward * back
 		RealChunkBuilder.strip(_flat("paint", PAINT, surfaces, materials), PackedVector2Array([at, at + left * (width * 0.5 - 0.3)]), 0.4, RealChunkBuilder.Y_PAINT)
-		# STOP is read from the driver's seat (the texture's top is the far end, the stop line): 1 m wide, 3 m long.
-		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 2.5 + left * width * 0.25, inward, 1.0, 3.0, Y_ROAD_DECAL)
+		# STOP across the lane, letters side by side left to right as the driver sees them (the texture's top is the far end, the stop line): 2.4 m across, 1.8 m along.
+		decal(_decal_tool("stop_text", surfaces, materials), at - inward * 1.7 + left * width * 0.25, inward, 2.4, 1.8, Y_ROAD_DECAL)
 		# The sign itself: a red octagon on a pole at the kerb beside the stop line, facing the arriving driver.
 		var pole_at := at + left * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.55)
 		RealLandmarks._obox(_flat("steel", RealLandmarks.STEEL, surfaces, materials), pole_at, left, Vector2(0.035, 0.035), 0.0, 2.3)

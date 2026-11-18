@@ -600,19 +600,16 @@ pal({ "<": "#6f8a3f", ">": "#93ab5c" })
 sprite("median_grass", { w: 32, h: 32 },
   rect(0, 0, 32, 32, "#7f9a4c"), noise(0, 0, 32, 32, "<", 0.12, 9), noise(0, 0, 32, 32, ">", 0.08, 4),
   ellipse(9, 22, 5, 3, "#b9a57e"), ellipse(10, 22, 3, 2, "#c9b68c"), ellipse(25, 8, 3, 2, "#b9a57e"))
-// STOP painted on the lane before a stop line, read from the driver's seat: the texture's top is the far end (the stop line), so
-// P is at the top and S at the bottom nearest the driver; the letters stand upright with their tops towards the junction.
-sprite("stop_text", { w: 16, h: 48 },
+// STOP painted across the lane before a stop line, as on a real road: the letters side by side, left to right as the driver sees
+// them, stretched along the road. The texture's top is the far end (the stop line). 48 x 24 px = 2.4 m across x 1.8 m along.
+sprite("stop_text", { w: 48, h: 24 },
   (c) => {
-    const W = "#f1eee8"
-    // P
-    c.rect(3, 0, 2, 10, W); c.rect(3, 0, 10, 2, W); c.rect(11, 0, 2, 6, W); c.rect(3, 4, 10, 2, W)
-    // O
-    c.rect(3, 12, 10, 2, W); c.rect(3, 20, 10, 2, W); c.rect(3, 12, 2, 10, W); c.rect(11, 12, 2, 10, W)
-    // T
-    c.rect(3, 24, 10, 2, W); c.rect(7, 24, 2, 10, W)
-    // S
-    c.rect(3, 36, 10, 2, W); c.rect(3, 38, 2, 3, W); c.rect(3, 40, 10, 2, W); c.rect(11, 42, 2, 3, W); c.rect(3, 44, 10, 2, W)
+    const W = "#f1eee8", y0 = 2, w = 9, h = 20, s = 3
+    const S = (x0) => { c.rect(x0, y0, w, s, W); c.rect(x0, y0, s, 10, W); c.rect(x0, y0 + 8, w, s, W); c.rect(x0 + w - s, y0 + 9, s, 11, W); c.rect(x0, y0 + h - s, w, s, W) }
+    const T = (x0) => { c.rect(x0, y0, w, s, W); c.rect(x0 + 3, y0, s, h, W) }
+    const O = (x0) => { c.rect(x0, y0, w, s, W); c.rect(x0, y0 + h - s, w, s, W); c.rect(x0, y0, s, h, W); c.rect(x0 + w - s, y0, s, h, W) }
+    const P = (x0) => { c.rect(x0, y0, s, h, W); c.rect(x0, y0, w, s, W); c.rect(x0 + w - s, y0, s, 11, W); c.rect(x0, y0 + 8, w, s, W) }
+    S(1); T(13); O(25); P(37)
   })
 // The red octagonal STOP sign on a pole.
 sprite("sign_stop", { w: 24, h: 24 },

@@ -1,5 +1,9 @@
 # Changelog
 
+## STOP written across the lane (2026-11-18)
+- The STOP painted before a stop line is now written horizontally across the lane, letters side by side reading left to right as the
+  driver sees them (2.4 m across, 1.8 m along, stretched along the road like real road paint), not stacked along the road.
+
 ## Westridge details, HUD and people (2026-11-17)
 - **Houses with missing walls.** Each wall was faced away from the building's centre, which is wrong for L and U shapes: 2,437
   walls of 1,370 buildings (a quarter of them) faced inward and were not drawn from the street. `RealChunkBuilder.edge_out`

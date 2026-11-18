@@ -3030,7 +3030,7 @@ func _test_real_world_units() -> void:
 		if surfaces.has("decal_stop_text") and surfaces.has("panel_sign_stop"):
 			stop_found = true
 	_check(stop_found and RealStreetDecor.rank("main") > RealStreetDecor.rank("street") and RealStreetDecor.node_key(Vector2(10.01, 5.0)) == RealStreetDecor.node_key(Vector2(10.0, 4.99)),
-		"side streets get a stop line, STOP on the road and a physical STOP sign where they meet a bigger road")
+		"side streets get a stop line, STOP written across the lane and a physical STOP sign where they meet a bigger road")
 	# Yards: the game's own homes keep their gate spot (5 m out) outside the fence and the yard dog's run inside.
 	var ykey := data.chunk_at(Vector3(-150, 0, -128))
 	var yfronts := data.home_fronts(ykey)
