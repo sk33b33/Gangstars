@@ -3234,6 +3234,17 @@ func _test_real_world_units() -> void:
 	_check(dparts.has("Mesh_garden_path") and dparts.has("Mesh_decal_grass_patch") and yard_props.has("Props_wheelie_bin") and yard_props.has("Props_letterbox")
 		and yard_props.has("Props_braai_drum") and yard_props.has("Props_plastic_chair"),
 		"front gardens have paved paths, lawn patches, wheelie bins and letterboxes; yards have braai drums and chairs (%s)" % [yard_props])
+	var blob_node: MultiMeshInstance3D = dnode.find_child("Blobs", false, false)
+	var ground_props := 0
+	for pk in yard_props:
+		if ContactShadows.RADIUS.has(str(pk).trim_prefix("Props_")):
+			ground_props += (dnode.find_child(str(pk), false, false) as MultiMeshInstance3D).multimesh.instance_count
+	var sample_props := {"tree_a": [Transform3D(Basis().scaled(Vector3.ONE * 1.5), Vector3(10, 0, 20))], "letterbox": [Transform3D(Basis(), Vector3(1, 1.05, 2))],
+		"bush": [Transform3D(Basis(), Vector3(3, 1.5, 4))], "wheelie_bin": [Transform3D(Basis(), Vector3(5, 0, 6))]}
+	var sample := ContactShadows.transforms(sample_props)
+	_check(blob_node != null and blob_node.multimesh.instance_count > 20 and blob_node.multimesh.instance_count <= ground_props \
+		and sample.size() == 2 and absf(sample[0].origin.y - ContactShadows.Y) < 0.001 and sample[0].basis.get_scale().x > sample[1].basis.get_scale().x,
+		"trees, bushes, bins and other solid props have a soft shadow blob on the ground, bigger for a tree than a bin, none for props off the ground, all in one draw (%d blobs for %d props)" % [blob_node.multimesh.instance_count if blob_node else 0, ground_props])
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}

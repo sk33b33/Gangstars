@@ -142,6 +142,9 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		mmi.multimesh = mm
 		root.add_child(mmi)
 	stats["props"] = props.keys().map(func(k): return [k, (props[k] as Array).size()])
+	var blobs := ContactShadows.build(props)
+	if blobs != null:
+		root.add_child(blobs)
 	if not collision.is_empty():
 		var body := StaticBody3D.new()
 		body.name = "Buildings"

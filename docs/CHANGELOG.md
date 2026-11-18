@@ -7,6 +7,9 @@
 - Lit windows: about 55% of windows get a warm pane over the glass at night, and about 60% of homes throw a pool of light on the ground in
   front (`NightGlow.window_material`, the same shared material and day/night level as the old ground glow, so none of it costs extra
   draws and all of it goes dark in load-shedding). Test: the panes and the ground glow exist, and follow the night level.
+- Contact shadows (`ContactShadows`): a soft dark blob on the ground under every solid prop (trees, bushes, bins, benches, tanks, boulders and
+  so on; none for grass and flowers, or for props that stand on something), all of a piece's blobs in one MultiMesh, and one blob under each
+  car. Real shadows stay off on the phone. Test: blobs exist, trees get bigger ones than bins, nothing off the ground gets one.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the

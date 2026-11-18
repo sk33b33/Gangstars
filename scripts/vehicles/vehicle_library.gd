@@ -221,6 +221,14 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 	elif model == "panel_van":
 		_bakery_panels(tilt)
 	VehicleDetail.dress(pivot, tilt, model, color, seed, age, marks)
+	var blob := MeshInstance3D.new()   # a soft shadow on the ground under the car (see ContactShadows)
+	blob.name = "Blob"
+	blob.mesh = ContactShadows.mesh()
+	blob.scale = Vector3(float(LENGTH.get(model, 4.0)) * 1.18, 1.0, 2.3 if model != "scooter" else 0.9)
+	blob.position = Vector3(0, 0.03, 0)
+	blob.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	blob.visibility_range_end = 70.0
+	pivot.add_child(blob)
 	return pivot
 
 

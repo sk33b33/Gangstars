@@ -248,6 +248,15 @@ func _init() -> void:
 		sun.light_energy = 0.04
 		env.environment.background_color = Color("#10162a")
 		env.environment.ambient_light_color = Color("#2a3350")
+	var ground := MeshInstance3D.new()   # sand under everything (the chunk builder does not make the ground)
+	var gplane := PlaneMesh.new()
+	gplane.size = Vector2(8000, 8000)
+	ground.mesh = gplane
+	var gmat := StandardMaterial3D.new()
+	gmat.albedo_color = Color("#d9c9a0")
+	ground.material_override = gmat
+	ground.position = Vector3(0, -0.005, 0)
+	root.add_child(ground)
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
