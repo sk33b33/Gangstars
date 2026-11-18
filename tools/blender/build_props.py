@@ -539,6 +539,50 @@ def solar_geyser(x):
     return join(p, "solar_geyser", (x, 0, 0))
 
 
+
+def braai_drum(x):
+    """A braai drum: half an oil drum on four legs with a grid on top (0.6 m across, 0.9 m high)."""
+    p = [add("cyl", (0, 0, 0.62), (0.3, 0.3, 0.3), "metal_dark", seg=16, rot=(0, math.pi / 2, 0))]   # the drum, lying on its side
+    p.append(add("cube", (0, 0, 0.86), (0.3, 0.27, 0.015), "metal", smooth=False))                   # the grid
+    for sx in (-0.24, 0.24):
+        for sy in (-0.2, 0.2):
+            p.append(add("cyl", (sx, sy, 0.3), (0.02, 0.02, 0.3), "metal_dark", seg=6))
+    p.append(add("cube", (0.0, 0.0, 0.42), (0.26, 0.2, 0.02), "plastic_dark", smooth=False))        # ash tray under the drum
+    return join(p, "braai_drum", (x, 0, 0))
+
+
+def kennel(x):
+    """A wooden dog kennel with a pitched roof and a dark doorway; the door faces -Y (Godot +Z)."""
+    p = [add("cube", (0, 0, 0.3), (0.38, 0.5, 0.3), "wood", smooth=False)]
+    for s in (-1, 1):
+        p.append(add("cube", (0.23 * s, 0, 0.72), (0.27, 0.58, 0.025), "wood_dark", rot=(0, -0.62 * s, 0), smooth=False))   # roof halves
+    p.append(add("cube", (0, -0.505, 0.26), (0.18, 0.01, 0.2), "plastic_dark", smooth=False))        # the doorway
+    p.append(add("cube", (0, -0.505, 0.5), (0.2, 0.012, 0.012), "wood_dark", smooth=False))
+    return join(p, "kennel", (x, 0, 0))
+
+
+def bicycle(x):
+    """A child's bicycle, standing on its kickstand, 1.5 m long."""
+    p = []
+    for sy in (-0.55, 0.55):
+        p.append(add("torus", (0, sy, 0.33), (0.33, 0.33, 0.33), "rubber", rot=(0, math.pi / 2, 0), minor=0.05, seg=20))
+        p.append(add("cyl", (0, sy, 0.33), (0.008, 0.008, 0.04), "metal", seg=6, rot=(0, math.pi / 2, 0)))
+    p.append(add("cyl", (0, 0.0, 0.5), (0.015, 0.015, 0.6), "cloth_a", seg=6, rot=(math.pi / 2 - 0.25, 0, 0)))    # top tube
+    p.append(add("cyl", (0, 0.2, 0.42), (0.015, 0.015, 0.4), "cloth_a", seg=6, rot=(0.9, 0, 0)))                   # seat tube / chain stay
+    p.append(add("cyl", (0, -0.5, 0.55), (0.015, 0.015, 0.3), "metal_dark", seg=6, rot=(-0.25, 0, 0)))             # fork
+    p.append(add("cyl", (0, -0.5, 0.86), (0.015, 0.015, 0.22), "metal_dark", seg=6, rot=(0, math.pi / 2, 0)))      # handlebar
+    p.append(add("cube", (0, 0.2, 0.68), (0.05, 0.1, 0.02), "plastic_dark", smooth=False))                         # seat
+    return join(p, "bicycle", (x, 0, 0))
+
+
+def letterbox(x):
+    """A steel letterbox for a gate post, 0.3 x 0.12 x 0.22 m, the slot on the face towards -Y (Godot +Z)."""
+    p = [add("cube", (0, 0, 0.11), (0.15, 0.06, 0.11), "cloth_a", smooth=False)]
+    p.append(add("cube", (0, 0.0, 0.23), (0.16, 0.07, 0.012), "cloth_a", smooth=False))
+    p.append(add("cube", (0, -0.062, 0.14), (0.09, 0.004, 0.012), "plastic_dark", smooth=False))
+    return join(p, "letterbox", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
@@ -549,7 +593,7 @@ for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tre
               lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
               lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
               lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
-              agave, palm, shade_tree, hedge, solar_geyser):
+              agave, palm, shade_tree, hedge, solar_geyser, braai_drum, kennel, bicycle, letterbox):
     build(x)
     x += 6.0
 

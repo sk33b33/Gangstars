@@ -3053,6 +3053,10 @@ func _test_real_world_units() -> void:
 	_check(dparts.has("Mesh_pole_wood") and dparts.has("Mesh_wire") and dparts.has("Mesh_decal_drain_grate") and dparts.has("Mesh_decal_manhole")
 		and dparts.any(func(n): return n.begins_with("Props_washing_line")) and dparts.any(func(n): return n.begins_with("Props_aloe")),
 		"the Excelsior Street piece has power poles and wires, drains, manholes, washing lines and aloes (%s)" % [dparts.filter(func(n): return n.begins_with("Props_"))])
+	var yard_props := dparts.filter(func(n): return n.begins_with("Props_"))
+	_check(dparts.has("Mesh_garden_path") and dparts.has("Mesh_decal_grass_patch") and yard_props.has("Props_wheelie_bin") and yard_props.has("Props_letterbox")
+		and yard_props.has("Props_braai_drum") and yard_props.has("Props_plastic_chair"),
+		"front gardens have paved paths, lawn patches, wheelie bins and letterboxes; yards have braai drums and chairs (%s)" % [yard_props])
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}
 	for ck: Vector2i in data.chunk_keys:

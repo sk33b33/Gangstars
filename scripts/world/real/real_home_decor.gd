@@ -22,7 +22,7 @@ const PAINTED_CARS := ["#c8392f", "#f1eee8", "#2b6fb5", "#3d3d42", "#b7b9bd", "#
 ## The decor of one home: {back: {kind: "wendy"|"washing", at, u}, tank: Vector2, dish: {at, n},
 ## plants: [{kind, at}], spaza: bool, obstacles: [outline]}. `yard`: the home's RealYards plan or {}.
 static func plan(ring: PackedVector2Array, front: Dictionary, yard: Dictionary, rings: Array, strips: Array, lanes: Array, fences: Array, story: bool, seed_value: int) -> Dictionary:
-	var out := {"plants": [], "obstacles": []}
+	var out := {"plants": [], "obstacles": [], "items": [], "lawns": []}
 	var i: int = front.index
 	var p0 := ring[i]
 	var p1 := ring[(i + 1) % ring.size()]
@@ -83,6 +83,42 @@ static func plan(ring: PackedVector2Array, front: Dictionary, yard: Dictionary, 
 		if rng.randi() % 2 == 0:
 			for sd: float in [-1.0, 1.0]:
 				out.plants.append({"kind": "pot", "at": mid + t * sd * 0.95 + n * 0.35})
+		# More of the garden: a paved path from the stoep to the gate, lawn patches either side of it, a wheelie bin and a letterbox by the
+		# gate, plastic chairs on the stoep, tyre planters along the fence.
+		var free_side := -drive_side if drive_side != 0.0 else (1.0 if rng.randi() % 2 == 0 else -1.0)
+		if depth >= 2.2:
+			out.path = {"a": mid + n * 0.66, "b": mid + n * (depth - 0.05)}
+			if rng.randi() % 5 < 3 and half >= 3.0:
+				for sd: float in [-1.0, 1.0]:
+					if sd != drive_side:
+						out.lawns.append({"at": mid + t * sd * (half * 0.5 + 0.55) + n * (depth * 0.5 + 0.3), "w": minf(half - 1.4, 3.2), "l": maxf(depth - 1.1, 1.0)})
+			var gate := mid + n * depth
+			if rng.randi() % 100 < 60:
+				out.items.append({"prop": "wheelie_bin", "at": gate - n * 0.7 + t * free_side * (RealYards.GATE * 0.5 + 0.55), "face": n})
+			if rng.randi() % 100 < 70:
+				out.items.append({"prop": "letterbox", "at": gate + t * -free_side * (RealYards.GATE * 0.5 + 0.2), "face": n, "y": 1.05})
+			if rng.randi() % 100 < 32 and half >= 2.4:
+				for k in 2:
+					out.items.append({"prop": "plastic_chair", "at": mid + t * (-1.0 if k == 0 else 1.0) * 1.55 + n * 0.85, "face": (n + t * (1.0 if k == 0 else -1.0) * 0.3).normalized()})
+			if rng.randi() % 100 < 28 and depth >= 2.6:
+				out.items.append({"prop": "tyre_planters", "at": mid + t * free_side * (half - 2.4) + n * (depth - 0.45), "face": t})
+	# The back yard: a braai drum, a kennel and now and then a child's bicycle, clear of the other fittings.
+	var back_taken: Array = []
+	if out.has("back"):
+		back_taken.append(out.back.at)
+	if out.has("tank"):
+		back_taken.append(out.tank)
+	for item: Array in [["braai_drum", 25], ["kennel", 16], ["bicycle", 14]]:
+		if rng.randi() % 100 >= int(item[1]):
+			continue
+		for off: float in [-half * 0.5, half * 0.5, 0.0]:
+			var at := mid - n * (back + 1.3) + t * off
+			if back_taken.any(func(o): return (o as Vector2).distance_to(at) < 2.4):
+				continue
+			if _free(RealYards.obstacle_box(at, t, Vector2(0.5, 0.5)), ring, rings, near_strips, near_lanes, near_fences):
+				out.items.append({"prop": item[0], "at": at, "face": -n if item[0] == "kennel" else t})
+				back_taken.append(at)
+				break
 	out.spaza = not story and rng.randi() % SPAZA_ONE_IN == 0 and half >= 3.2
 	return out
 
@@ -122,6 +158,15 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 	if decor.has("dish"):
 		var dn: Vector2 = decor.dish.n
 		RealStreetDecor.add_prop(props, "satellite_dish", decor.dish.at, atan2(dn.x, dn.y), 1.0, maxf(1.8, h - 0.6))
+	if decor.has("path"):
+		var path_tool := RealChunkBuilder._tool("garden_path", surfaces, materials, PixelMaterials.surface("sidewalk", Vector2(1.5, 1.5), Color("#cdc4ae")))
+		RealChunkBuilder.strip(path_tool, PackedVector2Array([decor.path.a, decor.path.b]), 0.9, RealStreetDecor.Y_GROUND_DECAL + 0.001)
+	for lawn: Dictionary in decor.get("lawns", []):
+		var lawn_tool := RealStreetDecor._decal_tool("grass_patch", surfaces, materials)
+		RealStreetDecor.decal(lawn_tool, lawn.at, n, float(lawn.w), float(lawn.l), RealStreetDecor.Y_GROUND_DECAL + 0.002)
+	for it: Dictionary in decor.get("items", []):
+		var face: Vector2 = it.face
+		RealStreetDecor.add_prop(props, str(it.prop), it.at, atan2(face.x, face.y), 1.0, float(it.get("y", 0.0)))
 	for plant: Dictionary in decor.get("plants", []):
 		var at: Vector2 = plant.at
 		match str(plant.kind):

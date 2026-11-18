@@ -1,5 +1,12 @@
 # Changelog
 
+## More detail in house gardens and yards (2026-11-18)
+- Front gardens: a paved path from the gate to the door, lawn patches on the side away from the driveway, a wheelie bin beside the gate,
+  a letterbox on the gate post, plastic chairs on some stoeps and tyre planters.
+- Back yards: braai drums, dog kennels and leaning bicycles (new Blender props `braai_drum`, `kennel`, `bicycle`, `letterbox`), kept clear
+  of walls, the tank and the washing line.
+- Test: the real-world "all details" check covers the paths, lawns, bins, letterboxes, braai drums and chairs.
+
 ## Roller doors, solar geysers, dishes; SAPS colours (2026-11-18)
 - Roller doors: a garage roller door (white ribbed shutter in a concrete frame, steel housing above, threshold) in place of one front
   window on about a third of the houses with a wide front, and on some side walls.

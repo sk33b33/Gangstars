@@ -15,7 +15,7 @@ func _init() -> void:
 	var node: Node3D = null
 	var chosen := Vector2i(-1, -1)
 	for key: Vector2i in [Vector2i(-1, -1), Vector2i(-1, -2), Vector2i(0, -1), Vector2i(-2, -1), Vector2i(0, -2), Vector2i(-2, -2), Vector2i(0, 0), Vector2i(-1, 0)]:
-		node = RealChunkBuilder.build(key, data.load_chunk(key), {}, [], {}, [], {}, {}, {"street": data.street_context(key)})
+		node = RealChunkBuilder.build(key, data.load_chunk(key), {}, data.around(key, "road_lines"), {}, data.around(key, "outlines"), data.yards(key), data.home_fronts(key), {"street": data.street_context(key), "decor": data.home_decor(key), "schools": data.school_fences(key), "stalls": data.stalls(key), "strips": data.around(key, "road_strips")})
 		var has_stop := node.get_children().any(func(c): return str(c.name).contains("sign_stop"))
 		if has_stop:
 			chosen = key
@@ -94,6 +94,12 @@ func _init() -> void:
 			_cams.append([xf.origin + xf.basis.y * 3.0 + xf.basis.z * 5.0, xf.origin])
 			_cams.append([xf.origin + xf.basis.y * 5.0 + xf.basis.z * 9.0 + xf.basis.x * 6.0, xf.origin])
 			print("GEYSER at ", xf.origin)
+			break
+	for c in node.get_children():
+		if c is MultiMeshInstance3D and str(c.name) == "Props_braai_drum":
+			var xf2: Transform3D = (c as MultiMeshInstance3D).multimesh.get_instance_transform(0)
+			_cams.append([xf2.origin + Vector3(4, 5, 4), xf2.origin])
+			_cams.append([xf2.origin + Vector3(-3, 7, 6), xf2.origin + Vector3(0, 0, 2)])
 			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
