@@ -32,8 +32,20 @@ func _initialize() -> void:
 	root.add_child(ground)
 	var stage := Node3D.new()
 	root.add_child(stage)
-	_van = VehicleLibrary.build(stage, "hiace", Color("#f1eee8"))
-	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT["hiace"]
+	for a in OS.get_cmdline_user_args():   # --find=hatch|sedan|bakkie|panel_van: a car of that model that has an extra (spoiler, rack, L plate)
+		if a.begins_with("--find="):
+			var want := a.trim_prefix("--find=")
+			for x in 600:
+				var probe := VehicleLibrary.build(stage, want, Color("#2e86c1"), Vector3(x * 3.7, 0, 0))
+				if not VehicleDetail.extras_for(want, int(probe.get_meta("seed"))).is_empty():
+					print("EXTRAS ", VehicleDetail.extras_for(want, int(probe.get_meta("seed"))))
+					probe.position = Vector3.ZERO
+					_van = probe
+					break
+				probe.queue_free()
+	if _van == null:
+		_van = VehicleLibrary.build(stage, "hiace", Color("#f1eee8"))
+	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT["hiace"] if _van.get_meta("model") == "hiace" else Vector3(0, -50, 0)
 	var remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
 	remy.position = remy_seat
 	(_van.get_meta("tilt") as Node3D).add_child(remy)

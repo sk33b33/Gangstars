@@ -128,8 +128,42 @@ static func dress(pivot: Node3D, tilt: Node3D, model: String, color: Color, seed
 			_bus(tilt, d, seed)
 		"hiace":
 			_quad(tilt, "sticker_westridge", Vector2(0.72, 0.14), Vector3(-0.35, 1.28, -2.5), PI, 30.0)   # low on the rear window
+	_extras(tilt, d, model, seed, color)
 	if model != "scooter":
 		_exhaust(pivot, tilt, d, age)
+
+
+## The small things that make one car of a kind different from the next (from its seed, so they never change): a spoiler on some hatchbacks and
+## sedans, a ladder rack on some bakkies and panel vans, an L plate on some hatchbacks and sedans. Never on police, taxis, buses or Remy's van.
+static func extras_for(model: String, seed: int) -> Array:
+	var out: Array = []
+	var k := seed % 100
+	if model in ["hatch", "sedan"]:
+		if k < 14:
+			out.append("spoiler")
+		if (seed / 100) % 100 < 8:
+			out.append("learner")
+	elif model in ["bakkie", "panel_van"]:
+		if k < 18:
+			out.append("rack")
+	return out
+
+
+static func _extras(tilt: Node3D, d: Dictionary, model: String, seed: int, color: Color) -> void:
+	var dark := Color("#1d1e22")
+	for extra: String in extras_for(model, seed):
+		match extra:
+			"spoiler":   # a wing on the boot lid, on two small posts
+				_box(tilt, Vector3(float(d.w) - 0.4, 0.035, 0.26), Vector3(0, float(d.belt) + 0.5, -float(d.h) + 0.18), color.darkened(0.45))
+				for sx: float in [-1.0, 1.0]:
+					_box(tilt, Vector3(0.04, 0.16, 0.05), Vector3(sx * (float(d.w) * 0.5 - 0.3), float(d.belt) + 0.4, -float(d.h) + 0.2), dark)
+			"rack":   # two rails and three cross bars on the roof
+				for sx: float in [-1.0, 1.0]:
+					_box(tilt, Vector3(0.04, 0.05, 2.6), Vector3(sx * (float(d.w) * 0.5 - 0.3), float(d.roof) + 0.05, -0.3), dark)
+				for z: float in [-1.4, -0.3, 0.8]:
+					_box(tilt, Vector3(float(d.w) - 0.5, 0.04, 0.05), Vector3(0, float(d.roof) + 0.09, z), dark)
+			"learner":
+				_quad(tilt, "sign_learner", Vector2(0.2, 0.2), Vector3(0.5, float(d.belt) + 0.3, -float(d.h) - 0.01), PI, 30.0)
 
 
 ## Rust at the arches, dents, a mismatched door: more of each the older the vehicle.

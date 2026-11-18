@@ -885,7 +885,7 @@ func _vehicles_snapshot() -> Dictionary:
 	var out := {}
 	for id in district.vehicles:
 		var car: DrivableCar = district.vehicles[id]
-		out[id] = {"position": [car.global_position.x, car.global_position.y, car.global_position.z], "yaw": car.rotation.y}
+		out[id] = {"position": [car.global_position.x, car.global_position.y, car.global_position.z], "yaw": car.rotation.y, "damage": VehicleLibrary.damage_of(car.body)}
 	return out
 
 
@@ -964,6 +964,9 @@ func apply_snapshot(data: Dictionary) -> String:
 				car.global_position = Vector3(float(v.position[0]), float(v.position[1]) + 0.05, float(v.position[2]))
 				car.rotation.y = float(v.get("yaw", 0.0))
 				car.speed = 0.0
+				var more := float(v.get("damage", 0.0)) - VehicleLibrary.damage_of(car.body)   # the dents it had when saved
+				if more >= 0.3:
+					VehicleLibrary.restore_damage(car.body, more)
 				car.reset_physics_interpolation()
 	progression.load_dict(data.progression)
 	missions.load_dict(data.missions)

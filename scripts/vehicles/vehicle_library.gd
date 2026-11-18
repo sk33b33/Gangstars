@@ -499,6 +499,18 @@ static func hit(pivot: Node3D, strength: float) -> void:
 		crack.rotation.x = -atan2(dz, dy)
 
 
+## How dented a car is (the sum of the hits it has taken), and putting that much damage back on a fresh one (a saved game).
+static func damage_of(pivot: Node3D) -> float:
+	return float(pivot.get_meta("damage", 0.0)) if pivot else 0.0
+
+
+static func restore_damage(pivot: Node3D, total: float) -> void:
+	var left := total
+	while left >= 0.3:
+		hit(pivot, minf(left, 1.0))
+		left -= 1.0
+
+
 ## Parked cars aren't all alike: some under a cover, some on bricks without their wheels, some with
 ## a flat tyre. Deterministic from the car; only for cars that stand still.
 static func dress_parked(pivot: Node3D) -> void:

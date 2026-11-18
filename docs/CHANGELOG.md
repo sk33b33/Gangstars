@@ -30,6 +30,12 @@
   ten transforms a frame, one MultiMesh); paper and plastic bags tumbling north-west along the ground whenever the wind is up (a particle
   emitter that follows the camera); and little puffs of sand behind the player's feet when running (not walking, not driving). Stray dogs
   were already in the game. Test: the flock stays in its circle, and the three switch on and off by their own rules.
+- Car variety (`VehicleDetail.extras_for`, new `sign_learner` texture): about one hatchback or sedan in seven has a spoiler on the boot, about
+  one in twelve an L plate on the rear window, and about one bakkie or panel van in five a roof rack; always the same cars, never on police,
+  taxis, buses or Remy's van. (No new car models yet: that needs a Blender pass.)
+- Saved damage: a car's dents are counted (`VehicleLibrary.damage_of`) and written into the save, and loading puts the same dents (and the
+  cracked screen) back (`restore_damage`). Tests: the extras appear on the right models only; a counted damage restores onto a fresh car; a
+  save remembers the golf's dents.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the

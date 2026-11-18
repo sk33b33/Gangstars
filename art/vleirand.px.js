@@ -724,6 +724,9 @@ sprite("razor_wire", { w: 24, h: 8 },
 sprite("electric_fence", { w: 16, h: 12 },
   hline(0, 2, 16, "#b9bcc2"), hline(0, 6, 16, "#b9bcc2"), hline(0, 10, 16, "#b9bcc2"),
   rect(0, 0, 1, 12, "#3a3d46"), rect(8, 1, 1, 11, "#3a3d4688"), px(0, 2, "#f2c43a"), px(0, 6, "#f2c43a"), px(0, 10, "#f2c43a"))
+// A learner driver's L plate for the back window: a red L on white.
+sprite("sign_learner", { w: 10, h: 10 },
+  rect(0, 0, 10, 10, "#f4f1ea"), box(0, 0, 10, 10, "#c0392b"), rect(3, 2, 2, 6, "#c0392b"), rect(3, 6, 5, 2, "#c0392b"))
 sprite("dent", { w: 16, h: 12 },
   ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
 sprite("sticker_a", { w: 14, h: 6 },

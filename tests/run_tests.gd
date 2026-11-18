@@ -268,6 +268,23 @@ func _test_npc_data() -> void:
 	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)
 	drivable.queue_free()
 	other.queue_free()
+	var seen_extras := {}
+	for xs in 400:
+		for mdl in ["hatch", "sedan", "bakkie", "panel_van"]:
+			for ex in VehicleDetail.extras_for(mdl, xs * 37 + 11):
+				seen_extras[ex] = true
+	var no_extras := true
+	for mdl in ["police", "taxi", "bus", "refuse", "hiace", "scooter", "skoro", "combi"]:
+		no_extras = no_extras and VehicleDetail.extras_for(mdl, 5).is_empty()
+	var dented := VehicleLibrary.build(garage, "sedan", Color.RED, Vector3(60, 0, 0))
+	VehicleLibrary.hit(dented, 1.5)
+	VehicleLibrary.hit(dented, 1.5)
+	var restored := VehicleLibrary.build(garage, "sedan", Color.RED, Vector3(70, 0, 0))
+	VehicleLibrary.restore_damage(restored, VehicleLibrary.damage_of(dented))
+	_check(seen_extras.has("spoiler") and seen_extras.has("rack") and seen_extras.has("learner") and no_extras and VehicleDetail.extras_for("hatch", 7) == VehicleDetail.extras_for("hatch", 7),
+		"some hatchbacks and sedans have a spoiler or an L plate and some bakkies and vans a roof rack, always the same ones; police, taxis, buses and Remy's van have none")
+	_check(absf(VehicleLibrary.damage_of(dented) - 3.0) < 0.01 and absf(VehicleLibrary.damage_of(restored) - 3.0) < 0.35 and restored.has_meta("cracked"),
+		"a car's dents are counted, and a saved count puts the same damage (and the cracked screen) back on a fresh car (%.2f)" % VehicleLibrary.damage_of(restored))
 	# Detail pass: a hollow taxi with a load of passengers, the combi and the bakery van.
 	var taxi := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(40, 0, 0))
 	VehicleLibrary.add_occupants(taxi)
@@ -1071,6 +1088,8 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	for i in 120:
 		await physics_frame
 	var golf: DrivableCar = district.vehicles["car_mossie"]
+	VehicleLibrary.hit(golf.body, 1.5)
+	_check(float(session._vehicles_snapshot()["car_mossie"].get("damage", 0.0)) >= 1.5, "a saved game remembers how dented each drivable car is")
 	_talk(player, golf.interactable)
 	_check(player.is_driving() and player.vehicle == golf and not player.model.visible, "E on a car gets the player in")
 	var p0 := golf.global_position
