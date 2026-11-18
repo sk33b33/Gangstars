@@ -6,7 +6,7 @@ Run headless:  blender -b --factory-startup --python tools/blender/build_hiace.p
 What it does, so the van drives like every other vehicle in VehicleLibrary (see tools/blender/build_vehicles.py):
   * scales the model by 0.8 (it was 1.25 times life size: 5.4 m long, 1.86 m wide after) and puts its origin on the ground at the centre,
     front = -Y in Blender (+Z in Godot), right-hand drive;
-  * drops the roof luggage and the roof rack floor;
+  * drops the roof luggage and the roof rack floor (the van has no roof rack);
   * decimates every part (the phone cannot draw 500 000 triangles for one van) to roughly 30 000 triangles in total;
   * replaces the 30 photo textures with plain role materials named as in vehicles.glb: paint (Godot recolours it), glass, trim (black
     plastic), chrome, seat, headlight, taillight - no textures at all;
@@ -173,22 +173,6 @@ for o in parts:
     mod.ratio = ratio
     mod.use_collapse_triangulate = True
     bpy.ops.object.modifier_apply(modifier=mod.name)
-
-# A roof rack: two rails and four cross bars on the roof (the original carried a pile of luggage there).
-def rack_bar(centre, size):
-    bpy.ops.mesh.primitive_cube_add(size=2, location=centre)
-    b = bpy.context.active_object
-    b.scale = (size[0] / 2, size[1] / 2, size[2] / 2)
-    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-    b.data.materials.append(ROLES["trim"])
-    parts.append(b)
-
-
-ROOF_Z = 2.13
-for sx in (-0.62, 0.62):
-    rack_bar((sx, 0.45, ROOF_Z + 0.05), (0.04, 3.3, 0.05))
-for cy in (-1.1, -0.1, 0.9, 1.9):
-    rack_bar((0.0, cy, ROOF_Z + 0.09), (1.34, 0.05, 0.04))
 
 # Join the body.
 bpy.ops.object.select_all(action="DESELECT")
