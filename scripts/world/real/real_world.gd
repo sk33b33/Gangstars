@@ -261,6 +261,10 @@ func load_chunk(key: Vector2i) -> void:
 		node.add_child(vendor)
 		var behind: Vector2 = s.at + s.out * (0.75 if s.kind == "fruit" else 1.3) + (s.dir * -2.4 if s.kind == "snoek" else Vector2.ZERO)
 		vendor.setup(str(s.kind), behind, -s.out, hash(Vector2i(roundi(s.at.x), roundi(s.at.y))), func(stock: String, label: String): vendor_used.emit(stock, label))
+	for pp: Dictionary in stats.get("people", []):   # car guards and taxi conductors (nothing to sell, just there)
+		var person := RealVendor.new()
+		node.add_child(person)
+		person.setup(str(pp.kind), pp.at, pp.face, hash(Vector2i(roundi(pp.at.x), roundi(pp.at.y))), func(_stock: String, _label: String): pass)
 	loaded[key] = node
 	buildings_loaded += int(stats.get("buildings", 0))
 	chunk_loaded.emit(key)

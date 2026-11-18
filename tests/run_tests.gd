@@ -3270,6 +3270,18 @@ func _test_real_world_units() -> void:
 	_check(razor_s.has("fence_razor") and not razor_s.has("fence_electric") and electric_s.has("fence_electric") and not bare_s.has("fence_razor") and not bare_s.has("fence_electric") \
 		and RealChunkBuilder.fence_top(5) == "razor" and RealChunkBuilder.fence_top(15) == "electric" and RealChunkBuilder.fence_top(50) == "",
 		"about one fence in ten has razor wire along its top and one in eleven an electric fence; the rest have neither")
+	var smoke_root := Node3D.new()
+	var smoke := AmbientFx.smoke(smoke_root, Vector3(1, 0.95, 2))
+	var guard_spot := RealLandmarks.people_spot("guard", {"mid": Vector2(0, 0), "normal": Vector2.DOWN}, 14.0, 4)
+	var conductor_spot := RealLandmarks.people_spot("conductor", {"mid": Vector2(0, 0), "normal": Vector2.DOWN}, 4.0, 4)
+	var guard := RealVendor.new()
+	root.add_child(guard)   # like the world does: in the tree first, then set up
+	guard.setup("guard", guard_spot.at, guard_spot.face, 4, func(_a, _b): pass)
+	_check(smoke.amount == 8 and smoke.visibility_range_end == AmbientFx.SMOKE_RANGE and (guard_spot.at as Vector2).y > 3.0 and (conductor_spot.at as Vector2).y > 2.0 \
+		and guard.get_child_count() >= 1 and not guard.has_node("Interactable") and guard.interactable.get_parent() == null,
+		"braai smoke is a small particle plume that only shows near the player; a car guard and a taxi conductor stand ahead of a front facing the customers, with nothing to sell")
+	smoke_root.free()
+	guard.queue_free()
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}

@@ -22,6 +22,10 @@
 - Fence tops (`RealChunkBuilder.fence_top`, two new textures `razor_wire` and `electric_fence`): about one home in ten has a coil of razor
   wire along its fence or wall, about one in eleven more an electric fence (three taut strands on brackets). Test: the right ones for
   the right seeds, none on the rest. Burglar bars were already on the windows and doors.
+- Street life: braai smoke (`AmbientFx.smoke`, a small particle plume, only drawn within 30 m) rising from one braai drum in three; a car guard
+  in an orange hi-vest at the end of about three shopfronts in five and on the forecourts with room; a taxi conductor in a bright shirt
+  by the bus station (`RealLandmarks.people_spot`, `RealVendor` kinds `guard` and `conductor`: they stand about with nothing to sell and turn
+  to talk when you come close). Washing swaying in the wind is not done yet (the washing lines are static props).
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the

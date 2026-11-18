@@ -121,6 +121,8 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 				var front_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
 				var front_mid: Vector2 = (ring[front.index] + ring[(int(front.index) + 1) % ring.size()]) * 0.5
 				RealShopDecor.draw_shop(front_mid, front_t, front.normal, front_len, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
+				if seed_value % 5 < 3 and front_len >= 8.0:   # a car guard at the end of the shopfront
+					RealChunkBuilder._people.append(people_spot("guard", front, front_len, seed_value))
 			_mural(ring, centre, front, seed_value, 0.4, 3.4, surfaces, materials)
 		"fuel":
 			var walls := _plaster(WHITE, surfaces, materials)
@@ -131,6 +133,8 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 				var kiosk_room := RealChunkBuilder._distance_to_lines(front.mid, near_roads) - 6.0 if not near_roads.is_empty() else 14.0
 				var kiosk_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
 				RealFuelDecor.draw(front.mid, _tangent(front), front.normal, kiosk_len, kiosk_room, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
+				if kiosk_room >= 6.0:   # a car guard on the forecourt
+					RealChunkBuilder._people.append(people_spot("guard", front, kiosk_len, seed_value + 1))
 		"station":
 			var walls := _plaster("#d9c49a", surfaces, materials)
 			var h := float(b.get("h", 3.0))
@@ -139,6 +143,7 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			if not front.is_empty():
 				var st_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
 				RealTransitDecor.draw_station(front.mid, _tangent(front), front.normal, st_len, surfaces, materials, RealChunkBuilder._roof_props)
+				RealChunkBuilder._people.append(people_spot("conductor", front, st_len, seed_value))   # calling for passengers
 		"canopy":
 			_canopy_on_columns(ring, rect, CANOPY_HEIGHT, FORECOURT_BANDS[seed_value % FORECOURT_BANDS.size()], surfaces, materials)
 		"hall":
@@ -278,6 +283,16 @@ static func _window_rows(ring: PackedVector2Array, centre: Vector2, storeys: int
 			for s in storeys:
 				var y := s * SCHOOL_STOREY
 				RealChunkBuilder._panel(window, mid, tangent, normal, size.x, y + y_from, y + y_from + size.y)
+
+
+## Where a landmark's outside person stands: `kind` "guard" (a car guard at the end of a shopfront or forecourt) or "conductor" (at the taxi
+## rank), ahead of the front and to one side, facing the customers. Recorded for the world to put a person there (RealVendor).
+static func people_spot(kind: String, front: Dictionary, length: float, seed_value: int) -> Dictionary:
+	var n: Vector2 = front.normal
+	var t := _tangent(front)
+	var side := 1.0 if seed_value % 2 == 0 else -1.0
+	var at: Vector2 = front.mid + n * (2.6 if kind == "conductor" else 4.2) + t * side * (1.6 if kind == "conductor" else length * 0.5 + 0.6)
+	return {"kind": kind, "at": at, "face": -n}
 
 
 ## A painted sign band round the top of a shop: the parapet's outer face in the band colour.

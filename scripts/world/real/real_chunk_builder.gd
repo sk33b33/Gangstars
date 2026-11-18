@@ -44,6 +44,7 @@ const COPING_COLOR := "#cfcac0"
 const SILL_DEPTH := 0.12
 ## Where the house being built puts its roof fittings (set by `build`: the chunk's prop dictionary).
 static var _roof_props: Dictionary = {}
+static var _people: Array = []   # {kind, at, face} of the people landmarks put outside (car guards, taxi conductors), reset for every piece
 const BRICK_TINTS := ["#c7775b", "#b9694f", "#a35d49", "#d39a7a", "#9c5a44"]
 const ROOF_TILE_TINTS := ["#ffffff", "#d8d2cc", "#f0d6c4", "#bfb6b0"]
 const ROOF_IBR_TINTS := ["#ffffff", "#e9a99c", "#a9c3b3", "#c8ccd2"]
@@ -79,6 +80,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		_road(r, surfaces, materials, root)
 	var props := {}   # prop name -> Array[Transform3D], built as one MultiMesh each
 	_roof_props = props   # houses put their roof fittings (solar geysers, dishes) here
+	_people = []
 	var humps: Array = []
 	if ctx.has("street"):
 		RealStreetDecor.build(chunk.get("roads", []), ctx.street, surfaces, materials, props, humps, root)
@@ -142,6 +144,7 @@ static func build(key: Vector2i, chunk: Dictionary, stats: Dictionary = {}, near
 		mmi.multimesh = mm
 		root.add_child(mmi)
 	stats["props"] = props.keys().map(func(k): return [k, (props[k] as Array).size()])
+	stats["people"] = _people
 	var blobs := ContactShadows.build(props)
 	if blobs != null:
 		root.add_child(blobs)

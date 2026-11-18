@@ -171,6 +171,8 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 	for it: Dictionary in decor.get("items", []):
 		var face: Vector2 = it.face
 		RealStreetDecor.add_prop(props, str(it.prop), it.at, atan2(face.x, face.y), 1.0, float(it.get("y", 0.0)))
+		if str(it.prop) == "braai_drum" and seed_value % 3 == 0:   # one braai in three is lit: smoke rises (AmbientFx)
+			AmbientFx.smoke(root, Vector3((it.at as Vector2).x, 0.95, (it.at as Vector2).y))
 	for plant: Dictionary in decor.get("plants", []):
 		var at: Vector2 = plant.at
 		match str(plant.kind):
