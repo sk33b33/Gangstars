@@ -88,8 +88,11 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			var h := 3.6
 			RealChunkBuilder.wall_ring(ring, centre, h, walls, _plaster("#3f7f6a", surfaces, materials), collision, RealChunkBuilder.PARAPET)
 			RealChunkBuilder.flat_roof(ring, h, RealChunkBuilder.PARAPET, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
+			_window_rows(ring, centre, 1, surfaces, materials)
 			if not front.is_empty():
 				_entrance_canopy(front, 5.0, 2.6, 2.9, surfaces, materials)
+				var cl_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				RealClinicDecor.draw(str(b.get("k", "")), front.mid, _tangent(front), front.normal, cl_len, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
 		"school":
 			var storeys := 2 if area > TWO_STOREY_AREA else 1
 			var h := SCHOOL_STOREY * storeys

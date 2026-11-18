@@ -3048,6 +3048,16 @@ func _test_real_world_units() -> void:
 	_check(stop_surfaces.has("bay_paint") and stop_surfaces.has("decal_bay_taxi") and stop_surfaces.has("panel_sign_timetable") and stop_props.has("litter_bin") \
 		and station_surfaces.has("panel_sign_taxi_rank") and station_props.has("park_bench") and station_props.get("bollard", []).size() == 3,
 		"a taxi stop has a yellow kerb, TAXI on the tarmac, a timetable and a bin; the bus station has a taxi rank sign, a bench and bollards (%s)" % [stop_surfaces.keys()])
+	var clinic_props := {}
+	var clinic_surfaces := {}
+	RealClinicDecor.draw("clinic", Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 10.0, 4, clinic_surfaces, {}, clinic_props)
+	var creche_props := {}
+	var creche_surfaces := {}
+	RealClinicDecor.draw("kindergarten", Vector2(0, 0), Vector2.RIGHT, Vector2.DOWN, 10.0, 4, creche_surfaces, {}, creche_props)
+	_check(clinic_surfaces.has("panel_sign_clinic") and clinic_surfaces.has("panel_sign_clinic_hours") and clinic_surfaces.has("decal_bay_ambulance") and clinic_props.has("park_bench") \
+		and clinic_props.has("litter_bin") and not clinic_props.has("spring_rider") \
+		and creche_surfaces.has("panel_sign_creche") and creche_props.get("spring_rider", []).size() == 2 and creche_props.has("seesaw") and not creche_surfaces.has("decal_bay_ambulance"),
+		"a clinic has a green-cross sign, hours board, ambulance bay and waiting benches; a crèche has its own sign, spring riders and a seesaw but no ambulance bay (%s / %s)" % [clinic_surfaces.keys(), creche_surfaces.keys()])
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

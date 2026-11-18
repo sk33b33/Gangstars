@@ -212,6 +212,26 @@ sprite("bay_taxi", { w: 32, h: 16 },
 sprite("bay_bus", { w: 32, h: 16 },
   text(16, 5, "BUS", "#f1eee8", { align: "c" }))
 
+sprite("sign_clinic", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "W"), box(0, 0, 64, 16, "f"), hline(1, 1, 62, "f"),
+  rect(5, 3, 3, 9, "f"), rect(2, 6, 9, 3, "f"),
+  text(38, 3, "WESTRIDGE", "f", { align: "c" }), text(38, 9, "CLINIC", "f", { align: "c" }))
+
+sprite("sign_creche", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "l"), box(0, 0, 64, 16, "#d64541"), hline(1, 1, 62, "L"),
+  rect(4, 4, 4, 4, "#2e86c1"), rect(10, 4, 4, 4, "#d64541"), rect(16, 4, 4, 4, "f"),
+  text(42, 3, "CRECHE", "k", { align: "c" }), text(42, 9, "PRE-SCHOOL", "k", { align: "c" }))
+
+// Opening hours board beside a clinic door.
+sprite("sign_clinic_hours", { w: 24, h: 32 },
+  rect(0, 0, 24, 32, "W"), box(0, 0, 24, 32, "f"), rect(1, 1, 22, 7, "f"),
+  text(12, 2, "OPEN", "W", { align: "c" }),
+  text(12, 11, "DAILY", "k", { align: "c" }), text(12, 18, "07:00", "k", { align: "c" }), text(12, 25, "16:00", "k", { align: "c" }))
+
+// AMBULANCE painted in the bay in front of a clinic, stretched along the bay like STOP: the top is the far end.
+sprite("bay_ambulance", { w: 48, h: 16 },
+  text(24, 5, "AMBULANCE", "#f1eee8", { align: "c" }))
+
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
   rect(3, 9, 10, 4, "k"), px(4, 13, "k"), px(11, 13, "k"), rect(4, 10, 3, 2, "C"), rect(9, 10, 3, 2, "C"))

@@ -188,6 +188,18 @@ func _init() -> void:
 						break
 		if not stop_found:
 			sn.free()
+	var clinic_key := Vector2i(0, -1)
+	var clinic_node := RealChunkBuilder.build(clinic_key, data.load_chunk(clinic_key), {}, data.around(clinic_key, "road_lines"), {}, data.around(clinic_key, "outlines"), data.yards(clinic_key), data.home_fronts(clinic_key), {"street": data.street_context(clinic_key), "decor": data.home_decor(clinic_key), "schools": data.school_fences(clinic_key), "stalls": data.stalls(clinic_key), "strips": data.around(clinic_key, "road_strips")})
+	root.add_child(clinic_node)
+	for c in clinic_node.get_children():
+		if c is MeshInstance3D and str(c.name) == "Mesh_panel_sign_clinic_hours":
+			var cv: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+			var cn: Vector3 = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0]
+			var cp := cv[0]
+			_cams.append([cp + cn * 9.0 + Vector3(0, 3.0, 0), cp + Vector3(0, 1.5, 0)])
+			_cams.append([cp + cn * 18.0 + Vector3(0, 12.0, 0), cp])
+			print("CLINIC at ", cp, " normal ", cn)
+			break
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)

@@ -1,5 +1,15 @@
 # Changelog
 
+## More at the clinic and crèche (2026-11-18)
+- Four new textures (pxl): `sign_clinic` (green cross, "WESTRIDGE CLINIC"), `sign_creche`, `sign_clinic_hours`, `bay_ambulance`.
+- Clinic (`RealClinicDecor`): barred windows along the walls (there were none), the clinic sign above the entrance canopy, an opening-hours
+  board beside the door, two waiting benches and a litter bin, three bollards, a yellow-boxed ambulance bay with AMBULANCE painted in it
+  (reads correctly for an ambulance driving in), and a signpost with a two-sided clinic board by the road.
+- Crèche (the kindergarten in the data): its own colourful "CRECHE / PRE-SCHOOL" sign instead, benches, a bin, bollards, two spring riders,
+  a seesaw and a sandpit out front; no ambulance bay.
+- There is no hospital in the Westridge data; only the clinic and the crèche got this.
+- Tests: clinic and crèche each get their own set.
+
 ## More at the bus stops and taxi ranks (2026-11-18)
 - Four new textures (pxl): `sign_taxi_rank`, `sign_timetable`, and the road words `bay_bus` and `bay_taxi`.
 - Bus and taxi stops (`RealTransitDecor.draw_stop`): a yellow painted kerb along a 14 m bay, BUS or TAXI painted across the lane, a
