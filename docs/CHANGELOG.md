@@ -1,5 +1,15 @@
 # Changelog
 
+## More at the community halls (2026-11-18)
+- Four new textures (pxl): `sign_civic`, `sign_sports_hall`, `sign_events`, `door_hall`.
+- Civic centre (`RealHallDecor.draw_civic`): barred windows along its walls (it had none), a row of high windows in the raised hall, the
+  "WESTRIDGE CIVIC CENTRE" sign over the entrance and steel double doors under it, an events board by the street ("BINGO FRI, SOCCER SAT,
+  CHOIR SUN"), benches and bins either side of the canopy, five bollards, a bicycle rack, a water tank behind, a community vegetable garden
+  of three raised beds, and two trees.
+- Sports hall (`RealHallDecor.draw_sports_hall`): barred high windows, its own sign and doors, a basketball post, two floodlights,
+  benches, a bin and a bicycle rack. The smaller sports blocks are unchanged.
+- Tests: civic centre and sports hall each get their own set.
+
 ## More at the churches and mosque (2026-11-18)
 - Six new textures (pxl): `window_stained`, `rose_window`, `door_church`, `window_arch`, `sign_church`, `sign_mosque`. One new Blender
   prop: `crescent_finial` (70 props in all).

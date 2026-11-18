@@ -264,6 +264,26 @@ sprite("sign_mosque", { w: 64, h: 24 },
   text(38, 3, "MASJID", "#1f6a4a", { align: "c" }),
   text(38, 10, "FRIDAYS", "#1f6a4a", { align: "c" }), text(38, 16, "13:00", "#1f6a4a", { align: "c" }))
 
+// ---- Community halls.
+sprite("sign_civic", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "#2f4a8a"), box(0, 0, 64, 16, "#f1eee8"), hline(1, 1, 62, "#e0b02a"),
+  text(32, 3, "WESTRIDGE", "#f1eee8", { align: "c" }), text(32, 9, "CIVIC CENTRE", "#e0b02a", { align: "c" }))
+
+sprite("sign_sports_hall", { w: 64, h: 16 },
+  rect(0, 0, 64, 16, "f"), box(0, 0, 64, 16, "F"), hline(1, 1, 62, "l"),
+  text(32, 3, "SPORTS HALL", "W", { align: "c" }), text(32, 9, "BOOK NOW", "l", { align: "c" }))
+
+sprite("sign_events", { w: 48, h: 32 },
+  rect(0, 0, 48, 32, "#f1eee8"), box(0, 0, 48, 32, "#2f4a8a"), rect(1, 1, 46, 8, "#2f4a8a"),
+  text(24, 3, "EVENTS", "#f1eee8", { align: "c" }),
+  text(24, 12, "BINGO FRI", "#1d1b24", { align: "c" }), text(24, 19, "SOCCER SAT", "#1d1b24", { align: "c" }),
+  text(24, 26, "CHOIR SUN", "#1d1b24", { align: "c" }))
+
+sprite("door_hall", { w: 24, h: 24 },
+  rect(0, 0, 24, 24, "#c2bdb3"), rect(1, 1, 22, 23, "#3b4a5a"), rect(11, 1, 2, 23, "#2a2f3a"),
+  rect(2, 3, 9, 9, "#7f9fb8"), rect(13, 3, 9, 9, "#7f9fb8"), rect(2, 14, 9, 9, "#4a5a6a"), rect(13, 14, 9, 9, "#4a5a6a"),
+  rect(8, 13, 1, 4, "#c9c9c4"), rect(15, 13, 1, 4, "#c9c9c4"))
+
 sprite("sign_bus", { w: 16, h: 16 },
   rect(0, 0, 16, 16, "l"), box(0, 0, 16, 16, "L"), text(8, 2, "BUS", "k", { align: "c" }),
   rect(3, 9, 10, 4, "k"), px(4, 13, "k"), px(11, 13, "k"), rect(4, 10, 3, 2, "C"), rect(9, 10, 3, 2, "C"))

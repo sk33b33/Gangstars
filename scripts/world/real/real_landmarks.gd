@@ -81,9 +81,12 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 			RealChunkBuilder.wall_ring(ring, centre, 5.0, walls, null, collision, RealChunkBuilder.PARAPET)
 			RealChunkBuilder.flat_roof(ring, 5.0, RealChunkBuilder.PARAPET, _mat("flat_roof", "#7c7f85", surfaces, materials), coping)
 			_raised_hall(rect, 5.0, 8.5, walls, surfaces, materials)
+			_window_rows(ring, centre, 1, surfaces, materials)
 			if not front.is_empty():
 				_entrance_canopy(front, 7.0, 3.2, 3.4, surfaces, materials)
 				_flagpole(front.mid + front.normal * 5.0 + _tangent(front) * 5.0, surfaces, materials)
+				var hall_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				RealHallDecor.draw_civic(front.mid, _tangent(front), front.normal, hall_len, rect, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
 		"clinic":
 			var walls := _plaster(WHITE, surfaces, materials)
 			var h := 3.6
@@ -146,6 +149,9 @@ static func build(b: Dictionary, ring: PackedVector2Array, centre: Vector2, area
 				RealChunkBuilder._pitched_roof(_roof("roof_ibr", surfaces, materials), _mat("fascia_" + WHITE, WHITE, surfaces, materials), walls, rect, h, true, clampf((rect.half as Vector2).y * 0.2, 0.6, 2.0))
 			else:
 				RealChunkBuilder.flat_roof(ring, h, RealChunkBuilder.PARAPET, _roof("roof_ibr", surfaces, materials), coping)
+			if str(b.get("k", "")) == "sports_hall" and not front.is_empty():
+				var sh_len: float = ring[front.index].distance_to(ring[(int(front.index) + 1) % ring.size()])
+				RealHallDecor.draw_sports_hall(front.mid, _tangent(front), front.normal, sh_len, rect, seed_value, surfaces, materials, RealChunkBuilder._roof_props)
 		_:
 			var h := float(b.get("h", 3.0))
 			var walls := _plaster(BRICK if seed_value % 3 == 0 else RealChunkBuilder.PUBLIC_WALL, surfaces, materials)

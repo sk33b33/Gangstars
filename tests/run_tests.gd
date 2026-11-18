@@ -3078,6 +3078,17 @@ func _test_real_world_units() -> void:
 	var fq_cross := (fq_verts[1] - fq_verts[0]).cross(fq_verts[2] - fq_verts[0])
 	_check(fq_cross.dot(Vector3(0, 0, 1)) < 0.0,
 		"a sign quad facing +z is wound clockwise as seen from +z (Godot's front face), so a single-sided material shows its picture the right way round, not mirrored")
+	var hall_rect := {"c": Vector2(0, 0), "u": Vector2.RIGHT, "v": Vector2.DOWN, "half": Vector2(20.0, 10.0), "area": 800.0}
+	var civic_props := {}
+	var civic_surfaces := {}
+	RealHallDecor.draw_civic(Vector2(0, 10), Vector2.RIGHT, Vector2.DOWN, 40.0, hall_rect, 6, civic_surfaces, {}, civic_props)
+	var sports_props := {}
+	var sports_surfaces := {}
+	RealHallDecor.draw_sports_hall(Vector2(0, 10), Vector2.RIGHT, Vector2.DOWN, 40.0, hall_rect, 6, sports_surfaces, {}, sports_props)
+	_check(civic_surfaces.has("panel_sign_civic") and civic_surfaces.has("panel_door_hall") and civic_surfaces.has("panel_sign_events") and civic_surfaces.has("garden_veg") \
+		and civic_props.has("park_bench") and civic_props.has("jojo_tank") and civic_props.get("bollard", []).size() == 5 \
+		and sports_surfaces.has("panel_sign_sports_hall") and sports_props.has("netball_post") and sports_props.get("park_lamp", []).size() == 2 and not sports_surfaces.has("garden_veg"),
+		"the civic centre has a sign, doors, an events board, benches, a vegetable garden and a water tank; the sports hall has its own sign, a basketball post and floodlights (%s / %s)" % [civic_surfaces.keys(), sports_surfaces.keys()])
 	var in_hole := 0
 	for kind: String in park_props:
 		for xf: Transform3D in park_props[kind]:

@@ -224,6 +224,17 @@ func _init() -> void:
 				_cams.append([cf + Vector3(14, 3, 14), cf + Vector3(0, -4, 0)])
 				_cams.append([cf + Vector3(25, 6, 25), cf + Vector3(0, -6, 0)])
 				print("MOSQUE at ", cf)
+	for hk: Vector2i in [Vector2i(0, -1), Vector2i(-2, -2)]:
+		var hn := RealChunkBuilder.build(hk, data.load_chunk(hk), {}, data.around(hk, "road_lines"), {}, data.around(hk, "outlines"), data.yards(hk), data.home_fronts(hk), {"street": data.street_context(hk), "decor": data.home_decor(hk), "schools": data.school_fences(hk), "stalls": data.stalls(hk), "strips": data.around(hk, "road_strips")})
+		root.add_child(hn)
+		for c in hn.get_children():
+			if c is MeshInstance3D and (str(c.name) == "Mesh_panel_sign_civic" or str(c.name) == "Mesh_panel_sign_sports_hall"):
+				var hv: PackedVector3Array = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+				var hnn: Vector3 = (c as MeshInstance3D).mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0]
+				var hp := (hv[0] + hv[2]) * 0.5
+				_cams.append([hp + hnn * 16.0 + Vector3(0, 2.5, 0), hp + Vector3(0, -0.5, 0)])
+				_cams.append([hp + hnn * 30.0 + Vector3(0, 20, 0), hp + Vector3(0, -3, 0)])
+				print("HALL ", c.name, " at ", hp)
 	var cam := Camera3D.new()
 	cam.name = "Cam"
 	root.add_child(cam)
