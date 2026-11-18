@@ -550,6 +550,7 @@ static func _power_line(line: PackedVector2Array, width: float, pave: float, lam
 	for pole: Array in poles:
 		RealLandmarks._prism(wood, pole[0], 0.13, 6, 0.0, POLE_HEIGHT, true)
 		RealLandmarks._obox(wood, pole[0], pole[1], Vector2(0.8, 0.06), POLE_HEIGHT - 0.5, POLE_HEIGHT - 0.38)
+	pole_posters(poles, rng, surfaces, materials)
 	for i in poles.size() - 1:
 		var a: Vector2 = poles[i][0]
 		var b: Vector2 = poles[i + 1][0]
@@ -566,6 +567,27 @@ static func _power_line(line: PackedVector2Array, width: float, pave: float, lam
 			RealLandmarks._obox(shoe, mid - da * 0.12, da.orthogonal(), Vector2(0.14, 0.05), y - 0.05, y + 0.05)
 			RealLandmarks._obox(wire, mid, da, Vector2(0.15, 0.01), y + 0.1, y + 0.35)
 	return poles
+
+
+## A hand-made poster stapled to about a third of the power poles, on the faces looking along the street (the way people walk past).
+const POSTERS := ["poster_choir", "poster_dog", "poster_special"]
+const POSTER_PERCENT := 34
+const POSTER_SIZE := Vector2(0.26, 0.32)
+
+
+static func pole_posters(poles: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> int:
+	var count := 0
+	for pole: Array in poles:
+		if rng.randi() % 100 >= POSTER_PERCENT:
+			continue
+		var tex: String = POSTERS[rng.randi() % POSTERS.size()]
+		var tool := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
+		var d: Vector2 = pole[1]
+		var y0 := 1.5 + rng.randf() * 0.5
+		for s: float in [1.0, -1.0]:
+			face_quad(tool, pole[0], d * s, POSTER_SIZE.x, y0, y0 + POSTER_SIZE.y, 0.15)
+		count += 1
+	return count
 
 
 ## A wire from a to b hanging WIRE_SAG at the middle: four straight pieces, each a thin cross of two strips.

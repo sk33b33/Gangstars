@@ -727,6 +727,22 @@ sprite("electric_fence", { w: 16, h: 12 },
 // A learner driver's L plate for the back window: a red L on white.
 sprite("sign_learner", { w: 10, h: 10 },
   rect(0, 0, 10, 10, "#f4f1ea"), box(0, 0, 10, 10, "#c0392b"), rect(3, 2, 2, 6, "#c0392b"), rect(3, 6, 5, 2, "#c0392b"))
+// Posters on power poles and adverts on bus-shelter boards (fictional, local, hand-made look).
+sprite("poster_choir", { w: 30, h: 36 },
+  rect(0, 0, 30, 36, "#f2c43a"), box(0, 0, 30, 36, "#1d1b24"),
+  text(15, 4, "CHOIR", "#1d1b24", { align: "c" }), text(15, 12, "NIGHT", "#c0392b", { align: "c" }), text(15, 21, "FRI 7PM", "#1d1b24", { align: "c" }), text(15, 28, "HALL", "#1d1b24", { align: "c" }))
+sprite("poster_dog", { w: 30, h: 36 },
+  rect(0, 0, 30, 36, "#f4f1ea"), box(0, 0, 30, 36, "#1d1b24"),
+  text(15, 4, "LOST", "#c0392b", { align: "c" }), text(15, 12, "DOG", "#1d1b24", { align: "c" }), rect(10, 20, 10, 5, "#8c6044"), rect(8, 21, 3, 3, "#8c6044"), text(15, 29, "REWARD", "#1d1b24", { align: "c" }))
+sprite("poster_special", { w: 30, h: 36 },
+  rect(0, 0, 30, 36, "#c0392b"), box(0, 0, 30, 36, "#f4f1ea"),
+  text(15, 4, "SPAZA", "#f4f1ea", { align: "c" }), text(15, 11, "2 FOR", "#f2c43a", { align: "c" }), text(15, 18, "R10", "#f4f1ea", { align: "c" }), text(15, 26, "TODAY", "#f2c43a", { align: "c" }))
+sprite("ad_soap", { w: 32, h: 44 },
+  rect(0, 0, 32, 44, "#2e86c1"), box(0, 0, 32, 44, "#f4f1ea"),
+  text(16, 5, "SKOON", "#f4f1ea", { align: "c" }), text(16, 13, "SOAP", "#f2c43a", { align: "c" }), ellipse(16, 27, 8, 6, "#f4f1ea"), ellipse(13, 25, 3, 2, "#cfe6f5"), text(16, 37, "R5", "#f4f1ea", { align: "c" }))
+sprite("ad_airtime", { w: 36, h: 44 },
+  rect(0, 0, 36, 44, "#27ae60"), box(0, 0, 36, 44, "#f4f1ea"),
+  text(18, 5, "AIRTIME", "#f4f1ea", { align: "c" }), text(18, 17, "R5", "#f2c43a", { align: "c" }), text(18, 25, "R10", "#f4f1ea", { align: "c" }), text(18, 33, "R20", "#f2c43a", { align: "c" }))
 sprite("dent", { w: 16, h: 12 },
   ellipse(8, 6, 7, 5, "#00000033"), ellipse(7, 5, 5, 3, "#00000040"), line(3, 9, 12, 3, "#ffffff40"), px(5, 4, "#00000055"))
 sprite("sticker_a", { w: 14, h: 6 },

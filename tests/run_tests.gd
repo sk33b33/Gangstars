@@ -3319,6 +3319,20 @@ func _test_real_world_units() -> void:
 		and WindLitter.blowing(0.5) and not WindLitter.blowing(0.1) and FootDust.should_puff(5.0, true, false) and not FootDust.should_puff(1.5, true, false) \
 		and not FootDust.should_puff(5.0, true, true) and not FootDust.should_puff(5.0, false, false),
 		"gulls circle high over the camera by day (not at night or in rain), litter blows when the wind is up, and the player kicks up dust only when running on the ground")
+	var pole_surfaces := {}
+	var pole_rng := RandomNumberGenerator.new()
+	pole_rng.seed = 21
+	var fake_poles: Array = []
+	for pi in 60:
+		fake_poles.append([Vector2(pi * 38.0, 0), Vector2.RIGHT])
+	var posters := RealStreetDecor.pole_posters(fake_poles, pole_rng, pole_surfaces, {})
+	var tag_surfaces := {}
+	for ti in 80:
+		var wall := PackedVector2Array([Vector2(ti * 13.7, 0), Vector2(ti * 13.7 + 9.0, 0), Vector2(ti * 13.7 + 9.0, 7.0), Vector2(ti * 13.7, 7.0)])
+		WallWear.draw(wall, 40 + ti, tag_surfaces, {})
+	_check(posters > 8 and posters < 35 and pole_surfaces.keys().any(func(k): return str(k).begins_with("panel_poster_")) \
+		and tag_surfaces.keys().any(func(k): return str(k).begins_with("panel_tag_")) and stop_surfaces.keys().any(func(k): return str(k).begins_with("panel_ad_")),
+		"about a third of the power poles carry a poster, bus stops have an advert board, and some plain side walls have a gang tag sprayed on them (%d posters on 60 poles)" % posters)
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}

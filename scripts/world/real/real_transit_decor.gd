@@ -27,11 +27,27 @@ static func draw_stop(line: PackedVector2Array, at_dist: float, width: float, le
 	var wall_at: Vector2 = centre + left_side * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.4 + 1.6)
 	RealChunkBuilder._panel(table, wall_at - left_side * 0.02, d, -left_side, TIMETABLE_SIZE.x, 1.0, 1.0 + TIMETABLE_SIZE.y)
 	RealStreetDecor.add_prop(props, "litter_bin", centre + left_side * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.7) + d * 2.4, rng.randf() * TAU)
+	_ad_board(centre + left_side * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 1.4) - d * 2.6, d, -left_side, rng, surfaces, materials)
 	if rng.randi() % HAWKER_ONE_IN == 0:
 		var spot := centre + left_side * (width * 0.5 + RealChunkBuilder.KERB_WIDTH + 0.9) - d * 3.4
 		RealStreetDecor.add_prop(props, "crate_stack", spot, rng.randf() * TAU)
 		RealStreetDecor.add_prop(props, "plastic_chair", spot + d * 0.9, rng.randf() * TAU)
 		RealStreetDecor.add_prop(props, "plastic_chair", spot - d * 0.8, rng.randf() * TAU)
+
+
+## An advert board on two steel posts beside the shelter, with a poster on each face (one facing each way along the pavement).
+const ADS := ["ad_soap", "ad_airtime"]
+const AD_SIZE := Vector2(0.8, 1.1)
+
+
+static func _ad_board(at: Vector2, d: Vector2, to_road: Vector2, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary) -> void:
+	var steel := RealStreetDecor._flat("steel", RealLandmarks.STEEL, surfaces, materials)
+	for s: float in [-1.0, 1.0]:
+		RealLandmarks._obox(steel, at + d * s * (AD_SIZE.x * 0.5 - 0.05), d, Vector2(0.04, 0.04), 0.0, 1.9)
+	var tex: String = ADS[rng.randi() % ADS.size()]
+	var tool := RealChunkBuilder._tool("panel_" + tex, surfaces, materials, PixelMaterials.panel(tex))
+	for s: float in [1.0, -1.0]:
+		RealStreetDecor.face_quad(tool, at, to_road * s, AD_SIZE.x, 0.7, 0.7 + AD_SIZE.y, 0.05)
 
 
 ## The small "bus station" building: a taxi rank sign over its front, a bench and a litter bin, and bollards along the kerb side.

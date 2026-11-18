@@ -10,6 +10,7 @@ const DAMP_TILE := 2.0          # one texture tile of damp along the wall (m)
 const STREAK_PERCENT := 60      # share of windows with a stain below the sill
 const STREAK_SIZE := Vector2(0.7, 0.55)
 const PATCH_PERCENT := 14       # share of walls with a repaired patch
+const TAG_PERCENT := 9          # share of longer walls with a tag sprayed on them
 const PATCH_SIZE := Vector2(0.9, 0.9)
 const LIFT := 0.014             # how far off the wall the layers sit (the windows' panels are 0.04 off)
 
@@ -50,6 +51,10 @@ static func draw(ring: PackedVector2Array, seed_value: int, surfaces: Dictionary
 			for k in tiles:
 				RealChunkBuilder._panel(damp_tool, p0 + t * seg * (k + 0.5) + normal * LIFT, t, normal, seg, DAMP_Y.x, DAMP_Y.y)
 		var hash := RealChunkBuilder._wall_hash(mid)
+		if hash % 100 >= 100 - TAG_PERCENT and length > 4.5:   # a gang tag sprayed on a plain side wall
+			var tag: String = RealChunkBuilder.TAGS[(hash / 100) % RealChunkBuilder.TAGS.size()]
+			var tag_tool := RealChunkBuilder._tool("panel_" + tag, surfaces, materials, PixelMaterials.panel(tag, Color.WHITE, true))
+			RealChunkBuilder._panel(tag_tool, mid + t * (float(hash / 400 % 100) / 100.0 - 0.5) * (length - 3.0) + normal * LIFT, t, normal, 2.0, 0.85, 1.7)
 		if hash % 100 < PATCH_PERCENT and length > 4.0:
 			var along := (float(hash / 100 % 100) / 100.0 - 0.5) * (length - 2.0)
 			RealChunkBuilder._panel(tool("wall_patch", surfaces, materials), mid + t * along + normal * LIFT, t, normal, PATCH_SIZE.x, 1.2, 1.2 + PATCH_SIZE.y)

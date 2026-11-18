@@ -1,6 +1,6 @@
 # Changelog
 
-## Quick wins and medium upgrades (2026-11-18, in progress)
+## Quick wins and medium upgrades (2026-11-18)
 - House numbers: every home has a small white plate with its number beside the front door (`RealHomeDecor.draw_number`). The game's own homes
   show their number from the data (`starter_houses.json`); every other home gets a steady number from 1 to 98 made from its outline. The
   number is a `Label3D` that only draws within 16 m. Test: a plate with the right text, facing the street.
@@ -36,6 +36,11 @@
 - Saved damage: a car's dents are counted (`VehicleLibrary.damage_of`) and written into the save, and loading puts the same dents (and the
   cracked screen) back (`restore_damage`). Tests: the extras appear on the right models only; a counted damage restores onto a fresh car; a
   save remembers the golf's dents.
+- Remy's van: the model's own steering wheel is replaced by a ring that turns with the steering (up to 1.4 rad at full lock, Remy's hands are on
+  it), and two reversing lamps at the back light only while it backs up. Test: the ring turns, the lamps follow the direction.
+- Posters, adverts and tags (five new textures `poster_choir`, `poster_dog`, `poster_special`, `ad_soap`, `ad_airtime`): hand-made posters (a
+  choir night, a lost dog, a spaza special) stapled to about a third of the power poles; an advert board on two posts beside every bus
+  stop; and a gang tag sprayed on about one longer plain side wall in eleven (the same fictional tags as the fences). Test: all three.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the
