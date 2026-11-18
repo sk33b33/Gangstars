@@ -105,6 +105,14 @@ func _ready() -> void:
 	weather.name = "Weather"
 	add_child(weather)
 	weather.setup(self, director.clock, day_night)
+	var birds := BirdFlock.new()
+	birds.name = "BirdFlock"
+	add_child(birds)
+	birds.setup(day_night)
+	var litter := WindLitter.new()
+	litter.name = "WindLitter"
+	add_child(litter)
+	litter.setup(day_night)
 	light_pool = LightPool.new()
 	light_pool.name = "LightPool"
 	add_child(light_pool)

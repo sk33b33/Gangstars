@@ -26,6 +26,10 @@
   in an orange hi-vest at the end of about three shopfronts in five and on the forecourts with room; a taxi conductor in a bright shirt
   by the bus station (`RealLandmarks.people_spot`, `RealVendor` kinds `guard` and `conductor`: they stand about with nothing to sell and turn
   to talk when you come close). Washing swaying in the wind is not done yet (the washing lines are static props).
+- Ambient life (`BirdFlock`, `WindLitter`, `FootDust`): ten gulls circling over the camera by day (gone at night, in rain and in a hard blow;
+  ten transforms a frame, one MultiMesh); paper and plastic bags tumbling north-west along the ground whenever the wind is up (a particle
+  emitter that follows the camera); and little puffs of sand behind the player's feet when running (not walking, not driving). Stray dogs
+  were already in the game. Test: the flock stays in its circle, and the three switch on and off by their own rules.
 
 ## Remy himself sits at the wheel of his van (2026-11-18)
 - The van showed the plain driver dummy every car has, in the seat marker. Now, when Remy drives his HiAce, Remy's own model sits in the

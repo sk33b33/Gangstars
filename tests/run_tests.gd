@@ -3282,6 +3282,15 @@ func _test_real_world_units() -> void:
 		"braai smoke is a small particle plume that only shows near the player; a car guard and a taxi conductor stand ahead of a front facing the customers, with nothing to sell")
 	smoke_root.free()
 	guard.queue_free()
+	var flock_centre := Vector3(100, 0, 200)
+	var bird_ok := true
+	for bi in BirdFlock.COUNT:
+		var bp := BirdFlock.position_at(bi, 12.5, flock_centre)
+		bird_ok = bird_ok and bp.distance_to(flock_centre + Vector3(0, BirdFlock.HEIGHT, 0)) < BirdFlock.RADIUS + 4.5 and bp.y > 10.0 and BirdFlock.position_at(bi, 12.5, flock_centre) == bp
+	_check(bird_ok and BirdFlock.out(0.0, 0.0, 0.3) and not BirdFlock.out(1.0, 0.0, 0.3) and not BirdFlock.out(0.0, 0.9, 0.3) \
+		and WindLitter.blowing(0.5) and not WindLitter.blowing(0.1) and FootDust.should_puff(5.0, true, false) and not FootDust.should_puff(1.5, true, false) \
+		and not FootDust.should_puff(5.0, true, true) and not FootDust.should_puff(5.0, false, false),
+		"gulls circle high over the camera by day (not at night or in rain), litter blows when the wind is up, and the player kicks up dust only when running on the ground")
 	_check(dparts.has("Mesh_night_glow"), "lit homes throw a pool of light on the ground in front of them at night")
 	dnode.free()
 	var tally := {"stop": 0, "crossings": 0, "drives": 0, "cars": 0, "wendy": 0, "spaza": 0, "school_pieces": 0, "stalls": 0, "snoek": 0}
