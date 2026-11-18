@@ -11,7 +11,7 @@ const SCHOOL_FENCE_HEIGHT := 2.1
 const SCHOOL_PIECE := 20.0          # perimeter cut into pieces of at most this (a blocked piece is left out alone)
 const SCHOOL_GATES := 2
 const SCHOOL_GATE_WIDTH := 5.0
-const PARK_TREE_SPACING := 11.0
+const PARK_TREE_SPACING := 9.0
 const PARK_TREE_CLEAR := 2.5        # from paths and buildings
 const STALL_HALF := Vector2(0.95, 0.45)
 const STALL_FROM_CROSSING := 4.5
@@ -147,6 +147,10 @@ static func draw_areas(areas: Array, strips: Array, rings: Array, surfaces: Dict
 				_playground(ring, rng, surfaces, materials)
 			"pitch":
 				_goals(ring, surfaces, materials)
+			"dunes":
+				_dunes(ring, strips, rings, rng, props)
+			"school":
+				_school_grounds(ring, strips, rings, rng, props)
 
 
 static func _park(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, surfaces: Dictionary, materials: Dictionary, props: Dictionary) -> void:
@@ -158,10 +162,13 @@ static func _park(ring: PackedVector2Array, strips: Array, rings: Array, rng: Ra
 		var y := box.position.y + PARK_TREE_SPACING * 0.5
 		while y < box.end.y:
 			var p := Vector2(x, y) + Vector2(rng.randf_range(-3.0, 3.0), rng.randf_range(-3.0, 3.0))
-			if RealChunkBuilder.point_in_ring(p, ring) and rng.randf() < 0.55 and _clear(p, near_strips, near_rings):
-				RealStreetDecor.add_prop(props, "tree_a" if rng.randi() % 3 != 0 else "tree_b", p, rng.randf() * TAU, rng.randf_range(0.8, 1.25))
+			if RealChunkBuilder.point_in_ring(p, ring) and rng.randf() < 0.75 and _clear(p, near_strips, near_rings):
+				var roll := rng.randi() % 8
+				var tree := "tree_c" if roll < 2 else ("palm" if roll == 2 else ("tree_a" if roll < 5 else "tree_b"))
+				RealStreetDecor.add_prop(props, tree, p, rng.randf() * TAU, rng.randf_range(0.8, 1.25))
 			y += PARK_TREE_SPACING
 		x += PARK_TREE_SPACING
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 6.0, 0.6, ["bush", "bush_pink", "bush_yellow", "bush_white", "flowers_pink", "flowers_yellow", "flowers_purple", "grass_green", "grass_green", "agave"])
 	var c := box.get_center()
 	if RealChunkBuilder.point_in_ring(c, ring):
 		var wood := RealStreetDecor._flat("bench_wood", "#8c6044", surfaces, materials)
@@ -171,6 +178,36 @@ static func _park(ring: PackedVector2Array, strips: Array, rings: Array, rng: Ra
 				var d := Vector2.RIGHT.rotated(k * PI + 0.4 + PI * 0.5)
 				RealLandmarks._obox(wood, at, d, Vector2(0.9, 0.22), 0.42, 0.5)
 				RealLandmarks._obox(wood, at - d.orthogonal() * 0.2, d, Vector2(0.9, 0.04), 0.5, 0.9)
+
+
+## Shrubs, flower beds and tufts scattered over an area on a loose grid, clear of paths and buildings.
+static func _undergrowth(ring: PackedVector2Array, box: Rect2, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary, spacing: float, chance: float, kinds: Array) -> void:
+	var x := box.position.x + spacing * 0.5
+	while x < box.end.x:
+		var y := box.position.y + spacing * 0.5
+		while y < box.end.y:
+			var p := Vector2(x, y) + Vector2(rng.randf_range(-2.0, 2.0), rng.randf_range(-2.0, 2.0))
+			if rng.randf() < chance and RealChunkBuilder.point_in_ring(p, ring) and _clear(p, strips, rings):
+				RealStreetDecor.add_prop(props, kinds[rng.randi() % kinds.size()], p, rng.randf() * TAU, rng.randf_range(0.8, 1.3))
+			y += spacing
+		x += spacing
+
+
+## The dunes: fynbos on sand: dry and green grass, agaves and low shrubs.
+static func _dunes(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+	var box := RealChunkBuilder.ring_box(ring)
+	var near_strips: Array = strips.filter(func(s): return (s.box as Rect2).intersects(box.grow(5.0)))
+	var near_rings: Array = rings.filter(func(r): return RealChunkBuilder.ring_box(r).intersects(box.grow(5.0)))
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 4.5, 0.7, ["grass_dry", "grass_dry", "grass_green", "agave", "bush", "grass_dry", "bush_white"])
+
+
+## School grounds: shade trees round the edge and across the playing fields, with shrubs along the buildings.
+static func _school_grounds(ring: PackedVector2Array, strips: Array, rings: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+	var box := RealChunkBuilder.ring_box(ring)
+	var near_strips: Array = strips.filter(func(s): return (s.box as Rect2).intersects(box.grow(5.0)))
+	var near_rings: Array = rings.filter(func(r): return RealChunkBuilder.ring_box(r).intersects(box.grow(5.0)))
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 13.0, 0.7, ["tree_c", "tree_a", "tree_b", "tree_c", "palm"])
+	_undergrowth(ring, box, near_strips, near_rings, rng, props, 7.0, 0.3, ["bush", "bush_pink", "flowers_yellow", "grass_green"])
 
 
 static func _clear(p: Vector2, strips: Array, rings: Array) -> bool:

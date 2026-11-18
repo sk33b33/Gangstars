@@ -67,6 +67,15 @@ M = {
     "chrome": mat("chrome", srgb("#d8dadf"), 0.2, 0.9),
     "counter_top": mat("counter_top", srgb("#d9d2c2"), 0.5),
     "glow": mat("glow", srgb("#ffcf7a"), 0.4),
+    "bloom_pink": mat("bloom_pink", srgb("#e0589a")),
+    "bloom_yellow": mat("bloom_yellow", srgb("#f2c230")),
+    "bloom_red": mat("bloom_red", srgb("#d6402e")),
+    "bloom_white": mat("bloom_white", srgb("#f4f1ea")),
+    "bloom_purple": mat("bloom_purple", srgb("#8e5ab8")),
+    "agave": mat("agave", srgb("#7fa08a")),
+    "palm_leaf": mat("palm_leaf", srgb("#4a8a3a")),
+    "grass_dry": mat("grass_dry", srgb("#b9a65a")),
+    "grass_green": mat("grass_green", srgb("#7aa245")),
 }
 
 
@@ -417,12 +426,113 @@ def ceiling_lamp(x):
 
 
 
+def bush(x, name="bush", blooms=None, size=1.0):
+    """A round shrub about 0.9 m high and 1.2 m across; `blooms`: a bloom material to dot it with flowers."""
+    random.seed(len(name) * 13)
+    p = []
+    for i in range(6):
+        a = i / 6 * math.tau
+        r = 0.32 * size if i else 0.0
+        h = (0.38 + random.uniform(-0.05, 0.12)) * size
+        s = random.uniform(0.34, 0.46) * size
+        p.append(add("sphere", (math.cos(a) * r, math.sin(a) * r, h), (s, s, s * 0.85), "leaf" if i % 2 else "leaf_dark", sub=1, jitter=0.04))
+    if blooms:
+        for i in range(16):
+            a = random.uniform(0, math.tau)
+            e = random.uniform(0.2, 0.85)
+            r = 0.52 * size * math.cos(e)
+            p.append(add("cube", (math.cos(a) * r, math.sin(a) * r, (0.1 + 0.55 * math.sin(e)) * size + 0.12), (0.06, 0.06, 0.05), blooms, smooth=False))
+    return join(p, name, (x, 0, 0))
+
+
+def flower_bed(x, name, bloom, bloom2):
+    """A low mound of leaves, 1.2 x 0.7 m, covered in flowers of two colours."""
+    random.seed(len(name) * 29)
+    p = [add("sphere", (0, 0, 0.03), (0.62, 0.36, 0.12), "soil", sub=1)]
+    for i in range(5):
+        p.append(add("sphere", ((i - 2) * 0.22, random.uniform(-0.1, 0.1), 0.13), (0.2, 0.2, 0.13), "leaf" if i % 2 else "leaf_dark", sub=1, jitter=0.02))
+    for i in range(22):
+        m = bloom if i % 3 else bloom2
+        p.append(add("cube", (random.uniform(-0.55, 0.55), random.uniform(-0.28, 0.28), random.uniform(0.2, 0.3)), (0.045, 0.045, 0.035), m, smooth=False))
+    return join(p, name, (x, 0, 0))
+
+
+def grass_tuft(x, name, material, height):
+    """A clump of thin blades (dune and verge grass)."""
+    random.seed(len(name) * 7)
+    p = []
+    for i in range(11):
+        a = i / 11 * math.tau + random.uniform(-0.2, 0.2)
+        tilt = random.uniform(0.25, 0.7)
+        h = height * random.uniform(0.7, 1.15)
+        p.append(add("cone", (math.cos(a) * 0.05, math.sin(a) * 0.05, h * 0.5), (0.03, 0.012, h * 0.5), material, seg=4,
+                     rot=(-math.sin(a) * tilt, math.cos(a) * tilt, a)))
+    return join(p, name, (x, 0, 0))
+
+
+def agave(x):
+    """A Cape agave: a rosette of fat grey-green leaves, 0.8 m across."""
+    p = []
+    for ring_i, (n, tilt, h, sz) in enumerate(((10, 0.95, 0.3, 0.34), (8, 0.55, 0.38, 0.3), (5, 0.2, 0.42, 0.26))):
+        for i in range(n):
+            a = i / n * math.tau + ring_i * 0.3
+            p.append(add("cone", (math.cos(a) * 0.06, math.sin(a) * 0.06, h), (0.07, 0.025, sz), "agave", seg=5,
+                         rot=(-math.sin(a) * tilt, math.cos(a) * tilt, a)))
+    return join(p, "agave", (x, 0, 0))
+
+
+def palm(x):
+    """A fan palm about 5 m tall: a slightly leaning ringed trunk and a crown of drooping fronds."""
+    p = []
+    for i in range(6):
+        z = 0.4 + i * 0.75
+        p.append(add("cyl", (0.04 * i * i * 0.12, 0, z), (0.17 - i * 0.006, 0.17 - i * 0.006, 0.4), "bark", seg=8, jitter=0.006))
+    top = (0.04 * 25 * 0.12, 0, 4.7)
+    for i in range(10):
+        a = i / 10 * math.tau
+        tilt = 1.05 + (i % 2) * 0.35
+        p.append(add("cone", (top[0] + math.cos(a) * 0.55, math.sin(a) * 0.55, top[2] + 0.1 - (i % 2) * 0.15), (0.16, 0.035, 0.95), "palm_leaf", seg=5,
+                     rot=(-math.sin(a) * tilt, math.cos(a) * tilt, a)))
+    p.append(add("sphere", (top[0], 0, top[2] - 0.1), (0.22, 0.22, 0.2), "bark", sub=1))
+    return join(p, "palm", (x, 0, 0))
+
+
+def shade_tree(x):
+    """A broad-crowned street tree (a milkwood or Port Jackson): short trunk, a wide flat-topped crown, 4 m tall."""
+    random.seed(41)
+    p = [add("cyl", (0, 0, 1.0), (0.15, 0.15, 1.0), "bark", seg=8, r2=0.7, jitter=0.01)]
+    for br in range(3):
+        a = br / 3 * math.tau
+        p.append(add("cyl", (math.cos(a) * 0.35, math.sin(a) * 0.35, 2.1), (0.06, 0.06, 0.5), "bark", seg=6, rot=(-math.sin(a) * 0.7, math.cos(a) * 0.7, 0)))
+    for i in range(9):
+        a = i / 9 * math.tau + random.uniform(-0.3, 0.3)
+        r = random.uniform(0.9, 1.6) if i else 0.0
+        h = 2.9 + random.uniform(-0.2, 0.45)
+        s = random.uniform(0.85, 1.2)
+        p.append(add("sphere", (math.cos(a) * r, math.sin(a) * r, h), (s, s, s * 0.6), "leaf" if i % 3 else "leaf_dark", sub=1, jitter=0.07))
+    return join(p, "tree_c", (x, 0, 0))
+
+
+def hedge(x):
+    """A clipped hedge piece, 2 m long and 0.9 m high."""
+    random.seed(3)
+    p = []
+    for i in range(5):
+        p.append(add("cube", ((i - 2) * 0.4, 0, 0.45), (0.22, 0.28, 0.45), "leaf" if i % 2 else "leaf_dark", smooth=False))
+    return join(p, "hedge", (x, 0, 0))
+
+
 x = 0.0
 for build in (wheelie_bin, lambda x: tree(x, "tree_a", 1.8, 7, 3), lambda x: tree(x, "tree_b", 2.4, 9, 11), aloe,
               satellite_dish, washing_line, tyre_planters, jojo_tank, plastic_chair, gas_bottle, crate,
               couch, lambda x: couch(x, "armchair", 0.95), coffee_table, tv_unit, kitchen_counter, stove, fridge,
               bed, wardrobe, dining_table, bar_counter, bottle_shelf, jukebox, pool_table, crate_stack, stash_crate,
-              ceiling_lamp):
+              ceiling_lamp,
+              bush, lambda x: bush(x, "bush_pink", "bloom_pink"), lambda x: bush(x, "bush_yellow", "bloom_yellow", 0.9), lambda x: bush(x, "bush_white", "bloom_white", 0.8),
+              lambda x: flower_bed(x, "flowers_pink", "bloom_pink", "bloom_white"), lambda x: flower_bed(x, "flowers_yellow", "bloom_yellow", "bloom_red"),
+              lambda x: flower_bed(x, "flowers_purple", "bloom_purple", "bloom_pink"),
+              lambda x: grass_tuft(x, "grass_dry", "grass_dry", 0.55), lambda x: grass_tuft(x, "grass_green", "grass_green", 0.4),
+              agave, palm, shade_tree, hedge):
     build(x)
     x += 6.0
 

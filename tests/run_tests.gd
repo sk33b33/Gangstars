@@ -2930,6 +2930,13 @@ func _test_real_world_units() -> void:
 	_check(slabs.size() >= 2 and slabs.all(func(s): return s == s.to_upper() and not s.contains("\n")) and node.get_children().any(func(c): return str(c.name) == "Mesh_slab"),
 		"each junction corner has concrete street name blocks, one name each (%d names, e.g. %s)" % [slabs.size(), str(slabs[0]) if not slabs.is_empty() else ""])
 	_check(floating.has("Excelsior Street"), "the street names also float over the roads")
+	var greenery := 0
+	var kinds_seen := {}
+	for e: Array in stats.props:
+		if str(e[0]).begins_with("bush") or str(e[0]).begins_with("flowers") or str(e[0]).begins_with("grass") or str(e[0]).begins_with("tree") or e[0] == "palm" or e[0] == "agave":
+			greenery += int(e[1])
+			kinds_seen[e[0]] = true
+	_check(greenery >= 60 and kinds_seen.size() >= 6, "the verges, yards and parks are planted: trees, shrubs, flower beds and grass (%d plants of %d kinds in this piece)" % [greenery, kinds_seen.size()])
 	_check(RealStreetDecor.STOP_POLE_TOP < RealStreetDecor.STOP_SIGN_TOP and RealStreetDecor.STOP_POLE_TOP > RealStreetDecor.STOP_SIGN_BOTTOM and RealStreetDecor.SIGN_STANDOFF > 0.04, "a STOP sign's pole ends inside the octagon and stands behind the plate, never across its face")
 	_check(ms < 400.0, "building one piece is quick enough to do while you walk (budget 400 ms, took %.0f)" % ms)
 	var parts: Array = node.get_children().map(func(c): return str(c.name))

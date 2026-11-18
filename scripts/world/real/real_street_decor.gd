@@ -99,9 +99,57 @@ static func build(roads: Array, ctx: Dictionary, surfaces: Dictionary, materials
 			_shelter(line, width, length, rng, surfaces, materials)
 		if str(r.get("n", "")) in TREE_STREETS and pave > 0.0:
 			_street_trees(line, width, pave, lamps, poles, rng, props)
+		elif pave >= GREEN_MIN_PAVE and cls != "lane":
+			_verge_greenery(line, width, pave, cls, length, lamps, poles, rng, props)
 	for c: Dictionary in ctx.get("crossings", []):
 		_zebra(c.at, c.dir, float(c.w), surfaces, materials)
 	_street_slabs(roads, ctx, surfaces, materials, root)
+
+
+# ------------------------------------------------------------------ verge greenery
+
+const GREEN_MIN_PAVE := 1.4
+const GREEN_END_CLEAR := 9.0      # no planting this close to a junction (the stop signs, name blocks and crossings are there)
+const TREE_SPACING_MIN := 12.0
+const BUSHES := ["bush", "bush", "bush_pink", "bush_yellow", "bush_white"]
+const BEDS := ["flowers_pink", "flowers_yellow", "flowers_purple"]
+const TUFTS := ["grass_green", "grass_dry", "grass_green"]
+
+
+## Trees, shrubs, flower beds and grass at the back of the verge on both sides of a street: a tree now and then (palms on the
+## bigger roads), bushes, flower beds and tufts in between. Clear of lamps and power poles, the junction ends and the bus shelter.
+static func _verge_greenery(line: PackedVector2Array, width: float, pave: float, cls: String, length: float, lamps: PackedVector3Array, poles: Array, rng: RandomNumberGenerator, props: Dictionary) -> void:
+	var offset := width * 0.5 + maxf(0.8, minf(pave, RealYards.PAVE_KEEP) - 0.3)
+	for side: float in [-1.0, 1.0]:
+		var dist := GREEN_END_CLEAR + rng.randf() * 4.0
+		var last_tree := -100.0
+		while dist < length - GREEN_END_CLEAR:
+			var step := 3.0 + rng.randf() * 3.5
+			var here: Array = at_distance(line, dist)
+			var p: Vector2 = here[0] + left_of(here[1]) * offset * side
+			var clear := absf(dist - length * 0.5) > 4.0 or cls == "street"
+			for l in lamps:
+				if Vector2(l.x, l.z).distance_to(p) < 2.2:
+					clear = false
+			for pole: Array in poles:
+				if (pole[0] as Vector2).distance_to(p) < 2.8:
+					clear = false
+			if clear and rng.randf() < 0.9:
+				var roll := rng.randf()
+				if roll < 0.28 and dist - last_tree >= TREE_SPACING_MIN:
+					last_tree = dist
+					var tree := "tree_c" if rng.randi() % 3 == 0 else ("tree_a" if rng.randi() % 2 == 0 else "tree_b")
+					if cls != "street" and rng.randi() % 3 == 0:
+						tree = "palm"
+					add_prop(props, tree, p, rng.randf() * TAU, rng.randf_range(0.8, 1.15))
+				elif roll < 0.5:
+					add_prop(props, BUSHES[rng.randi() % BUSHES.size()], p, rng.randf() * TAU, rng.randf_range(0.8, 1.2))
+				elif roll < 0.75:
+					add_prop(props, BEDS[rng.randi() % BEDS.size()], p, here[1].angle() + (PI * 0.5 if rng.randi() % 2 == 0 else 0.0))
+				else:
+					for k in 2:
+						add_prop(props, TUFTS[rng.randi() % TUFTS.size()], p + Vector2(rng.randf_range(-0.5, 0.5), rng.randf_range(-0.5, 0.5)), rng.randf() * TAU, rng.randf_range(0.8, 1.4))
+			dist += step
 
 
 # ------------------------------------------------------------------ street name slabs

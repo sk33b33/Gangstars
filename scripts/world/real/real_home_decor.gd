@@ -72,6 +72,10 @@ static func plan(ring: PackedVector2Array, front: Dictionary, yard: Dictionary, 
 			if sd == drive_side or half < 2.4:
 				continue
 			out.plants.append({"kind": "aloe", "at": mid + t * sd * (half - 0.7) + n * minf(1.0, depth * 0.35)})
+			if rng.randi() % 3 != 0:   # a bed of flowers by the path, and now and then a shrub or a hedge piece
+				out.plants.append({"kind": "flowers", "at": mid + t * sd * (half - 1.5) + n * minf(1.6, depth * 0.5), "variant": rng.randi() % 3})
+			if rng.randi() % 3 == 0 and depth >= 2.5:
+				out.plants.append({"kind": "bush", "at": mid + t * sd * (half - 2.6) + n * (depth - 0.8), "variant": rng.randi() % 4})
 			if rng.randi() % 2 == 0:
 				out.plants.append({"kind": "bougainvillea", "at": mid + t * sd * (half - 0.7) + n * (depth - 0.6)})
 			elif rng.randi() % 3 == 0 and depth >= 3.0:
@@ -135,6 +139,10 @@ static func draw(decor: Dictionary, yard: Dictionary, front: Dictionary, ring: P
 				RealLandmarks._obox(leaf, at, t, Vector2(0.55, 0.35), 0.0, 1.5)
 				RealLandmarks._obox(bloom, at + n * 0.05, t, Vector2(0.6, 0.38), 1.2, 1.9)
 				RealLandmarks._obox(bloom, at - t * 0.3, t, Vector2(0.3, 0.3), 0.7, 1.3)
+			"flowers":
+				RealStreetDecor.add_prop(props, ["flowers_pink", "flowers_yellow", "flowers_purple"][int(plant.get("variant", 0)) % 3], at, atan2(t.x, t.y) + PI * 0.5)
+			"bush":
+				RealStreetDecor.add_prop(props, ["bush", "bush_pink", "bush_yellow", "bush_white"][int(plant.get("variant", 0)) % 4], at, float(seed_value % 7), 0.8)
 			"pot":
 				RealLandmarks._prism(RealStreetDecor._flat("terracotta", "#b8714e", surfaces, materials), at, 0.22, 8, 0.0, 0.42, true)
 				RealLandmarks._prism(RealStreetDecor._flat("pot_plant", "#4f8a3c", surfaces, materials), at, 0.26, 8, 0.42, 0.75, true)

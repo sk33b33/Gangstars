@@ -1,5 +1,14 @@
 # Changelog
 
+## More trees, plants and flowers (2026-11-18)
+- New plant models (`tools/blender/build_props.py`, each under 400 triangles): bush, flowering bushes (pink, yellow, white), flower
+  beds (three colour mixes), grass tufts (dry and green), agave, a fan palm, a broad shade tree (`tree_c`) and a hedge piece.
+- Street verges: every street and road with a pavement now has trees (palms on the bigger roads), shrubs, flower beds and grass at the
+  back of the verge on both sides, clear of lamps, poles, junction ends and bus shelters.
+- Parks: more and mixed trees (shade tree, palm) with shrubs, flower beds, grass and agave under them. Dunes: fynbos (dry and green
+  grass, agave, shrubs). School grounds: shade trees across the grounds with shrubs and flower beds.
+- Front yards: flower beds by the path and now and then a shrub, besides the aloes, bougainvillea and lemon trees.
+
 ## STOP sign pole no longer shows across the face (2026-11-18)
 - The sign plate stood 3 cm in front of the pole's middle but the pole is 7 cm thick, so the pole poked through the plate and showed
   across the STOP (and the bus stop signs). Plates now stand 6 cm out (`SIGN_STANDOFF`), the pole behind them, ending below the top.
