@@ -3103,6 +3103,33 @@ func _test_real_world_units() -> void:
 	var floating: Array = node.get_children().filter(func(c): return c.has_meta("street")).map(func(c): return str(c.get_meta("street")))
 	_check(slabs.size() >= 2 and slabs.all(func(s): return s == s.to_upper() and not s.contains("\n")) and node.get_children().any(func(c): return str(c.name) == "Mesh_slab"),
 		"each junction corner has concrete street name blocks, one name each (%d names, e.g. %s)" % [slabs.size(), str(slabs[0]) if not slabs.is_empty() else ""])
+	# No street name block stands on a carriageway (seen failing before the fix: 25 of 198 blocks over 40 pieces were on the road).
+	var near_roads: Array = []
+	for dx in [-1, 0, 1]:
+		for dz in [-1, 0, 1]:
+			near_roads.append_array(data.load_chunk(key + Vector2i(dx, dz)).get("roads", []))
+	var blocks_on_road := 0
+	var seen_blocks := 0
+	var done_nodes := {}
+	for rd: Dictionary in data.load_chunk(key).get("roads", []):
+		var rl := RealChunkBuilder._line(rd.p)
+		if rl.size() < 2 or not str(rd.c) in ["street", "collector", "main"]:
+			continue
+		for en: Vector2 in [rl[0], rl[rl.size() - 1]]:
+			var nk := RealStreetDecor.node_key(en)
+			if done_nodes.has(nk):
+				continue
+			done_nodes[nk] = true
+			var pr := RealStreetDecor._slab_pair(data.street_context(key).nodes.get(nk, []))
+			if pr.is_empty():
+				continue
+			for k in 2:
+				var fr := RealStreetDecor.block_frame(en, pr[k], pr[1 - k], near_roads)
+				if fr.clear:
+					seen_blocks += 1
+					if not RealStreetDecor.block_clear(fr.back_at, fr.toward, fr.u, near_roads):
+						blocks_on_road += 1
+	_check(seen_blocks > 0 and blocks_on_road == 0, "street name blocks stand clear of every carriageway (%d blocks, %d on a road)" % [seen_blocks, blocks_on_road])
 	_check(floating.has("Excelsior Street"), "the street names also float over the roads")
 	var greenery := 0
 	var kinds_seen := {}

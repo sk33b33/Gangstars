@@ -221,6 +221,7 @@ const BLOCK_LENGTH := 1.0
 const BLOCK_DEPTH := 0.105
 const BLOCK_HEIGHT := 0.265
 const BLOCK_STEP := 0.125
+const BLOCK_BACKOFF := [0.0, 0.3, 0.6, 1.0]   # metres the block may be moved back from the kerb when a bend leaves it on the road
 const BLOCK_SETBACK := 0.15   # from the kerb to the block's front face
 const ABBREV := {"Street": "St", "Avenue": "Ave", "Road": "Rd", "Close": "Cl", "Drive": "Dr", "Crescent": "Cres", "Court": "Ct", "Place": "Pl", "Way": "Way", "Lane": "Ln"}
 
@@ -254,7 +255,7 @@ static func _street_slabs(roads: Array, ctx: Dictionary, surfaces: Dictionary, m
 			var pair := _slab_pair(nodes.get(nk, []))
 			if pair.is_empty():
 				continue
-			_slab(end, pair[0], pair[1], surfaces, materials, root)
+			_slab(end, pair[0], pair[1], roads, surfaces, materials, root)
 
 
 ## Two entries of a junction with different street names (the biggest roads first), or [].
@@ -268,15 +269,15 @@ static func _slab_pair(entries: Array) -> Array:
 	return []
 
 
-static func _slab(node: Vector2, a: Array, b: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+static func _slab(node: Vector2, a: Array, b: Array, roads: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
 	# One block for each street, lying along that street just behind its kerb, on the corner's side of the junction.
-	_name_block(node, a, b, surfaces, materials, root)
-	_name_block(node, b, a, surfaces, materials, root)
+	_name_block(node, a, b, roads, surfaces, materials, root)
+	_name_block(node, b, a, roads, surfaces, materials, root)
 
 
-## The concrete street name block (1 m x 105 mm, 265 mm high at the back, a 125 mm step in front, the name on the sloping face),
-## white-painted, with the street's name in black, standing behind the kerb of street `own` at the corner with street `other`.
-static func _name_block(node: Vector2, own: Array, other: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+## Where the block for street `own` stands at its junction with `other`: the middle of its back face, the direction from the block to the
+## road, and the direction the name runs. It lies along `own` clear of `other`'s kerb (which a slanted junction pushes further along `own`).
+static func block_frame(node: Vector2, own: Array, other: Array, roads: Array = []) -> Dictionary:
 	var along: Vector2 = own[3]
 	var side: Vector2 = other[3]   # the corner is on this side of `own`
 	var toward := left_of(along)   # horizontal and across the street
@@ -284,8 +285,46 @@ static func _name_block(node: Vector2, own: Array, other: Array, surfaces: Dicti
 		toward = -toward           # the face looks at the road: away from the corner's side
 	var kerb := RealChunkBuilder.KERB_WIDTH
 	var front_gap := float(own[1]) * 0.5 + kerb + BLOCK_SETBACK   # centre line of the street to the block's front face
-	var back_at := node + along * (float(other[1]) * 0.5 + kerb + 0.6 + BLOCK_LENGTH * 0.5) - toward * (front_gap + BLOCK_DEPTH)
-	var u := left_of(toward)   # the reader's right: the name runs this way
+	var slant := maxf(absf(along.cross(side)), 0.45)   # a junction that is not square: the other road's kerb crosses `own` further out
+	var clear := (float(other[1]) * 0.5 + kerb) / slant + 0.6 + BLOCK_LENGTH * 0.5
+	var u := left_of(toward)
+	var back_at := node + along * clear - toward * (front_gap + BLOCK_DEPTH)
+	# Streets bend, so the straight-line spot can land on a carriageway: step the block back until it is clear of every road, or give up.
+	for slide: float in [0.0, 1.5, 3.0]:   # a bend may also be avoided by standing further along the street
+		for extra: float in BLOCK_BACKOFF:
+			var at := back_at + along * slide - toward * extra
+			if block_clear(at, toward, u, roads):
+				return {"toward": toward, "u": u, "back_at": at, "clear": true}
+	return {"toward": toward, "u": u, "back_at": back_at, "clear": roads.is_empty()}
+
+
+## True when the block's four footprint corners are all off the carriageways and kerbs of `roads`.
+static func block_clear(back_at: Vector2, toward: Vector2, u: Vector2, roads: Array) -> bool:
+	var corners: Array[Vector2] = []
+	for su: float in [-0.5, 0.5]:
+		for st: float in [0.0, BLOCK_DEPTH]:
+			corners.append(back_at + u * su * BLOCK_LENGTH + toward * st)
+	for r: Dictionary in roads:
+		if not str(r.c) in ["street", "collector", "main"]:
+			continue
+		var line := RealChunkBuilder._line(r.p)
+		var need := float(r.w) * 0.5 + RealChunkBuilder.KERB_WIDTH
+		for c: Vector2 in corners:
+			for i in line.size() - 1:
+				if c.distance_to(Geometry2D.get_closest_point_to_segment(c, line[i], line[i + 1])) < need:
+					return false
+	return true
+
+
+## The concrete street name block (1 m x 105 mm, 265 mm high at the back, a 125 mm step in front, the name on the sloping face),
+## white-painted, with the street's name in black, standing behind the kerb of street `own` at the corner with street `other`.
+static func _name_block(node: Vector2, own: Array, other: Array, roads: Array, surfaces: Dictionary, materials: Dictionary, root: Node3D) -> void:
+	var frame := block_frame(node, own, other, roads)
+	if not frame.clear:
+		return   # no clear spot on this corner: no block rather than one standing in the road
+	var toward: Vector2 = frame.toward
+	var back_at: Vector2 = frame.back_at
+	var u: Vector2 = frame.u
 	var concrete := _flat("slab", SLAB_COLOR, surfaces, materials)
 	var sect: Array[Vector2] = [Vector2(0, 0), Vector2(BLOCK_DEPTH, 0), Vector2(BLOCK_DEPTH, BLOCK_STEP), Vector2(BLOCK_DEPTH - 0.02, BLOCK_STEP + 0.015),
 		Vector2(BLOCK_DEPTH - 0.035, BLOCK_HEIGHT), Vector2(0, BLOCK_HEIGHT)]
