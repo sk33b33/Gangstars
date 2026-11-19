@@ -1,5 +1,11 @@
 # Changelog
 
+## SAPS drive a Toyota Hilux
+- The police vehicle is now the supplied Hilux double cab (`art/source/Hilux.glb`, built by `tools/blender/build_hilux.py` into `assets/models/vehicles/hilux.glb`, about 19 000 triangles): white paint, glass, headlights, taillights, a flashing light bar on the cab roof, seats for the officers. It is the model "police" and is in no civilian or traffic list, so only the SAPS use it.
+- `VehicleLibrary.EXTRA_SOURCES` now also covers "police" and a model listed there takes its markers (axles, plates, seats) from its own file; POLICE door and load-bin lettering and the crest were moved to fit the Hilux; `VehicleDetail.DIMS["police"]` updated.
+- Tests: the SAPS vehicle is the Hilux, has four wheels and officer seats, and is in no civilian list. Preview: `van_shot.gd -- --police`.
+- To check on the phone: police patrols and responses show the new bakkie with its blue light bar. The model's licence/credit is unknown (supplied by the owner).
+
 ## Driving that feels like a real car, and a speedometer (2026-11-19)
 - A gearbox for every drivable car (`Drivetrain`, `data/vehicles/drivetrains.json`, design in `design/gdd/driving.md`): 1st gear is slow and
   strong, each gear after it is faster and weaker, the car shifts up near the redline and down as it slows, nothing pulls for a moment

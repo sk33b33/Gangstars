@@ -8,14 +8,15 @@ extends RefCounted
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
 ## Models with a file of their own (tools/blender/build_hiace.py), loaded next to the main set under the same conventions.
-const EXTRA_SOURCES := {"hiace": "res://assets/models/vehicles/hiace.glb"}
+## Models built from a supplied file of their own: the SAPS Hilux (replaces the old police bakkie) and Remy's HiAce.
+const EXTRA_SOURCES := {"hiace": "res://assets/models/vehicles/hiace.glb", "police": "res://assets/models/vehicles/hilux.glb"}
 const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter", "hiace"]
 ## Cars that belong to one person: only that vehicle id gets the model, and it is in no traffic or parking list (CIVILIAN).
 ## "car_player" is Remy's own van.
 const EXCLUSIVE := {"car_player": "hiace"}
 const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "hiace": 5.4}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.4, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "hiace": 5.4}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
@@ -57,17 +58,20 @@ static func _load() -> void:
 	for mi in root.find_children("*", "MeshInstance3D", true, false):
 		_meshes[str(mi.name)] = (mi as MeshInstance3D).mesh
 	var extras: Array = []
+	var extra_of := {}
 	for model: String in EXTRA_SOURCES:
 		var extra: Node = (load(EXTRA_SOURCES[model]) as PackedScene).instantiate()
 		for mi in extra.find_children("*", "MeshInstance3D", true, false):
 			_meshes[str(mi.name)] = (mi as MeshInstance3D).mesh
 		extras.append(extra)
+		extra_of[model] = extra
 	# Marker empties under each body: <model>_axle_0..3 (front pair first), <model>_plate_*.
 	for model in MODELS:
-		var body := root.find_child(model, true, false) as Node3D
-		for extra: Node in extras:
-			if body == null:
-				body = extra.find_child(model, true, false) as Node3D
+		var body: Node3D = null
+		if extra_of.has(model):
+			body = (extra_of[model] as Node).find_child(model, true, false) as Node3D
+		if body == null:
+			body = root.find_child(model, true, false) as Node3D
 		var m := {"wheels": [], "seats": [], "wipers": []}
 		if body:
 			for c in body.get_children():
@@ -582,22 +586,22 @@ static func set_lights(pivot: Node3D, on: bool, time: float) -> void:
 ## "POLICE / POLISIE" on the doors and canopy, and the made-up crest (not the real SAPS emblem).
 static func _police_markings(pivot: Node3D) -> void:
 	for side in [1.0, -1.0]:
-		var z: float = side * 0.935
+		var z: float = side * 1.055   # just outside the Hilux's door skin (1.04 at the doors, 1.01 on the load bin)
 		var door := Label3D.new()
 		door.text = "POLICE"
 		door.font_size = 64
-		door.pixel_size = 0.004
+		door.pixel_size = 0.0034
 		door.modulate = Color("#123f8c")
 		door.outline_size = 0
-		door.position = Vector3(0.55, 0.42, z)
+		door.position = Vector3(0.5, 0.95, z)
 		door.rotation.y = 0.0 if side > 0 else PI
 		door.double_sided = false
 		pivot.add_child(door)
 		var back := door.duplicate() as Label3D
 		back.text = "POLICE"
-		back.position = Vector3(-1.55, 1.72, z)
+		back.position = Vector3(1.45, 1.02, side * 1.03)   # on the load bin
 		back.font_size = 48
 		pivot.add_child(back)
-		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(1.0, 0.82, z + side * 0.002),
+		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(-0.7, 1.0, z + side * 0.002),
 			PixelMaterials.panel("police_crest", Color.WHITE, true), 0.0 if side > 0 else PI)
 		crest.name = "Crest"

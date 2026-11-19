@@ -221,6 +221,14 @@ func _test_npc_data() -> void:
 	var cop_car := VehicleLibrary.build(garage, "police", Color.WHITE, Vector3(10, 0, 0))
 	VehicleLibrary.add_occupants(cop_car)
 	_check(cop_car.get_meta("occupants", []).size() == 2, "police bakkies carry two officers")
+	var cop_mesh: Mesh = (cop_car.find_child("Mesh", true, false) as MeshInstance3D).mesh
+	var hx_tris := 0
+	for si in cop_mesh.get_surface_count():
+		hx_tris += cop_mesh.surface_get_array_index_len(si) / 3 if cop_mesh.surface_get_arrays(si)[Mesh.ARRAY_INDEX] != null else 0
+	_check(VehicleLibrary.EXTRA_SOURCES.get("police", "").ends_with("hilux.glb") and cop_mesh.get_aabb().size.z > 5.0 and hx_tris > 10000 and hx_tris < 30000,
+		"the SAPS vehicle is the Toyota Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
+	_check(cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2, "the Hilux has four wheels and seats for the officers")
+	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the Hilux: it is in no civilian or traffic list")
 	var skoro := VehicleLibrary.build(garage, "skoro", Color("#b5651d"), Vector3(20, 0, 0))
 	_check(VehicleLibrary.MODELS.has("skoro") and VehicleLibrary.CIVILIAN.has("skoro") and skoro.get_meta("wheels", []).size() == 4, "the skorokoro is on the road")
 	var own := VehicleLibrary.build(garage, "hatch", Color.BLUE, Vector3(30, 0, 0))

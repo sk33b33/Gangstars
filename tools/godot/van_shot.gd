@@ -44,7 +44,7 @@ func _initialize() -> void:
 					break
 				probe.queue_free()
 	if _van == null:
-		_van = VehicleLibrary.build(stage, "hiace", Color("#f1eee8"))
+		_van = VehicleLibrary.build(stage, "police" if "--police" in OS.get_cmdline_user_args() else "hiace", Color("#f1eee8"))
 	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT["hiace"] if _van.get_meta("model") == "hiace" else Vector3(0, -50, 0)
 	var remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
 	remy.position = remy_seat
