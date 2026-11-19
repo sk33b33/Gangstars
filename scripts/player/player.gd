@@ -93,7 +93,6 @@ func _ready() -> void:
 	wear_colours(Color("#f1eee8"), Color("#a63a4c"))
 	spring_arm.add_excluded_object(get_rid())
 	_arm_length = spring_arm.spring_length
-	add_child(FootDust.new())   # sand puffs behind the feet when running
 	model.set_weapon(weapon)
 	snap_camera()
 

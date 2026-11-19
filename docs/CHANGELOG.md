@@ -1,5 +1,8 @@
 # Changelog
 
+## No dust trail behind Remy
+- Removed the sand puffs behind Remy's feet when he walks or runs (`FootDust` deleted).
+
 ## Street name blocks stay off the road
 - Name blocks were placed from the junction's straight lines, so on slanted junctions and bends 25 of 198 (measured over 40 pieces) stood partly on the carriageway. They are now placed clear of the other street's kerb on a slanted junction, and checked against the roads of the piece: moved back from the kerb or further along the street if a bend leaves them on the road, and left out only if no spot is clear (1 of 198). A check covers the Excelsior Street piece.
 
