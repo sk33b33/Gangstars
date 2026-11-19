@@ -4942,7 +4942,7 @@ func _test_gamepad_in_game(main: Node, district: District, player: Player) -> vo
 	_check(player.is_driving(), "A on a car gets in")
 	_pad_axis(JOY_AXIS_TRIGGER_RIGHT, 1.0)
 	var top := 0.0
-	for i in 90:
+	for i in 150:   # 2.5 s: 1st gear pulls away slowly
 		await physics_frame
 		top = maxf(top, golf.speed)
 	_pad_axis(JOY_AXIS_TRIGGER_RIGHT, 0.0)
