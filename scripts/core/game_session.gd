@@ -510,6 +510,7 @@ func _check_area() -> void:
 
 func _on_vehicle_changed(car: DrivableCar) -> void:
 	audio.set_driving(car != null)
+	hud.set_vehicle(car)   # the speedometer is only on screen while the player is in a car
 	if car:
 		hud.show_message("You get into %s. W/S drive, A/D steer, Q hoot, E get out, %s radio." % [car.display_name, InputHints.key("radio")])
 		missions.on_vehicle_entered(car.vehicle_id)

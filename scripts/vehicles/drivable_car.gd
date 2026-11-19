@@ -6,13 +6,15 @@ extends CharacterBody3D
 signal bumped(car: DrivableCar)
 
 const LAYER_VEHICLES := 1 << 4
-const MAX_SPEED := 14.0
-const REVERSE_SPEED := 5.0
-const ACCEL := 6.0
-const BRAKE := 14.0
-const DRAG := 3.0
-const STEER_RATE := 1.9
 const GRAVITY := 9.8
+const STEER_SPEED := 2.6          # how fast the wheel follows the stick (per second, full lock = 1)
+const STEER_RETURN := 3.6         # and how fast it returns to centre
+const MAX_LOCK := 0.62            # front wheel angle at full lock when crawling (rad)
+const MIN_LOCK := 0.10            # and at top speed
+const LATERAL_GRIP := 8.5         # m/s^2 the tyres hold sideways
+const UNDERSTEER_SCRUB := 0.35    # per second, of speed, lost while the tyres are past their grip
+const ENGINE_PITCH_LOW := 0.55    # the engine hum's pitch at idle, and how far it rises up the rev range
+const ENGINE_PITCH_RANGE := 1.25
 
 var vehicle_id := ""
 var display_name := ""
@@ -22,6 +24,12 @@ var interactable: Interactable
 var obstacle: NavigationObstacle3D
 var body: Node3D
 var _anim_time := 0.0
+var drivetrain: Drivetrain
+var wheelbase := 2.4
+var _steer := 0.0
+## For the engine sound (AudioDirector): the pitch follows the engine speed, the volume the pedal.
+var engine_pitch := 0.6
+var engine_volume := -14.0
 var _remy: RemyPlayerModel   # the seated driver of a car that has a seat for him (REMY_SEAT)
 
 
@@ -32,6 +40,8 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	collision_layer = LAYER_VEHICLES
 	collision_mask = 1 | (1 << 2) | LAYER_VEHICLES | RealCar.LAYER_VEHICLES
 	var model := VehicleLibrary.model_for(id)
+	drivetrain = Drivetrain.for_model(model)
+	wheelbase = float(VehicleLibrary.LENGTH.get(model, 4.0)) * 0.6
 	body = StreetBuilder.build_car(self, Vector3.ZERO, -PI * 0.5, color, false, 4.0, model)
 	VehicleLibrary.add_headlights(body, model)
 	var shape := CollisionShape3D.new()
@@ -71,6 +81,11 @@ func _show_driver(on: bool) -> void:
 	VehicleLibrary.set_driver(body, false)
 
 
+## How far (rad) the front wheels can turn at full lock at a speed: wide when crawling, hardly at all at top speed.
+static func steer_lock(speed: float, top_speed: float) -> float:
+	return lerpf(MAX_LOCK, MIN_LOCK, pow(clampf(absf(speed) / maxf(top_speed, 1.0), 0.0, 1.0), 0.7))
+
+
 func is_driven() -> bool:
 	return driver != null
 
@@ -86,24 +101,37 @@ func _physics_process(delta: float) -> void:
 		obstacle.velocity = Vector3.ZERO
 		interactable.set_enabled(true)
 		return
-	var throttle := 0.0
-	var steer := 0.0
+	var pedal := 0.0
+	var steer_input := 0.0
 	if driver and driver.input_enabled:
 		# W/S or the left stick, plus the triggers (RT accelerate, LT brake/reverse) on a pad.
-		throttle = clampf(Input.get_axis("move_backward", "move_forward") + Input.get_axis("brake", "accelerate"), -1.0, 1.0)
-		steer = Input.get_axis("move_right", "move_left")
-	if throttle > 0.0:
-		speed += (ACCEL if speed >= 0.0 else BRAKE) * throttle * delta
-	elif throttle < 0.0:
-		speed -= (BRAKE if speed > 0.0 else ACCEL * 0.6) * -throttle * delta
-	else:
-		speed = move_toward(speed, 0.0, DRAG * delta)
-	speed = clampf(speed, -REVERSE_SPEED, MAX_SPEED * (driver.drive_factor if driver is Player else 1.0))
+		pedal = clampf(Input.get_axis("move_backward", "move_forward") + Input.get_axis("brake", "accelerate"), -1.0, 1.0)
+		steer_input = Input.get_axis("move_right", "move_left")
+	drivetrain.skill = driver.drive_factor if driver is Player else 1.0
+	var accel := drivetrain.update(delta, speed, pedal)
+	speed += accel * delta
+	if pedal == 0.0 and absf(speed) < 0.25 and absf(accel) < 1.0:
+		speed = 0.0   # rolled to a stop
+	speed = clampf(speed, -drivetrain.reverse_kmh / 3.6 * drivetrain.skill, drivetrain.top_speed())
 	_anim_time += delta
-	var braking := -1.0 if (throttle < 0.0 and speed > 0.2) or (throttle > 0.0 and speed < -0.2) else 0.0
+	# The steering wheel has weight: it follows the stick, and comes back to centre a little faster than it went out.
+	_steer = move_toward(_steer, steer_input, delta * (STEER_RETURN if absf(steer_input) < absf(_steer) else STEER_SPEED))
+	var steer := _steer
+	var light_accel := accel * signf(speed) if absf(speed) > 0.3 else accel   # braking lights only for braking, not for backing up or coasting
+	if pedal == 0.0:
+		light_accel = maxf(light_accel, -0.4)
 	var indicate := 0 if absf(steer) < 0.3 else (-1 if steer > 0.0 else 1)   # the lamps on the side it is turning towards blink
-	VehicleLibrary.animate(body, speed, steer, braking * 4.0 + throttle * 2.0 * (1.0 + braking), indicate, delta, _anim_time)
-	rotation.y += steer * STEER_RATE * clampf(speed / 5.0, -1.0, 1.0) * delta
+	VehicleLibrary.animate(body, speed, steer, light_accel, indicate, delta, _anim_time)
+	engine_pitch = ENGINE_PITCH_LOW + drivetrain.rpm_fraction * ENGINE_PITCH_RANGE
+	engine_volume = lerpf(-14.0, -4.0, clampf(maxf(absf(pedal), drivetrain.rpm_fraction * 0.6), 0.0, 1.0))
+	# Steering: the front wheels turn less the faster you go (a bicycle model: the yaw rate is speed over wheelbase times the tan of the
+	# steering angle), and the tyres can only hold so much sideways: past that the car runs wide and scrubs speed.
+	var yaw_rate := speed / wheelbase * tan(steer * steer_lock(speed, drivetrain.top_speed()))
+	var grip_limit := LATERAL_GRIP / maxf(absf(speed), 0.5)
+	if absf(yaw_rate) > grip_limit:
+		yaw_rate = signf(yaw_rate) * grip_limit
+		speed -= signf(speed) * UNDERSTEER_SCRUB * delta * absf(speed)
+	rotation.y += yaw_rate * delta
 	var forward := global_basis.z
 	velocity.x = forward.x * speed
 	velocity.z = forward.z * speed

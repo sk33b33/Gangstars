@@ -220,9 +220,13 @@ func _process(delta: float) -> void:
 	for e in _engines:
 		var p: AudioStreamPlayer3D = e[0]
 		var v: Node3D = e[1]
-		var spd := absf(float(v.get("speed")))
-		p.pitch_scale = 0.7 + spd * 0.09
-		p.volume_db = lerpf(-14.0, -4.0, clampf(spd / 10.0, 0.0, 1.0))
+		if v.get("drivetrain") != null:   # a car with a gearbox: the hum follows the engine speed and the pedal
+			p.pitch_scale = float(v.get("engine_pitch"))
+			p.volume_db = float(v.get("engine_volume"))
+		else:
+			var spd := absf(float(v.get("speed")))
+			p.pitch_scale = 0.7 + spd * 0.09
+			p.volume_db = lerpf(-14.0, -4.0, clampf(spd / 10.0, 0.0, 1.0))
 	_street_life(delta)
 	if clock:
 		var hour := clock.hour()

@@ -1,5 +1,19 @@
 # Changelog
 
+## Driving that feels like a real car, and a speedometer (2026-11-19)
+- A gearbox for every drivable car (`Drivetrain`, `data/vehicles/drivetrains.json`, design in `design/gdd/driving.md`): 1st gear is slow and
+  strong, each gear after it is faster and weaker, the car shifts up near the redline and down as it slows, nothing pulls for a moment
+  between gears, there is neutral and reverse, and braking, coasting and engine braking are separate. A hatchback goes 0-100 km/h in about
+  16 s and tops out at 128; a police car does 0-100 in 12 s and 150; the bus reaches 78. The old fixed 14 m/s top speed is gone.
+- Steering is a bicycle model: the front wheels turn wide when crawling and hardly at all at top speed, the wheel has weight, and past the tyres'
+  grip the car runs wide and scrubs speed. Brake lights light only for braking (not for backing up or coasting).
+- The engine hum follows the engine speed: it rises through each gear and drops at each shift.
+- Speedometer (`Speedometer`): a dial at the bottom centre with the needle on the speed in km/h, a ring for engine speed (red near the redline),
+  the gear (R, N, 1 to 5) in the middle and the speed in digits. It is only on screen while the player is in a car, and goes away when
+  they get out. The prompt and messages move up out of its way while it shows.
+- Tests: the gear run, torque cut, reverse, neutral and braking; every vehicle has rising gears in the data; steering lock at speed; the gauge
+  shows and hides; in the game the gauge appears on entering the golf, shows its speed and gear, and goes on exit.
+
 ## Quick wins and medium upgrades (2026-11-18)
 - House numbers: every home has a small white plate with its number beside the front door (`RealHomeDecor.draw_number`). The game's own homes
   show their number from the data (`starter_houses.json`); every other home gets a steady number from 1 to 98 made from its outline. The

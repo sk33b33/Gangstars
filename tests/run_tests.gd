@@ -294,6 +294,63 @@ func _test_npc_data() -> void:
 		"some hatchbacks and sedans have a spoiler or an L plate and some bakkies and vans a roof rack, always the same ones; police, taxis, buses and Remy's van have none")
 	_check(absf(VehicleLibrary.damage_of(dented) - 3.0) < 0.01 and absf(VehicleLibrary.damage_of(restored) - 3.0) < 0.35 and restored.has_meta("cracked"),
 		"a car's dents are counted, and a saved count puts the same damage (and the cracked screen) back on a fresh car (%.2f)" % VehicleLibrary.damage_of(restored))
+	# Driving feel: a gearbox per vehicle (slow and strong in 1st, fast and weak in the top gear), a speedometer that shows the gear.
+	var hatch_dt := Drivetrain.for_model("hatch")
+	var v_dt := 0.0
+	var seen_gears: Array = []
+	var shift_cut := false
+	var a_first := 0.0
+	var a_top := 0.0
+	for f in 60 * 60:
+		var a_dt := hatch_dt.update(1.0 / 60.0, v_dt, 1.0)
+		if hatch_dt.gear == 1 and v_dt > 2.0 and a_first == 0.0:
+			a_first = a_dt
+		if hatch_dt.gear == hatch_dt.gear_count() and v_dt * 3.6 > 100.0 and a_top == 0.0:
+			a_top = a_dt
+		if hatch_dt.shift_left > 0.1 and a_dt <= 0.0:
+			shift_cut = true   # nothing pulls while the gearbox changes gear
+		v_dt += a_dt / 60.0
+		if seen_gears.is_empty() or seen_gears[-1] != hatch_dt.gear:
+			seen_gears.append(hatch_dt.gear)
+	_check(seen_gears == [1, 2, 3, 4, 5] and v_dt * 3.6 > 120.0 and a_first > a_top * 2.0 and shift_cut and hatch_dt.gears_kmh[0] < 35.0 and hatch_dt.gears_kmh[-1] > 100.0,
+		"a hatchback pulls away in 1st (slow, strong), goes through 2nd to 5th, loses torque between gears and tops out over 120 km/h (%d km/h, %.1f m/s2 in 1st, %.1f in 5th)" % [roundi(v_dt * 3.6), a_first, a_top])
+	var park_dt := Drivetrain.for_model("hatch")
+	var back_speed := 0.0
+	for f in 300:
+		back_speed += park_dt.update(1.0 / 60.0, back_speed, -1.0) / 60.0
+	var rolling_dt := Drivetrain.for_model("hatch")
+	var stop_v := 20.0
+	var stop_gear0 := 5
+	rolling_dt.gear = 5
+	for f in 60:
+		stop_v += rolling_dt.update(1.0 / 60.0, stop_v, -1.0) / 60.0
+	var idle_dt := Drivetrain.for_model("hatch")
+	idle_dt.update(0.016, 0.0, 0.0)
+	_check(park_dt.gear == -1 and back_speed < -3.0 and back_speed > -(park_dt.reverse_kmh / 3.6 + 0.1) and idle_dt.gear == 0 and idle_dt.gear_text() == "N" and park_dt.gear_text() == "R" \
+		and stop_v < 12.5 and stop_v > 8.0 and rolling_dt.gear < stop_gear0,
+		"pressing back at a standstill goes into reverse at a crawl, the gearbox rests in neutral, and braking hard from 72 km/h sheds about 9 m/s in a second and drops the gearbox down the gears (%.1f m/s left)" % stop_v)
+	var every_model_ok := true
+	for model: String in VehicleLibrary.LENGTH:
+		var dt_m := Drivetrain.for_model(model)
+		for gi in range(1, dt_m.gears_kmh.size()):
+			every_model_ok = every_model_ok and float(dt_m.gears_kmh[gi]) > float(dt_m.gears_kmh[gi - 1])
+		every_model_ok = every_model_ok and dt_m.gear_count() >= 4 and dt_m.launch_accel > 1.0
+	var slow_lock := DrivableCar.steer_lock(2.0, 35.0)
+	var fast_lock := DrivableCar.steer_lock(35.0, 35.0)
+	_check(every_model_ok and slow_lock > 0.5 and fast_lock < 0.15 and slow_lock > fast_lock * 4.0 and Speedometer.scale_max(128.0) == 140.0 and Speedometer.fraction(70.0, 140.0) == 0.5,
+		"every vehicle has a gearbox in the data with rising gears; the front wheels turn far less at speed than when crawling; the speedometer scale rounds up to the next 20 km/h")
+	var gauge := Speedometer.new()
+	root.add_child(gauge)
+	var gauge_car := DrivableCar.new()
+	root.add_child(gauge_car)
+	gauge_car.setup("car_gauge_test", "test car", Color.WHITE)
+	_check(not gauge.visible, "the speedometer is hidden until a car is entered")
+	gauge.set_car(gauge_car)
+	var gauge_shown := gauge.visible
+	gauge.set_car(null)
+	_check(gauge_shown and not gauge.visible, "the speedometer shows when a car is entered and hides again when the player gets out")
+	gauge.queue_free()
+	gauge_car.queue_free()
 	# Detail pass: a hollow taxi with a load of passengers, the combi and the bakery van.
 	var taxi := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(40, 0, 0))
 	VehicleLibrary.add_occupants(taxi)
@@ -1101,6 +1158,7 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	_check(float(session._vehicles_snapshot()["car_mossie"].get("damage", 0.0)) >= 1.5, "a saved game remembers how dented each drivable car is")
 	_talk(player, golf.interactable)
 	_check(player.is_driving() and player.vehicle == golf and not player.model.visible, "E on a car gets the player in")
+	_check(main.hud.speedometer_visible(), "the speedometer comes on screen when the player gets into a car")
 	var p0 := golf.global_position
 	var top_speed := 0.0
 	var hits: PackedStringArray = []
@@ -1127,8 +1185,10 @@ func _test_phase6_in_game(main: Node, district: District, player: Player) -> voi
 	_check(district.events.recent.any(func(e): return e.kind == "car_horn" and not before.has(e)), "Q hoots the horn")
 	var saved_pos := golf.global_position
 	_check(session.save_game() == "", "save while driving")
+	_check(golf.drivetrain.gear >= 1 and main.hud.speedometer.shown_kmh > 3.0, "while driving the gauge shows the speed and the car is in gear (%s, %.0f km/h)" % [golf.drivetrain.gear_text(), main.hud.speedometer.shown_kmh])
 	player.exit_vehicle()
 	_check(not player.is_driving() and player.model.visible and player.collision_layer != 0, "getting out restores the player")
+	_check(not main.hud.speedometer_visible(), "and the speedometer goes away when the player gets out")
 	_check(player.global_position.distance_to(golf.global_position) < 4.5, "the player steps out beside the car")
 	pass
 	_check(session.load_game() == "" and golf.global_position.distance_to(saved_pos) < 0.3, "loading restores the car's position")

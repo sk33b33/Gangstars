@@ -66,6 +66,7 @@ func _ready() -> void:
 	_tracker.position = Vector2(12, 164)
 	_build_money()
 	_build_minimap()
+	_build_speedometer()
 	_build_compass()
 	_build_vignette()
 	_build_menu()
@@ -353,6 +354,7 @@ var _money_box: HBoxContainer
 var _cash_label: Label
 var _need_label: Label
 var minimap: MiniMap
+var speedometer: Speedometer
 
 
 ## The R5 coin and the money total, top right under the health.
@@ -384,6 +386,35 @@ func _build_money() -> void:
 	_need_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_need_label.add_theme_color_override("font_color", Color("#ffb86b"))
 	_need_label.visible = false
+
+
+## The dashboard gauge, bottom centre, only while driving. The prompt and the messages move up out of its way.
+func _build_speedometer() -> void:
+	speedometer = Speedometer.new()
+	speedometer.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	speedometer.offset_left = -Speedometer.SIZE * 0.5
+	speedometer.offset_right = Speedometer.SIZE * 0.5
+	speedometer.offset_top = -Speedometer.SIZE - 12.0
+	speedometer.offset_bottom = -12.0
+	add_child(speedometer)
+
+
+## The player got into a car (show the gauge) or out of it (hide it).
+func set_vehicle(car: DrivableCar) -> void:
+	if speedometer == null:
+		return
+	var was := speedometer.visible
+	speedometer.set_car(car)
+	var lift := Speedometer.SIZE * 0.9 if car else 0.0
+	if was != (car != null):
+		for l: Label in [_prompt, _message]:
+			l.offset_top += -lift if car else Speedometer.SIZE * 0.9
+			l.offset_bottom += -lift if car else Speedometer.SIZE * 0.9
+
+
+## The player got into a car (show the gauge) or out of it (hide it).
+func speedometer_visible() -> bool:
+	return speedometer != null and speedometer.visible
 
 
 ## The translucent map under the clock.

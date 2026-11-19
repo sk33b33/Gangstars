@@ -1,0 +1,18 @@
+{
+ "_note": "One entry per vehicle model. gears_kmh: the speed (km/h) each gear reaches at the engine's redline (so 1st is short and strong, the top gear long and weak). launch_accel: m/s^2 in 1st gear at full throttle (limited by grip). reverse_kmh: top speed in reverse. idle/redline: engine rpm.",
+ "default": {"gears_kmh": [30, 55, 82, 108, 128], "launch_accel": 4.0, "reverse_kmh": 20, "idle": 850, "redline": 6200},
+ "models": {
+  "hatch": {"gears_kmh": [30, 55, 82, 108, 128], "launch_accel": 4.0, "reverse_kmh": 22, "idle": 850, "redline": 6200},
+  "sedan": {"gears_kmh": [32, 58, 86, 114, 135], "launch_accel": 3.8, "reverse_kmh": 22, "idle": 800, "redline": 6000},
+  "bakkie": {"gears_kmh": [28, 50, 76, 100, 118], "launch_accel": 3.4, "reverse_kmh": 20, "idle": 800, "redline": 5400},
+  "skoro": {"gears_kmh": [26, 48, 72, 96], "launch_accel": 2.9, "reverse_kmh": 18, "idle": 900, "redline": 5600},
+  "combi": {"gears_kmh": [27, 50, 75, 98, 110], "launch_accel": 3.1, "reverse_kmh": 18, "idle": 800, "redline": 5200},
+  "panel_van": {"gears_kmh": [26, 48, 72, 95, 108], "launch_accel": 3.0, "reverse_kmh": 18, "idle": 800, "redline": 5200},
+  "taxi": {"gears_kmh": [26, 48, 72, 95, 112], "launch_accel": 3.1, "reverse_kmh": 18, "idle": 800, "redline": 5200},
+  "hiace": {"gears_kmh": [27, 50, 76, 100, 118], "launch_accel": 3.3, "reverse_kmh": 20, "idle": 800, "redline": 5400},
+  "police": {"gears_kmh": [34, 62, 92, 122, 150], "launch_accel": 4.8, "reverse_kmh": 24, "idle": 850, "redline": 6500},
+  "bus": {"gears_kmh": [18, 32, 48, 64, 78], "launch_accel": 2.0, "reverse_kmh": 14, "idle": 700, "redline": 3200},
+  "refuse": {"gears_kmh": [16, 29, 44, 58, 68], "launch_accel": 1.8, "reverse_kmh": 12, "idle": 700, "redline": 3200},
+  "scooter": {"gears_kmh": [25, 45, 65, 80], "launch_accel": 3.2, "reverse_kmh": 8, "idle": 1500, "redline": 8500}
+ }
+}
