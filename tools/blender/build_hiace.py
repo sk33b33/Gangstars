@@ -25,7 +25,7 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "art", "source", "2012_Toyota_HiAce_Commuter.fbx")
 OUT = os.path.join(ROOT, "assets", "models", "vehicles", "hiace.glb")
 SCALE = 0.8
-DROP = ("Baggages", "Baggage Floor", "steering", "steering.001")   # the steering wheel is a ring Godot makes and turns (hiace_steer)
+DROP = ("Baggages", "Baggage Floor", "steering", "steering.001", "Rims9", "Rims11")   # Rims9/11: flat hub discs fixed to the body at the front wheels (the wheels have their own rims)   # the steering wheel is a ring Godot makes and turns (hiace_steer)
 WHEELS = ("TireRing173", "TireRing174", "TireRing173.001", "TireRing174.001")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -119,10 +119,8 @@ for o in list(scene.objects):
         bpy.data.objects.remove(o)
 
 for o in parts + list(wheel_src.values()):
-    old = [s.material.name if s.material else "" for s in o.material_slots]
-    o.data.materials.clear()
-    for name in old:
-        o.data.materials.append(ROLES[INDICATORS.get(o.name) or role_of(name)])
+    for slot in o.material_slots:   # in place: clearing the material list resets every face to slot 0 (the wheels lost their rims that way)
+        slot.material = ROLES[INDICATORS.get(o.name) or role_of(slot.material.name if slot.material else "")]
     world_apply(o)
 
 # Scale about the origin, then centre the van on x = 0 with its wheels on the ground (z = 0).

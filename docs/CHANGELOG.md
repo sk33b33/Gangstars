@@ -1,5 +1,8 @@
 # Changelog
 
+## Van wheels get their rims
+- The HiAce build script reset every wheel face to the tyre material, so the van's wheels were black discs and the front ones had fixed hub discs that did not steer. Materials are now assigned in place, so the wheels have rims, and the fixed discs are dropped. A check covers the van and Hilux wheels (a tyre and a rim surface each).
+
 ## SAPS drive a Toyota Hilux
 - The police vehicle is now the supplied Hilux double cab (`art/source/Hilux.glb`, built by `tools/blender/build_hilux.py` into `assets/models/vehicles/hilux.glb`, about 19 000 triangles): white paint, glass, headlights, taillights, a flashing light bar on the cab roof, seats for the officers. It is the model "police" and is in no civilian or traffic list, so only the SAPS use it.
 - `VehicleLibrary.EXTRA_SOURCES` now also covers "police" and a model listed there takes its markers (axles, plates, seats) from its own file; POLICE door and load-bin lettering and the crest were moved to fit the Hilux; `VehicleDetail.DIMS["police"]` updated.

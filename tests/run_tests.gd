@@ -229,6 +229,12 @@ func _test_npc_data() -> void:
 		"the SAPS vehicle is the Toyota Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
 	_check(cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2, "the Hilux has four wheels and seats for the officers")
 	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the Hilux: it is in no civilian or traffic list")
+	for wm in ["hiace", "police"]:
+		var wheel_mesh: ArrayMesh = VehicleLibrary._meshes[wm + "_tyre"]
+		var wheel_mats: Array = []
+		for si in wheel_mesh.get_surface_count():
+			wheel_mats.append(wheel_mesh.surface_get_material(si).resource_name)
+		_check(wheel_mats.has("tyre") and wheel_mats.has("rim"), "the %s wheel has a rubber tyre and a separate rim (%s)" % [wm, wheel_mats])
 	var skoro := VehicleLibrary.build(garage, "skoro", Color("#b5651d"), Vector3(20, 0, 0))
 	_check(VehicleLibrary.MODELS.has("skoro") and VehicleLibrary.CIVILIAN.has("skoro") and skoro.get_meta("wheels", []).size() == 4, "the skorokoro is on the road")
 	var own := VehicleLibrary.build(garage, "hatch", Color.BLUE, Vector3(30, 0, 0))
