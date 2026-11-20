@@ -6,9 +6,11 @@ extends RefCounted
 
 const SOURCE := "res://assets/models/props/props.glb"
 const WIND := preload("res://assets/shaders/foliage_wind.gdshader")
+const CLOTH := preload("res://assets/shaders/cloth_wind.gdshader")
 
 static var _meshes: Dictionary = {}
 static var _wind_mats: Dictionary = {}
+static var _cloth_mats: Dictionary = {}   # the washing's materials, by colour name; set_wind() drives them all
 
 
 static func mesh(prop: String) -> Mesh:
@@ -17,7 +19,30 @@ static func mesh(prop: String) -> Mesh:
 		for mi in root.find_children("*", "MeshInstance3D", true, false):
 			_meshes[str(mi.name)] = (mi as MeshInstance3D).mesh
 		root.free()
+		_sway_washing(_meshes.get("washing_line"))
 	return _meshes.get(prop)
+
+
+## 0..1: how hard the wind blows (from DayNight); the washing on the lines swings with it.
+static func set_wind(wind: float) -> void:
+	for m: ShaderMaterial in _cloth_mats.values():
+		m.set_shader_parameter("wind", clampf(wind, 0.0, 1.0))
+
+
+## The clothes on the washing line get the cloth shader (everything else on it stays still).
+static func _sway_washing(m: Mesh) -> void:
+	if m == null or not m is ArrayMesh:
+		return
+	for i in m.get_surface_count():
+		var mat := m.surface_get_material(i) as BaseMaterial3D
+		if mat == null or not mat.resource_name.begins_with("cloth"):
+			continue
+		if not _cloth_mats.has(mat.resource_name):
+			var sm := ShaderMaterial.new()
+			sm.shader = CLOTH
+			sm.set_shader_parameter("albedo", mat.albedo_color)
+			_cloth_mats[mat.resource_name] = sm
+		(m as ArrayMesh).surface_set_material(i, _cloth_mats[mat.resource_name])
 
 
 ## Adds a prop to `parent`. paint: recolours "paint" surfaces (null keeps the default green).

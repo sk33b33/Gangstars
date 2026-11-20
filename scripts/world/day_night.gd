@@ -134,6 +134,7 @@ func apply() -> void:
 	var power := 1.0 if power_on else 0.0
 	PixelMaterials.lamp().emission_energy_multiplier = lerpf(0.3, 4.0, night) * power
 	VehicleLibrary.night = night
+	PropLibrary.set_wind(wind)   # washing on the lines
 	VehicleLibrary.dust = dust
 	VehicleLibrary.wet = wet
 	VehicleLibrary.haze = clampf(dust + overcast * 0.3 + wet * 0.4, 0.0, 1.0)

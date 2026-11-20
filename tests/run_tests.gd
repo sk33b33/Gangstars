@@ -3419,6 +3419,15 @@ func _test_real_world_units() -> void:
 	_check(bird_ok and BirdFlock.out(0.0, 0.0, 0.3) and not BirdFlock.out(1.0, 0.0, 0.3) and not BirdFlock.out(0.0, 0.9, 0.3) \
 		and WindLitter.blowing(0.5) and not WindLitter.blowing(0.1),
 		"gulls circle high over the camera by day (not at night or in rain), and litter blows when the wind is up")
+	var washing := PropLibrary.mesh("washing_line")
+	var cloth_surfaces := 0
+	for wi in washing.get_surface_count():
+		if washing.surface_get_material(wi) is ShaderMaterial:
+			cloth_surfaces += 1
+	PropLibrary.set_wind(0.8)
+	var wind_set: float = (PropLibrary._cloth_mats.values()[0] as ShaderMaterial).get_shader_parameter("wind")
+	PropLibrary.set_wind(0.0)
+	_check(cloth_surfaces >= 3 and is_equal_approx(wind_set, 0.8), "the washing on the line sways in the wind (%d cloth materials on the swaying shader, wind passed on: %.1f)" % [cloth_surfaces, wind_set])
 	var pole_surfaces := {}
 	var pole_rng := RandomNumberGenerator.new()
 	pole_rng.seed = 21

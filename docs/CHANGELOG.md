@@ -1,5 +1,8 @@
 # Changelog
 
+## Washing sways in the wind
+- The clothes on every washing line hang from the line and swing downwind: a gentle sway on a calm day, a hard lean and flap in a south-easter. `assets/shaders/cloth_wind.gdshader` on the cloth materials of the `washing_line` prop (`PropLibrary`); `DayNight` passes the weather's wind to `PropLibrary.set_wind`. Each line has its own phase. Same shader for every line (MultiMesh, no extra cost). Preview: the cloth at wind 0 and 1 is in the check.
+
 ## No dust trail behind Remy
 - Removed the sand puffs behind Remy's feet when he walks or runs (`FootDust` deleted).
 
