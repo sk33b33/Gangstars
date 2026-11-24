@@ -20,13 +20,13 @@ const DIMS := {
 	"sedan": {"w": 1.76, "h": 2.2, "belt": 0.84, "roof": 1.4, "ws": [1.1, 0.84, 0.35, 1.38], "wb": 2.65},
 	"bakkie": {"w": 1.76, "h": 2.3, "belt": 0.96, "roof": 1.62, "ws": [1.25, 0.96, 0.6, 1.6], "wb": 3.0},
 	"police": {"w": 1.9, "h": 2.71, "belt": 1.25, "roof": 2.1, "ws": [1.35, 1.43, 0.62, 2.05], "wb": 3.1},
-	"taxi": {"w": 1.9, "h": 2.6, "belt": 1.22, "roof": 1.99, "ws": [2.43, 1.07, 2.0, 1.93], "wb": 3.1},
+	"taxi": {"w": 1.86, "h": 2.68, "belt": 1.0, "roof": 2.15, "ws": [2.49, 1.29, 1.85, 1.79], "wb": 3.09, "steer_scale": 1.25, "rear": 2.49},   # the HiAce minibus: its back end is at z = -2.49 (the front at +2.87)
 	"skoro": {"w": 1.68, "h": 2.15, "belt": 0.84, "roof": 1.38, "ws": [1.1, 0.84, 0.42, 1.36], "wb": 2.55},
 	"combi": {"w": 1.78, "h": 2.2, "belt": 1.12, "roof": 1.9, "ws": [2.13, 1.13, 1.98, 1.86], "wb": 2.4},
 	"panel_van": {"w": 1.85, "h": 2.5, "belt": 1.1, "roof": 2.0, "ws": [2.33, 1.12, 1.77, 1.92], "wb": 3.0},
 	"bus": {"w": 2.4, "h": 4.4, "belt": 1.12, "roof": 2.76, "ws": [4.18, 1.14, 4.0, 2.7], "wb": 5.6},
 	"refuse": {"w": 2.3, "h": 3.3, "belt": 1.4, "roof": 2.46, "ws": [3.13, 1.32, 2.95, 2.4], "wb": 4.4},
-	"hiace": {"w": 1.86, "h": 2.68, "belt": 1.0, "roof": 2.15, "ws": [2.49, 1.29, 1.85, 1.79], "wb": 3.09, "steer_scale": 1.25},
+	"sierra": {"w": 1.78, "h": 2.25, "belt": 0.92, "roof": 1.42, "ws": [0.8, 0.99, 0.23, 1.33], "wb": 2.63},
 	"scooter": {"w": 0.5, "h": 0.95, "belt": 0.7, "roof": 1.0, "ws": [], "wb": 1.24},
 }
 const SLOGANS := ["taxi_slogan_a", "taxi_slogan_b"]
@@ -48,8 +48,8 @@ static func age_for(model: String, seed: int) -> float:
 			return 0.25 + base * 0.6
 		"bus", "refuse":
 			return 0.3 + base * 0.5
-		"hiace":
-			return 0.04   # Remy's van is looked after
+		"sierra":
+			return 0.04   # Remy's car is looked after
 	return base * 0.9
 
 
@@ -126,19 +126,18 @@ static func dress(pivot: Node3D, tilt: Node3D, model: String, color: Color, seed
 			_bakkie(tilt, d, color, seed)
 		"bus":
 			_bus(tilt, d, seed)
-		"hiace":
+		"sierra":
 			_reverse_lamps(pivot, tilt)
-			_quad(tilt, "sticker_westridge", Vector2(0.72, 0.14), Vector3(-0.35, 1.28, -2.5), PI, 30.0)   # low on the rear window
 	_extras(tilt, d, model, seed, color)
 	if model != "scooter":
 		_exhaust(pivot, tilt, d, age)
 
 
-## Two white reversing lamps low on the back of Remy's van; they light while it backs up (VehicleLibrary.animate).
+## Two white reversing lamps low on the back of Remy's car; they light while it backs up (VehicleLibrary.animate).
 static func _reverse_lamps(pivot: Node3D, tilt: Node3D) -> void:
 	var mat := VehicleLibrary._glow(Color("#cfd3d8"), Color("#ffffff"))
 	for sx: float in [-1.0, 1.0]:
-		var lamp := _box(tilt, Vector3(0.16, 0.07, 0.03), Vector3(sx * 0.68, 0.64, -2.51), Color.WHITE, 30.0)
+		var lamp := _box(tilt, Vector3(0.16, 0.07, 0.03), Vector3(sx * 0.52, 0.69, -2.22), Color.WHITE, 30.0)
 		lamp.material_override = mat
 	pivot.set_meta("reverse_lamp", mat)
 
@@ -346,18 +345,18 @@ static func _taxi(pivot: Node3D, tilt: Node3D, d: Dictionary, seed: int) -> void
 	for zf in [1.0, -1.0]:
 		_quad(tilt, "sign_taxi", Vector2(0.5, 0.18), Vector3(0, roof + 0.14, 0.9 + zf * 0.142), 0.0 if zf > 0.0 else PI, 80.0)
 	for side in [1.0, -1.0]:   # the stripe (the taxi association's colours) and a number
-		_box(tilt, Vector3(0.014, 0.13, h * 1.7), Vector3(side * (w * 0.5 + 0.007), d.belt - 0.5, -0.1), Color("#f2c43a"), 80.0)
-		_box(tilt, Vector3(0.016, 0.04, h * 1.7), Vector3(side * (w * 0.5 + 0.008), d.belt - 0.6, -0.1), Color("#1d1e22"), 80.0)
+		_box(tilt, Vector3(0.014, 0.13, h * 1.7), Vector3(side * (w * 0.5 + 0.007), d.belt - 0.22, 0.05), Color("#f2c43a"), 80.0)   # above the wheel arches
+		_box(tilt, Vector3(0.016, 0.04, h * 1.7), Vector3(side * (w * 0.5 + 0.008), d.belt - 0.32, 0.05), Color("#1d1e22"), 80.0)
 	var num := Label3D.new()
 	num.text = "No. %d" % (10 + seed % 80)
 	num.font_size = 40
 	num.pixel_size = 0.004
 	num.modulate = Color("#1d1e22")
-	num.position = Vector3(w * 0.5 + 0.02, d.belt - 0.2, 1.7)
+	num.position = Vector3(w * 0.5 + 0.02, d.belt - 0.55, 0.3)   # on the sliding door, between the wheels
 	num.rotation.y = PI * 0.5
 	num.visibility_range_end = 25.0
 	tilt.add_child(num)
-	_quad(tilt, SLOGANS[seed % SLOGANS.size()], Vector2(1.3, 0.26), Vector3(0, roof - 0.42, -h - 0.014), PI, 35.0)
+	_quad(tilt, SLOGANS[seed % SLOGANS.size()], Vector2(1.3, 0.26), Vector3(0, roof - 0.42, -float(d.get("rear", h)) - 0.014), PI, 35.0)
 	# Luggage on a roof rack.
 	if seed % 3 != 0:
 		_box(tilt, Vector3(1.5, 0.03, 1.6), Vector3(0, roof + 0.03, -0.9), Color("#565a64"), 60.0)

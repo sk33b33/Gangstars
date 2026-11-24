@@ -229,7 +229,7 @@ func _test_npc_data() -> void:
 		"the SAPS vehicle is the Toyota Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
 	_check(cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2, "the Hilux has four wheels and seats for the officers")
 	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the Hilux: it is in no civilian or traffic list")
-	for wm in ["hiace", "police"]:
+	for wm in ["taxi", "sierra", "police"]:
 		var wheel_mesh: ArrayMesh = VehicleLibrary._meshes[wm + "_tyre"]
 		var wheel_mats: Array = []
 		for si in wheel_mesh.get_surface_count():
@@ -242,40 +242,47 @@ func _test_npc_data() -> void:
 	_check(own.get_meta("occupants", []).size() == 1 and own.get_meta("occupants")[0].visible, "the player shows at the wheel of their car")
 	VehicleLibrary.set_driver(own, false)
 	_check(not own.get_meta("occupants")[0].visible, "and not once they get out")
-	# Remy's own remy_van: a Toyota HiAce Commuter that only his car id gets, in no traffic or parking list.
-	var remy_van := VehicleLibrary.build(garage, "hiace", Color.WHITE, Vector3(35, 0, 0))
+	# Remy's own car: a Ford Sierra that only his car id gets, in no traffic or parking list.
+	var remy_van := VehicleLibrary.build(garage, "sierra", Color.WHITE, Vector3(35, 0, 0))
 	VehicleLibrary.set_driver(remy_van, true)
 	var remy_van_tris := 0
-	var remy_van_mesh: Mesh = VehicleLibrary.mesh("hiace")
+	var remy_van_mesh: Mesh = VehicleLibrary.mesh("sierra")
 	for si in remy_van_mesh.get_surface_count():
 		remy_van_tris += (remy_van_mesh.surface_get_arrays(si)[Mesh.ARRAY_INDEX] as PackedInt32Array).size() / 3
 	var drivable := DrivableCar.new()
 	root.add_child(drivable)
-	drivable.setup("car_player", "Remy's HiAce", Color.WHITE)
+	drivable.setup("car_player", "Remy's Sierra", Color.WHITE)
 	var other := DrivableCar.new()
 	root.add_child(other)
 	other.setup("car_mossie", "the yellow Golf", Color.YELLOW)
-	_check(VehicleLibrary.model_for("car_player") == "hiace" and not VehicleLibrary.CIVILIAN.has("hiace") and VehicleLibrary.model_for("car_mossie") != "hiace" \
-		and drivable.body.get_meta("model") == "hiace" and other.body.get_meta("model") != "hiace",
-		"Remy's car id gets the HiAce and no other drivable car does; the HiAce is in no traffic or parking list")
-	_check(remy_van.get_meta("wheels", []).size() == 4 and remy_van.get_meta("occupants", []).size() >= 1 and remy_van_tris <= 45000 and VehicleLibrary.mesh("hiace_tyre") != null,
-		"the HiAce has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
+	_check(VehicleLibrary.model_for("car_player") == "sierra" and not VehicleLibrary.CIVILIAN.has("sierra") and VehicleLibrary.model_for("car_mossie") != "sierra" \
+		and drivable.body.get_meta("model") == "sierra" and other.body.get_meta("model") != "sierra",
+		"Remy's car id gets the Ford Sierra and no other drivable car does; the Sierra is in no traffic or parking list")
+	_check(remy_van.get_meta("wheels", []).size() == 4 and remy_van.get_meta("occupants", []).size() >= 1 and remy_van_tris <= 45000 and VehicleLibrary.mesh("sierra_tyre") != null,
+		"the Sierra has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
 	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
-	var front_wheel: MeshInstance3D = remy_van.get_meta("wheels")[0]
+	var minibus := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(38, 0, 0))
+	VehicleLibrary.animate(minibus, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
+	var front_wheel: MeshInstance3D = minibus.get_meta("wheels")[0]
 	var lock_turn := front_wheel.basis.get_euler(EULER_ORDER_YXZ).y
-	_check(absf(absf(lock_turn) - VehicleLibrary.STEER_LOCK["hiace"]) < 0.02 and VehicleLibrary.STEER_LOCK["hiace"] < 0.5,
-		"the HiAce's front wheels turn 0.3 rad at full lock, less than other cars, so the wide tyres stay clear of the arch (%.2f)" % lock_turn)
+	_check(absf(absf(lock_turn) - VehicleLibrary.STEER_LOCK["taxi"]) < 0.02 and VehicleLibrary.STEER_LOCK["taxi"] < 0.5,
+		"the taxi's (HiAce) front wheels turn 0.3 rad at full lock, less than other cars, so the wide tyres stay clear of the arch (%.2f)" % lock_turn)
+	var minibus_mesh: Mesh = VehicleLibrary.mesh("taxi")
+	VehicleLibrary.add_occupants(minibus, 9)
+	_check(VehicleLibrary.EXTRA_SOURCES.get("taxi", "").ends_with("taxi.glb") and minibus_mesh.get_aabb().size.z > 5.2 and VehicleLibrary._markers["taxi"].seats.size() >= 10 \
+		and minibus.get_meta("occupants", []).size() == 10 and minibus.get_meta("wheels", []).size() == 4 and minibus.has_meta("dims"),
+		"every taxi is the Toyota HiAce minibus (%.1f m long) with four wheels and a seat for a driver and nine passengers" % minibus_mesh.get_aabb().size.z)
 	_check(remy_van.get_meta("wipers", []).size() == 2 and remy_van.has_meta("indicator_L") and remy_van.has_meta("indicator_R") and remy_van.has_meta("dims") \
 		and remy_van.find_child("ScreenDrops", true, false) != null,
-		"the HiAce has two wipers, left and right indicator lamps, and a windscreen for rain drops")
+		"the Sierra has two wipers, left and right indicator lamps, and a windscreen for rain drops")
 	var seated_remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
 	root.add_child(seated_remy)
 	seated_remy.set_seated(true, true)
 	seated_remy.remy.skeleton.force_update_all_bone_transforms()
 	var sk_hand := seated_remy.remy.skeleton.global_transform * seated_remy.remy.skeleton.get_bone_global_pose(seated_remy.remy.skeleton.find_bone("mixamorig_RightHand"))
 	var sk_hips := seated_remy.remy.skeleton.global_transform * seated_remy.remy.skeleton.get_bone_global_pose(seated_remy.remy.skeleton.find_bone("mixamorig_Hips"))
-	_check(seated_remy.is_seated() and VehicleLibrary.REMY_SEAT.has("hiace") and sk_hand.origin.z - sk_hips.origin.z > 0.3 and absf(sk_hand.origin.y - 1.14) < 0.15,
-		"Remy sits at the wheel of his van with his hands forward and up on the wheel, not at his sides (hand %.2f m ahead of the hips)" % (sk_hand.origin.z - sk_hips.origin.z))
+	_check(seated_remy.is_seated() and VehicleLibrary.REMY_SEAT.has("sierra") and sk_hand.origin.z - sk_hips.origin.z > 0.3 and absf(sk_hand.origin.y - 1.14) < 0.15,
+		"Remy sits at the wheel of his car with his hands forward and up on the wheel, not at his sides (hand %.2f m ahead of the hips)" % (sk_hand.origin.z - sk_hips.origin.z))
 	seated_remy.queue_free()
 	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.5, 0.1)
 	var steer_ring: Node3D = remy_van.get_meta("steer_ring", null)
@@ -285,10 +292,10 @@ func _test_npc_data() -> void:
 	VehicleLibrary.animate(remy_van, 3.0, 0.0, 0.0, 0, 0.1, 0.1)
 	var rev_off: float = (remy_van.get_meta("reverse_lamp") as StandardMaterial3D).emission_energy_multiplier if remy_van.has_meta("reverse_lamp") else -1.0
 	_check(steer_ring != null and absf(turned_ring) > 0.4 and rev_on > 1.0 and rev_off == 0.0,
-		"the HiAce's steering wheel turns with the steering (%.2f rad at full lock) and its reversing lamps light only while it backs up" % turned_ring)
+		"the Sierra's steering wheel turns with the steering (%.2f rad at full lock) and its reversing lamps light only while it backs up" % turned_ring)
 	var remy_van_shape: CollisionShape3D = drivable.find_children("*", "CollisionShape3D", false, false)[0]
-	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["hiace"])) < 0.01, "the HiAce's collision box is as long as the van (5.4 m)")
-	_check(drivable.interactable.prompt.contains("HiAce"), "you get into Remy's HiAce with the usual prompt (%s)" % drivable.interactable.prompt)
+	_check(absf((remy_van_shape.shape as BoxShape3D).size.z - float(VehicleLibrary.LENGTH["sierra"])) < 0.01, "the Sierra's collision box is as long as the car (4.5 m)")
+	_check(drivable.interactable.prompt.contains("Sierra"), "you get into Remy's Sierra with the usual prompt (%s)" % drivable.interactable.prompt)
 	drivable.queue_free()
 	other.queue_free()
 	var seen_extras := {}
@@ -297,7 +304,7 @@ func _test_npc_data() -> void:
 			for ex in VehicleDetail.extras_for(mdl, xs * 37 + 11):
 				seen_extras[ex] = true
 	var no_extras := true
-	for mdl in ["police", "taxi", "bus", "refuse", "hiace", "scooter", "skoro", "combi"]:
+	for mdl in ["police", "taxi", "bus", "refuse", "sierra", "scooter", "skoro", "combi"]:
 		no_extras = no_extras and VehicleDetail.extras_for(mdl, 5).is_empty()
 	var dented := VehicleLibrary.build(garage, "sedan", Color.RED, Vector3(60, 0, 0))
 	VehicleLibrary.hit(dented, 1.5)

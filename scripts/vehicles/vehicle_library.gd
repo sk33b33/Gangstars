@@ -7,25 +7,26 @@ extends RefCounted
 ## material per vehicle so its lights can flash (see set_lights()).
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
-## Models with a file of their own (tools/blender/build_hiace.py), loaded next to the main set under the same conventions.
-## Models built from a supplied file of their own: the SAPS Hilux (replaces the old police bakkie) and Remy's HiAce.
-const EXTRA_SOURCES := {"hiace": "res://assets/models/vehicles/hiace.glb", "police": "res://assets/models/vehicles/hilux.glb"}
-const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter", "hiace"]
+## Models built from a supplied file of their own, loaded next to the main set under the same conventions (a model listed here takes its
+## meshes and markers from its own file): the minibus taxi (a Toyota HiAce, tools/blender/build_taxi.py), the SAPS Hilux (build_hilux.py)
+## and Remy's Ford Sierra (build_sierra.py).
+const EXTRA_SOURCES := {"taxi": "res://assets/models/vehicles/taxi.glb", "police": "res://assets/models/vehicles/hilux.glb", "sierra": "res://assets/models/vehicles/sierra.glb"}
+const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter", "sierra"]
 ## Cars that belong to one person: only that vehicle id gets the model, and it is in no traffic or parking list (CIVILIAN).
 ## "car_player" is Remy's own van.
-const EXCLUSIVE := {"car_player": "hiace"}
+const EXCLUSIVE := {"car_player": "sierra"}
 const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.3, "police": 5.4, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "hiace": 5.4}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.4, "police": 5.4, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "sierra": 4.5}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
 const SKINS := [Color("#6b4430"), Color("#8d5a3b"), Color("#a7754f"), Color("#4a2f22"), Color("#c58c62")]
 
-## How far the front wheels turn at full lock (radians). The HiAce's wide tyres foul the arch at more than this.
-const STEER_LOCK := {"hiace": 0.3}
+## How far the front wheels turn at full lock (radians). The taxi's (HiAce) wide tyres foul the arch at more than this.
+const STEER_LOCK := {"taxi": 0.3}
 ## Where Remy sits in a car that seats him himself (the origin of his sitting model, in the body's Tilt space), instead of the plain bust.
-const REMY_SEAT := {"hiace": Vector3(-0.496, 0.06, 1.6)}
+const REMY_SEAT := {"sierra": Vector3(-0.37, -0.45, -0.15)}
 
 static var _meshes: Dictionary = {}
 static var _markers: Dictionary = {}   # model -> {"wheels": [Vector3], "plate_front": Vector3, "plate_rear": Vector3}
@@ -121,10 +122,10 @@ static func build(root: Node3D, model: String, color: Color, center := Vector3.Z
 		return pivot
 	var seed := absi(("%s|%s|%s" % [model, color, center]).hash())
 	var age := VehicleDetail.age_for(model, seed)
-	if model not in ["police", "taxi", "bus", "refuse", "hiace"]:
+	if model not in ["police", "taxi", "bus", "refuse", "sierra"]:
 		color = VehicleDetail.weathered(color, age)
 	# Some cars are dusty from the roads; the skorokoro always is.
-	var dirty := model == "skoro" or (seed % 20 < 7 and model != "hiace")   # Remy keeps his van clean
+	var dirty := model == "skoro" or (seed % 20 < 7 and model != "sierra")   # Remy keeps his car clean
 	pivot.set_meta("model", model)
 	pivot.set_meta("seed", seed)
 	var tilt := Node3D.new()

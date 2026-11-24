@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://6p5ojfm3byql"
-path="res://.godot/imported/hiace.glb-6c0b39c4206370784dd43c622d0601e8.scn"
+uid="uid://d4dk6kylvuye6"
+path="res://.godot/imported/sierra.glb-420f62748ac1b146a2efba59c173f435.scn"
 
 [deps]
 
-source_file="res://assets/models/vehicles/hiace.glb"
-dest_files=["res://.godot/imported/hiace.glb-6c0b39c4206370784dd43c622d0601e8.scn"]
+source_file="res://assets/models/vehicles/sierra.glb"
+dest_files=["res://.godot/imported/sierra.glb-420f62748ac1b146a2efba59c173f435.scn"]
 
 [params]
 

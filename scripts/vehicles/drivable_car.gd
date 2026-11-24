@@ -46,10 +46,9 @@ func setup(id: String, p_name: String, color: Color) -> void:
 	VehicleLibrary.add_headlights(body, model)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	var van := model == "hiace"
-	box.size = Vector3(1.95, 2.0, float(VehicleLibrary.LENGTH[model])) if van else Vector3(1.85, 1.4, 4.0)
+	box.size = Vector3(1.85, 1.4, float(VehicleLibrary.LENGTH[model]) if model == "sierra" else 4.0)
 	shape.shape = box
-	shape.position = Vector3(0, 1.05 if van else 0.75, 0)
+	shape.position = Vector3(0, 0.75, 0)
 	add_child(shape)
 	interactable = Interactable.new()
 	interactable.radius = 2.6

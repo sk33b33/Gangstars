@@ -1,5 +1,11 @@
 # Changelog
 
+## Remy drives a Ford Sierra; every taxi is the HiAce minibus
+- Remy's own car is now the supplied Ford Sierra (`art/source/ford_sierra.glb`, built by `tools/blender/build_sierra.py` into `assets/models/vehicles/sierra.glb`, about 12 000 triangles: engine, suspension, roll cage and the duplicate wheels are left out; paint, glass, trim, chrome, lamps, blinking indicators, alloy wheels, seats and dashboard stay). Only his car id gets it (`VehicleLibrary.EXCLUSIVE`), it is in no traffic or parking list, Remy sits at the wheel (`REMY_SEAT["sierra"]`, tuned by eye), and the car has its own wipers, steering wheel that turns and reversing lamps. Display name: "Remy's Sierra".
+- The Toyota HiAce that was Remy's van is now the minibus taxi: `build_hiace.py` became `build_taxi.py` and makes `taxi.glb` (model "taxi", ten seats for the driver and nine passengers). The old taxi model is gone; the taxi dressing (roof sign, yellow stripe, number, slogan, luggage, conductor) is fitted to the new body (`VehicleDetail.DIMS["taxi"]`), and its front wheels turn less (`STEER_LOCK["taxi"]`). The WESTRIDGE rear sticker went with the van.
+- Checks: the Sierra is Remy's alone, has four wheels, wipers, indicators, a turning wheel and a seated Remy; every taxi is the HiAce with ten seats. Preview: `van_shot.gd -- --model=sierra|taxi`.
+- To check on the phone: Remy's car at the Westridge spot (the seat height was set by eye), and taxis in traffic and at the rank.
+
 ## Touch: swipe to look, no right stick
 - The right "LOOK" stick is gone on phones. A finger dragged anywhere on the open screen turns the camera, the way the mouse does on a PC (`TouchControls.swipe_look`; 120 px of drag is about 22 degrees; the multiple is `SWIPE_LOOK`). The left move stick and all the buttons work as before, and a touch that starts on a button or the move stick never turns the camera. The help line and prompts say "drag the screen to look". Gamepad look is unchanged. Checks: no look stick on the screen, and a drag turns the camera.
 

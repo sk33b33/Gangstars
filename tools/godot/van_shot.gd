@@ -44,8 +44,14 @@ func _initialize() -> void:
 					break
 				probe.queue_free()
 	if _van == null:
-		_van = VehicleLibrary.build(stage, "police" if "--police" in OS.get_cmdline_user_args() else "hiace", Color("#f1eee8"))
-	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT["hiace"] if _van.get_meta("model") == "hiace" else Vector3(0, -50, 0)
+		var which := "sierra"
+		for a in OS.get_cmdline_user_args():   # --model=sierra|taxi|police (--police is short for the last)
+			if a.begins_with("--model="):
+				which = a.trim_prefix("--model=")
+		if "--police" in OS.get_cmdline_user_args():
+			which = "police"
+		_van = VehicleLibrary.build(stage, which, Color("#f1eee8"))
+	var remy_seat: Vector3 = VehicleLibrary.REMY_SEAT.get(str(_van.get_meta("model")), Vector3(0, -50, 0))
 	var remy: RemyPlayerModel = (load("res://scenes/characters/remy/remy_player_model.tscn") as PackedScene).instantiate()
 	remy.position = remy_seat
 	(_van.get_meta("tilt") as Node3D).add_child(remy)

@@ -1,17 +1,17 @@
-"""Builds Remy's van: assets/models/vehicles/hiace.glb, from the 2012 Toyota HiAce Commuter model Remy's owner supplied
+"""Builds the minibus taxi: assets/models/vehicles/taxi.glb, from the 2012 Toyota HiAce Commuter model the owner supplied (the model "taxi", used for every taxi in the game)
 (art/source/2012_Toyota_HiAce_Commuter.fbx, ~500 000 triangles with 30 photo textures).
 
-Run headless:  blender -b --factory-startup --python tools/blender/build_hiace.py
+Run headless:  blender -b --factory-startup --python tools/blender/build_taxi.py
 
 What it does, so the van drives like every other vehicle in VehicleLibrary (see tools/blender/build_vehicles.py):
   * scales the model by 0.8 (it was 1.25 times life size: 5.4 m long, 1.86 m wide after) and puts its origin on the ground at the centre,
     front = -Y in Blender (+Z in Godot), right-hand drive;
-  * drops the roof luggage and the roof rack floor (the van has no roof rack) and its steering wheel (Godot makes a ring that turns);
+  * drops the roof luggage and the roof rack floor (the taxi's own luggage is added by VehicleDetail) and its steering wheel (Godot makes a ring that turns);
   * decimates every part (the phone cannot draw 500 000 triangles for one van) to roughly 30 000 triangles in total;
   * replaces the 30 photo textures with plain role materials named as in vehicles.glb: paint (Godot recolours it), glass, trim (black
     plastic), chrome, seat, headlight, taillight - no textures at all;
-  * makes one wheel (tyre and rim, axle along X, outer face +X) as "hiace_tyre", and empties "hiace_axle_0..3" (front pair first),
-    "hiace_plate_front/rear" and "hiace_seat_0/1" (driver first) under the body "hiace".
+  * makes one wheel (tyre and rim, axle along X, outer face +X) as "taxi_tyre", and empties "taxi_axle_0..3" (front pair first),
+    "taxi_plate_front/rear" and "taxi_seat_0..9" (driver first, then the passengers' rows) under the body "taxi".
 The steering wheel, doors and mirrors stay as static parts of the body. Credit and licence of the source model: supplied by the user.
 """
 import math
@@ -23,9 +23,9 @@ from mathutils import Vector
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC = os.path.join(ROOT, "art", "source", "2012_Toyota_HiAce_Commuter.fbx")
-OUT = os.path.join(ROOT, "assets", "models", "vehicles", "hiace.glb")
+OUT = os.path.join(ROOT, "assets", "models", "vehicles", "taxi.glb")
 SCALE = 0.8
-DROP = ("Baggages", "Baggage Floor", "steering", "steering.001", "Rims9", "Rims11")   # Rims9/11: flat hub discs fixed to the body at the front wheels (the wheels have their own rims)   # the steering wheel is a ring Godot makes and turns (hiace_steer)
+DROP = ("Baggages", "Baggage Floor", "steering", "steering.001", "Rims9", "Rims11")   # Rims9/11: flat hub discs fixed to the body at the front wheels (the wheels have their own rims)   # the steering wheel is a ring Godot makes and turns (taxi_steer)
 WHEELS = ("TireRing173", "TireRing174", "TireRing173.001", "TireRing174.001")
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -179,7 +179,7 @@ for o in parts:
 bpy.context.view_layer.objects.active = parts[0]
 bpy.ops.object.join()
 body = bpy.context.active_object
-body.name = body.data.name = "hiace"
+body.name = body.data.name = "taxi"
 bpy.ops.object.shade_smooth_by_angle(angle=math.radians(35))
 
 # One wheel: the +X-side front tyre, centred on the origin, rim facing +X.
@@ -197,7 +197,7 @@ if flip:
     bm.to_mesh(tyre_src.data)
     bm.free()
 tyre_src.data.update()
-tyre_src.name = tyre_src.data.name = "hiace_tyre"
+tyre_src.name = tyre_src.data.name = "taxi_tyre"
 tyre_src.location = (0.0, -8.0, 0.0)
 radius = (max(v.co.z for v in tyre_src.data.vertices) - min(v.co.z for v in tyre_src.data.vertices)) / 2
 bpy.context.view_layer.objects.active = tyre_src
@@ -218,7 +218,7 @@ steer_x, steer_y = (-0.65 + shift_x) * SCALE, -2.50 * SCALE
 
 
 def marker(name, at):
-    e = bpy.data.objects.new("hiace_" + name, None)
+    e = bpy.data.objects.new("taxi_" + name, None)
     scene.collection.objects.link(e)
     e.parent = body
     e.location = at
@@ -232,6 +232,8 @@ marker("plate_front", (0.0, plate_front_y - 0.02, 0.6))
 marker("plate_rear", (0.0, plate_rear_y + 0.02, 0.7))
 marker("seat_0", (steer_x, steer_y + 0.62, 0.78))     # right-hand drive: the driver on the -X side facing -Y
 marker("seat_1", (-steer_x, steer_y + 0.62, 0.78))
+for k, (sx, sy) in enumerate([(-0.52, -0.45), (0.52, -0.45), (-0.52, 0.35), (0.52, 0.35), (-0.52, 1.15), (0.52, 1.15), (-0.52, 1.95), (0.52, 1.95)]):
+    marker("seat_%d" % (k + 2), (sx, sy, 0.78))   # the passengers' rows behind the driver and the front passenger
 marker("steer", (steer_x, steer_y + 0.05, 1.2))      # the centre of the steering wheel (the model's own is left out)
 # Wiper pivots at the foot of the windscreen (Blender coordinates: the glass runs from y -2.49, z 1.29 up to y -1.85, z 1.79).
 marker("wiper_0", (steer_x - 0.1, -2.4, 1.33))
@@ -243,5 +245,5 @@ for o in scene.objects:
         o.data.uv_layers.new(name="UVMap")
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT, export_format="GLB", export_yup=True, export_apply=True)
-print("HIACE body tris", tris(body), "wheel tris", tris(tyre_src), "radius", round(radius, 3), "flip", bool(flip),
+print("TAXI body tris", tris(body), "wheel tris", tris(tyre_src), "radius", round(radius, 3), "flip", bool(flip),
       "plates", round(plate_front_y, 2), round(plate_rear_y, 2), "size", tuple(round(x, 2) for x in body.dimensions))
