@@ -2672,6 +2672,27 @@ func _test_remy_player() -> void:
 	touch._stick_pos["move"] = Vector2.ZERO
 	await process_frame
 	await process_frame
+	# Dragging a finger on the open screen turns the camera: no right stick any more.
+	var yaw_before: float = p.pivot.rotation.y
+	var open_spot := Vector2(touch._size().x * 0.5, touch._size().y * 0.3)
+	_check(touch._hit(open_spot) == "" and touch._hit(Vector2(touch._size().x - 170.0, touch._size().y - 140.0)) == "", "there is no look stick: the open screen is not a control")
+	var swipe_down := InputEventScreenTouch.new()
+	swipe_down.index = 1
+	swipe_down.pressed = true
+	swipe_down.position = open_spot
+	touch._input(swipe_down)
+	var swipe_drag := InputEventScreenDrag.new()
+	swipe_drag.index = 1
+	swipe_drag.position = open_spot + Vector2(120, 0)
+	swipe_drag.relative = Vector2(120, 0)
+	touch._input(swipe_drag)
+	var turned := absf(angle_difference(yaw_before, p.pivot.rotation.y))
+	_check(turned > 0.1 and turned < 1.5, "dragging a finger across the screen turns the camera (%.2f rad for 120 px)" % turned)
+	var swipe_up := InputEventScreenTouch.new()
+	swipe_up.index = 1
+	swipe_up.pressed = false
+	swipe_up.position = swipe_drag.position
+	touch._input(swipe_up)
 	touch.free()
 	p.free()
 	floor_body.free()

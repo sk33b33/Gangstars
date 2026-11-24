@@ -1,5 +1,8 @@
 # Changelog
 
+## Touch: swipe to look, no right stick
+- The right "LOOK" stick is gone on phones. A finger dragged anywhere on the open screen turns the camera, the way the mouse does on a PC (`TouchControls.swipe_look`; 120 px of drag is about 22 degrees; the multiple is `SWIPE_LOOK`). The left move stick and all the buttons work as before, and a touch that starts on a button or the move stick never turns the camera. The help line and prompts say "drag the screen to look". Gamepad look is unchanged. Checks: no look stick on the screen, and a drag turns the camera.
+
 ## Washing sways in the wind
 - The clothes on every washing line hang from the line and swing downwind: a gentle sway on a calm day, a hard lean and flap in a south-easter. `assets/shaders/cloth_wind.gdshader` on the cloth materials of the `washing_line` prop (`PropLibrary`); `DayNight` passes the weather's wind to `PropLibrary.set_wind`. Each line has its own phase. Same shader for every line (MultiMesh, no extra cost). Preview: the cloth at wind 0 and 1 is in the check.
 

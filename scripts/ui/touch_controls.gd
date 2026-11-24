@@ -3,7 +3,7 @@ extends CanvasLayer
 ## On-screen controls for phones and tablets (Android, iOS), shown only on a touchscreen (or with the
 ## --touch argument for testing on a PC):
 ##   left stick  - move (and steer/accelerate when driving)
-##   right stick - look
+##   swipe       - drag a finger anywhere else on the screen to look around (no right stick)
 ##   LOCK        - toggles auto-lock aim (raises the weapon and swings onto the nearest armed stranger)
 ##   buttons     - Talk/interact, Sprint (tap to toggle), Jump, Aim (hold), Shoot (hold), and a column on
 ##                 the right edge: Menu, Phone, Map, Whistle, Radio. The player can move, remove and add
@@ -16,6 +16,7 @@ signal edit_finished(layout: Dictionary)
 
 const STICK_RADIUS := 105.0
 const DEAD := 0.15
+const SWIPE_LOOK := 1.3          # camera turn per pixel of finger drag, as a multiple of the player's mouse sensitivity
 const DRAG_SLOP := 10.0          # a touch that moves less than this is a tap (edit mode)
 const BADGE_RADIUS := 15.0       # the small x that appears on a selected button
 
@@ -23,8 +24,8 @@ const BADGE_RADIUS := 15.0       # the small x that appears on a selected button
 var player
 var enabled := false
 var _draw_node: Control
-var _touches := {}           # touch index -> "move" | "look" | button id
-var _stick_pos := {"move": Vector2.ZERO, "look": Vector2.ZERO}   # knob offsets, pixels
+var _touches := {}           # touch index -> "move" | "swipe" | button id
+var _stick_pos := {"move": Vector2.ZERO}   # the move stick's knob offset, pixels
 var _sprint_on := false
 var _was_visible := false
 
@@ -75,9 +76,8 @@ func _size() -> Vector2:
 	return get_viewport().get_visible_rect().size
 
 
-func _stick_centre(id: String) -> Vector2:
-	var s := _size()
-	return Vector2(190.0, s.y - 170.0) if id == "move" else Vector2(s.x - 170.0, s.y - 140.0)
+func _stick_centre(_id: String) -> Vector2:
+	return Vector2(190.0, _size().y - 170.0)
 
 
 ## Button centre in screen pixels (from the layout: the default place, or where the player put it).
@@ -124,14 +124,18 @@ func _input(event: InputEvent) -> void:
 				_touches[event.index] = hit
 				_begin(hit, event.position)
 				get_viewport().set_input_as_handled()
+			else:
+				_touches[event.index] = "swipe"   # a finger on the open screen turns the camera
 		elif _touches.has(event.index):
 			_end(str(_touches[event.index]))
 			_touches.erase(event.index)
 			get_viewport().set_input_as_handled()
 	elif event is InputEventScreenDrag and _touches.has(event.index):
 		var id := str(_touches[event.index])
-		if id == "move" or id == "look":
+		if id == "move":
 			_stick_pos[id] = _clamped(event.position - _stick_centre(id))
+		elif id == "swipe":
+			swipe_look(event.relative)
 		get_viewport().set_input_as_handled()
 
 
@@ -139,10 +143,15 @@ func _hit(p: Vector2) -> String:
 	for b in _buttons:
 		if p.distance_to(_button_centre(b)) <= float(b.r) * 1.15:
 			return str(b.id)
-	for id in ["move", "look"]:
-		if p.distance_to(_stick_centre(id)) <= STICK_RADIUS * 1.5:
-			return id
+	if p.distance_to(_stick_centre("move")) <= STICK_RADIUS * 1.5:
+		return "move"
 	return ""
+
+
+## Turns the camera by a finger drag of `relative` pixels (what the mouse does on a PC).
+func swipe_look(relative: Vector2) -> void:
+	if player != null and player.input_enabled:
+		player._look(relative * float(player.mouse_sensitivity) * SWIPE_LOOK)
 
 
 func _clamped(v: Vector2) -> Vector2:
@@ -150,7 +159,7 @@ func _clamped(v: Vector2) -> Vector2:
 
 
 func _begin(id: String, p: Vector2) -> void:
-	if id == "move" or id == "look":
+	if id == "move":
 		_stick_pos[id] = _clamped(p - _stick_centre(id))
 		return
 	var b := _button(id)
@@ -165,7 +174,9 @@ func _begin(id: String, p: Vector2) -> void:
 
 
 func _end(id: String) -> void:
-	if id == "move" or id == "look":
+	if id == "swipe":
+		return
+	if id == "move":
 		_stick_pos[id] = Vector2.ZERO
 		return
 	var b := _button(id)
@@ -188,14 +199,11 @@ func _send(action: String, pressed: bool, strength := 1.0) -> void:
 	Input.parse_input_event(e)
 
 
-## Pushes the stick positions into the move_* and look_* actions (analogue strength).
+## Pushes the move stick into the move_* actions (analogue strength).
 func _apply_sticks() -> void:
 	var mv := _axis(_stick_pos.move)
 	_set_axis("move_left", "move_right", mv.x)
 	_set_axis("move_forward", "move_backward", mv.y)
-	var lk := _axis(_stick_pos.look)
-	_set_axis("look_left", "look_right", lk.x)
-	_set_axis("look_up", "look_down", lk.y)
 
 
 func _axis(v: Vector2) -> Vector2:
@@ -216,7 +224,7 @@ func _set_axis(neg: String, pos: String, value: float) -> void:
 
 func _release_all() -> void:
 	_touches.clear()
-	_stick_pos = {"move": Vector2.ZERO, "look": Vector2.ZERO}
+	_stick_pos = {"move": Vector2.ZERO}
 	_apply_sticks()
 	for b in _buttons:
 		if str(b.action) != "" and Input.is_action_pressed(str(b.action)) and b.action != "pause":
@@ -230,15 +238,13 @@ func _on_draw() -> void:
 	var font := ThemeDB.fallback_font
 	if editing:
 		_draw_node.draw_rect(Rect2(Vector2.ZERO, _size()), Color(0, 0, 0, 0.38))
-	for id in ["move", "look"]:
-		var c := _stick_centre(id)
-		var fade := 0.45 if editing else 1.0
-		_draw_node.draw_circle(c, STICK_RADIUS, Color(1, 1, 1, 0.10 * fade))
-		_draw_node.draw_arc(c, STICK_RADIUS, 0.0, TAU, 40, Color(1, 1, 1, 0.35 * fade), 3.0)
-		if not editing:
-			_draw_node.draw_circle(c + _stick_pos[id], 44.0, Color(1, 0.85, 0.37, 0.45))
-		var name_txt := "MOVE" if id == "move" else "LOOK"
-		_draw_node.draw_string(font, c + Vector2(-24, STICK_RADIUS + 24), name_txt, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.55 * fade))
+	var c := _stick_centre("move")
+	var fade := 0.45 if editing else 1.0
+	_draw_node.draw_circle(c, STICK_RADIUS, Color(1, 1, 1, 0.10 * fade))
+	_draw_node.draw_arc(c, STICK_RADIUS, 0.0, TAU, 40, Color(1, 1, 1, 0.35 * fade), 3.0)
+	if not editing:
+		_draw_node.draw_circle(c + _stick_pos.move, 44.0, Color(1, 0.85, 0.37, 0.45))
+	_draw_node.draw_string(font, c + Vector2(-24, STICK_RADIUS + 24), "MOVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.55 * fade))
 	for b in _buttons:
 		var c2 := _button_centre(b)
 		var chosen := editing and str(b.id) == _selected

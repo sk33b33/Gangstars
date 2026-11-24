@@ -16,7 +16,7 @@ const KEYBOARD := {
 }
 const TOUCH := {
 	"interact": "TALK", "shout": "HEY", "turf_map": "MAP", "sprint": "RUN", "jump": "JUMP",
-	"pause": "MENU", "move": "the left stick", "look": "the right stick", "drive": "the left stick", "back": "MENU", "aim": "AIM", "fire": "FIRE",
+	"pause": "MENU", "move": "the left stick", "look": "a finger drag", "drive": "the left stick", "back": "MENU", "aim": "AIM", "fire": "FIRE",
 	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here", "camera_mode": "VIEW", "bag": "BAG",
 }
 const PAD := {
@@ -55,7 +55,7 @@ static func key(action: String) -> String:
 
 static func help_line() -> String:
 	if touch:
-		return "Left stick move · Right stick look · TALK to interact · AIM and FIRE · PHONE · MAP · HEY · MENU"
+		return "Left stick move · drag the screen to look · TALK to interact · AIM and FIRE · PHONE · MAP · HEY · MENU"
 	if gamepad:
 		return "Left stick move · L3 sprint · A interact · LT aim · RT shoot · D-pad up phone · Y whistle · View turf map · Menu pause"
 	var move := "WASD" if not custom.has("move_forward") else "%s%s%s%s" % [key("move_forward"), key("move_left"), key("move_backward"), key("move_right")]

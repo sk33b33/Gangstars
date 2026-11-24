@@ -38,7 +38,7 @@ const RUN_THRESHOLD := 0.55
 @onready var camera: Camera3D = $CameraPivot/Pitch/SpringArm3D/Camera3D
 
 var input_enabled := true
-## False on a touchscreen: dragging a finger must not turn the camera (the look stick does that).
+## False on a touchscreen: the mouse events a touch emulates must not turn the camera (TouchControls turns it from the touch drags).
 var mouse_look_enabled := true
 ## TouchControls' LOCK button: while on, the gun stays up (there is nothing to lock onto in this player).
 var auto_lock := false
