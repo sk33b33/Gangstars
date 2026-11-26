@@ -1,5 +1,8 @@
 # Changelog
 
+## Touch: separate driving controls
+- When Remy gets into a vehicle the on-screen buttons swap to driving ones: GAS and BRAKE (right thumb), HOOT (the whistle/horn action), BACK (hold to look out of the rear: the camera swings behind the car and returns when let go; new input action `look_back`, key B) and EXIT (the way out of the car, the "interact" action). JUMP, RUN, TALK, PHONE and FIRE are gone while driving, and so are AIM and LOCK; MENU, MAP, VIEW, BAG and RADIO stay where the player put them. The left stick only steers (its label says STEER): speed is the pedals. When Remy gets out the on-foot buttons come back where they were. The on-foot layout editor is unchanged. `TouchLayout.DRIVE_CATALOG`, `TouchControls.driving`. Checks for the swap, GAS, BACK, the steering-only stick and the return.
+
 ## Taxis lose the roof rack and luggage
 - The taxi no longer carries a roof rack, bags or a mattress on top; only its little roof sign stays. The unused WESTRIDGE sticker texture is deleted (no vehicle had it since the Sierra swap). The bumper stickers and rear slogan now sit on the HiAce's real back end. A check covers twelve taxis.
 

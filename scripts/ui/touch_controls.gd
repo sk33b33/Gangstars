@@ -2,7 +2,7 @@ class_name TouchControls
 extends CanvasLayer
 ## On-screen controls for phones and tablets (Android, iOS), shown only on a touchscreen (or with the
 ## --touch argument for testing on a PC):
-##   left stick  - move (and steer/accelerate when driving)
+##   left stick  - move; while Remy drives it only steers, and the buttons change to GAS, BRAKE, HOOT, BACK (look back) and EXIT
 ##   swipe       - drag a finger anywhere else on the screen to look around (no right stick)
 ##   LOCK        - toggles auto-lock aim (raises the weapon and swings onto the nearest armed stranger)
 ##   buttons     - Talk/interact, Sprint (tap to toggle), Jump, Aim (hold), Shoot (hold), and a column on
@@ -28,6 +28,7 @@ var _touches := {}           # touch index -> "move" | "swipe" | button id
 var _stick_pos := {"move": Vector2.ZERO}   # the move stick's knob offset, pixels
 var _sprint_on := false
 var _was_visible := false
+var driving := false        # Remy is in a vehicle: the driving buttons replace the on-foot ones
 
 ## The buttons now on screen (from `layout`): id, action, label, hold, radius, ...
 var _buttons: Array = []
@@ -92,7 +93,11 @@ func apply_layout(saved: Variant) -> void:
 
 
 func _rebuild() -> void:
-	_buttons = layout.active()
+	_buttons = layout.drive_buttons() if driving else layout.active()
+
+
+func _player_driving() -> bool:
+	return player != null and player.has_method("is_driving") and bool(player.is_driving())
 
 
 func _process(_delta: float) -> void:
@@ -100,6 +105,11 @@ func _process(_delta: float) -> void:
 		visible = true
 		_draw_node.queue_redraw()
 		return
+	var drive_now := _player_driving()
+	if drive_now != driving:
+		_release_all()   # let go of everything held, then swap the buttons (they come back when Remy gets out)
+		driving = drive_now
+		_rebuild()
 	var show_now: bool = enabled and player != null and player.input_enabled
 	if show_now != _was_visible:
 		_was_visible = show_now
@@ -202,6 +212,8 @@ func _send(action: String, pressed: bool, strength := 1.0) -> void:
 ## Pushes the move stick into the move_* actions (analogue strength).
 func _apply_sticks() -> void:
 	var mv := _axis(_stick_pos.move)
+	if driving:
+		mv.y = 0.0   # steering only: GAS and BRAKE are the pedals
 	_set_axis("move_left", "move_right", mv.x)
 	_set_axis("move_forward", "move_backward", mv.y)
 
@@ -244,7 +256,7 @@ func _on_draw() -> void:
 	_draw_node.draw_arc(c, STICK_RADIUS, 0.0, TAU, 40, Color(1, 1, 1, 0.35 * fade), 3.0)
 	if not editing:
 		_draw_node.draw_circle(c + _stick_pos.move, 44.0, Color(1, 0.85, 0.37, 0.45))
-	_draw_node.draw_string(font, c + Vector2(-24, STICK_RADIUS + 24), "MOVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.55 * fade))
+	_draw_node.draw_string(font, c + Vector2(-24, STICK_RADIUS + 24), "STEER" if driving else "MOVE", HORIZONTAL_ALIGNMENT_LEFT, -1, 18, Color(1, 1, 1, 0.55 * fade))
 	for b in _buttons:
 		var c2 := _button_centre(b)
 		var chosen := editing and str(b.id) == _selected
@@ -276,6 +288,8 @@ func _badge_centre(b: Dictionary) -> Vector2:
 ## Starts editing: the game stays paused, every button can be dragged, tapped (to select) and removed.
 func begin_edit() -> void:
 	_release_all()
+	driving = false   # the editor shows the on-foot layout
+	_rebuild()
 	editing = true
 	_selected = ""
 	_drag = {}

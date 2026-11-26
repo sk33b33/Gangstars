@@ -46,6 +46,7 @@ var input_enabled := true:
 ## both "accept" and "interact") must not also act in the world on the same press.
 var _enabled_frame := -10
 var vehicle: DrivableCar
+var _looking_back := false
 var invert_y := false
 var _saved_layer := 0
 var _saved_mask := 0
@@ -162,6 +163,9 @@ func exit_vehicle() -> void:
 	if vehicle == null:
 		return
 	var car := vehicle
+	if _looking_back:   # out of the car while looking out of the rear: the camera turns round again
+		pivot.rotate_y(PI)
+		_looking_back = false
 	global_position = car.exit_position() + Vector3(0, 0.05, 0)
 	car.driver = null
 	vehicle = null
@@ -175,6 +179,10 @@ func exit_vehicle() -> void:
 func _physics_process(delta: float) -> void:
 	if vehicle:
 		global_position = vehicle.global_position
+		var back := Input.is_action_pressed("look_back")
+		if back != _looking_back:   # hold to look out of the rear: the camera swings half a turn and comes back when let go
+			pivot.rotate_y(PI)
+			_looking_back = back
 		if _pressed("interact"):
 			exit_vehicle()
 		elif _pressed("shout"):

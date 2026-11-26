@@ -4142,6 +4142,56 @@ func _test_touch_in_game(main: Node, district: District, player: Player) -> void
 	await process_frame
 	_check(not touch.visible, "the controls hide while a menu has the input")
 	player.input_enabled = true
+	# Driving: the on-foot buttons are swapped for the driving ones, and come back when Remy gets out.
+	var on_foot_ids: Array = touch._buttons.map(func(x): return str(x.id))
+	var car := DrivableCar.new()
+	district.add_child(car)
+	car.setup("car_touch_test", "a test car", Color.WHITE)
+	car.global_position = player.global_position + Vector3(0, 0.2, -4)
+	player.enter_vehicle(car)
+	await process_frame
+	await process_frame
+	var drive_ids: Array = touch._buttons.map(func(x): return str(x.id))
+	_check(touch.driving and ["d_gas", "d_brake", "d_hoot", "d_lookback", "d_exit"].all(func(i): return drive_ids.has(i)) \
+		and ["jump", "sprint", "interact", "phone", "fire"].all(func(i): return not drive_ids.has(i)),
+		"in a vehicle the buttons become GAS, BRAKE, HOOT, BACK and EXIT, with no JUMP, RUN, TALK, PHONE or FIRE (%s)" % [drive_ids])
+	var gas := InputEventScreenTouch.new()
+	gas.index = 3
+	gas.pressed = true
+	gas.position = touch._button_centre(touch._button("d_gas"))
+	touch._input(gas)
+	await process_frame
+	var gas_on := Input.is_action_pressed("accelerate")
+	gas.pressed = false
+	touch._input(gas)
+	var back_look := InputEventScreenTouch.new()
+	back_look.index = 4
+	back_look.pressed = true
+	back_look.position = touch._button_centre(touch._button("d_lookback"))
+	var yaw_ahead: float = player.pivot.rotation.y
+	touch._input(back_look)
+	await process_frame
+	await physics_frame
+	await physics_frame
+	var swung := absf(angle_difference(yaw_ahead, player.pivot.rotation.y))
+	back_look.pressed = false
+	touch._input(back_look)
+	await physics_frame
+	await physics_frame
+	var restored := absf(angle_difference(yaw_ahead, player.pivot.rotation.y))
+	_check(gas_on and swung > 3.0 and restored < 0.05, "GAS presses accelerate, and holding BACK swings the camera behind the car and lets go back (%.2f rad, then %.2f)" % [swung, restored])
+	touch._stick_pos["move"] = Vector2(0, -TouchControls.STICK_RADIUS * 0.9)   # pushed up: while driving the stick only steers
+	touch._apply_sticks()
+	await process_frame
+	_check(Input.get_action_strength("move_forward") < 0.01, "the stick pushed up does not accelerate while driving: it only steers")
+	touch._stick_pos["move"] = Vector2.ZERO
+	touch._apply_sticks()
+	player.exit_vehicle()
+	await process_frame
+	await process_frame
+	var back_ids: Array = touch._buttons.map(func(x): return str(x.id))
+	_check(not touch.driving and back_ids == on_foot_ids, "the on-foot buttons come back when Remy gets out of the vehicle")
+	car.queue_free()
 	touch.enabled = false
 	player.mouse_look_enabled = true
 	await process_frame

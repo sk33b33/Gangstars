@@ -12,12 +12,12 @@ static var custom: Dictionary = {}
 
 const KEYBOARD := {
 	"interact": "E", "shout": "Q", "turf_map": "M", "sprint": "Shift", "jump": "Space",
-	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab", "camera_mode": "V", "bag": "I",
+	"pause": "Esc", "move": "WASD", "look": "Mouse", "drive": "W/S", "back": "Esc", "aim": "RMB", "fire": "LMB", "phone": "P", "radio": "R", "skip_tips": "Tab", "camera_mode": "V", "bag": "I", "look_back": "B",
 }
 const TOUCH := {
 	"interact": "TALK", "shout": "HEY", "turf_map": "MAP", "sprint": "RUN", "jump": "JUMP",
 	"pause": "MENU", "move": "the left stick", "look": "a finger drag", "drive": "the left stick", "back": "MENU", "aim": "AIM", "fire": "FIRE",
-	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here", "camera_mode": "VIEW", "bag": "BAG",
+	"phone": "PHONE", "radio": "RADIO", "skip_tips": "tap here", "camera_mode": "VIEW", "bag": "BAG", "look_back": "BACK",
 }
 const PAD := {
 	"interact": "A", "shout": "Y", "turf_map": "View", "sprint": "L3", "jump": "B",

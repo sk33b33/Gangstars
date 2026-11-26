@@ -34,6 +34,18 @@ const CATALOG := [
 	{"id": "brake", "action": "brake", "label": "BRAKE", "name": "Brake (driving)", "hold": true, "r": 46.0, "at": [0.0, 0.0], "from": "br", "extra": true},
 ]
 
+## The buttons shown instead of the on-foot ones while Remy drives (not editable, not saved): GAS and BRAKE for the right thumb (the left
+## stick only steers), HOOT, LOOK BACK (hold) and EXIT (it is the "interact" action, the way out of the car).
+const DRIVE_CATALOG := [
+	{"id": "d_gas", "action": "accelerate", "label": "GAS", "name": "Accelerate", "hold": true, "r": 66.0, "at": [150.0, 165.0], "from": "br"},
+	{"id": "d_brake", "action": "brake", "label": "BRAKE", "name": "Brake / reverse", "hold": true, "r": 54.0, "at": [335.0, 115.0], "from": "br"},
+	{"id": "d_hoot", "action": "shout", "label": "HOOT", "name": "Hoot", "hold": false, "r": 42.0, "at": [140.0, 330.0], "from": "br"},
+	{"id": "d_lookback", "action": "look_back", "label": "BACK", "name": "Look back (hold)", "hold": true, "r": 42.0, "at": [300.0, 275.0], "from": "br"},
+	{"id": "d_exit", "action": "interact", "label": "EXIT", "name": "Get out", "hold": false, "r": 42.0, "at": [470.0, 185.0], "from": "br"},
+]
+## From the on-foot layout, these stay on screen while driving (where the player put them).
+const DRIVE_KEEP := ["pause", "turf_map", "camera_mode", "bag", "radio"]
+
 var positions := {}    # button id -> Vector2 (fractions of the screen) for buttons the player moved or added
 var removed := {}      # button id -> true: default buttons the player took away
 var added := {}        # button id -> true: extra buttons the player put on screen
@@ -52,6 +64,17 @@ func active() -> Array:
 	for b: Dictionary in CATALOG:
 		if is_active(str(b.id)):
 			out.append(b.duplicate())
+	return out
+
+
+## The buttons on screen while driving: the driving set, then the shared ones (MENU, MAP, VIEW, BAG, RADIO) the player has on screen.
+func drive_buttons() -> Array:
+	var out: Array = []
+	for b: Dictionary in DRIVE_CATALOG:
+		out.append(b.duplicate())
+	for b: Dictionary in active():
+		if DRIVE_KEEP.has(str(b.id)):
+			out.append(b)
 	return out
 
 
