@@ -19,6 +19,7 @@
   carry ads or paid extras, while it uses this model (replace it before any commercial release). Source `art/source/sapn_hilux.glb`, built
   into `assets/models/vehicles/hilux.glb` by `tools/blender/build_hilux.py`. Changes: the textures (a power company's logo, mud) are replaced
   by plain colours, the wheels rebuilt, a light bar and police markings added. Credited in the game (Menu > Credits).
-- **Remy's car model:** a Ford Sierra, `art/source/ford_sierra.glb` (built by `tools/blender/build_sierra.py`), supplied by the project owner.
-  Its author and licence are not known yet: it needs a credit or a replacement before the game is shared.
-
+- **Remy's car model:** "Ford Sierra" by poormancantaffordto3dmodels (https://skfb.ly/onCrE), Creative Commons Attribution 4.0
+  (http://creativecommons.org/licenses/by/4.0/). Source `art/source/ford_sierra.glb`, built into `assets/models/vehicles/sierra.glb` by
+  `tools/blender/build_sierra.py`. Changes: the engine, suspension, roll cage and duplicate wheels removed, parts joined and decimated, plain
+  role colours, markers for the wheels, seats, wipers and steering wheel. Credited in the game (Menu > Credits).

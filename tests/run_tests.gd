@@ -262,8 +262,8 @@ func _test_npc_data() -> void:
 		"the Sierra has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
 	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
 	_check(Credits.LINES.size() >= 2 and Credits.LINES.any(func(l): return str(l).contains("Aeroux") and str(l).contains("by/4.0")) \
-		and Credits.LINES.any(func(l): return str(l).contains("stephen.williams") and str(l).contains("by-nc/4.0")),
-		"the credits name the taxi's and the police bakkie's authors and licences")
+		and Credits.LINES.any(func(l): return str(l).contains("stephen.williams") and str(l).contains("by-nc/4.0")) and Credits.LINES.any(func(l): return str(l).contains("poormancantaffordto3dmodels") and str(l).contains("by/4.0")),
+		"the credits name the authors and licences of the taxi, the police bakkie and Remy's Sierra")
 	var minibus := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(38, 0, 0))
 	VehicleLibrary.animate(minibus, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
 	var front_wheel: MeshInstance3D = minibus.get_meta("wheels")[0]

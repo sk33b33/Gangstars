@@ -1,5 +1,8 @@
 # Changelog
 
+## Sierra credit
+- Remy's Ford Sierra is credited to poormancantaffordto3dmodels (CC BY 4.0) in the menu credits and `docs/THIRD_PARTY.md`.
+
 ## New taxi and police models, with credits
 - Taxis are now "Toyota Hiace Passenger Van L2H3 GLX 2020" by Aeroux (CC BY 4.0): `tools/blender/build_taxi.py` makes `taxi.glb` (800 triangles; its own texture kept at 2048 px as the material `taxi_body`, the baked-in wheels cut out and replaced by a made wheel that spins and steers; same ten seats). Its windows are part of the texture, so passengers are no longer seen through them. The taxi dressing (roof sign, stripe, number, slogan, conductor) was refitted (`DIMS["taxi"]`).
 - The SAPS bakkie is now "SAPN Hilux" by stephen.williams (CC BY-NC 4.0): `build_hilux.py` makes `hilux.glb` (7 800 triangles: cab and canopy, the logo and mud of its texture replaced by plain white paint, glass and trim; its wheel rebuilt; the blue light bar and POLICE lettering added). It now drives nose first like every other vehicle (the old model faced backwards). **Its licence forbids commercial use**: see `docs/THIRD_PARTY.md`.
