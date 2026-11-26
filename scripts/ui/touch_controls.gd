@@ -107,7 +107,8 @@ func _process(_delta: float) -> void:
 		return
 	var drive_now := _player_driving()
 	if drive_now != driving:
-		_release_all()   # let go of everything held, then swap the buttons (they come back when Remy gets out)
+		if enabled:
+			_release_all()   # let go of everything held, then swap the buttons (they come back when Remy gets out)
 		driving = drive_now
 		_rebuild()
 	var show_now: bool = enabled and player != null and player.input_enabled
