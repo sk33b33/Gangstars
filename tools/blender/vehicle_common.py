@@ -1,4 +1,4 @@
-"""Shared helpers for the vehicle build scripts that start from a textured model (build_taxi.py, build_hilux.py): the role materials
+"""Shared helpers for the vehicle build scripts that start from a textured model (build_taxi.py): the role materials
 VehicleLibrary knows, welding and decimating, and sorting a mesh's faces into roles by the colour the model's texture has at each face
 (so the texture itself, with its logos and baked mud, never reaches the game: the roles are plain colours, and the paint can be recoloured).
 Imported with sys.path.insert(0, <this folder>) from a script run by `blender -b --python`."""

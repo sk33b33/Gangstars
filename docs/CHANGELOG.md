@@ -1,5 +1,8 @@
 # Changelog
 
+## The Hilux is removed
+- The SAPN Hilux (CC BY-NC) is gone, with its source, build script, credit and the police tests that named it. Police go back to the main set's bakkie (with the old POLICE lettering and crest positions and dimensions) until a replacement is supplied: `EXTRA_SOURCES` has no "police" entry, so adding one later is a one-line change.
+
 ## Sierra credit
 - Remy's Ford Sierra is credited to poormancantaffordto3dmodels (CC BY 4.0) in the menu credits and `docs/THIRD_PARTY.md`.
 

@@ -8,16 +8,16 @@ extends RefCounted
 
 const SOURCE := "res://assets/models/vehicles/vehicles.glb"
 ## Models built from a supplied file of their own, loaded next to the main set under the same conventions (a model listed here takes its
-## meshes and markers from its own file): the minibus taxi (a Toyota HiAce, tools/blender/build_taxi.py), the SAPS Hilux (build_hilux.py)
-## and Remy's Ford Sierra (build_sierra.py).
-const EXTRA_SOURCES := {"taxi": "res://assets/models/vehicles/taxi.glb", "police": "res://assets/models/vehicles/hilux.glb", "sierra": "res://assets/models/vehicles/sierra.glb"}
+## meshes and markers from its own file): the minibus taxi (a Toyota HiAce, tools/blender/build_taxi.py)
+## and Remy's Ford Sierra (build_sierra.py). The police bakkie is the model in the main set (vehicles.glb) until another is supplied.
+const EXTRA_SOURCES := {"taxi": "res://assets/models/vehicles/taxi.glb", "sierra": "res://assets/models/vehicles/sierra.glb"}
 const MODELS := ["hatch", "sedan", "bakkie", "taxi", "police", "skoro", "combi", "panel_van", "bus", "refuse", "scooter", "sierra"]
 ## Cars that belong to one person: only that vehicle id gets the model, and it is in no traffic or parking list (CIVILIAN).
 ## "car_player" is Remy's own van.
 const EXCLUSIVE := {"car_player": "sierra"}
 const CIVILIAN := ["hatch", "hatch", "sedan", "bakkie", "skoro", "combi", "panel_van"]   # weighted pick for everyday cars
 ## Length of each model (m), for colliders and obstacles.
-const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.4, "police": 5.4, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "sierra": 4.5}
+const LENGTH := {"hatch": 4.0, "sedan": 4.5, "bakkie": 4.7, "taxi": 5.4, "police": 5.1, "skoro": 4.4, "combi": 4.5, "panel_van": 5.1, "bus": 8.8, "refuse": 6.6, "scooter": 1.9, "sierra": 4.5}
 ## Colours for the skorokoro's odd door and primer patches, and for occupants.
 const ODD_PANELS := [Color("#8f949a"), Color("#c9c2b4"), Color("#2e6a8f"), Color("#7a2420"), Color("#e8e2d0")]
 const SHIRTS := [Color("#f1eee8"), Color("#2c3e50"), Color("#a63a4c"), Color("#27ae60"), Color("#f2b632"), Color("#5dade2"), Color("#1d1b24")]
@@ -587,22 +587,22 @@ static func set_lights(pivot: Node3D, on: bool, time: float) -> void:
 ## "POLICE / POLISIE" on the doors and canopy, and the made-up crest (not the real SAPS emblem).
 static func _police_markings(pivot: Node3D) -> void:
 	for side in [1.0, -1.0]:
-		var z: float = side * 1.0   # just outside the Hilux's door skin
+		var z: float = side * 0.935
 		var door := Label3D.new()
 		door.text = "POLICE"
 		door.font_size = 64
-		door.pixel_size = 0.0034
+		door.pixel_size = 0.004
 		door.modulate = Color("#123f8c")
 		door.outline_size = 0
-		door.position = Vector3(0.5, 1.0, z)
+		door.position = Vector3(0.55, 0.42, z)
 		door.rotation.y = 0.0 if side > 0 else PI
 		door.double_sided = false
 		pivot.add_child(door)
 		var back := door.duplicate() as Label3D
 		back.text = "POLICE"
-		back.position = Vector3(-1.75, 1.05, side * 0.98)   # on the canopy   # on the load bin
+		back.position = Vector3(-1.55, 1.72, z)   # on the load bin
 		back.font_size = 48
 		pivot.add_child(back)
-		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(-0.35, 1.0, z + side * 0.002),
+		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(1.0, 0.82, z + side * 0.002),
 			PixelMaterials.panel("police_crest", Color.WHITE, true), 0.0 if side > 0 else PI)
 		crest.name = "Crest"

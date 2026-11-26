@@ -14,11 +14,6 @@
   (http://creativecommons.org/licenses/by/4.0/). Source `art/source/hiace_l2h3.glb`, built into `assets/models/vehicles/taxi.glb` by
   `tools/blender/build_taxi.py`. Changes: scaled, the baked-in wheels cut out and replaced by a made wheel, the texture shrunk to 2048 px,
   seats, markers and the taxi markings added. Credited in the game (Menu > Credits).
-- **Police bakkie model:** "SAPN Hilux" by stephen.williams (https://skfb.ly/6SAY8), Creative Commons Attribution-NonCommercial 4.0
-  (http://creativecommons.org/licenses/by-nc/4.0/). **The licence does not allow commercial use**: the game may not be sold, or
-  carry ads or paid extras, while it uses this model (replace it before any commercial release). Source `art/source/sapn_hilux.glb`, built
-  into `assets/models/vehicles/hilux.glb` by `tools/blender/build_hilux.py`. Changes: the textures (a power company's logo, mud) are replaced
-  by plain colours, the wheels rebuilt, a light bar and police markings added. Credited in the game (Menu > Credits).
 - **Remy's car model:** "Ford Sierra" by poormancantaffordto3dmodels (https://skfb.ly/onCrE), Creative Commons Attribution 4.0
   (http://creativecommons.org/licenses/by/4.0/). Source `art/source/ford_sierra.glb`, built into `assets/models/vehicles/sierra.glb` by
   `tools/blender/build_sierra.py`. Changes: the engine, suspension, roll cage and duplicate wheels removed, parts joined and decimated, plain

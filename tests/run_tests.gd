@@ -221,15 +221,10 @@ func _test_npc_data() -> void:
 	var cop_car := VehicleLibrary.build(garage, "police", Color.WHITE, Vector3(10, 0, 0))
 	VehicleLibrary.add_occupants(cop_car)
 	_check(cop_car.get_meta("occupants", []).size() == 2, "police bakkies carry two officers")
-	var cop_mesh: Mesh = (cop_car.find_child("Mesh", true, false) as MeshInstance3D).mesh
-	var hx_tris := 0
-	for si in cop_mesh.get_surface_count():
-		hx_tris += cop_mesh.surface_get_array_index_len(si) / 3 if cop_mesh.surface_get_arrays(si)[Mesh.ARRAY_INDEX] != null else 0
-	_check(VehicleLibrary.EXTRA_SOURCES.get("police", "").ends_with("hilux.glb") and cop_mesh.get_aabb().size.z > 5.0 and hx_tris > 4000 and hx_tris < 30000,
-		"the SAPS vehicle is the SAPN Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
-	_check(cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2, "the Hilux has four wheels and seats for the officers")
-	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the Hilux: it is in no civilian or traffic list")
-	for wm in ["taxi", "sierra", "police"]:
+	_check(not VehicleLibrary.EXTRA_SOURCES.has("police") and cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2,
+		"the police bakkie is the main set's model with four wheels and seats for the officers")
+	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the police bakkie: it is in no civilian or traffic list")
+	for wm in ["taxi", "sierra"]:
 		var wheel_mesh: ArrayMesh = VehicleLibrary._meshes[wm + "_tyre"]
 		var wheel_mats: Array = []
 		for si in wheel_mesh.get_surface_count():
@@ -262,8 +257,8 @@ func _test_npc_data() -> void:
 		"the Sierra has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
 	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
 	_check(Credits.LINES.size() >= 2 and Credits.LINES.any(func(l): return str(l).contains("Aeroux") and str(l).contains("by/4.0")) \
-		and Credits.LINES.any(func(l): return str(l).contains("stephen.williams") and str(l).contains("by-nc/4.0")) and Credits.LINES.any(func(l): return str(l).contains("poormancantaffordto3dmodels") and str(l).contains("by/4.0")),
-		"the credits name the authors and licences of the taxi, the police bakkie and Remy's Sierra")
+		and Credits.LINES.any(func(l): return str(l).contains("poormancantaffordto3dmodels") and str(l).contains("by/4.0")),
+		"the credits name the authors and licences of the taxi and Remy's Sierra")
 	var minibus := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(38, 0, 0))
 	VehicleLibrary.animate(minibus, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
 	var front_wheel: MeshInstance3D = minibus.get_meta("wheels")[0]
