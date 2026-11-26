@@ -267,6 +267,14 @@ func _test_npc_data() -> void:
 	var lock_turn := front_wheel.basis.get_euler(EULER_ORDER_YXZ).y
 	_check(absf(absf(lock_turn) - VehicleLibrary.STEER_LOCK["taxi"]) < 0.02 and VehicleLibrary.STEER_LOCK["taxi"] < 0.5,
 		"the taxi's (HiAce) front wheels turn 0.3 rad at full lock, less than other cars, so the wide tyres stay clear of the arch (%.2f)" % lock_turn)
+	var on_roof := 0
+	var roof_y: float = VehicleDetail.DIMS["taxi"].roof
+	for ti in 12:   # twelve taxis of different seeds: only the little roof sign stands above the roof, no rack, no luggage
+		var cab := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(200 + ti * 7, 0, 0))
+		for part in (cab.get_meta("tilt") as Node3D).get_children():
+			if part is MeshInstance3D and part.position.y > roof_y + 0.01 and part.position.y < roof_y + 3.0 and (part as MeshInstance3D).mesh is BoxMesh:
+				on_roof += 1
+	_check(on_roof == 12 and not FileAccess.file_exists("res://assets/textures/pxl/sticker_westridge.png"), "taxis have no roof rack or luggage, only the roof sign (%d boxes above the roof on 12 taxis), and no WESTRIDGE sticker texture is left" % on_roof)
 	var minibus_mesh: Mesh = VehicleLibrary.mesh("taxi")
 	VehicleLibrary.add_occupants(minibus, 9)
 	_check(VehicleLibrary.EXTRA_SOURCES.get("taxi", "").ends_with("taxi.glb") and minibus_mesh.get_aabb().size.z > 5.2 and VehicleLibrary._markers["taxi"].seats.size() >= 10 \

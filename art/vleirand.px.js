@@ -752,8 +752,6 @@ sprite("sticker_b", { w: 14, h: 6 },
 sprite("sticker_c", { w: 14, h: 6 },
   rect(0, 0, 14, 6, "#c0392b"), box(0, 0, 14, 6, "#f4f1ea"), text(7, 1, "BRA", "#f4f1ea", { align: "c" }))
 // Remy's van: a town sticker low on the rear window and a small crown on the sliding door.
-sprite("sticker_westridge", { w: 36, h: 7 },
-  rect(0, 0, 36, 7, "#1d1b24"), box(0, 0, 36, 7, "#e0b02a"), text(18, 1, "WESTRIDGE", "#e0b02a", { align: "c" }))
 sprite("taxi_slogan_a", { w: 40, h: 8 },
   rect(0, 0, 40, 8, "#1d1b2488"), text(20, 1, "ALLES SAL REG KOM", "#f4f1ea", { align: "c" }))
 sprite("taxi_slogan_b", { w: 40, h: 8 },

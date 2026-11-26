@@ -205,7 +205,7 @@ static func _stickers(tilt: Node3D, d: Dictionary, seed: int, age: float, model:
 	var count := 1 + int(age * 2.0) + (1 if model == "taxi" else 0)
 	for k in count:
 		_quad(tilt, STICKERS[rng.randi() % STICKERS.size()], Vector2(0.28, 0.12),
-			Vector3(rng.randf_range(-0.55, 0.55), 0.55 + rng.randf() * 0.2, -h - 0.012), PI, 30.0)
+			Vector3(rng.randf_range(-0.55, 0.55), 0.55 + rng.randf() * 0.2, -float(d.get("rear", h)) - 0.012), PI, 30.0)
 
 
 ## Windscreen drops (shown in rain) and the dash glow (at night); the materials are shared, so
@@ -339,8 +339,6 @@ static func _taxi(pivot: Node3D, tilt: Node3D, d: Dictionary, seed: int) -> void
 	var w: float = d.w
 	var roof: float = d.roof
 	var h: float = d.h
-	var rng := RandomNumberGenerator.new()
-	rng.seed = seed + 3
 	_box(tilt, Vector3(0.7, 0.2, 0.28), Vector3(0, roof + 0.14, 0.9), Color("#1d1e22"), 80.0)
 	for zf in [1.0, -1.0]:
 		_quad(tilt, "sign_taxi", Vector2(0.5, 0.18), Vector3(0, roof + 0.14, 0.9 + zf * 0.142), 0.0 if zf > 0.0 else PI, 80.0)
@@ -357,15 +355,6 @@ static func _taxi(pivot: Node3D, tilt: Node3D, d: Dictionary, seed: int) -> void
 	num.visibility_range_end = 25.0
 	tilt.add_child(num)
 	_quad(tilt, SLOGANS[seed % SLOGANS.size()], Vector2(1.3, 0.26), Vector3(0, roof - 0.42, -float(d.get("rear", h)) - 0.014), PI, 35.0)
-	# Luggage on a roof rack.
-	if seed % 3 != 0:
-		_box(tilt, Vector3(1.5, 0.03, 1.6), Vector3(0, roof + 0.03, -0.9), Color("#565a64"), 60.0)
-		for k in 2 + seed % 3:
-			var s := Vector3(rng.randf_range(0.45, 0.8), rng.randf_range(0.25, 0.4), rng.randf_range(0.4, 0.7))
-			_box(tilt, s, Vector3(rng.randf_range(-0.35, 0.35), roof + 0.06 + s.y * 0.5, -0.5 - k * 0.5), BAG_COLOURS[rng.randi() % BAG_COLOURS.size()], 60.0)
-		if seed % 5 == 0:   # a mattress, tied down
-			_box(tilt, Vector3(1.2, 0.18, 1.9), Vector3(0, roof + 0.14, -0.9), Color("#e8e2d0"), 60.0)
-			_box(tilt, Vector3(1.24, 0.2, 0.05), Vector3(0, roof + 0.14, -0.4), Color("#c0392b"), 60.0)
 	# The conductor, leaning out of the sliding door with a hand up to tap the roof.
 	var occ: Mesh = VehicleLibrary.mesh("occupant_passenger")
 	if occ:

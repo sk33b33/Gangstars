@@ -1,5 +1,8 @@
 # Changelog
 
+## Taxis lose the roof rack and luggage
+- The taxi no longer carries a roof rack, bags or a mattress on top; only its little roof sign stays. The unused WESTRIDGE sticker texture is deleted (no vehicle had it since the Sierra swap). The bumper stickers and rear slogan now sit on the HiAce's real back end. A check covers twelve taxis.
+
 ## Remy drives a Ford Sierra; every taxi is the HiAce minibus
 - Remy's own car is now the supplied Ford Sierra (`art/source/ford_sierra.glb`, built by `tools/blender/build_sierra.py` into `assets/models/vehicles/sierra.glb`, about 12 000 triangles: engine, suspension, roll cage and the duplicate wheels are left out; paint, glass, trim, chrome, lamps, blinking indicators, alloy wheels, seats and dashboard stay). Only his car id gets it (`VehicleLibrary.EXCLUSIVE`), it is in no traffic or parking list, Remy sits at the wheel (`REMY_SEAT["sierra"]`, tuned by eye), and the car has its own wipers, steering wheel that turns and reversing lamps. Display name: "Remy's Sierra".
 - The Toyota HiAce that was Remy's van is now the minibus taxi: `build_hiace.py` became `build_taxi.py` and makes `taxi.glb` (model "taxi", ten seats for the driver and nine passengers). The old taxi model is gone; the taxi dressing (roof sign, yellow stripe, number, slogan, luggage, conductor) is fitted to the new body (`VehicleDetail.DIMS["taxi"]`), and its front wheels turn less (`STEER_LOCK["taxi"]`). The WESTRIDGE rear sticker went with the van.
