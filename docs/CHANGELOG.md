@@ -1,5 +1,11 @@
 # Changelog
 
+## New taxi and police models, with credits
+- Taxis are now "Toyota Hiace Passenger Van L2H3 GLX 2020" by Aeroux (CC BY 4.0): `tools/blender/build_taxi.py` makes `taxi.glb` (800 triangles; its own texture kept at 2048 px as the material `taxi_body`, the baked-in wheels cut out and replaced by a made wheel that spins and steers; same ten seats). Its windows are part of the texture, so passengers are no longer seen through them. The taxi dressing (roof sign, stripe, number, slogan, conductor) was refitted (`DIMS["taxi"]`).
+- The SAPS bakkie is now "SAPN Hilux" by stephen.williams (CC BY-NC 4.0): `build_hilux.py` makes `hilux.glb` (7 800 triangles: cab and canopy, the logo and mud of its texture replaced by plain white paint, glass and trim; its wheel rebuilt; the blue light bar and POLICE lettering added). It now drives nose first like every other vehicle (the old model faced backwards). **Its licence forbids commercial use**: see `docs/THIRD_PARTY.md`.
+- Credits: `Credits.LINES`, shown at the bottom of the menu, and `docs/THIRD_PARTY.md` (which also notes the Sierra's author is not yet known). The old HiAce FBX and Hilux files are deleted. Shared Blender helpers: `tools/blender/vehicle_common.py`.
+- To check on the phone: taxis and police in traffic (look, wheels turning, nose first), and the credits at the bottom of the menu.
+
 ## Touch: separate driving controls
 - When Remy gets into a vehicle the on-screen buttons swap to driving ones: GAS and BRAKE (right thumb), HOOT (the whistle/horn action), BACK (hold to look out of the rear: the camera swings behind the car and returns when let go; new input action `look_back`, key B) and EXIT (the way out of the car, the "interact" action). JUMP, RUN, TALK, PHONE and FIRE are gone while driving, and so are AIM and LOCK; MENU, MAP, VIEW, BAG and RADIO stay where the player put them. The left stick only steers (its label says STEER): speed is the pedals. When Remy gets out the on-foot buttons come back where they were. The on-foot layout editor is unchanged. `TouchLayout.DRIVE_CATALOG`, `TouchControls.driving`. Checks for the swap, GAS, BACK, the steering-only stick and the return.
 

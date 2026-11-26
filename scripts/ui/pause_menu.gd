@@ -119,6 +119,15 @@ func _build() -> void:
 	replay.text = "Replay the tutorial"
 	replay.pressed.connect(func(): replay_tutorial.emit())
 	_rows.add_child(replay)
+	_heading("Credits", 20)
+	for line: String in Credits.LINES:
+		var credit := Label.new()
+		credit.name = "Credit"
+		credit.text = line
+		credit.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		credit.custom_minimum_size = Vector2(0, 0)
+		credit.add_theme_font_size_override("font_size", 14)
+		_rows.add_child(credit)
 	var quit := Button.new()
 	quit.text = "Quit to desktop"
 	quit.pressed.connect(func(): quit_requested.emit())

@@ -225,8 +225,8 @@ func _test_npc_data() -> void:
 	var hx_tris := 0
 	for si in cop_mesh.get_surface_count():
 		hx_tris += cop_mesh.surface_get_array_index_len(si) / 3 if cop_mesh.surface_get_arrays(si)[Mesh.ARRAY_INDEX] != null else 0
-	_check(VehicleLibrary.EXTRA_SOURCES.get("police", "").ends_with("hilux.glb") and cop_mesh.get_aabb().size.z > 5.0 and hx_tris > 10000 and hx_tris < 30000,
-		"the SAPS vehicle is the Toyota Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
+	_check(VehicleLibrary.EXTRA_SOURCES.get("police", "").ends_with("hilux.glb") and cop_mesh.get_aabb().size.z > 5.0 and hx_tris > 4000 and hx_tris < 30000,
+		"the SAPS vehicle is the SAPN Hilux double cab (%d triangles, %.1f m long)" % [hx_tris, cop_mesh.get_aabb().size.z])
 	_check(cop_car.get_meta("wheels", []).size() == 4 and VehicleLibrary._markers["police"].seats.size() >= 2, "the Hilux has four wheels and seats for the officers")
 	_check(not VehicleLibrary.CIVILIAN.has("police") and not VehicleLibrary.EXCLUSIVE.values().has("police"), "only the SAPS drive the Hilux: it is in no civilian or traffic list")
 	for wm in ["taxi", "sierra", "police"]:
@@ -261,6 +261,9 @@ func _test_npc_data() -> void:
 	_check(remy_van.get_meta("wheels", []).size() == 4 and remy_van.get_meta("occupants", []).size() >= 1 and remy_van_tris <= 45000 and VehicleLibrary.mesh("sierra_tyre") != null,
 		"the Sierra has four wheels that spin, a driver at the wheel, and stays under 45 000 triangles (%d)" % remy_van_tris)
 	VehicleLibrary.animate(remy_van, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
+	_check(Credits.LINES.size() >= 2 and Credits.LINES.any(func(l): return str(l).contains("Aeroux") and str(l).contains("by/4.0")) \
+		and Credits.LINES.any(func(l): return str(l).contains("stephen.williams") and str(l).contains("by-nc/4.0")),
+		"the credits name the taxi's and the police bakkie's authors and licences")
 	var minibus := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(38, 0, 0))
 	VehicleLibrary.animate(minibus, 3.0, 1.0, 0.0, 0, 0.1, 0.1)
 	var front_wheel: MeshInstance3D = minibus.get_meta("wheels")[0]
@@ -279,7 +282,7 @@ func _test_npc_data() -> void:
 	VehicleLibrary.add_occupants(minibus, 9)
 	_check(VehicleLibrary.EXTRA_SOURCES.get("taxi", "").ends_with("taxi.glb") and minibus_mesh.get_aabb().size.z > 5.2 and VehicleLibrary._markers["taxi"].seats.size() >= 10 \
 		and minibus.get_meta("occupants", []).size() == 10 and minibus.get_meta("wheels", []).size() == 4 and minibus.has_meta("dims"),
-		"every taxi is the Toyota HiAce minibus (%.1f m long) with four wheels and a seat for a driver and nine passengers" % minibus_mesh.get_aabb().size.z)
+		"every taxi is the Toyota HiAce L2H3 minibus (%.1f m long) with four wheels and a seat for a driver and nine passengers" % minibus_mesh.get_aabb().size.z)
 	_check(remy_van.get_meta("wipers", []).size() == 2 and remy_van.has_meta("indicator_L") and remy_van.has_meta("indicator_R") and remy_van.has_meta("dims") \
 		and remy_van.find_child("ScreenDrops", true, false) != null,
 		"the Sierra has two wipers, left and right indicator lamps, and a windscreen for rain drops")
@@ -384,11 +387,12 @@ func _test_npc_data() -> void:
 	var taxi := VehicleLibrary.build(garage, "taxi", Color.WHITE, Vector3(40, 0, 0))
 	VehicleLibrary.add_occupants(taxi)
 	_check(taxi.get_meta("occupants", []).size() >= 5, "taxis carry a load of passengers (%d)" % taxi.get_meta("occupants", []).size())
-	var taxi_glass := false
+	var taxi_textured := false
 	var taxi_mesh: Mesh = VehicleLibrary.mesh("taxi")
 	for i in taxi_mesh.get_surface_count():
-		taxi_glass = taxi_glass or (taxi_mesh.surface_get_material(i) != null and taxi_mesh.surface_get_material(i).resource_name == "glass")
-	_check(taxi_glass, "taxi windows are see-through glass")
+		var tm := taxi_mesh.surface_get_material(i) as BaseMaterial3D
+		taxi_textured = taxi_textured or (tm != null and tm.resource_name == "taxi_body" and tm.albedo_texture != null)
+	_check(taxi_textured, "the taxi's body is the model's own texture, windows and lamps painted on (the passengers are not seen through it)")
 	for vm in ["combi", "panel_van"]:
 		var v := VehicleLibrary.build(garage, vm, Color.TEAL, Vector3(50 + vm.length(), 0, 0))
 		_check(VehicleLibrary.CIVILIAN.has(vm) and v.get_meta("wheels", []).size() == 4, "the %s is on the road" % vm)

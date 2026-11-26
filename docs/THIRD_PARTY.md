@@ -10,3 +10,15 @@
   Claude Code Game Studios by Donchitos (MIT licence, https://github.com/Donchitos/Claude-Code-Game-Studios).
 - **Game-design inspiration:** the survival layer borrows ideas (needs, looting, wounds, skills, top-down view) from
   Project Zomboid. No code or assets from Project Zomboid or the Zomdroid launcher are used.
+- **Taxi model:** "Toyota Hiace Passenger Van L2H3 GLX 2020" by Aeroux (https://skfb.ly/pH7KN), Creative Commons Attribution 4.0
+  (http://creativecommons.org/licenses/by/4.0/). Source `art/source/hiace_l2h3.glb`, built into `assets/models/vehicles/taxi.glb` by
+  `tools/blender/build_taxi.py`. Changes: scaled, the baked-in wheels cut out and replaced by a made wheel, the texture shrunk to 2048 px,
+  seats, markers and the taxi markings added. Credited in the game (Menu > Credits).
+- **Police bakkie model:** "SAPN Hilux" by stephen.williams (https://skfb.ly/6SAY8), Creative Commons Attribution-NonCommercial 4.0
+  (http://creativecommons.org/licenses/by-nc/4.0/). **The licence does not allow commercial use**: the game may not be sold, or
+  carry ads or paid extras, while it uses this model (replace it before any commercial release). Source `art/source/sapn_hilux.glb`, built
+  into `assets/models/vehicles/hilux.glb` by `tools/blender/build_hilux.py`. Changes: the textures (a power company's logo, mud) are replaced
+  by plain colours, the wheels rebuilt, a light bar and police markings added. Credited in the game (Menu > Credits).
+- **Remy's car model:** a Ford Sierra, `art/source/ford_sierra.glb` (built by `tools/blender/build_sierra.py`), supplied by the project owner.
+  Its author and licence are not known yet: it needs a credit or a replacement before the game is shared.
+

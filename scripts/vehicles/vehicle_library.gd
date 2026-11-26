@@ -587,22 +587,22 @@ static func set_lights(pivot: Node3D, on: bool, time: float) -> void:
 ## "POLICE / POLISIE" on the doors and canopy, and the made-up crest (not the real SAPS emblem).
 static func _police_markings(pivot: Node3D) -> void:
 	for side in [1.0, -1.0]:
-		var z: float = side * 1.055   # just outside the Hilux's door skin (1.04 at the doors, 1.01 on the load bin)
+		var z: float = side * 1.0   # just outside the Hilux's door skin
 		var door := Label3D.new()
 		door.text = "POLICE"
 		door.font_size = 64
 		door.pixel_size = 0.0034
 		door.modulate = Color("#123f8c")
 		door.outline_size = 0
-		door.position = Vector3(0.5, 0.95, z)
+		door.position = Vector3(0.5, 1.0, z)
 		door.rotation.y = 0.0 if side > 0 else PI
 		door.double_sided = false
 		pivot.add_child(door)
 		var back := door.duplicate() as Label3D
 		back.text = "POLICE"
-		back.position = Vector3(1.45, 1.02, side * 1.03)   # on the load bin
+		back.position = Vector3(-1.75, 1.05, side * 0.98)   # on the canopy   # on the load bin
 		back.font_size = 48
 		pivot.add_child(back)
-		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(-0.7, 1.0, z + side * 0.002),
+		var crest := Geo.quad(pivot, Vector2(0.3, 0.36), Vector3(-0.35, 1.0, z + side * 0.002),
 			PixelMaterials.panel("police_crest", Color.WHITE, true), 0.0 if side > 0 else PI)
 		crest.name = "Crest"
